@@ -51,3 +51,10 @@ This resource supports the following arguments:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)

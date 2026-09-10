@@ -90,6 +90,9 @@ func TestAccS3VectorsVectorBucketPolicy_disappears(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 				},
 				ExpectNonEmptyPlan: true,
 			},

@@ -40,85 +40,87 @@ func resourcePipeline() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parallelism_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_parallel_execution_steps": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(1),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parallelism_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_parallel_execution_steps": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
 						},
 					},
 				},
-			},
-			"pipeline_definition": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1048576),
-					validation.StringIsJSON,
-				),
-			},
-			"pipeline_definition_s3_location": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
-				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"object_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"version_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"pipeline_definition": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1048576),
+						validation.StringIsJSON,
+					),
+				},
+				"pipeline_definition_s3_location": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
+					MaxItems:     1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"object_key": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"version_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"pipeline_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 3072),
-			},
-			"pipeline_display_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"pipeline_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"pipeline_description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 3072),
+				},
+				"pipeline_display_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"pipeline_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

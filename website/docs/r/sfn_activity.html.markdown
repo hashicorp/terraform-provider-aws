@@ -55,8 +55,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the activity.
-* `arn` - Amazon Resource Name (ARN) of the activity.
+* `id` - ARN of the activity.
+* `arn` - ARN of the activity.
 * `name` - Name of the activity.
 * `creation_date` - Date the activity was created.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -77,6 +77,12 @@ resource "aws_sfn_activity" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
+
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the activity.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 

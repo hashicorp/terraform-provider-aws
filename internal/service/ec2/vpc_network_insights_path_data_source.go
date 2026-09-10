@@ -27,64 +27,66 @@ func dataSourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInsightsPathRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"destination_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"destination_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"filter_at_destination": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: sdkv2.ComputedOnlyFromResourceSchema(networkInsightsPathFilterSchema()),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"filter_at_source": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: sdkv2.ComputedOnlyFromResourceSchema(networkInsightsPathFilterSchema()),
+				names.AttrDestination: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"network_insights_path_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrDestinationARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"destination_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"destination_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"filter_at_destination": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: sdkv2.ComputedOnlyFromResourceSchema(networkInsightsPathFilterSchema()),
+					},
+				},
+				"filter_at_source": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: sdkv2.ComputedOnlyFromResourceSchema(networkInsightsPathFilterSchema()),
+					},
+				},
+				"network_insights_path_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -22,32 +22,34 @@ func dataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"clone_url_http": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"clone_url_ssh": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRepositoryName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"clone_url_http": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"clone_url_ssh": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRepositoryName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 100),
+				},
+			}
 		},
 	}
 }

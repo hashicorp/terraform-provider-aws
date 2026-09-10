@@ -23,29 +23,31 @@ func dataSourceLinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinksRead,
 
-		Schema: map[string]*schema.Schema{
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"site_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags: tftags.TagsSchema(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"site_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags: tftags.TagsSchema(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

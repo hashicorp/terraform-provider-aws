@@ -26,7 +26,9 @@ import (
 
 // @SDKResource("aws_securityhub_account", name="Account")
 func resourceAccount() *schema.Resource {
-	resourceV0 := &schema.Resource{Schema: map[string]*schema.Schema{}}
+	resourceV0 := &schema.Resource{SchemaFunc: func() map[string]*schema.Schema {
+		return map[string]*schema.Schema{}
+	}}
 
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -53,28 +55,30 @@ func resourceAccount() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_enable_controls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"control_finding_generator": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ControlFindingGenerator](),
-			},
-			"enable_default_standards": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_enable_controls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"control_finding_generator": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ControlFindingGenerator](),
+				},
+				"enable_default_standards": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

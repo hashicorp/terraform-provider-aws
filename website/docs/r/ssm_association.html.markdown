@@ -117,7 +117,6 @@ resource "aws_ssm_association" "system_update" {
   max_concurrency     = "1" # Run on one instance at a time
   max_errors          = "0" # Stop if any instance fails
 
-
   tags = {
     Name        = "Weekly System Update"
     Environment = "demo"

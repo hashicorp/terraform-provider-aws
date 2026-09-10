@@ -47,26 +47,28 @@ func resourceConfigurationPolicyAssociation() *schema.Resource {
 			Update: schema.DefaultTimeout(90 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"policy_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The universally unique identifier (UUID) of the configuration policy, or SELF_MANAGED_SECURITY_HUB for a self-managed configuration.",
-				ValidateFunc: validation.Any(
-					validation.IsUUID,
-					validation.StringInSlice([]string{"SELF_MANAGED_SECURITY_HUB"}, false),
-				),
-			},
-			"target_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The identifier of the target account, organizational unit, or the root to associate with the specified configuration.",
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^(r-[a-z0-9]{4,32})$|^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32})$|^([0-9]{12})$`),
-					"Target ID must be a valid root, organizational unit or account id.",
-				),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"policy_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The universally unique identifier (UUID) of the configuration policy, or SELF_MANAGED_SECURITY_HUB for a self-managed configuration.",
+					ValidateFunc: validation.Any(
+						validation.IsUUID,
+						validation.StringInSlice([]string{"SELF_MANAGED_SECURITY_HUB"}, false),
+					),
+				},
+				"target_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					ForceNew:    true,
+					Description: "The identifier of the target account, organizational unit, or the root to associate with the specified configuration.",
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`^(r-[a-z0-9]{4,32})$|^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32})$|^([0-9]{12})$`),
+						"Target ID must be a valid root, organizational unit or account id.",
+					),
+				},
+			}
 		},
 	}
 }

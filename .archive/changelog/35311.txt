@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_m2_environment
-```

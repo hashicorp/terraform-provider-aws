@@ -16,6 +16,8 @@ For more information, see the [AWS CloudWatch Observability Admin documentation]
 
 ~> **NOTE:** Only one telemetry evaluation can exist per account per region. Creating this resource enables the feature; destroying it disables the feature.
 
+~> **NOTE:** Do not use this resource in an account where telemetry evaluation is centrally managed by an AWS Organization via [`aws_observabilityadmin_telemetry_evaluation_for_organization`](observabilityadmin_telemetry_evaluation_for_organization.html.markdown). In that case, the per-account `StartTelemetryEvaluation` API silently returns success without changing per-account state, and `GetTelemetryEvaluationStatus` reports the org-derived `RUNNING` status — so `terraform apply` appears to succeed. However, the matching `StopTelemetryEvaluation` call is rejected with `ValidationException: Telemetry evaluation is managed by the caller's organization`, so a later `terraform destroy` will fail and leave the resource in state. Use the organization variant from the management account instead.
+
 ## Example Usage
 
 ### Basic Usage

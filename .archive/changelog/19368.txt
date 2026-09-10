@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudtrail: Add `advanced_event_selector` argument
-```

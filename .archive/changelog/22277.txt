@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_launch_template: Correctly set `default_version` and `latest_version` as Computed when `name`, `name_prefix` or `description` change
-```

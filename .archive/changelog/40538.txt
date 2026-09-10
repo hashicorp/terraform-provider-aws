@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_instance Fix `manage_master_user_password` being updated in state when update errors
-```

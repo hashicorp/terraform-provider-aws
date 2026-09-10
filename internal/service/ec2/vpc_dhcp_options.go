@@ -40,56 +40,58 @@ func resourceVPCDHCPOptions() *schema.Resource {
 
 		// Keep in sync with aws_default_vpc_dhcp_options' schema.
 		// See notes in vpc_default_vpc_dhcp_options.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"domain_name_servers": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"ipv6_address_preferred_lease_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"netbios_name_servers": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"netbios_node_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"ntp_servers": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"domain_name_servers": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"ipv6_address_preferred_lease_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"netbios_name_servers": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"netbios_node_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"ntp_servers": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

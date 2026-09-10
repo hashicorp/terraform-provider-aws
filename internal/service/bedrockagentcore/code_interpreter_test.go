@@ -103,7 +103,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
+func TestAccBedrockAgentCoreCodeInterpreter_certificates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
@@ -120,7 +120,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeInterpreterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccCodeInterpreterConfig_certificates(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
 				),
@@ -130,9 +130,13 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificate), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secrets_manager": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+							})}),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -141,39 +145,6 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "code_interpreter_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "code_interpreter_id",
-			},
-			{
-				Config: testAccCodeInterpreterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccCodeInterpreterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
 			},
 		},
 	})
@@ -320,35 +291,32 @@ resource "aws_bedrockagentcore_code_interpreter" "test" {
 `, rName)
 }
 
-func testAccCodeInterpreterConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccCodeInterpreterConfig_certificates(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA\n-----END CERTIFICATE-----\n"
+}
+
 resource "aws_bedrockagentcore_code_interpreter" "test" {
   name = %[1]q
 
   network_configuration {
-    network_mode = "PUBLIC"
+    network_mode = "SANDBOX"
   }
 
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccCodeInterpreterConfig_tags2(rName, tagKey1, tagValue1, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_code_interpreter" "test" {
-  name = %[1]q
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+  certificate {
+    location {
+      secrets_manager {
+        secret_arn = aws_secretsmanager_secret_version.test.arn
+      }
+    }
   }
 }
-`, rName, tagKey1, tagValue1, tag2Key, tag2Value)
+`, rName)
 }

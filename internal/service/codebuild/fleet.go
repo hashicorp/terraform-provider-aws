@@ -39,191 +39,193 @@ func resourceFleet() *schema.Resource {
 		UpdateWithoutTimeout: resourceFleetUpdate,
 		DeleteWithoutTimeout: resourceFleetDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"compute_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"disk": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"machine_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.MachineType](),
-						},
-						"memory": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"vcpu": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_capacity": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"compute_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"disk": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"machine_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.MachineType](),
+							},
+							"memory": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"vcpu": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"compute_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ComputeType](),
-			},
-			"created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"environment_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
-			},
-			"fleet_service_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 128),
-			},
-			"overflow_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.FleetOverflowBehavior](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "" {
-						return true
-					}
-					return old == new
+				"compute_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ComputeType](),
 				},
-			},
-			"scaling_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrMaxCapacity: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"scaling_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.FleetScalingType](),
-						},
-						"target_tracking_scaling_configs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"metric_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.FleetScalingMetricType](),
-									},
-									"target_value": {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										ValidateFunc: validation.FloatAtLeast(0),
+				"created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"environment_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
+				},
+				"fleet_service_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(2, 128),
+				},
+				"overflow_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.FleetOverflowBehavior](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if new == "" {
+							return true
+						}
+						return old == new
+					},
+				},
+				"scaling_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrMaxCapacity: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"scaling_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.FleetScalingType](),
+							},
+							"target_tracking_scaling_configs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.FleetScalingMetricType](),
+										},
+										"target_value": {
+											Type:         schema.TypeFloat,
+											Optional:     true,
+											ValidateFunc: validation.FloatAtLeast(0),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"context": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusCode: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				RequiredWith: []string{"fleet_service_role"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							MinItems: 1,
-							MaxItems: 5,
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							MinItems: 1,
-							MaxItems: 16,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrStatus: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"context": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusCode: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MinItems:     1,
+					RequiredWith: []string{"fleet_service_role"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MinItems: 1,
+								MaxItems: 5,
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MinItems: 1,
+								MaxItems: 16,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

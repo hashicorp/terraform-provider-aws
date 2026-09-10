@@ -27,40 +27,42 @@ func dataSourceRules() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesRead,
 
-		Schema: map[string]*schema.Schema{
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.Any(
-					verify.ValidAccountID,
-					// The owner of the default Internet Resolver rule.
-					validation.StringInSlice([]string{"Route 53 Resolver"}, false),
-				),
-			},
-			"resolver_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"resolver_rule_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rule_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
-			},
-			"share_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ShareStatus](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"name_regex": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsValidRegExp,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						verify.ValidAccountID,
+						// The owner of the default Internet Resolver rule.
+						validation.StringInSlice([]string{"Route 53 Resolver"}, false),
+					),
+				},
+				"resolver_endpoint_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"resolver_rule_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"rule_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
+				},
+				"share_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ShareStatus](),
+				},
+			}
 		},
 	}
 }

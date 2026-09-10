@@ -68,6 +68,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_project.example
+  identity = {
+    domain_identifier = "domain-1234"
+    id                = "project-1234"
+  }
+}
+
+resource "aws_datazone_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the project.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Project using a colon-delimited string combining `domain_id` and `id`. For example:
 
 ```terraform

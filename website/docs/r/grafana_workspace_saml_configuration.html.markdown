@@ -74,6 +74,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `status` - The status of the SAML configuration.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Grafana Workspace SAML configuration using the workspace's `id`. For example:

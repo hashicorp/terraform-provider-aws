@@ -55,10 +55,35 @@ For more information about the Upgrade Rollout Policy syntax, see the [Upgrade R
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the policy.
-* `arn` - Amazon Resource Name (ARN) of the policy.
+* `arn` - ARN of the policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_policy.example
+  identity = {
+    id = "p-12345678"
+  }
+}
+
+resource "aws_organizations_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Unique identifier (ID) of the policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_policy` using the policy ID. For example:
 

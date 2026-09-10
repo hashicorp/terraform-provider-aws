@@ -41,25 +41,27 @@ func resourceMemberAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"delegated_admin_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"relationship_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"delegated_admin_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"relationship_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

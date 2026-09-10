@@ -55,7 +55,7 @@ HTTPS Notification Configuration support the following:
 
 * `endpoint` - (Required) The subscription endpoint in Security Lake.
   If you prefer notification with an HTTPS endpoint, populate this field.
-* `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the EventBridge API destinations IAM role that you created.
+* `target_role_arn` - (Required) ARN of the EventBridge API destinations IAM role that you created.
   For more information about ARNs and how to use them in policies, see Managing data access and AWS Managed Policies in the Amazon Security Lake User Guide.
 * `authorization_api_key_name` - (Optional) The API key name for the notification subscription.
 * `authorization_api_key_value` - (Optional) The API key value for the notification subscription.
@@ -68,11 +68,3 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `endpoint_id` - (**Deprecated**) The subscriber endpoint to which exception messages are posted.
 * `subscriber_endpoint` - The subscriber endpoint to which exception messages are posted.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)

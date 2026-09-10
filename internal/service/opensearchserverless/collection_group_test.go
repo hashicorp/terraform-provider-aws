@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -45,6 +47,7 @@ func TestAccOpenSearchServerlessCollectionGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aoss", "collection-group/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttr(resourceName, "generation", string(types.ServerlessGenerationClassic)),
 				),
 			},
 			{
@@ -79,6 +82,14 @@ func TestAccOpenSearchServerlessCollectionGroup_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceCollectionGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -189,6 +200,43 @@ func TestAccOpenSearchServerlessCollectionGroup_standbyReplicas(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
 					resource.TestCheckResourceAttr(resourceName, "standby_replicas", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollectionGroup_generation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collectionGroup types.CollectionGroupDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollectionGroup(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCollectionGroupConfig_generation(rName, string(types.ServerlessGenerationNextgen), string(types.StandbyReplicasDisabled)),
+				ExpectError: regexache.MustCompile("`standby_replicas` must be `ENABLED` when `generation` is `NEXTGEN`"),
+			},
+			{
+				Config: testAccCollectionGroupConfig_generation(rName, string(types.ServerlessGenerationNextgen), string(types.StandbyReplicasEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionGroupExists(ctx, t, resourceName, &collectionGroup),
+					resource.TestCheckResourceAttr(resourceName, "standby_replicas", string(types.StandbyReplicasEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "generation", string(types.ServerlessGenerationNextgen)),
 				),
 			},
 			{
@@ -323,4 +371,15 @@ resource "aws_opensearchserverless_collection_group" "test" {
   }
 }
 `, rName, standbyReplicas)
+}
+
+func testAccCollectionGroupConfig_generation(rName, generation, standby_replicas string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_collection_group" "test" {
+  name             = %[1]q
+  standby_replicas = %[3]q
+
+  generation = %[2]q
+}
+`, rName, generation, standby_replicas)
 }

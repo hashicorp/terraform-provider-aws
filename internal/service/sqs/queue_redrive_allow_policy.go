@@ -32,13 +32,15 @@ func resourceQueueRedriveAllowPolicy() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"queue_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"redrive_allow_policy": sdkv2.JSONDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"queue_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"redrive_allow_policy": sdkv2.JSONDocumentSchemaRequired(),
+			}
 		},
 
 		CreateWithoutTimeout: h.Upsert,

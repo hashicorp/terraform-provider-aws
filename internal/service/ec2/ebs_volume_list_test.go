@@ -141,7 +141,7 @@ func TestAccEC2EBSVolume_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrIOPS), knownvalue.Int32Exact(100)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrKMSKeyID), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("multi_attach_enabled"), knownvalue.Bool(false)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("outpost_arn"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrOutpostARN), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrSize), knownvalue.Int32Exact(1)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrSnapshotID), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

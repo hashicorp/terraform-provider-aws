@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the API Gateway Authorizer.
 * `authorizer_credentials` - Credentials required for the authorizer.
 * `authorizer_result_ttl_in_seconds` - TTL of cached authorizer results in seconds.
-* `authorizer_uri` - Authorizer's Uniform Resource Identifier (URI).
+* `authorizer_uri` - Authorizer's URI.
 * `identity_source` - Source of the identity in an incoming request.
 * `identity_validation_expression` - Validation expression for the incoming identity.
 * `name` - Name of the authorizer.

@@ -39,57 +39,59 @@ func resourcePackage() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"available_package_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^Elasticsearch_[0-9]{1}\.[0-9]{1,2}$|^OpenSearch_[0-9]{1,2}\.[0-9]{1,2}$`), "must be in the format 'Elasticsearch_X.Y' or 'OpenSearch_X.Y'"),
-			},
-			"package_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"package_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"package_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			"package_source": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrS3BucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"s3_key": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"available_package_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^Elasticsearch_[0-9]{1}\.[0-9]{1,2}$|^OpenSearch_[0-9]{1,2}\.[0-9]{1,2}$`), "must be in the format 'Elasticsearch_X.Y' or 'OpenSearch_X.Y'"),
+				},
+				"package_description": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"package_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"package_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 32),
+				},
+				"package_source": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrS3BucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"s3_key": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"package_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PackageType](),
-			},
+				"package_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PackageType](),
+				},
+			}
 		},
 	}
 }

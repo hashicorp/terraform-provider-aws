@@ -41,42 +41,44 @@ func resourceAnomalyMonitor() *schema.Resource {
 		UpdateWithoutTimeout: resourceAnomalyMonitorUpdate,
 		DeleteWithoutTimeout: resourceAnomalyMonitorDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"monitor_dimension": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"monitor_specification"},
-				ValidateDiagFunc: enum.Validate[awstypes.MonitorDimension](),
-			},
-			"monitor_specification": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ForceNew:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				ConflictsWith:         []string{"monitor_dimension"},
-			},
-			"monitor_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MonitorType](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexache.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"monitor_dimension": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ConflictsWith:    []string{"monitor_specification"},
+					ValidateDiagFunc: enum.Validate[awstypes.MonitorDimension](),
+				},
+				"monitor_specification": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ForceNew:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					ConflictsWith:         []string{"monitor_dimension"},
+				},
+				"monitor_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MonitorType](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						validation.StringMatch(regexache.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

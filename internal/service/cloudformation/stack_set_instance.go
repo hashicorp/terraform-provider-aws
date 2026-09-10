@@ -58,181 +58,183 @@ func resourceStackSetInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidAccountID,
-				ConflictsWith: []string{"deployment_targets"},
-			},
-			"call_as": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CallAsSelf,
-				ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
-			},
-			"deployment_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"organizational_unit_ids": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							ForceNew:      true,
-							MinItems:      1,
-							ConflictsWith: []string{names.AttrAccountID},
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
-							},
-						},
-						"account_filter_type": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
-							ConflictsWith: []string{names.AttrAccountID},
-						},
-						"accounts": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{names.AttrAccountID},
-							MinItems:      1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidAccountID,
-							},
-						},
-						"accounts_url": {
-							Type:          schema.TypeString,
-							ForceNew:      true,
-							Optional:      true,
-							ConflictsWith: []string{names.AttrAccountID},
-							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  verify.ValidAccountID,
+					ConflictsWith: []string{"deployment_targets"},
 				},
-				ConflictsWith: []string{names.AttrAccountID},
-			},
-			"operation_preferences": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_tolerance_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(0),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
-						},
-						"failure_tolerance_percentage": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(0, 100),
-							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
-						},
-						"max_concurrent_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(1),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
-						},
-						"max_concurrent_percentage": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntBetween(1, 100),
-							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
-						},
-						"concurrency_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
-						},
-						"region_concurrency_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
-						},
-						"region_order": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+				"call_as": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.CallAsSelf,
+					ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
+				},
+				"deployment_targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"organizational_unit_ids": {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								ForceNew:      true,
+								MinItems:      1,
+								ConflictsWith: []string{names.AttrAccountID},
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
+								},
+							},
+							"account_filter_type": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ForceNew:      true,
+								ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
+								ConflictsWith: []string{names.AttrAccountID},
+							},
+							"accounts": {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{names.AttrAccountID},
+								MinItems:      1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidAccountID,
+								},
+							},
+							"accounts_url": {
+								Type:          schema.TypeString,
+								ForceNew:      true,
+								Optional:      true,
+								ConflictsWith: []string{names.AttrAccountID},
+								ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
 							},
 						},
 					},
+					ConflictsWith: []string{names.AttrAccountID},
 				},
-			},
-			"organizational_unit_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parameter_overrides": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrRegion: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"stack_set_instance_region"},
-				Deprecated:    "region is deprecated. Use stack_set_instance_region instead.",
-			},
-			"retain_stack": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"stack_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stack_instance_summaries": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Description: "List of stack instances created from an organizational unit deployment target. " +
-					"This will only be populated when `deployment_targets` is set.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAccountID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"organizational_unit_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"stack_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"operation_preferences": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_tolerance_count": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(0),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+							},
+							"failure_tolerance_percentage": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(0, 100),
+								ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+							},
+							"max_concurrent_count": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntAtLeast(1),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+							},
+							"max_concurrent_percentage": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ValidateFunc:  validation.IntBetween(1, 100),
+								ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+							},
+							"concurrency_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
+							},
+							"region_concurrency_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
+							},
+							"region_order": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+								},
+							},
 						},
 					},
 				},
-			},
-			"stack_set_instance_region": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrRegion},
-			},
-			"stack_set_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				"organizational_unit_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parameter_overrides": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrRegion: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"stack_set_instance_region"},
+					Deprecated:    "region is deprecated. Use stack_set_instance_region instead.",
+				},
+				"retain_stack": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"stack_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stack_instance_summaries": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Description: "List of stack instances created from an organizational unit deployment target. " +
+						"This will only be populated when `deployment_targets` is set.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAccountID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"organizational_unit_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"stack_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"stack_set_instance_region": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrRegion},
+				},
+				"stack_set_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }

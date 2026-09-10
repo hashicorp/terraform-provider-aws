@@ -41,24 +41,26 @@ func resourceResource() *schema.Resource {
 		UpdateWithoutTimeout: resourceResourceUpdate,
 		DeleteWithoutTimeout: resourceResourceDelete,
 
-		Schema: map[string]*schema.Schema{
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"path_part": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"parent_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"path_part": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(

@@ -51,252 +51,254 @@ func ResourceLaunch() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 160),
-			},
-			"execution": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ended_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"started_time": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 160),
+				},
+				"execution": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ended_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"started_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"groups": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 160),
-						},
-						"feature": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-							),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-							),
-						},
-						"variation": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-							),
+				"groups": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 160),
+							},
+							"feature": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 127),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 127),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								),
+							},
+							"variation": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 127),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								),
+							},
 						},
 					},
 				},
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metric_monitors": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_definition": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"entity_id_key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"event_pattern": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 1024),
-											validation.StringIsJSON,
-										),
-										DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-										StateFunc: func(v any) string {
-											json, _ := structure.NormalizeJsonString(v)
-											return json
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metric_monitors": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_definition": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"entity_id_key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
 										},
-									},
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"unit_label": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"value_key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+										"event_pattern": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 1024),
+												validation.StringIsJSON,
+											),
+											DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+											StateFunc: func(v any) string {
+												json, _ := structure.NormalizeJsonString(v)
+												return json
+											},
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"unit_label": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"value_key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
-				),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
-					// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
-					return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 127),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
 				},
-			},
-			"randomization_salt": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 127),
-				// Default: set to the launch name if not specified
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == d.Get(names.AttrName).(string) && new == ""
+				"project": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
+					),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
+						// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
+						return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+					},
 				},
-			},
-			"scheduled_splits_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"steps": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 6,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"group_weights": {
-										Type:     schema.TypeMap,
-										Required: true,
-										ValidateDiagFunc: validation.AllDiag(
-											validation.MapKeyLenBetween(1, 127),
-											validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-										),
-										Elem: &schema.Schema{
-											Type:         schema.TypeInt,
-											ValidateFunc: validation.IntBetween(0, 100000),
+				"randomization_salt": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 127),
+					// Default: set to the launch name if not specified
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == d.Get(names.AttrName).(string) && new == ""
+					},
+				},
+				"scheduled_splits_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"steps": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 6,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"group_weights": {
+											Type:     schema.TypeMap,
+											Required: true,
+											ValidateDiagFunc: validation.AllDiag(
+												validation.MapKeyLenBetween(1, 127),
+												validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+											),
+											Elem: &schema.Schema{
+												Type:         schema.TypeInt,
+												ValidateFunc: validation.IntBetween(0, 100000),
+											},
 										},
-									},
-									"segment_overrides": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 6,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"evaluation_order": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-												"segment": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(0, 2048),
-														validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:segment/[0-9A-Za-z._-]*)`), "name or arn of the segment"),
-													),
-													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-														// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
-														// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
-														return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+										"segment_overrides": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 6,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"evaluation_order": {
+														Type:     schema.TypeInt,
+														Required: true,
 													},
-												},
-												"weights": {
-													Type:     schema.TypeMap,
-													Required: true,
-													ValidateDiagFunc: validation.AllDiag(
-														validation.MapKeyLenBetween(1, 127),
-														validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-													),
-													Elem: &schema.Schema{
-														Type:         schema.TypeInt,
-														ValidateFunc: validation.IntBetween(0, 100000),
+													"segment": {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(0, 2048),
+															validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:segment/[0-9A-Za-z._-]*)`), "name or arn of the segment"),
+														),
+														DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+															// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
+															// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
+															return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+														},
+													},
+													"weights": {
+														Type:     schema.TypeMap,
+														Required: true,
+														ValidateDiagFunc: validation.AllDiag(
+															validation.MapKeyLenBetween(1, 127),
+															validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+														),
+														Elem: &schema.Schema{
+															Type:         schema.TypeInt,
+															ValidateFunc: validation.IntBetween(0, 100000),
+														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrStartTime: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidUTCTimestamp,
+										names.AttrStartTime: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidUTCTimestamp,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

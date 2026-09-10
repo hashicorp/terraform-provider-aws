@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lightsail_disk_attachment: Resolves a panic when an attachment fails and attempts to display the error returned by AWS.
-```

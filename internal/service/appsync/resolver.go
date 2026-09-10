@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appsync_resolver", name="Resolver)
+// @SDKResource("aws_appsync_resolver", name="Resolver")
 func resourceResolver() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResolverCreate,
@@ -43,146 +43,148 @@ func resourceResolver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caching_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"caching_keys": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"ttl": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 3600),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			"code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"runtime"},
-				ValidateFunc: validation.StringLenBetween(1, 32768),
-			},
-			"data_source": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"pipeline_config"},
-			},
-			names.AttrField: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"kind": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ResolverKindUnit,
-				ValidateDiagFunc: enum.Validate[awstypes.ResolverKind](),
-			},
-			"max_batch_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			"pipeline_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"data_source"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"functions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caching_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"caching_keys": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"ttl": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 3600),
 							},
 						},
 					},
 				},
-			},
-			"request_template": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"response_template": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"runtime": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				RequiredWith: []string{"code"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RuntimeName](),
-						},
-						"runtime_version": {
-							Type:     schema.TypeString,
-							Required: true,
+				"code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"runtime"},
+					ValidateFunc: validation.StringLenBetween(1, 32768),
+				},
+				"data_source": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"pipeline_config"},
+				},
+				names.AttrField: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"kind": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ResolverKindUnit,
+					ValidateDiagFunc: enum.Validate[awstypes.ResolverKind](),
+				},
+				"max_batch_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
+				},
+				"pipeline_config": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"data_source"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"functions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
 						},
 					},
 				},
-			},
-			"sync_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"conflict_detection": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConflictDetectionType](),
+				"request_template": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"response_template": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"runtime": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     1,
+					RequiredWith: []string{"code"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RuntimeName](),
+							},
+							"runtime_version": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
-						"conflict_handler": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConflictHandlerType](),
-						},
-						"lambda_conflict_handler_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_conflict_handler_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+					},
+				},
+				"sync_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conflict_detection": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConflictDetectionType](),
+							},
+							"conflict_handler": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConflictHandlerType](),
+							},
+							"lambda_conflict_handler_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda_conflict_handler_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -39,34 +39,36 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 		UpdateWithoutTimeout: resourceAccountPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceAccountPublicAccessBlockDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }
@@ -98,9 +100,12 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
+	const (
+		inARow = 2
+	)
+	_, err = retry.Op(func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
-	})
+	}).UntilFoundN(inARow)(ctx, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Account Public Access Block (%s) create: %s", d.Id(), err)

@@ -53,7 +53,7 @@ exactly match a pair on desired instances.
 * `instance_state_names` - (Optional) List of instance states that should be applicable to the desired instances. The permitted values are: `pending, running, shutting-down, stopped, stopping, terminated`. The default value is `running`.
 * `filter` - (Optional) One or more filters to apply to the search.
   If multiple `filter` blocks are provided, they all must be true.
-  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html).
   See [`filter` Block](#filter-block) below.
 
 ### `filter` Block
@@ -61,7 +61,7 @@ exactly match a pair on desired instances.
 The `filter` block supports the following arguments:
 
 * `name` - (Required) Name of the filter.
-  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html).
 * `values` - (Required) One or more values to match.
 
 ## Attribute Reference
@@ -79,5 +79,3 @@ This data source exports the following attributes in addition to the arguments a
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
-
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

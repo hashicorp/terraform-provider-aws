@@ -50,160 +50,162 @@ func resourceDocument() *schema.Resource {
 		UpdateWithoutTimeout: resourceDocumentUpdate,
 		DeleteWithoutTimeout: resourceDocumentDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attachments_source": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 20,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AttachmentsSourceKey](),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-								validation.StringLenBetween(3, 128),
-							),
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							MinItems: 1,
-							Required: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attachments_source": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 20,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AttachmentsSourceKey](),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+									validation.StringLenBetween(3, 128),
+								),
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								MinItems: 1,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 1024),
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrContent: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DocumentFormatJson,
-				ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
-			},
-			"document_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DocumentType](),
-			},
-			"document_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hash": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hash_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"latest_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-					validation.StringLenBetween(3, 128),
-				),
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrParameter: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrContent: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"document_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DocumentFormatJson,
+					ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
+				},
+				"document_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DocumentType](),
+				},
+				"document_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hash": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hash_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"latest_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						validation.StringLenBetween(3, 128),
+					),
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrParameter: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPermissions: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrPermissions: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"platform_types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"schema_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^\/[\w\.\-\:\/]*$`), "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
-					validation.StringLenBetween(1, 200),
-				),
-			},
-			"version_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-					validation.StringLenBetween(3, 128),
-				),
-			},
+				"platform_types": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"schema_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^\/[\w\.\-\:\/]*$`), "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
+						validation.StringLenBetween(1, 200),
+					),
+				},
+				"version_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						validation.StringLenBetween(3, 128),
+					),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

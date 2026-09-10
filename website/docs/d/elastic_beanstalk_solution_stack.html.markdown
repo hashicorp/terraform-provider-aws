@@ -28,7 +28,7 @@ This data source supports the following arguments:
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent solution stack.
 * `name_regex` - Regex string to apply to the solution stack list returned
-by AWS. See [Elastic Beanstalk Supported Platforms][beanstalk-platforms] from
+by AWS. See [Elastic Beanstalk Supported Platforms](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html) from
 AWS documentation for reference solution stack names.
 
 ~> **NOTE:** If more or less than a single match is returned by the search,
@@ -40,5 +40,3 @@ a single solution stack, or use `most_recent` to choose the most recent one.
 This data source exports the following attributes in addition to the arguments above:
 
 * `name` - Name of the solution stack.
-
-[beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"

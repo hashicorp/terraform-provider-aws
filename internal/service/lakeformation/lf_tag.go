@@ -40,32 +40,34 @@ func ResourceLFTag() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			names.AttrValues: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				// Soft limit stated in AWS Doc
-				// https://docs.aws.amazon.com/lake-formation/latest/dg/TBAC-notes.html
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateLFTagValues(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
 				},
-				Set: schema.HashString,
-			},
+				names.AttrKey: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				names.AttrValues: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					// Soft limit stated in AWS Doc
+					// https://docs.aws.amazon.com/lake-formation/latest/dg/TBAC-notes.html
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validateLFTagValues(),
+					},
+					Set: schema.HashString,
+				},
+			}
 		},
 	}
 }

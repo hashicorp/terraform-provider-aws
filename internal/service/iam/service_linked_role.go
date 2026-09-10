@@ -42,50 +42,52 @@ func resourceServiceLinkedRole() *schema.Resource {
 		UpdateWithoutTimeout: resourceServiceLinkedRoleUpdate,
 		DeleteWithoutTimeout: resourceServiceLinkedRoleDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_service_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.`), "must be a full service hostname e.g. elasticbeanstalk.amazonaws.com"),
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_suffix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if strings.Contains(d.Get("aws_service_name").(string), ".application-autoscaling.") && new == "" {
-						return true
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"aws_service_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.`), "must be a full service hostname e.g. elasticbeanstalk.amazonaws.com"),
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_suffix": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if strings.Contains(d.Get("aws_service_name").(string), ".application-autoscaling.") && new == "" {
+							return true
+						}
+						return false
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

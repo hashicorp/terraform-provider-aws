@@ -11,6 +11,10 @@ on:
         description: "Semver release tag e.g. 1.1.0 (v prefix will be added automatically)"
         required: true
 
+permissions:
+  issues: read         # required to search issues
+  pull-requests: read  # required to search pull requests
+
 jobs:
   tidy-jira:
     runs-on: ubuntu-latest

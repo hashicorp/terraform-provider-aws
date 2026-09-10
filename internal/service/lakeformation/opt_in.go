@@ -337,6 +337,8 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -427,7 +429,7 @@ func (r *optInResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	plan.LastModified = fwflex.TimeToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastModified)
-	plan.LastUpdatedBy = fwflex.StringValueToFramework(ctx, *lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
+	plan.LastUpdatedBy = fwflex.StringToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -538,7 +540,7 @@ func (r *optInResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if _, err := conn.DeleteLakeFormationOptIn(ctx, in); err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -572,7 +574,7 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

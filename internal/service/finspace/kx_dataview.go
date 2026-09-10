@@ -47,99 +47,101 @@ func ResourceKxDataview() *schema.Resource {
 			Update: schema.DefaultTimeout(4 * time.Hour),
 			Delete: schema.DefaultTimeout(4 * time.Hour),
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_update": {
-				Type:     schema.TypeBool,
-				ForceNew: true,
-				Required: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
-			},
-			"changeset_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"environment_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			"last_modified_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			"segment_configurations": {
-				Type: schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"volume_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"db_paths": {
-							Type: schema.TypeList,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_update": {
+					Type:     schema.TypeBool,
+					ForceNew: true,
+					Required: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"az_mode": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.KxAzMode](),
+				},
+				"changeset_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"created_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"environment_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				"last_modified_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				"segment_configurations": {
+					Type: schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"volume_name": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							Required: true,
-						},
-						"on_demand": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							ForceNew: true,
-							Optional: true,
+							"db_paths": {
+								Type: schema.TypeList,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+								Required: true,
+							},
+							"on_demand": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								ForceNew: true,
+								Optional: true,
+							},
 						},
 					},
+					Optional: true,
 				},
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_write": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				ForceNew: true,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_write": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					ForceNew: true,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

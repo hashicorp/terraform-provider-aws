@@ -69,7 +69,7 @@ resource "aws_ivs_playback_key_pair" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS playback key pair.
+- `arn` (String) ARN of the IVS playback key pair.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Playback Key Pair using the ARN. For example:
 

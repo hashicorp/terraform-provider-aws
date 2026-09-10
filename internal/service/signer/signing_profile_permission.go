@@ -39,52 +39,54 @@ func resourceSigningProfilePermission() *schema.Resource {
 			StateContext: resourceSigningProfilePermissionImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"signer:StartSigningJob",
-					"signer:GetSigningProfile",
-					"signer:RevokeSignature",
-					"signer:SignPayload",
-				}, false),
-			},
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"profile_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 64),
-			},
-			"profile_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(10, 10),
-			},
-			"statement_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
-			},
-			"statement_id_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"statement_id"},
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"signer:StartSigningJob",
+						"signer:GetSigningProfile",
+						"signer:RevokeSignature",
+						"signer:SignPayload",
+					}, false),
+				},
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"profile_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(2, 64),
+				},
+				"profile_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(10, 10),
+				},
+				"statement_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"statement_id_prefix"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
+				},
+				"statement_id_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"statement_id"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
+				},
+			}
 		},
 	}
 }

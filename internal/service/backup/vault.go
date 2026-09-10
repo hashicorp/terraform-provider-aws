@@ -33,8 +33,10 @@ import (
 
 // @SDKResource("aws_backup_vault", name="Vault")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
-// @Testing(importIgnore="force_destroy")
+// @Testing(importIgnore="force_destroy", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.58.0")
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
@@ -42,46 +44,44 @@ func resourceVault() *schema.Resource {
 		UpdateWithoutTimeout: resourceVaultUpdate,
 		DeleteWithoutTimeout: resourceVaultDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 50),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must consist of letters, numbers, and hyphens."),
-				),
-			},
-			"recovery_points": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 50),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must consist of letters, numbers, and hyphens."),
+					),
+				},
+				"recovery_points": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -127,12 +127,16 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Backup Vault (%s): %s", d.Id(), err)
 	}
 
+	resourceVaultFlatten(d, output)
+
+	return diags
+}
+
+func resourceVaultFlatten(d *schema.ResourceData, output *backup.DescribeBackupVaultOutput) {
 	d.Set(names.AttrARN, output.BackupVaultArn)
 	d.Set(names.AttrKMSKeyARN, output.EncryptionKeyArn)
 	d.Set(names.AttrName, output.BackupVaultName)
 	d.Set("recovery_points", output.NumberOfRecoveryPoints)
-
-	return diags
 }
 
 func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

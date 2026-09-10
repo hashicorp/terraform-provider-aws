@@ -25,145 +25,147 @@ func dataSourceKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKeyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAWSAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloud_hsm_cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_master_key_spec": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_key_store_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"expiration_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grant_tokens": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrKeyID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateKeyOrAlias,
-			},
-			"key_manager": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_spec": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"multi_region": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"multi_region_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"multi_region_key_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"primary_key": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrARN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAWSAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloud_hsm_cluster_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_master_key_spec": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_key_store_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deletion_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"expiration_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"grant_tokens": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrKeyID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateKeyOrAlias,
+				},
+				"key_manager": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_spec": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_usage": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"multi_region": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"multi_region_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"multi_region_key_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"primary_key": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"replica_keys": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrARN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"replica_keys": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"origin": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pending_deletion_window_in_days": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"valid_to": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"xks_key_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"origin": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pending_deletion_window_in_days": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"valid_to": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"xks_key_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

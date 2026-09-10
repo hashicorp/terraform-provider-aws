@@ -193,17 +193,7 @@ resource "aws_instance" "this" {
 }
 ```
 
-## Tag Guide
-
-These are the five types of tags you might encounter relative to an `aws_instance`:
-
-1. **Instance tags**: Applied to instances but not to `ebs_block_device` and `root_block_device` volumes.
-2. **Default tags**: Applied to the instance and to `ebs_block_device` and `root_block_device` volumes.
-3. **Volume tags**: Applied during creation to `ebs_block_device` and `root_block_device` volumes.
-4. **Root block device tags**: Applied only to the `root_block_device` volume. These conflict with `volume_tags`.
-5. **EBS block device tags**: Applied only to the specific `ebs_block_device` volume you configure them for and cannot be updated. These conflict with `volume_tags`.
-
-Do not use `volume_tags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
+~> **Note:** There are five types of tags relevant to an `aws_instance`: (1) **instance tags** — applied to instances but not to `ebs_block_device` or `root_block_device` volumes; (2) **default tags** — applied to the instance and to those volumes; (3) **volume tags** — applied during creation to `ebs_block_device` and `root_block_device` volumes; (4) **root block device tags** — applied only to the `root_block_device` volume (conflicts with `volume_tags`); (5) **EBS block device tags** — applied only to the specific `ebs_block_device` volume and cannot be updated (conflicts with `volume_tags`). Do not use `volume_tags` if you manage block device tags outside the `aws_instance` configuration (e.g., using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource) as this causes resource cycling and inconsistent behavior.
 
 ## Argument Reference
 
@@ -320,7 +310,7 @@ The `root_block_device` block supports the following:
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
 * `encrypted` - (Optional) Whether to enable volume encryption. Defaults to `false`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) ARN of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 * `tags` - (Optional) Map of tags to assign to the device. **Note:** Tags specified here are applied after instance creation via a separate API call. This means they cannot be used with IAM policies that require tags during resource creation (e.g., ABAC policies with `ec2:CreateAction` conditions or SCPs requiring volume tags). For ABAC compliance, use `volume_tags` instead, which applies uniform tags to all volumes during instance creation.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
@@ -334,7 +324,7 @@ Each `ebs_block_device` block supports the following:
 * `device_name` - (Required) Name of the device to mount.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume. Defaults to `false`. Cannot be used with `snapshot_id`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) ARN of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 * `snapshot_id` - (Optional) Snapshot ID to mount.
 * `tags` - (Optional) Map of tags to assign to the device. **Note:** Tags specified here are applied after instance creation via a separate API call. This means they cannot be used with IAM policies that require tags during resource creation (e.g., ABAC policies with `ec2:CreateAction` conditions or SCPs requiring volume tags). For ABAC compliance, use `volume_tags` instead, which applies uniform tags to all volumes during instance creation.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.
@@ -373,7 +363,7 @@ The `maintenance_options` block supports the following:
 
 The `instance_market_options` block supports the following:
 
-* `market_type` - (Optional) Type of market for the instance. Valid values are `spot` and `capacity-block`. Defaults to `spot`. Required if `spot_options` is specified.
+* `market_type` - (Optional) Type of market for the instance. Valid values are `spot`, `capacity-block`, and `interruptible-capacity-reservation`. Use `interruptible-capacity-reservation` to launch instances into [interruptible Capacity Reservations](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-consumer-procedures.html). Defaults to `spot`. Required if `spot_options` is specified.
 * `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options

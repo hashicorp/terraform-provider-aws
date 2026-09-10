@@ -42,7 +42,7 @@
     "@message": "Converting",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Apple",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·74]",
     "autoflex.target.path": "Apples",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples"
   },
@@ -51,7 +51,7 @@
     "@message": "Expanding null value",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Apple",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·74]",
     "autoflex.target.path": "Apples",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples"
   }

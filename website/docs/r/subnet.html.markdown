@@ -129,7 +129,7 @@ This resource supports the following arguments:
 * `ipv6_netmask_length` - (Optional) Netmask. Requires specifying a `ipv6_ipam_pool_id`. Valid values are from 44 to 64 in increments of 4.
 * `map_customer_owned_ip_on_launch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is `false`.
-* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
+* `outpost_arn` - (Optional) ARN of the Outpost.
 * `private_dns_hostname_type_on_launch` - (Optional) The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`.
 * `vpc_id` - (Required) The VPC ID.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -144,40 +144,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The ID of the AWS account that owns the subnet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## GuardDuty Cleanup Permissions
-
-The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during subnet deletion:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "GuardDutySubnetCleanupDescribe",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DescribeVpcEndpoints",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "GuardDutySubnetCleanupMutate",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:ModifyVpcEndpoint"
-      ],
-      "Resource": "*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/GuardDutyManaged": "true"
-        }
-      }
-    }
-  ]
-}
-```
+~> **Note:** The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during subnet deletion: `ec2:DescribeVpcEndpoints`, `ec2:DescribeSubnets`, `ec2:DescribeVpcs` (on all resources), and `ec2:ModifyVpcEndpoint` (on resources tagged `GuardDutyManaged: true`).
 
 ## Timeouts
 

@@ -22,21 +22,23 @@ import (
 func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
-		Schema: map[string]*schema.Schema{
-			"endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpointType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"iot:CredentialProvider",
-					"iot:Data",
-					"iot:Data-ATS",
-					"iot:Jobs",
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpointType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"iot:CredentialProvider",
+						"iot:Data",
+						"iot:Data-ATS",
+						"iot:Jobs",
+					}, false),
+				},
+			}
 		},
 	}
 }

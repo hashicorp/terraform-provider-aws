@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_billing_view: Fix handling of data_filter_expression
-```

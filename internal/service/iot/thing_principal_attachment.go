@@ -37,24 +37,26 @@ func resourceThingPrincipalAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"thing": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"thing_principal_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ThingPrincipalType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"thing": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"thing_principal_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ThingPrincipalType](),
+				},
+			}
 		},
 	}
 }

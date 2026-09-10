@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -18,14 +19,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCLatticeDomainVerification_basic(t *testing.T) {
+func TestAccVPCLatticeDomainVerification_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccVPCLatticeDomainVerification_basic,
+		acctest.CtDisappears: testAccVPCLatticeDomainVerification_disappears,
+		"tags":               testAccVPCLatticeDomainVerification_tagsSerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccVPCLatticeDomainVerification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainVerification vpclattice.GetDomainVerificationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	resourceName := "aws_vpclattice_domain_verification.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,14 +66,14 @@ func TestAccVPCLatticeDomainVerification_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeDomainVerification_disappears(t *testing.T) {
+func testAccVPCLatticeDomainVerification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainVerification vpclattice.GetDomainVerificationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	resourceName := "aws_vpclattice_domain_verification.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,6 +86,14 @@ func TestAccVPCLatticeDomainVerification_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceDomainVerification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

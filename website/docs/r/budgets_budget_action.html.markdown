@@ -120,7 +120,7 @@ This resource supports the following arguments:
 
 #### IAM Action Definition
 
-* `policy_arn` - (Required) The Amazon Resource Name (ARN) of the policy to be attached.
+* `policy_arn` - (Required) ARN of the policy to be attached.
 * `groups` - (Optional) A list of groups to be attached. There must be at least one group.
 * `roles` - (Optional) A list of roles to be attached. There must be at least one role.
 * `users` - (Optional) A list of users to be attached. There must be at least one user.
@@ -152,6 +152,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `5m`)
 * `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

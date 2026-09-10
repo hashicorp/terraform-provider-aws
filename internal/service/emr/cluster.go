@@ -10,12 +10,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"slices"
 	"strings"
 	"time"
-	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
@@ -23,7 +23,6 @@ import (
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -59,180 +58,182 @@ func resourceCluster() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			instanceFleetConfigSchema := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_type_configs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bid_price": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-									},
-									"bid_price_as_percentage_of_on_demand_price": {
-										Type:     schema.TypeFloat,
-										Optional: true,
-										ForceNew: true,
-										Default:  100,
-									},
-									"configurations": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"classification": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrProperties: {
-													Type:     schema.TypeMap,
-													Optional: true,
-													ForceNew: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"ebs_config": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrIOPS: {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrSize: {
-													Type:     schema.TypeInt,
-													Required: true,
-													ForceNew: true,
-												},
-												names.AttrType: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validEBSVolumeType(),
-												},
-												"volumes_per_instance": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  1,
-												},
-											},
-										},
-										Set: resourceClusterEBSHashConfig,
-									},
-									names.AttrInstanceType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"weighted_capacity": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-							Set: resourceInstanceTypeHashConfig,
-						},
-						"launch_specifications": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"on_demand_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"allocation_strategy": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+							"instance_type_configs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bid_price": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"bid_price_as_percentage_of_on_demand_price": {
+											Type:     schema.TypeFloat,
+											Optional: true,
+											ForceNew: true,
+											Default:  100,
+										},
+										"configurations": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"classification": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrProperties: {
+														Type:     schema.TypeMap,
+														Optional: true,
+														ForceNew: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
-									},
-									"spot_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"allocation_strategy": {
-													Type:             schema.TypeString,
-													ForceNew:         true,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
-												},
-												"block_duration_minutes": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  0,
-												},
-												"timeout_action": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
-												},
-												"timeout_duration_minutes": {
-													Type:     schema.TypeInt,
-													ForceNew: true,
-													Required: true,
+										"ebs_config": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrIOPS: {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrSize: {
+														Type:     schema.TypeInt,
+														Required: true,
+														ForceNew: true,
+													},
+													names.AttrType: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validEBSVolumeType(),
+													},
+													"volumes_per_instance": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+														Default:  1,
+													},
 												},
 											},
+											Set: resourceClusterEBSHashConfig,
+										},
+										names.AttrInstanceType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"weighted_capacity": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  1,
 										},
 									},
 								},
+								Set: resourceInstanceTypeHashConfig,
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"provisioned_on_demand_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"provisioned_spot_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"target_on_demand_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  0,
-						},
-						"target_spot_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  0,
-						},
+							"launch_specifications": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"on_demand_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"allocation_strategy": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+													},
+												},
+											},
+										},
+										"spot_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"allocation_strategy": {
+														Type:             schema.TypeString,
+														ForceNew:         true,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
+													},
+													"block_duration_minutes": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+														Default:  0,
+													},
+													"timeout_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
+													},
+													"timeout_duration_minutes": {
+														Type:     schema.TypeInt,
+														ForceNew: true,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"provisioned_on_demand_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"provisioned_spot_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"target_on_demand_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  0,
+							},
+							"target_spot_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  0,
+							},
+						}
 					},
 				}
 			}
@@ -1459,15 +1460,12 @@ func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstype
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	if output.Status.State == awstypes.ClusterStateTerminated || output.Status.State == awstypes.ClusterStateTerminatedWithErrors {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.Status.State),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(output.Status.State),
 		}
 	}
 
@@ -1478,9 +1476,8 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1495,8 +1492,8 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	return output.Cluster, nil
 }
 
-func statusCluster(ctx context.Context, conn *emr.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *emr.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
 		}
@@ -1518,10 +1515,10 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateBootstrapping, awstypes.ClusterStateStarting),
 		Target:     enum.Slice(awstypes.ClusterStateRunning, awstypes.ClusterStateWaiting),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1544,10 +1541,10 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateTerminating),
 		Target:     enum.Slice(awstypes.ClusterStateTerminated, awstypes.ClusterStateTerminatedWithErrors),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1582,9 +1579,8 @@ func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.List
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1606,9 +1602,8 @@ func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListSte
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1639,9 +1634,8 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") ||
 		tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") ||
 		tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1713,11 +1707,125 @@ func flattenEC2InstanceAttributes(apiObject *awstypes.Ec2InstanceAttributes) []a
 	return tfList
 }
 
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeAutoScalingPolicy github.com/aws/aws-sdk-go-v2/service/emr.awsAwsjson11_serializeDocumentAutoScalingPolicy
-func serializeAutoScalingPolicy(v *awstypes.AutoScalingPolicy, value smithyjson.Value) error
+// Preserve the AWS JSON representation used in state: omit nil members and empty
+// enums, but retain non-nil empty collections and pointers to zero values.
+func serializeAutoScalingPolicy(v *awstypes.AutoScalingPolicy, value smithyjson.Value) error {
+	o := value.Object()
+	defer o.Close()
+
+	if v.Constraints != nil {
+		c := o.Key("Constraints").Object()
+		if v.Constraints.MaxCapacity != nil {
+			c.Key("MaxCapacity").Integer(*v.Constraints.MaxCapacity)
+		}
+		if v.Constraints.MinCapacity != nil {
+			c.Key("MinCapacity").Integer(*v.Constraints.MinCapacity)
+		}
+		c.Close()
+	}
+	if v.Rules != nil {
+		a := o.Key("Rules").Array()
+		for i := range v.Rules {
+			serializeScalingRule(&v.Rules[i], a.Value())
+		}
+		a.Close()
+	}
+
+	return nil
+}
+
+func serializeScalingRule(v *awstypes.ScalingRule, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.Action != nil {
+		a := o.Key("Action").Object()
+		if v.Action.Market != "" {
+			a.Key("Market").String(string(v.Action.Market))
+		}
+		if v := v.Action.SimpleScalingPolicyConfiguration; v != nil {
+			c := a.Key("SimpleScalingPolicyConfiguration").Object()
+			if v.AdjustmentType != "" {
+				c.Key("AdjustmentType").String(string(v.AdjustmentType))
+			}
+			if v.CoolDown != nil {
+				c.Key("CoolDown").Integer(*v.CoolDown)
+			}
+			if v.ScalingAdjustment != nil {
+				c.Key("ScalingAdjustment").Integer(*v.ScalingAdjustment)
+			}
+			c.Close()
+		}
+		a.Close()
+	}
+	if v.Description != nil {
+		o.Key("Description").String(*v.Description)
+	}
+	if v.Name != nil {
+		o.Key("Name").String(*v.Name)
+	}
+	if v.Trigger != nil {
+		t := o.Key("Trigger").Object()
+		if v.Trigger.CloudWatchAlarmDefinition != nil {
+			serializeCloudWatchAlarmDefinition(v.Trigger.CloudWatchAlarmDefinition, t.Key("CloudWatchAlarmDefinition"))
+		}
+		t.Close()
+	}
+}
+
+func serializeCloudWatchAlarmDefinition(v *awstypes.CloudWatchAlarmDefinition, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.ComparisonOperator != "" {
+		o.Key("ComparisonOperator").String(string(v.ComparisonOperator))
+	}
+	if v.Dimensions != nil {
+		a := o.Key("Dimensions").Array()
+		for _, v := range v.Dimensions {
+			d := a.Value().Object()
+			if v.Key != nil {
+				d.Key("Key").String(*v.Key)
+			}
+			if v.Value != nil {
+				d.Key("Value").String(*v.Value)
+			}
+			d.Close()
+		}
+		a.Close()
+	}
+	if v.EvaluationPeriods != nil {
+		o.Key("EvaluationPeriods").Integer(*v.EvaluationPeriods)
+	}
+	if v.MetricName != nil {
+		o.Key("MetricName").String(*v.MetricName)
+	}
+	if v.Namespace != nil {
+		o.Key("Namespace").String(*v.Namespace)
+	}
+	if v.Period != nil {
+		o.Key("Period").Integer(*v.Period)
+	}
+	if v.Statistic != "" {
+		o.Key("Statistic").String(string(v.Statistic))
+	}
+	if v.Threshold != nil {
+		t := o.Key("Threshold")
+		switch {
+		case math.IsNaN(*v.Threshold):
+			t.String("NaN")
+		case math.IsInf(*v.Threshold, 1):
+			t.String("Infinity")
+		case math.IsInf(*v.Threshold, -1):
+			t.String("-Infinity")
+		default:
+			t.Double(*v.Threshold)
+		}
+	}
+	if v.Unit != "" {
+		o.Key("Unit").String(string(v.Unit))
+	}
+}
 
 func flattenAutoScalingPolicyDescription(apiObject *awstypes.AutoScalingPolicyDescription) (string, error) {
 	if apiObject == nil {
@@ -2058,11 +2166,32 @@ func expandConfigurationJSON(tfString string) ([]awstypes.Configuration, error) 
 	return apiObjects, nil
 }
 
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeConfigurations github.com/aws/aws-sdk-go-v2/service/emr.awsAwsjson11_serializeDocumentConfigurationList
-func serializeConfigurations(v []awstypes.Configuration, value smithyjson.Value) error
+func serializeConfigurations(v []awstypes.Configuration, value smithyjson.Value) error {
+	a := value.Array()
+	defer a.Close()
+
+	for _, v := range v {
+		o := a.Value().Object()
+		if v.Classification != nil {
+			o.Key("Classification").String(*v.Classification)
+		}
+		if v.Configurations != nil {
+			if err := serializeConfigurations(v.Configurations, o.Key("Configurations")); err != nil {
+				return err
+			}
+		}
+		if v.Properties != nil {
+			p := o.Key("Properties").Object()
+			for k, s := range v.Properties {
+				p.Key(k).String(s)
+			}
+			p.Close()
+		}
+		o.Close()
+	}
+
+	return nil
+}
 
 func flattenConfigurationJSON(apiObjects []awstypes.Configuration) (string, error) {
 	jsonEncoder := smithyjson.NewEncoder()

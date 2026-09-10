@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_service: Fix crash when just `alarms` is updated
-```

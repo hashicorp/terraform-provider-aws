@@ -29,88 +29,90 @@ func dataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_cluster_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"include_shared": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_create_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"db_cluster_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_cluster_snapshot_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_public": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"include_shared": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_create_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"source_db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

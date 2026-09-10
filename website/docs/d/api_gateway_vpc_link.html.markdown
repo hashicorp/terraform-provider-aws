@@ -25,8 +25,8 @@ data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API Gateway VPC Link to look up. If no API Gateway VPC Link is found with this name, an error will be returned. If multiple API Gateway VPC Links are found with this name, an error will be returned.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -37,5 +37,5 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Set to the ID of the found API Gateway VPC Link.
 * `status` - Status of the VPC link.
 * `status_message` - Status message of the VPC link.
-* `target_arns` - List of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
 * `tags` - Key-value map of resource tags
+* `target_arns` - List of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.

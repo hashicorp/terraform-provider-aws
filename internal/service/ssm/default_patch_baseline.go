@@ -60,23 +60,25 @@ func resourceDefaultPatchBaseline() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"baseline_id": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: diffSuppressPatchBaselineID,
-				ValidateFunc: validation.Any(
-					validatePatchBaselineID,
-					validatePatchBaselineARN,
-				),
-			},
-			"operating_system": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"baseline_id": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: diffSuppressPatchBaselineID,
+					ValidateFunc: validation.Any(
+						validatePatchBaselineID,
+						validatePatchBaselineARN,
+					),
+				},
+				"operating_system": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				},
+			}
 		},
 	}
 }

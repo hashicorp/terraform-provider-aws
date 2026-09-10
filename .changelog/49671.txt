@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Fix `assume_role_with_web_identity.web_identity_token` being rejected when `AWS_WEB_IDENTITY_TOKEN_FILE` is set
+```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_redshift_scheduled_action: Add plan time validation for `name` argument
-```

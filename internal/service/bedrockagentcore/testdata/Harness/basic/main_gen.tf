@@ -14,6 +14,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_iam_role" "test" {

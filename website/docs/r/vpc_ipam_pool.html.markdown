@@ -60,7 +60,6 @@ resource "aws_vpc_ipam_pool" "child" {
   source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
 }
 
-
 resource "aws_vpc_ipam_pool_cidr" "child_test" {
   ipam_pool_id = aws_vpc_ipam_pool.child.id
   cidr         = "172.20.0.0/24"
@@ -144,7 +143,7 @@ within the CIDR range in the pool.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of IPAM
+* `arn` - ARN of IPAM
 * `id` - The ID of the IPAM
 * `state` - The ID of the IPAM
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -72,292 +72,294 @@ func resourceCertificateAuthority() *schema.Resource {
 		MigrateState:  resourceCertificateAuthorityMigrateState,
 		SchemaVersion: 1,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html
-			"certificate_authority_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key_algorithm": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
-						},
-						"signing_algorithm": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.SigningAlgorithm](),
-						},
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_ASN1Subject.html
-						"subject": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"common_name": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 64),
-									},
-									"country": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 2),
-									},
-									"distinguished_name_qualifier": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 64),
-									},
-									"generation_qualifier": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 3),
-									},
-									"given_name": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 16),
-									},
-									"initials": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 5),
-									},
-									"locality": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-									"organization": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 64),
-									},
-									"organizational_unit": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 64),
-									},
-									"pseudonym": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-									names.AttrState: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-									"surname": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 40),
-									},
-									"title": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 64),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html
+				"certificate_authority_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key_algorithm": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
+							},
+							"signing_algorithm": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.SigningAlgorithm](),
+							},
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_ASN1Subject.html
+							"subject": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"common_name": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 64),
+										},
+										"country": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 2),
+										},
+										"distinguished_name_qualifier": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 64),
+										},
+										"generation_qualifier": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 3),
+										},
+										"given_name": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 16),
+										},
+										"initials": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 5),
+										},
+										"locality": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 128),
+										},
+										"organization": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 64),
+										},
+										"organizational_unit": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 64),
+										},
+										"pseudonym": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 128),
+										},
+										names.AttrState: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 128),
+										},
+										"surname": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 40),
+										},
+										"title": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 64),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_signing_request": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"key_storage_security_standard": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KeyStorageSecurityStandard](),
-			},
-			"not_after": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"not_before": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permanent_deletion_time_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
-				ValidateFunc: validation.IntBetween(
-					certificateAuthorityPermanentDeletionTimeInDaysMin,
-					certificateAuthorityPermanentDeletionTimeInDaysMax,
-				),
-			},
-			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
-			"revocation_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
-						"crl_configuration": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"custom_cname": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 253),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											// Ignore attributes if CRL configuration is not enabled
-											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
-												return old == new
-											}
-											return true
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_signing_request": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"key_storage_security_standard": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.KeyStorageSecurityStandard](),
+				},
+				"not_after": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"not_before": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permanent_deletion_time_in_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
+					ValidateFunc: validation.IntBetween(
+						certificateAuthorityPermanentDeletionTimeInDaysMin,
+						certificateAuthorityPermanentDeletionTimeInDaysMax,
+					),
+				},
+				// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
+				"revocation_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
+							"crl_configuration": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"custom_cname": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 253),
+											DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+												// Ignore attributes if CRL configuration is not enabled
+												if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+													return old == new
+												}
+												return true
+											},
 										},
-									},
-									"custom_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 253),
-											validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*$`), "must match pattern [-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*"),
-										),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											// Ignore attributes if CRL configuration is not enabled
-											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
-												return old == new
-											}
-											return true
+										"custom_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 253),
+												validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*$`), "must match pattern [-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*"),
+											),
+											DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+												// Ignore attributes if CRL configuration is not enabled
+												if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+													return old == new
+												}
+												return true
+											},
 										},
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"expiration_in_days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 5000),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											// Ignore attributes if CRL configuration is not enabled
-											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
-												return old == new
-											}
-											return true
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
 										},
-									},
-									names.AttrS3BucketName: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(3, 255),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											// Ignore attributes if CRL configuration is not enabled
-											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
-												return old == new
-											}
-											return true
+										"expiration_in_days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 5000),
+											DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+												// Ignore attributes if CRL configuration is not enabled
+												if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+													return old == new
+												}
+												return true
+											},
 										},
-									},
-									"s3_object_acl": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[types.S3ObjectAcl](),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											// Ignore attributes if CRL configuration is not enabled
-											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
-												return old == new
-											}
-											return true
+										names.AttrS3BucketName: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(3, 255),
+											DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+												// Ignore attributes if CRL configuration is not enabled
+												if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+													return old == new
+												}
+												return true
+											},
+										},
+										"s3_object_acl": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.S3ObjectAcl](),
+											DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+												// Ignore attributes if CRL configuration is not enabled
+												if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+													return old == new
+												}
+												return true
+											},
 										},
 									},
 								},
 							},
-						},
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
-						"ocsp_configuration": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"ocsp_custom_cname": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 253),
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
+							"ocsp_configuration": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"ocsp_custom_cname": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 253),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"serial": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.CertificateAuthorityTypeSubordinate,
-				ValidateDiagFunc: enum.Validate[types.CertificateAuthorityType](),
-			},
-			"usage_mode": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.CertificateAuthorityUsageMode](),
-			},
+				"serial": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.CertificateAuthorityTypeSubordinate,
+					ValidateDiagFunc: enum.Validate[types.CertificateAuthorityType](),
+				},
+				"usage_mode": {
+					Type:             schema.TypeString,
+					Computed:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.CertificateAuthorityUsageMode](),
+				},
+			}
 		},
 	}
 }

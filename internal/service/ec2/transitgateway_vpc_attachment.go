@@ -39,69 +39,71 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"appliance_mode_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ApplianceModeSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.ApplianceModeSupportValue](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DnsSupportValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
-			},
-			"ipv6_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.Ipv6SupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.Ipv6SupportValue](),
-			},
-			"security_group_referencing_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_default_route_table_association": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"transit_gateway_default_route_table_propagation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrVPCID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"vpc_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appliance_mode_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ApplianceModeSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.ApplianceModeSupportValue](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DnsSupportValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
+				},
+				"ipv6_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.Ipv6SupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.Ipv6SupportValue](),
+				},
+				"security_group_referencing_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_gateway_default_route_table_association": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"transit_gateway_default_route_table_propagation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrVPCID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"vpc_owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

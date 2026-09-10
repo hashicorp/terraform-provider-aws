@@ -42,74 +42,76 @@ func resourceEnvironmentEC2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic_stop_time_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtMost(20160),
-			},
-			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.ConnectionTypeConnectSsh,
-				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"amazonlinux-1-x86_64",
-					"amazonlinux-2-x86_64",
-					"amazonlinux-2023-x86_64",
-					"ubuntu-18.04-x86_64",
-					"ubuntu-22.04-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
-				}, false),
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 60),
-			},
-			"owner_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automatic_stop_time_minutes": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtMost(20160),
+				},
+				"connection_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.ConnectionTypeConnectSsh,
+					ValidateDiagFunc: enum.Validate[types.ConnectionType](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"amazonlinux-1-x86_64",
+						"amazonlinux-2-x86_64",
+						"amazonlinux-2023-x86_64",
+						"ubuntu-18.04-x86_64",
+						"ubuntu-22.04-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
+					}, false),
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 60),
+				},
+				"owner_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

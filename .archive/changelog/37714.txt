@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_kinesisanalyticsv2_application: Add `application_mode` argument
-```

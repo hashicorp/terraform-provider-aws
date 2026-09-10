@@ -24,91 +24,93 @@ func dataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningProfileRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_display_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"revocation_record": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"revocation_effective_from": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revoked_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revoked_by": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"revocation_record": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"revocation_effective_from": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revoked_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revoked_by": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"signature_validity_period": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrValue: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"signing_material": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCertificateARN: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"signature_validity_period": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrValue: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"signing_parameters": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"signing_material": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificateARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"signing_parameters": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

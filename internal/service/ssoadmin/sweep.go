@@ -76,7 +76,9 @@ func sweepAccountAssignments(region string) error {
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
-			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
+			if awsv2.SkipSweepError(err) ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "This operation is not supported for account instances of IAM Identity Center") {
 				log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
 				return nil
 			}
@@ -225,7 +227,9 @@ func sweepPermissionSets(region string) error {
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
-			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
+			if awsv2.SkipSweepError(err) ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "This operation is not supported for account instances of IAM Identity Center") {
 				log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
 				return nil
 			}

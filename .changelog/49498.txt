@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_resiliencehubv2_service: Add `associated_system` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_resiliencehubv2_service: Add `associated_system` attribute
+```

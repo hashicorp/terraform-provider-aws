@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument
-```

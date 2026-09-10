@@ -39,7 +39,7 @@ The following arguments are required:
 
 * `index_id` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra experience.
 * `name` - (Required) A name for your Amazon Kendra experience.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of a role with permission to access `Query API`, `QuerySuggestions API`, `SubmitFeedback API`, and `AWS SSO` that stores your user and group information. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
+* `role_arn` - (Required) ARN of a role with permission to access `Query API`, `QuerySuggestions API`, `SubmitFeedback API`, and `AWS SSO` that stores your user and group information. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 
 The following arguments are optional:
 

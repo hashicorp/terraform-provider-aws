@@ -38,30 +38,32 @@ func resourcePoolProviderPrincipalTag() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 55),
-					validation.StringMatch(regexache.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
-				),
-			},
-			"identity_provider_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-				),
-			},
-			"principal_tags": tftags.TagsSchema(),
-			"use_defaults": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 55),
+						validation.StringMatch(regexache.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
+					),
+				},
+				"identity_provider_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+					),
+				},
+				"principal_tags": tftags.TagsSchema(),
+				"use_defaults": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

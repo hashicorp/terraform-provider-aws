@@ -12,14 +12,110 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkConnectionARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("events", regexache.MustCompile(`connection/`+name+`/`+uuidRegex))
+}
+
+func TestAccEventsConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeConnectionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_connection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Connection/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkConnectionARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorization_type"), tfknownvalue.StringExact(awstypes.ConnectionAuthorizationTypeBasic)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invocation_connectivity_parameters"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_key_identifier"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("secret_arn"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Connection/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"auth_parameters.0.basic.0.password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEventsConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeConnectionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_connection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Connection/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
 
 func TestAccEventsConnection_apiKey(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -104,7 +200,7 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 	})
 }
 
-func TestAccEventsConnection_basic(t *testing.T) {
+func TestAccEventsConnection_basicAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 eventbridge.DescribeConnectionOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -677,48 +773,6 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.0.query_string.1.key", fmt.Sprintf("second-%s", queryStringKeyModified)),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.0.query_string.1.is_value_secret", strconv.FormatBool(queryStringIsSecretValueModified)),
 				),
-			},
-		},
-	})
-}
-
-func TestAccEventsConnection_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v eventbridge.DescribeConnectionOutput
-	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	authorizationType := "API_KEY"
-	description := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	key := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	value := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_connection.api_key"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConnectionConfig_apiKey(
-					name,
-					description,
-					authorizationType,
-					key,
-					value,
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, t, resourceName, &v),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceConnection(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
 			},
 		},
 	})

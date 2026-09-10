@@ -14,7 +14,7 @@ import (
 func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	t.Parallel()
 
-	delay := DefaultSDKv2HelperRetryCompatibleDelay()
+	delay := DefaultSDKv2HelperRetryCompatibleDelay(t.Context())
 	want := []time.Duration{
 		0,
 		500 * time.Millisecond,
@@ -40,7 +40,7 @@ func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 func TestDefaultSDKv2HelperRetryCompatibleDelayWithIncrementDelay(t *testing.T) {
 	t.Parallel()
 
-	delay := DefaultSDKv2HelperRetryCompatibleDelay()
+	delay := DefaultSDKv2HelperRetryCompatibleDelay(t.Context())
 	want := []time.Duration{
 		0,
 		500 * time.Millisecond,
@@ -68,7 +68,7 @@ func TestDefaultSDKv2HelperRetryCompatibleDelayWithIncrementDelay(t *testing.T) 
 func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	t.Parallel()
 
-	delay := SDKv2HelperRetryCompatibleDelay(200*time.Millisecond, 0, 3*time.Second)
+	delay := SDKv2HelperRetryCompatibleDelay(t.Context(), 200*time.Millisecond, 0, 3*time.Second)
 	want := []time.Duration{
 		200 * time.Millisecond,
 		3 * time.Second,
@@ -89,7 +89,7 @@ func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 func TestSDKv2HelperRetryCompatibleDelayWithPollTimeout(t *testing.T) {
 	t.Parallel()
 
-	delay := SDKv2HelperRetryCompatibleDelay(200*time.Millisecond, 20*time.Second, 3*time.Second)
+	delay := SDKv2HelperRetryCompatibleDelay(t.Context(), 200*time.Millisecond, 20*time.Second, 3*time.Second)
 	want := []time.Duration{
 		200 * time.Millisecond,
 		20 * time.Second,
@@ -113,7 +113,7 @@ func TestLoopWithTimeoutDefaultGracePeriod(t *testing.T) {
 	ctx := context.Background()
 
 	var n int
-	for r := NewLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
+	for r := NewLoopWithOptions(t.Context(), 1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}
@@ -130,7 +130,7 @@ func TestLoopWithTimeoutNoGracePeriod(t *testing.T) {
 	ctx := context.Background()
 
 	var n int
-	for r := NewLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
+	for r := NewLoopWithOptions(t.Context(), 1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}

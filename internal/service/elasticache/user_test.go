@@ -6,6 +6,7 @@ package elasticache_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -41,6 +42,43 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords",
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_mixedCase(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+	rName := acctest.RandomWithPrefix(t, "Tf-Acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", strings.ToLower(rName)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,

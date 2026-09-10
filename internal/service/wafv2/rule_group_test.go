@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -423,6 +424,62 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.text_transformation.*", map[string]string{
 						names.AttrPriority: "3",
 						names.AttrType:     "CMD_LINE",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_ByteMatchStatement_preParseTextTransformation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementPreParseTextTransformation(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                        "1",
+						"statement.0.byte_match_statement.#": "1",
+						"statement.0.byte_match_statement.0.pre_parse_text_transformation.#": "2",
+						"statement.0.byte_match_statement.0.text_transformation.#":           "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.pre_parse_text_transformation.*", map[string]string{
+						names.AttrPriority: "1",
+						names.AttrType:     "URL_DECODE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.pre_parse_text_transformation.*", map[string]string{
+						names.AttrPriority: "2",
+						names.AttrType:     "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                        "1",
+						"statement.0.byte_match_statement.#": "1",
+						"statement.0.byte_match_statement.0.pre_parse_text_transformation.#": "0",
 					}),
 				),
 			},
@@ -1015,6 +1072,14 @@ func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -3188,6 +3253,63 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       geo_match_statement {
         country_codes = ["US", "NL"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementPreParseTextTransformation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 300
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          all_query_arguments {}
+        }
+
+        pre_parse_text_transformation {
+          priority = 1
+          type     = "URL_DECODE"
+        }
+
+        pre_parse_text_transformation {
+          priority = 2
+          type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
       }
     }
 

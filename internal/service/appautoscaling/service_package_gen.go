@@ -66,6 +66,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_namespace", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("scalable_dimension", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      targetImportID{},
+			},
 		},
 	}
 }
@@ -82,6 +91,20 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
 				inttypes.StringIdentityAttribute("scalable_dimension", true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
+		{
+			Factory:  newTargetResourceAsListResource,
+			TypeName: "aws_appautoscaling_target",
+			Name:     "Target",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_namespace", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceID, true),
+				inttypes.StringIdentityAttribute("scalable_dimension", true),
 			}),
 		},
 	})

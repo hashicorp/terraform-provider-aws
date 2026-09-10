@@ -35,30 +35,32 @@ func resourceTransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"peer_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_transit_gateway_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"peer_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peer_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peer_transit_gateway_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

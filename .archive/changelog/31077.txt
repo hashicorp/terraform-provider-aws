@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_memorydb_cluster: Treat `snapshotting` status as pending when creating cluster
-```

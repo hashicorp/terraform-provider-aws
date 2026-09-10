@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_globalaccelerator_accelerator: Support `DUAL_STACK` value for `ip_address_type`
-```

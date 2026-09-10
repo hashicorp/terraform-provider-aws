@@ -48,119 +48,121 @@ func resourceIntegration() *schema.Resource {
 		UpdateWithoutTimeout: resourceIntegrationUpdate,
 		DeleteWithoutTimeout: resourceIntegrationDelete,
 
-		Schema: map[string]*schema.Schema{
-			"cache_key_parameters": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"cache_namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.ConnectionTypeInternet,
-				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
-			},
-			"content_handling": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validIntegrationContentHandling(),
-			},
-			"credentials": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"http_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validHTTPMethod(),
-			},
-			"integration_http_method": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validHTTPMethod(),
-			},
-			"integration_target": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"passthrough_behavior": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"WHEN_NO_MATCH",
-					"WHEN_NO_TEMPLATES",
-					"NEVER",
-				}, false),
-			},
-			"request_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"request_templates": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"response_transfer_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ResponseTransferMode](),
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"timeout_milliseconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  29000,
-			},
-			"tls_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"insecure_skip_verification": {
-							Type:     schema.TypeBool,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cache_key_parameters": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"cache_namespace": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"connection_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.ConnectionTypeInternet,
+					ValidateDiagFunc: enum.Validate[types.ConnectionType](),
+				},
+				"content_handling": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validIntegrationContentHandling(),
+				},
+				"credentials": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"http_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validHTTPMethod(),
+				},
+				"integration_http_method": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validHTTPMethod(),
+				},
+				"integration_target": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"passthrough_behavior": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"WHEN_NO_MATCH",
+						"WHEN_NO_TEMPLATES",
+						"NEVER",
+					}, false),
+				},
+				"request_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"request_templates": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"response_transfer_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ResponseTransferMode](),
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"timeout_milliseconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  29000,
+				},
+				"tls_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"insecure_skip_verification": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.IntegrationType](),
-			},
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.IntegrationType](),
+				},
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 		CustomizeDiff: validateTimeoutMilliseconds,
 	}

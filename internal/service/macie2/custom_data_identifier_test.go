@@ -134,6 +134,14 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceCustomDataIdentifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

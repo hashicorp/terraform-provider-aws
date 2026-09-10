@@ -25,76 +25,78 @@ func dataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_environment_order": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_environment": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"order": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_environment_order": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_environment": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"order": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"job_state_time_limit_action": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"max_time_seconds": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"reason": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"job_state_time_limit_action": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"max_time_seconds": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"reason": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"scheduling_policy_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"scheduling_policy_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

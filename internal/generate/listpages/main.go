@@ -258,6 +258,7 @@ func fixSomeInitialisms(s string) string {
 	replace = strings.Replace(replace, "Db", "DB", 1)
 	replace = strings.Replace(replace, "Ip", "IP", 1)
 	replace = strings.Replace(replace, "Mq", "MQ", 1)
+	replace = strings.Replace(replace, "Workspaces", "WorkSpaces", 1)
 
 	if replace != strings.TrimSuffix(replace, "Ids") {
 		replace = fmt.Sprintf("%s%s", strings.TrimSuffix(replace, "Ids"), "IDs")

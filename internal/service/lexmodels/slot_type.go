@@ -52,73 +52,75 @@ func resourceSlotType() *schema.Resource {
 			Delete: schema.DefaultTimeout(slotTypeDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_version": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"enumeration_value": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10000,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"synonyms": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_version": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "",
+					ValidateFunc: validation.StringLenBetween(0, 200),
+				},
+				"enumeration_value": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10000,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"synonyms": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 140),
+								},
+							},
+							names.AttrValue: {
 								Type:         schema.TypeString,
+								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 140),
 							},
 						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 140),
-						},
 					},
 				},
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
-				),
-			},
-			"value_selection_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SlotValueSelectionStrategyOriginalValue,
-				ValidateDiagFunc: enum.Validate[awstypes.SlotValueSelectionStrategy](),
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+					),
+				},
+				"value_selection_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SlotValueSelectionStrategyOriginalValue,
+					ValidateDiagFunc: enum.Validate[awstypes.SlotValueSelectionStrategy](),
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 		CustomizeDiff: updateComputedAttributesOnSlotTypeCreateVersion,
 	}

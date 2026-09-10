@@ -41,51 +41,53 @@ func resourceThingType() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deprecated": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validThingTypeName,
-			},
-			names.AttrProperties: {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validThingTypeDescription,
-						},
-						"searchable_attributes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 3,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deprecated": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validThingTypeName,
+				},
+				names.AttrProperties: {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
 								Type:         schema.TypeString,
-								ValidateFunc: validThingTypeSearchableAttribute,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validThingTypeDescription,
+							},
+							"searchable_attributes": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 3,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validThingTypeSearchableAttribute,
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

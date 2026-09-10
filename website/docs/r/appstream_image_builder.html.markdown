@@ -40,7 +40,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_endpoint` - (Optional) Set of interface VPC endpoint (interface endpoint) objects. Maximum of 4. See below.
 * `appstream_agent_version` - (Optional) Version of the AppStream 2.0 agent to use for this image builder.
 * `description` - (Optional) Description to display.
@@ -50,24 +49,25 @@ The following arguments are optional:
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the image builder.
 * `image_arn` - (Optional, Required if `image_name` not provided) ARN of the public, private, or shared image to use.
 * `image_name` - (Optional, Required if `image_arn` not provided) Name of the image used to create the image builder.
-* `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 
-### `access_endpoint`
+### `access_endpoint` Block
 
 The `access_endpoint` block supports the following arguments:
 
 * `endpoint_type` - (Required) Type of interface endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html).
 * `vpce_id` - (Optional) Identifier (ID) of the interface VPC endpoint.
 
-### `domain_join_info`
+### `domain_join_info` Block
 
 The `domain_join_info` block supports the following arguments:
 
 * `directory_name` - (Optional) Fully qualified name of the directory (for example, corp.example.com).
 * `organizational_unit_distinguished_name` - (Optional) Distinguished name of the organizational unit for computer accounts.
 
-### `vpc_config`
+### `vpc_config` Block
 
 The `vpc_config` block supports the following arguments:
 

@@ -45,246 +45,248 @@ func resourceImage() *schema.Resource {
 			Create: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container_recipe_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"distribution_configuration_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"enhanced_image_metadata_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-			"execution_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"image_recipe_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
-			},
-			"image_scanning_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ecr_configuration": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_tags": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"container_recipe_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"distribution_configuration_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"enhanced_image_metadata_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  true,
+				},
+				"execution_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"image_recipe_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+				},
+				"image_scanning_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ecr_configuration": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_tags": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										names.AttrRepositoryName: {
+											Type:     schema.TypeString,
+											Optional: true,
 										},
 									},
-									names.AttrRepositoryName: {
-										Type:     schema.TypeString,
-										Optional: true,
+								},
+							},
+							"image_scanning_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+				},
+				"image_tests_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"image_tests_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  true,
+							},
+							"timeout_minutes": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								Default:      720,
+								ValidateFunc: validation.IntBetween(60, 1440),
+							},
+						},
+					},
+				},
+				"infrastructure_configuration_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrLogGroupName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"os_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"output_resources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amis": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrDescription: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"image": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"image_tests_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"image_tests_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  true,
-						},
-						"timeout_minutes": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      720,
-							ValidateFunc: validation.IntBetween(60, 1440),
-						},
-					},
-				},
-			},
-			"infrastructure_configuration_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrLoggingConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrLogGroupName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"os_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"output_resources": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amis": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrDescription: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"image": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"containers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"image_uris": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"containers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"image_uris": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workflow": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"on_failure": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OnWorkflowFailure](),
-						},
-						"parallel_group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
-						},
-						names.AttrParameter: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workflow": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"on_failure": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OnWorkflowFailure](),
+							},
+							"parallel_group": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
+							},
+							names.AttrParameter: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"workflow_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+							"workflow_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

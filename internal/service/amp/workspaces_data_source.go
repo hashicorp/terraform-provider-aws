@@ -23,26 +23,28 @@ func dataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspacesRead,
 
-		Schema: map[string]*schema.Schema{
-			"alias_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"aliases": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARNs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"workspace_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alias_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"aliases": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARNs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"workspace_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

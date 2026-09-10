@@ -39,7 +39,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.
-* `network_load_balancer_arn` - (Optional, Forces new) The Amazon Resource Name (ARN) of the Network Load Balancer that is associated with the target.
+* `network_load_balancer_arn` - (Optional, Forces new) ARN of the Network Load Balancer that is associated with the target.
 * `gateway_load_balancer_endpoint_id` - (Optional, Forces new) The VPC Endpoint Id of the Gateway Load Balancer that is associated with the target.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

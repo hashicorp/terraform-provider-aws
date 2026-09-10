@@ -30,97 +30,99 @@ func dataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoutingProfileRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_outbound_queue_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"media_concurrencies": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"concurrency": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"cross_channel_behavior": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"behavior_type": {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_outbound_queue_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				"media_concurrencies": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"channel": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"concurrency": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"cross_channel_behavior": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"behavior_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "routing_profile_id"},
-			},
-			"queue_configs": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"delay": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrPriority: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrName, "routing_profile_id"},
+				},
+				"queue_configs": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"channel": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"delay": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrPriority: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"queue_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"queue_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"queue_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"routing_profile_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"routing_profile_id", names.AttrName},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"routing_profile_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"routing_profile_id", names.AttrName},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -81,7 +81,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_invocation_ephemeral.handler"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
 }
 
 ephemeral "aws_lambda_invocation" "test" {

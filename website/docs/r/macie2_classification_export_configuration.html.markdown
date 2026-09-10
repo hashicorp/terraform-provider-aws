@@ -40,7 +40,7 @@ The `s3_destination` configuration block supports the following arguments:
 
 * `bucket_name` - (Required) The Amazon S3 bucket name in which Amazon Macie exports the data classification results.
 * `key_prefix` - (Optional) The object key for the bucket in which Amazon Macie exports the data classification results.
-* `kms_key_arn` - (Required) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
+* `kms_key_arn` - (Required) ARN of the KMS key to be used to encrypt the data.
 
 Additional information can be found in the [Storing and retaining sensitive data discovery results with Amazon Macie for AWS Macie documentation](https://docs.aws.amazon.com/macie/latest/user/discovery-results-repository-s3.html).
 
@@ -51,6 +51,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The unique identifier (ID) of the configuration.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_macie2_classification_export_configuration.example
+  identity = {
+    region = "us-west-2"
+  }
+}
+
+resource "aws_macie2_classification_export_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_export_configuration` using the region. For example:
 

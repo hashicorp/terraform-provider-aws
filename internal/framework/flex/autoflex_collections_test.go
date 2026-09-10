@@ -80,7 +80,7 @@ func TestExpandCollections(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandListOfInt64(t *testing.T) {
@@ -159,8 +159,13 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 		},
+		"incompatible target": {
+			Source:     types.ListValueMust(types.Int64Type, []attr.Value{types.Int64Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandSetOfInt64(t *testing.T) {
@@ -239,8 +244,148 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 		},
+		"incompatible target": {
+			Source:     types.SetValueMust(types.Int64Type, []attr.Value{types.Int64Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+func TestExpandListOfInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"valid value []int32": {
+			Source: types.ListValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{1, -1},
+		},
+		"empty value []int32": {
+			Source:     types.ListValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"null value []int32": {
+			Source:     types.ListNull(types.Int32Type),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"valid value []*int32": {
+			Source: types.ListValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
+		},
+		"empty value []*int32": {
+			Source:     types.ListValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"null value []*int32": {
+			Source:     types.ListNull(types.Int32Type),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"incompatible target": {
+			Source:     types.ListValueMust(types.Int32Type, []attr.Value{types.Int32Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
+	}
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+func TestExpandSetOfInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"valid value []int32": {
+			Source: types.SetValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{1, -1},
+		},
+		"empty value []int32": {
+			Source:     types.SetValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"null value []int32": {
+			Source:     types.SetNull(types.Int32Type),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		"valid value []*int32": {
+			Source: types.SetValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(1),
+				types.Int32Value(-1),
+			}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
+		},
+		"empty value []*int32": {
+			Source:     types.SetValueMust(types.Int32Type, []attr.Value{}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"null value []*int32": {
+			Source:     types.SetNull(types.Int32Type),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		"incompatible target": {
+			Source:     types.SetValueMust(types.Int32Type, []attr.Value{types.Int32Value(1)}),
+			Target:     &map[string]string{},
+			WantTarget: &map[string]string{},
+		},
+	}
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+type tfListOfFloat64Field struct {
+	Field1 types.List `tfsdk:"field1"`
+}
+
+type tfObjectField struct {
+	Field1 fwtypes.ObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
+}
+
+type tfSetOfFloat64Field struct {
+	Field1 types.Set `tfsdk:"field1"`
+}
+
+func TestExpandCollectionIncompatibleTypes(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"list of float64 to incompatible": {
+			Source:     &tfListOfFloat64Field{Field1: types.ListValueMust(types.Float64Type, []attr.Value{types.Float64Value(1.1)})},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"set of float64 to incompatible": {
+			Source:     &tfSetOfFloat64Field{Field1: types.SetValueMust(types.Float64Type, []attr.Value{types.Float64Value(1.1)})},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+		"object to incompatible": {
+			Source:     &tfObjectField{Field1: fwtypes.NewObjectValueOfMust(ctx, &tfSingleStringField{Field1: types.StringValue("x")})},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandListOfStringEnum(t *testing.T) {
@@ -266,7 +411,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandSetOfStringEnum(t *testing.T) {
@@ -292,7 +437,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 type tfListOfStringEnum struct {
@@ -338,7 +483,7 @@ func TestExpandStructListOfStringEnum(t *testing.T) {
 			WantTarget: &awsSliceOfStringEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 type tfSetOfStringEnum struct {
@@ -380,7 +525,7 @@ func TestExpandStructSetOfStringEnum(t *testing.T) {
 			WantTarget: &awsSliceOfStringEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 type tfSingleStringFieldIgnore struct {
@@ -407,7 +552,7 @@ func TestExpandIgnoreStructTag(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 type TFExportedStruct struct {
@@ -460,7 +605,7 @@ func TestExpandEmbeddedStruct(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 // List/Set/Map of string types.
@@ -579,7 +724,7 @@ func TestFlattenCollections(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 type awsSimpleStringValueSlice struct {
@@ -673,9 +818,283 @@ func TestFlattenSimpleListOfPrimitiveValues(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
+}
+
+type awsInt64PointerSlice struct {
+	Field1 []*int64
+}
+
+type awsInt32PointerSlice struct {
+	Field1 []*int32
+}
+
+type awsStringPointerSlice struct {
+	Field1 []*string
+}
+
+func TestFlattenSliceOfIntPointer(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]*int64 to list": {
+			Source: &awsInt64PointerSlice{
+				Field1: []*int64{aws.Int64(1), aws.Int64(-1)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]*int64 nil to null list": {
+			Source:     &awsInt64PointerSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.Int64Type)},
+		},
+		"[]*int64 with nil element to list": {
+			Source: &awsInt64PointerSlice{
+				Field1: []*int64{aws.Int64(1), nil, aws.Int64(2)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Null(),
+					types.Int64Value(2),
+				}),
+			},
+		},
+		"[]*int32 to list": {
+			Source: &awsInt32PointerSlice{
+				Field1: []*int32{aws.Int32(1), aws.Int32(-1)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]*int32 nil to null list": {
+			Source:     &awsInt32PointerSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.Int64Type)},
+		},
+		"[]*int32 with nil element to list": {
+			Source: &awsInt32PointerSlice{
+				Field1: []*int32{aws.Int32(1), nil, aws.Int32(2)},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Null(),
+					types.Int64Value(2),
+				}),
+			},
+		},
+		"[]*int64 to set": {
+			Source: &awsInt64PointerSlice{
+				Field1: []*int64{aws.Int64(1), aws.Int64(-1)},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]*int32 to set": {
+			Source: &awsInt32PointerSlice{
+				Field1: []*int32{aws.Int32(1), aws.Int32(-1)},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenSliceOfStringPointer(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]*string to list": {
+			Source: &awsStringPointerSlice{
+				Field1: []*string{aws.String("a"), aws.String("b")},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+			},
+		},
+		"[]*string nil to null list": {
+			Source:     &awsStringPointerSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.StringType)},
+		},
+		"[]*string with nil element to list": {
+			Source: &awsStringPointerSlice{
+				Field1: []*string{aws.String("a"), nil, aws.String("b")},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringNull(),
+					types.StringValue("b"),
+				}),
+			},
+		},
+		"[]*string to set": {
+			Source: &awsStringPointerSlice{
+				Field1: []*string{aws.String("a"), aws.String("b")},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+			},
+		},
+		"[]*string nil to null set": {
+			Source:     &awsStringPointerSlice{},
+			Target:     &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{Field1: types.SetNull(types.StringType)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+type awsInt32ValueSlice struct {
+	Field1 []int32
+}
+
+type awsEnumSlice struct {
+	Field1 []testEnum
+}
+
+type awsFloat64Slice struct {
+	Field1 []float64
+}
+
+type awsPointerToSlice struct {
+	Field1 *[]string
+}
+
+func TestFlattenSliceOfInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]int32 to list": {
+			Source: &awsInt32ValueSlice{
+				Field1: []int32{1, -1},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]int32 to set": {
+			Source: &awsInt32ValueSlice{
+				Field1: []int32{1, -1},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.Int64Type, []attr.Value{
+					types.Int64Value(1),
+					types.Int64Value(-1),
+				}),
+			},
+		},
+		"[]int32 nil to null set": {
+			Source:     &awsInt32ValueSlice{},
+			Target:     &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{Field1: types.SetNull(types.Int64Type)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenSliceOfCustomStringType(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]enum to list": {
+			Source: &awsEnumSlice{
+				Field1: []testEnum{testEnumScalar, testEnumList},
+			},
+			Target: &tfSimpleList{},
+			WantTarget: &tfSimpleList{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("Scalar"),
+					types.StringValue("List"),
+				}),
+			},
+		},
+		"[]enum to set": {
+			Source: &awsEnumSlice{
+				Field1: []testEnum{testEnumScalar, testEnumList},
+			},
+			Target: &tfSimpleSet{},
+			WantTarget: &tfSimpleSet{
+				Field1: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("Scalar"),
+					types.StringValue("List"),
+				}),
+			},
+		},
+		"[]enum nil to null list": {
+			Source:     &awsEnumSlice{},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{Field1: types.ListNull(types.StringType)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenSliceIncompatibleType(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"[]float64 to list": {
+			Source:     &awsFloat64Slice{Field1: []float64{1.1, 2.2}},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{},
+			WantDiff:   true,
+		},
+		"*[]string to list": {
+			Source:     &awsPointerToSlice{Field1: &[]string{"a"}},
+			Target:     &tfSimpleList{},
+			WantTarget: &tfSimpleList{},
+			WantDiff:   true,
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 type tfSimpleSet struct {
@@ -684,6 +1103,10 @@ type tfSimpleSet struct {
 
 type tfSimpleSetLegacy struct {
 	Field1 types.Set `tfsdk:"field1" autoflex:",legacy"`
+}
+
+type tfSimpleSetOmitEmpty struct {
+	Field1 types.Set `tfsdk:"field1" autoflex:",omitempty"`
 }
 
 func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
@@ -759,13 +1182,36 @@ func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 				},
 			},
 		},
+
+		"omitempty": {
+			"values": {
+				Source: &awsSimpleStringValueSlice{Field1: []string{"a", "b"}},
+				Target: &tfSimpleSetOmitEmpty{},
+				WantTarget: &tfSimpleSetOmitEmpty{
+					Field1: types.SetValueMust(types.StringType, []attr.Value{
+						types.StringValue("a"),
+						types.StringValue("b"),
+					}),
+				},
+			},
+			"empty": {
+				Source:     &awsSimpleStringValueSlice{Field1: []string{}},
+				Target:     &tfSimpleSetOmitEmpty{},
+				WantTarget: &tfSimpleSetOmitEmpty{Field1: types.SetNull(types.StringType)},
+			},
+			"null": {
+				Source:     &awsSimpleStringValueSlice{Field1: nil},
+				Target:     &tfSimpleSetOmitEmpty{},
+				WantTarget: &tfSimpleSetOmitEmpty{Field1: types.SetNull(types.StringType)},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -790,7 +1236,7 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenStructListOfStringEnum(t *testing.T) {
@@ -835,7 +1281,7 @@ func TestFlattenStructListOfStringEnum(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -882,7 +1328,7 @@ func TestFlattenStructSetOfStringEnum(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -919,5 +1365,5 @@ func TestFlattenEmbeddedStruct(t *testing.T) {
 		},
 	}
 	// cmp.Diff cannot handle an unexported field
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true}, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
+	runAutoFlattenTestCases(t, testCases, runChecks{}, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
 }

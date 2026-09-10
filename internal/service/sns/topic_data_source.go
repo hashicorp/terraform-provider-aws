@@ -23,22 +23,23 @@ import (
 )
 
 // @SDKDataSource("aws_sns_topic", name="Topic")
-// @Testing(tagsTest=true)
 // @Tags(identifierAttribute="arn")
 func dataSourceTopic() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTopicRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

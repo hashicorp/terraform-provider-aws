@@ -49,6 +49,7 @@ func testAccAppFabricAppBundle_Identity_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -128,6 +129,7 @@ func testAccAppFabricAppBundle_Identity_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -245,6 +247,7 @@ func testAccAppFabricAppBundle_Identity_ExistingResource_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -321,6 +324,7 @@ func testAccAppFabricAppBundle_Identity_ExistingResource_noRefreshNoChange(t *te
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -36,7 +37,10 @@ func testAccDeliverySource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliverySourceConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliverySource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 				),
@@ -54,10 +58,14 @@ func testAccDeliverySource_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/DeliverySource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliverySourceImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
@@ -79,7 +87,10 @@ func testAccDeliverySource_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliverySourceConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliverySource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDeliverySource, resourceName),
@@ -129,10 +140,10 @@ func testAccDeliverySource_tags(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliverySourceImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -216,17 +227,6 @@ func testAccCheckDeliverySourceExists(ctx context.Context, t *testing.T, n strin
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccDeliverySourceImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

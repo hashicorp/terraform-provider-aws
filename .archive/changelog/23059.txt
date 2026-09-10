@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_autoscaling_group: Add `instance_refresh.preferences.skip_matching` argument
-```

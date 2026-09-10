@@ -158,8 +158,7 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
-		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
-		if err != nil {
+		if err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout); err != nil {
 			return fmt.Errorf("updating Green environment: %w", err)
 		}
 	}

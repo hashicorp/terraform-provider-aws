@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,6 +29,7 @@ import (
 type mockRawDiffer struct {
 	state    cty.Value
 	config   cty.Value
+	plan     cty.Value
 	forceNew []string
 }
 
@@ -39,13 +41,56 @@ func (d *mockRawDiffer) GetRawConfig() cty.Value {
 	return d.config
 }
 
+func (d *mockRawDiffer) GetRawPlan() cty.Value {
+	if d.plan.IsNull() && d.plan.Type() == cty.NilType {
+		return cty.NullVal(cty.DynamicPseudoType)
+	}
+	return d.plan
+}
+
 func (d *mockRawDiffer) ForceNew(key string) error {
 	d.forceNew = append(d.forceNew, key)
 	return nil
 }
 
+// HasChange returns true unless the value in state is known, non-null, and
+// equal to the value in config (mirroring schema.ResourceDiff.HasChange
+// closely enough for these tests).
+func (d *mockRawDiffer) HasChange(key string) bool {
+	if d.state.IsNull() || !d.state.Type().HasAttribute(key) {
+		return true
+	}
+	if d.config.IsNull() || !d.config.Type().HasAttribute(key) {
+		return true
+	}
+	stateVal := d.state.GetAttr(key)
+	configVal := d.config.GetAttr(key)
+	if !stateVal.IsKnown() || !configVal.IsKnown() {
+		return true
+	}
+	if stateVal.IsNull() != configVal.IsNull() {
+		return true
+	}
+	if stateVal.IsNull() && configVal.IsNull() {
+		return false
+	}
+	return !stateVal.Equals(configVal).True()
+}
+
+// The following methods round out the sdkv2.ResourceDiffer interface but are
+// not exercised by secretVersionForceNewCustomDiffInner; they return zero
+// values to satisfy the interface contract.
+func (d *mockRawDiffer) Get(string) any              { return nil }
+func (d *mockRawDiffer) GetChange(string) (any, any) { return nil, nil }
+func (d *mockRawDiffer) GetOk(string) (any, bool)    { return nil, false }
+func (d *mockRawDiffer) HasChanges(keys ...string) bool {
+	return slices.ContainsFunc(keys, d.HasChange)
+}
+func (d *mockRawDiffer) Id() string { return "" }
+
 func secretVersionValuesObjectState(values map[string]cty.Value) cty.Value {
 	allValues := map[string]cty.Value{
+		names.AttrID:               cty.StringVal("arn:aws:secretsmanager:us-east-1:123456789012:secret:test|version-id"), //lintignore:AWSAT003,AWSAT005
 		"secret_binary":            cty.StringVal(""),
 		"secret_string":            cty.StringVal(""),
 		"secret_string_wo":         cty.NullVal(cty.String),
@@ -59,6 +104,25 @@ func secretVersionValuesObjectState(values map[string]cty.Value) cty.Value {
 
 func secretVersionValuesObjectConfig(values map[string]cty.Value) cty.Value {
 	allValues := map[string]cty.Value{
+		names.AttrID:               cty.NullVal(cty.String),
+		"secret_binary":            cty.NullVal(cty.String),
+		"secret_string":            cty.NullVal(cty.String),
+		"secret_string_wo":         cty.NullVal(cty.String),
+		"secret_string_wo_version": cty.NullVal(cty.Number),
+	}
+
+	maps.Copy(allValues, values)
+
+	return cty.ObjectVal(allValues)
+}
+
+// secretVersionValuesObjectPlan builds a value approximating Terraform's
+// proposed plan state. At apply expansion, computed attributes that the plan
+// already decided would change (e.g., when the resource is being recreated)
+// are reported as unknown via this value.
+func secretVersionValuesObjectPlan(values map[string]cty.Value) cty.Value {
+	allValues := map[string]cty.Value{
+		names.AttrID:               cty.UnknownVal(cty.String),
 		"secret_binary":            cty.NullVal(cty.String),
 		"secret_string":            cty.NullVal(cty.String),
 		"secret_string_wo":         cty.NullVal(cty.String),
@@ -76,6 +140,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 	testcases := map[string]struct {
 		state            cty.Value
 		config           cty.Value
+		plan             cty.Value
 		expectedForceNew []string
 	}{
 		"new resource": {},
@@ -97,6 +162,10 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			}),
 			expectedForceNew: []string{"secret_string"},
 		},
+		// Issue #47907: previously unknown config silently skipped ForceNew at
+		// plan time, causing the planned action to flip from Update to
+		// DeleteThenCreate at apply expansion. The fix forces replacement
+		// proactively at plan time when config is unknown.
 		"secret_string unknown": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
 				"secret_string": cty.StringVal("old"),
@@ -104,6 +173,27 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
 				"secret_string": cty.UnknownVal(cty.String),
 			}),
+			expectedForceNew: []string{"secret_string"},
+		},
+		// Apply-expansion of the regression: rawPlan reports the planned `id`
+		// as unknown (i.e., plan required recreation), but the resolved config
+		// happens to match state. The fix preserves the plan's recreate
+		// decision via the plannedRecreation flag.
+		"secret_string apply expand recreation planned same value": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("same"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string": cty.StringVal("same"),
+			}),
+			plan: secretVersionValuesObjectPlan(map[string]cty.Value{
+				"secret_string": cty.StringVal("same"),
+				names.AttrID:    cty.UnknownVal(cty.String),
+			}),
+			// HasChange is false (state and config match), so ForceNew is a
+			// no-op via the forceNewIfChanged helper. The SDK preserves the
+			// planned RequiresReplace through the apply path when Terraform
+			// Core sees the plan already required recreation.
 		},
 
 		"secret_string_wo_version no change": {
@@ -123,6 +213,8 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			}),
 			expectedForceNew: []string{"secret_string_wo_version"},
 		},
+		// Issue #47907 (also reported with `secret_string_wo_version` unknown
+		// at plan time, e.g., during rotation).
 		"secret_string_wo_version unknown": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
 				"secret_string_wo_version": cty.NumberIntVal(1),
@@ -130,6 +222,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
 				"secret_string_wo_version": cty.UnknownVal(cty.Number),
 			}),
+			expectedForceNew: []string{"secret_string_wo_version"},
 		},
 
 		"secret_string to secret_string_wo no change": {
@@ -169,6 +262,19 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 				"secret_string_wo_version": cty.UnknownVal(cty.Number),
 			}),
 		},
+		// New: switching from `secret_string` to `secret_string_wo` where the
+		// `secret_string_wo` value is unknown at plan time. Force replacement
+		// of both attributes for consistency.
+		"secret_string to secret_string_wo unknown wo value": {
+			state: secretVersionValuesObjectState(map[string]cty.Value{
+				"secret_string": cty.StringVal("old"),
+			}),
+			config: secretVersionValuesObjectConfig(map[string]cty.Value{
+				"secret_string_wo":         cty.UnknownVal(cty.String),
+				"secret_string_wo_version": cty.NumberIntVal(1),
+			}),
+			expectedForceNew: []string{"secret_string", "secret_string_wo"},
+		},
 
 		"secret_string_wo to secret_string no change": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
@@ -190,6 +296,9 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			}),
 			expectedForceNew: []string{"secret_string"},
 		},
+		// Switching from `secret_string_wo` to `secret_string` always requires
+		// recreation. Previously this code path silently returned without
+		// calling ForceNew when the new value was unknown.
 		"secret_string_wo to secret_string unknown": {
 			state: secretVersionValuesObjectState(map[string]cty.Value{
 				"secret_string_wo":         cty.StringVal(names.AttrValue),
@@ -198,6 +307,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 			config: secretVersionValuesObjectConfig(map[string]cty.Value{
 				"secret_string": cty.UnknownVal(cty.String),
 			}),
+			expectedForceNew: []string{"secret_string"},
 		},
 	}
 
@@ -205,9 +315,14 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			plan := testcase.plan
+			if plan == cty.NilVal {
+				plan = cty.NullVal(cty.DynamicPseudoType)
+			}
 			diff := mockRawDiffer{
 				state:  testcase.state,
 				config: testcase.config,
+				plan:   plan,
 			}
 
 			err := tfsecretsmanager.SecretVersionForceNewCustomDiffInner(t.Context(), &diff, nil)
@@ -439,10 +554,24 @@ func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 				Config: testAccSecretVersionConfig_string(rName, "test-string"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretVersion(), resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
-				// Because resource Delete leaves a secret version with a single stage ("AWSCURRENT"), the resource is still there.
-				// ExpectNonEmptyPlan: true,
+				// Unlike most resources, the Delete function for
+				// aws_secretsmanager_secret_version does not actually delete
+				// the underlying AWS resource: AWS does not permit removing
+				// the AWSCURRENT staging label, so when no other staging
+				// labels are set the version remains in place. As a result,
+				// post-refresh the resource is still present and consistent
+				// with config, so the planned action is NoOp rather than
+				// Create.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -468,6 +597,14 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_version.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -497,6 +634,94 @@ func TestAccSecretsManagerSecretVersion_UpdateForcesReplacement_string(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string-updated"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccSecretsManagerSecretVersion_unknownSecretString reproduces issue
+// https://github.com/hashicorp/terraform-provider-aws/issues/47907
+func TestAccSecretsManagerSecretVersion_unknownSecretString(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: create with a known `secret_string`.
+			{
+				Config: testAccSecretVersionConfig_string(rName, "initial-value"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "initial-value"),
+				),
+			},
+			// Step 2: introduce an upstream resource (`aws_secretsmanager_secret.upstream`)
+			// that is being created in this same apply and whose ARN is consumed
+			// by `secret_string`. The ARN is unknown at plan time, mirroring
+			// the regression scenario in the issue. With the fix, the plan
+			// shows "Replace" upfront and the apply succeeds.
+			{
+				Config: testAccSecretVersionConfig_unknownSecretString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttrSet(resourceName, "secret_string"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccSecretsManagerSecretVersion_unknownSecretStringWriteOnlyVersion
+// reproduces the rotation scenario reported in the comments on issue
+// https://github.com/hashicorp/terraform-provider-aws/issues/47907
+func TestAccSecretsManagerSecretVersion_unknownSecretStringWriteOnlyVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: create with a known `secret_string_wo` and version.
+			{
+				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "initial-secret", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string_wo_version", "1"),
+				),
+			},
+			// Step 2: derive `secret_string_wo_version` from an upstream
+			// resource being created in the same apply, making it unknown at
+			// plan time.
+			{
+				Config: testAccSecretVersionConfig_unknownSecretStringWriteOnlyVersion(rName, "rotated-secret"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttrSet(resourceName, "secret_string_wo_version"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1235,4 +1460,46 @@ resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 }
 `, rName, secret, version)
+}
+
+// testAccSecretVersionConfig_unknownSecretString returns a configuration in
+// which `secret_string` references a resource being created in the same plan
+// (`aws_secretsmanager_secret.upstream`). Its ARN is unknown at plan time,
+// reproducing the conditions under which issue #47907 fires.
+func testAccSecretVersionConfig_unknownSecretString(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret" "upstream" {
+  name = "%[1]s-upstream"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = aws_secretsmanager_secret.upstream.arn
+}
+`, rName)
+}
+
+// testAccSecretVersionConfig_unknownSecretStringWriteOnlyVersion returns a
+// configuration in which `secret_string_wo_version` is derived from a string
+// length of an upstream resource's ARN (computed, unknown at plan time).
+func testAccSecretVersionConfig_unknownSecretStringWriteOnlyVersion(rName, secret string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret" "upstream" {
+  name = "%[1]s-upstream"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id                = aws_secretsmanager_secret.test.id
+  secret_string_wo         = %[2]q
+  secret_string_wo_version = length(aws_secretsmanager_secret.upstream.arn)
+}
+`, rName, secret)
 }

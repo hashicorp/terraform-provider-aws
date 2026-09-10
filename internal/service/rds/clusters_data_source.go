@@ -25,18 +25,20 @@ func dataSourceClusters() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClustersRead,
 
-		Schema: map[string]*schema.Schema{
-			"cluster_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"cluster_identifiers": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: namevaluesfilters.Schema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cluster_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"cluster_identifiers": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFilter: namevaluesfilters.Schema(),
+			}
 		},
 	}
 }

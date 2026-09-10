@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_task_definition: Correctly detect differences in `volume.configure_at_launch` and `volume.docker_volume_configuration`
-```

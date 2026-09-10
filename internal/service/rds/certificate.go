@@ -35,11 +35,13 @@ func resourceCertificate() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificatePut,
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
-		Schema: map[string]*schema.Schema{
-			"certificate_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"certificate_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -60,7 +60,7 @@ func structFieldsInner_(typ reflect.Type, parentIndex []int, yield func(reflect.
 }
 
 func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.StructField] {
-	return tfiter.Filtered(fields, func(field reflect.StructField) bool {
+	return tfiter.Filter(fields, func(field reflect.StructField) bool {
 		return field.IsExported() || field.Anonymous
 	})
 }

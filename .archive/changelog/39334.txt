@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_securityhub_standards_control_associations
-```

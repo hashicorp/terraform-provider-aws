@@ -51,245 +51,247 @@ func resourceFileCache() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"copy_tags_to_data_repository_associations": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"data_repository_association": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 8,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"data_repository_path": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(3, 4357),
-							),
-						},
-						"data_repository_subdirectories": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 500,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"copy_tags_to_data_repository_associations": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"data_repository_association": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 8,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"data_repository_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(3, 4357),
+								),
+							},
+							"data_repository_subdirectories": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 500,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.StringLenBetween(1, 4096),
+									),
+								},
+							},
+							"file_cache_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"file_cache_path": {
+								Type:     schema.TypeString,
+								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 4096),
 								),
 							},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"file_system_path": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"imported_file_chunk_size": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"nfs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dns_ips": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(7, 15),
+													validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+												),
+											},
+										},
+										names.AttrVersion: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
+										},
+									},
+								},
+							},
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
 						},
-						"file_cache_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"file_cache_path": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 4096),
-							),
-						},
-						names.AttrFileSystemID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"file_system_path": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"imported_file_chunk_size": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"nfs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dns_ips": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+					},
+				},
+				"data_repository_association_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_cache_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_cache_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FileCacheType](),
+				},
+				"file_cache_type_version": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 20),
+						validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
+					),
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"lustre_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FileCacheLustreDeploymentType](),
+							},
+							"log_configuration": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDestination: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"level": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"metadata_configuration": {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 8,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"storage_capacity": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringLenBetween(7, 15),
-												validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+												validation.IntBetween(0, 2147483647),
 											),
 										},
 									},
-									names.AttrVersion: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
-									},
 								},
 							},
-						},
-						names.AttrResourceARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
-					},
-				},
-			},
-			"data_repository_association_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_cache_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_cache_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FileCacheType](),
-			},
-			"file_cache_type_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
-				),
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"lustre_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"deployment_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FileCacheLustreDeploymentType](),
-						},
-						"log_configuration": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"level": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							"mount_name": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"metadata_configuration": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 8,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"storage_capacity": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.IntBetween(0, 2147483647),
-										),
-									},
-								},
+							"per_unit_storage_throughput": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.IntBetween(12, 1000),
+								),
 							},
-						},
-						"mount_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"per_unit_storage_throughput": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.IntBetween(12, 1000),
-							),
-						},
-						"weekly_maintenance_start_time": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(7, 7),
-								validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
-							),
+							"weekly_maintenance_start_time": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(7, 7),
+									validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
+								),
+							},
 						},
 					},
 				},
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"network_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"storage_capacity": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.IntBetween(0, 2147483647),
-				),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"storage_capacity": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.IntBetween(0, 2147483647),
+					),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

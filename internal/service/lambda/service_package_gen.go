@@ -69,6 +69,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newFunctionScalingConfigResource,
+			TypeName: "aws_lambda_function_scaling_config",
+			Name:     "Function Scaling Config",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("qualifier", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionScalingConfigImportID{},
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_lambda_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newRuntimeManagementConfigResource,
 			TypeName: "aws_lambda_runtime_management_config",
 			Name:     "Runtime Management Config",
@@ -88,6 +112,23 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
+			Factory:  newFunctionScalingConfigResourceAsListResource,
+			TypeName: "aws_lambda_function_scaling_config",
+			Name:     "Function Scaling Config",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("qualifier", true),
+			}),
+		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_lambda_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 		},
 	})
 }
@@ -147,6 +188,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_lambda_alias",
 			Name:     "Alias",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      aliasImportID{},
+			},
 		},
 		{
 			Factory:  resourceCodeSigningConfig,
@@ -247,6 +296,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newAliasResourceAsListResource,
+			TypeName: "aws_lambda_alias",
+			Name:     "Alias",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
 		{
 			Factory:  newEventSourceMappingResourceAsListResource,
 			TypeName: "aws_lambda_event_source_mapping",

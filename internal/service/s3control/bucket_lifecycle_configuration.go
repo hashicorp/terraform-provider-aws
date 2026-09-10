@@ -40,92 +40,94 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"abort_incomplete_multipart_upload": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days_after_initiation": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-								},
-							},
-						},
-						"expiration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-											value := v.(string)
-
-											_, err := time.Parse("2006-01-02", value)
-
-											if err != nil {
-												errors = append(errors, fmt.Errorf("%q should be in YYYY-MM-DD date format", value))
-											}
-
-											return
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"abort_incomplete_multipart_upload": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"days_after_initiation": {
+											Type:     schema.TypeInt,
+											Required: true,
 										},
 									},
-									"days": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"expired_object_delete_marker": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false, // Prevent SDK TypeSet difference issues
+								},
+							},
+							"expiration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+												value := v.(string)
+
+												_, err := time.Parse("2006-01-02", value)
+
+												if err != nil {
+													errors = append(errors, fmt.Errorf("%q should be in YYYY-MM-DD date format", value))
+												}
+
+												return
+											},
+										},
+										"days": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"expired_object_delete_marker": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false, // Prevent SDK TypeSet difference issues
+										},
 									},
 								},
 							},
-						},
-						names.AttrFilter: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
+							names.AttrFilter: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrTags: tftags.TagsSchema(),
 									},
-									names.AttrTags: tftags.TagsSchema(),
 								},
 							},
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  types.ExpirationStatusEnabled,
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  types.ExpirationStatusEnabled,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

@@ -75,14 +75,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The identifier of the Customer Profiles Profile.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Customer Profiles Profile using the resource `id`. For example:

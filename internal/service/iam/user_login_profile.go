@@ -42,44 +42,46 @@ func resourceUserLoginProfile() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"pgp_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"password_reset_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"password_length": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      20,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(5, 128),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"pgp_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"password_reset_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"password_length": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      20,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(5, 128),
+				},
 
-			"key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_password": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPassword: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
+				"key_fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_password": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPassword: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }

@@ -27,47 +27,49 @@ func dataSourceSecurityPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityPolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreatedDate: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The date the security policy was created.",
-			},
-			names.AttrDescription: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Description of the security policy.",
-			},
-			"last_modified_date": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The date the security policy was last modified.",
-			},
-			names.AttrName: {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the policy.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 32),
-					validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
-				),
-			},
-			names.AttrPolicy: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The JSON policy document without any whitespaces.",
-			},
-			"policy_version": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Version of the policy.",
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				Description:      "Type of security policy. One of `encryption` or `network`.",
-				ValidateDiagFunc: enum.Validate[types.SecurityPolicyType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreatedDate: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The date the security policy was created.",
+				},
+				names.AttrDescription: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Description of the security policy.",
+				},
+				"last_modified_date": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The date the security policy was last modified.",
+				},
+				names.AttrName: {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Name of the policy.",
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 32),
+						validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
+					),
+				},
+				names.AttrPolicy: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The JSON policy document without any whitespaces.",
+				},
+				"policy_version": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Version of the policy.",
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "Type of security policy. One of `encryption` or `network`.",
+					ValidateDiagFunc: enum.Validate[types.SecurityPolicyType](),
+				},
+			}
 		},
 	}
 }

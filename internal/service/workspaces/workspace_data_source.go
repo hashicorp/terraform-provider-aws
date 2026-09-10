@@ -26,84 +26,86 @@ func dataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
-		Schema: map[string]*schema.Schema{
-			"bundle_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"computer_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				RequiredWith:  []string{names.AttrUserName},
-				ConflictsWith: []string{"workspace_id"},
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_volume_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrUserName: {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				RequiredWith:  []string{"directory_id"},
-				ConflictsWith: []string{"workspace_id"},
-			},
-			"user_volume_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"volume_encryption_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workspace_id": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"directory_id", names.AttrUserName},
-			},
-			"workspace_properties": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_type_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"root_volume_size_gib": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"running_mode": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"running_mode_auto_stop_timeout_in_minutes": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"user_volume_size_gib": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bundle_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"computer_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					RequiredWith:  []string{names.AttrUserName},
+					ConflictsWith: []string{"workspace_id"},
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_volume_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrUserName: {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					RequiredWith:  []string{"directory_id"},
+					ConflictsWith: []string{"workspace_id"},
+				},
+				"user_volume_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"volume_encryption_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workspace_id": {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"directory_id", names.AttrUserName},
+				},
+				"workspace_properties": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_type_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"root_volume_size_gib": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"running_mode": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"running_mode_auto_stop_timeout_in_minutes": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"user_volume_size_gib": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

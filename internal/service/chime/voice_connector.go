@@ -38,33 +38,35 @@ func ResourceVoiceConnector() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_region": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VoiceConnectorAwsRegion](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"outbound_host_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"require_encryption": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_region": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VoiceConnectorAwsRegion](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"outbound_host_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"require_encryption": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: resourceVoiceConnectorDefaultRegion,

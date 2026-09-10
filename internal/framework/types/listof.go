@@ -215,3 +215,7 @@ func validateStringEnumSlice[T enum.Valueser[T]](ctx context.Context, path path.
 	}
 	return diags
 }
+
+func NewListValueOfEmpty[T attr.Value](ctx context.Context) ListValueOf[T] {
+	return NewListValueOfMust[T](ctx, []attr.Value{})
+}

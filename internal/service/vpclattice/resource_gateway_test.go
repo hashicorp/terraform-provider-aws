@@ -349,6 +349,14 @@ func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

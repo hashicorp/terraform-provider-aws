@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_athena_workgroup: Add `configuration.query_results_s3_access_grants_configuration` argument
-```

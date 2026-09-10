@@ -66,15 +66,17 @@ func resourceTopicRule() *schema.Resource {
 
 			timestreamDimensionResource := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						}
 					},
 				}
 			}

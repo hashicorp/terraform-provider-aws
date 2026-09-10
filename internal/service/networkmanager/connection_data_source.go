@@ -21,40 +21,42 @@ func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connected_device_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connected_link_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"device_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"link_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connected_device_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connected_link_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"device_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"link_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

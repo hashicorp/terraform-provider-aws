@@ -50,7 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 * `platform` - Platform of the image.
 * `os_version` - Operating System version of the image.
 * `output_resources` - List of objects with resources created by the image.
-    * `amis` - Set of objects with each Amazon Machine Image (AMI) created.
+    * `amis` - Set of objects with each AMI created.
         * `account_id` - Account identifier of the AMI.
         * `description` - Description of the AMI.
         * `image` - Identifier of the AMI.

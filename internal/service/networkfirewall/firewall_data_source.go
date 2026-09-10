@@ -28,215 +28,217 @@ func dataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallResourceRead,
 
-		Schema: map[string]*schema.Schema{
-			"availability_zone_change_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"availability_zone_mapping": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zone_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"availability_zone_change_protection": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"availability_zone_mapping": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_zone_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-				AtLeastOneOf: []string{names.AttrARN, names.AttrName},
-			},
-			"delete_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enabled_analysis_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
+				},
+				"delete_protection": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enabled_analysis_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"firewall_policy_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"firewall_policy_change_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"firewall_status": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_usage_summary": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidrs": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"available_cidr_count": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"ip_set_references": {
-													Type:     schema.TypeSet,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"resolved_cidr_count": {
-																Type:     schema.TypeInt,
-																Computed: true,
+				"firewall_policy_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_policy_change_protection": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"firewall_status": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_usage_summary": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cidrs": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"available_cidr_count": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													"ip_set_references": {
+														Type:     schema.TypeSet,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"resolved_cidr_count": {
+																	Type:     schema.TypeInt,
+																	Computed: true,
+																},
 															},
 														},
 													},
-												},
-												"utilized_cidr_count": {
-													Type:     schema.TypeInt,
-													Computed: true,
+													"utilized_cidr_count": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"configuration_sync_state_summary": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"sync_states": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"attachment": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"endpoint_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrStatus: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrStatusMessage: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrSubnetID: {
-													Type:     schema.TypeString,
-													Computed: true,
+							"configuration_sync_state_summary": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"sync_states": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attachment": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"endpoint_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrStatus: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrStatusMessage: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrSubnetID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									names.AttrAvailabilityZone: {
-										Type:     schema.TypeString,
-										Computed: true,
+										names.AttrAvailabilityZone: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"transit_gateway_attachment_sync_states": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"attachment_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrStatusMessage: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"transit_gateway_attachment_status": {
-										Type:     schema.TypeString,
-										Computed: true,
+							"transit_gateway_attachment_sync_states": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attachment_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrStatusMessage: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"transit_gateway_attachment_status": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{names.AttrARN, names.AttrName},
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
-			},
-			"subnet_change_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"subnet_mapping": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+				},
+				"subnet_change_protection": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"subnet_mapping": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"transit_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"update_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transit_gateway_owner_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"update_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

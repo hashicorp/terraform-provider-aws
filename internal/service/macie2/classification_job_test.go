@@ -134,6 +134,15 @@ func testAccClassificationJob_disappears(t *testing.T) {
 					testAccCheckClassificationJobExists(ctx, t, resourceName, &macie2Output),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceClassificationJob(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

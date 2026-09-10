@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_codeartifact_domain: Make `encryption_key` optional
-```

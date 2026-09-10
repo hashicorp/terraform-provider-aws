@@ -33,212 +33,175 @@ func dataSourceListener() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"alpn_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"load_balancer_arn", names.AttrPort},
-			},
-			names.AttrCertificateARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultAction: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authenticate_cognito": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_request_extra_params": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"on_unauthenticated_request": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"session_cookie_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"session_timeout": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"user_pool_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"user_pool_client_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"user_pool_domain": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"authenticate_oidc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_request_extra_params": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"authorization_endpoint": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrClientID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrClientSecret: {
-										Type:      schema.TypeString,
-										Computed:  true,
-										Sensitive: true,
-									},
-									names.AttrIssuer: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"on_unauthenticated_request": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"session_cookie_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"session_timeout": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"token_endpoint": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"user_info_endpoint": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"fixed_response": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrContentType: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"message_body": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrStatusCode: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"forward": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"stickiness": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrDuration: {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alpn_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"load_balancer_arn", names.AttrPort},
+				},
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultAction: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authenticate_cognito": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_request_extra_params": {
+											Type:     schema.TypeMap,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
-									},
-									"target_group": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrARN: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrWeight: {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
+										"on_unauthenticated_request": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrScope: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"session_cookie_name": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"session_timeout": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"user_pool_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"user_pool_client_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"user_pool_domain": {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
 									},
 								},
 							},
-						},
-						"jwt_validation": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrIssuer: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"authenticate_oidc": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_request_extra_params": {
+											Type:     schema.TypeMap,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"authorization_endpoint": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrClientID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrClientSecret: {
+											Type:      schema.TypeString,
+											Computed:  true,
+											Sensitive: true,
+										},
+										names.AttrIssuer: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"on_unauthenticated_request": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrScope: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"session_cookie_name": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"session_timeout": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"token_endpoint": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"user_info_endpoint": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
-									"jwks_endpoint": {
-										Type:     schema.TypeString,
-										Computed: true,
+								},
+							},
+							"fixed_response": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrContentType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"message_body": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrStatusCode: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
-									"additional_claim": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrFormat: {
-													Type:     schema.TypeString,
-													Computed: true,
+								},
+							},
+							"forward": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"stickiness": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrDuration: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Computed: true,
+													},
 												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeSet,
-													Computed: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
+											},
+										},
+										"target_group": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrARN: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrWeight: {
+														Type:     schema.TypeInt,
+														Computed: true,
 													},
 												},
 											},
@@ -246,101 +209,140 @@ func dataSourceListener() *schema.Resource {
 									},
 								},
 							},
-						},
-						"order": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"redirect": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrPort: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrProtocol: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"query": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrStatusCode: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"jwt_validation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIssuer: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"jwks_endpoint": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"additional_claim": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFormat: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeSet,
+														Computed: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
-						},
-						"target_group_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+							"order": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"redirect": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"host": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrPort: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrProtocol: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"query": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrStatusCode: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"target_group_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"load_balancer_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
-				RequiredWith:  []string{names.AttrPort},
-			},
-			"mutual_authentication": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"advertise_trust_store_ca_names": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrMode: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"trust_store_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"load_balancer_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrARN},
+					RequiredWith:  []string{names.AttrPort},
+				},
+				"mutual_authentication": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"advertise_trust_store_ca_names": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ignore_client_certificate_expiry": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrMode: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"trust_store_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPort: {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
-				RequiredWith:  []string{"load_balancer_arn"},
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ssl_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrPort: {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrARN},
+					RequiredWith:  []string{"load_balancer_arn"},
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ssl_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

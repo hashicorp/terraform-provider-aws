@@ -41,267 +41,269 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_options": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active_directory_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"root_certificate_chain_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"saml_provider_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"self_service_saml_provider_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ClientVpnAuthenticationType](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"client_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-			},
-			"client_connect_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"lambda_function_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"client_login_banner_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"banner_text": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1400),
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"client_route_enforcement_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enforced": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"connection_log_options": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"cloudwatch_log_stream": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"disconnect_on_session_timeout": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"endpoint_ip_address_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EndpointIpAddressType](),
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				MaxItems: 5,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"self_service_portal": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SelfServicePortalDisabled,
-				ValidateDiagFunc: enum.Validate[awstypes.SelfServicePortal](),
-			},
-			"self_service_portal_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"server_certificate_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"session_timeout_hours": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      24,
-				ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
-			},
-			"split_tunnel": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"traffic_ip_address_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
-			},
-			"transit_gateway_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				ForceNew: true,
-				ConflictsWith: []string{
-					names.AttrSecurityGroupIDs,
-					names.AttrVPCID,
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{
-								"transit_gateway_configuration.0.availability_zone_ids",
+				"authentication_options": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active_directory_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"root_certificate_chain_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"saml_provider_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"self_service_saml_provider_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ClientVpnAuthenticationType](),
 							},
 						},
-						"availability_zone_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{
-								"transit_gateway_configuration.0.availability_zones",
+					},
+				},
+				"client_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsCIDR,
+				},
+				"client_connect_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
 							},
-						},
-						names.AttrTransitGatewayAttachmentID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTransitGatewayID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							"lambda_function_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"transport_protocol": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.TransportProtocolUdp,
-				ValidateDiagFunc: enum.Validate[awstypes.TransportProtocol](),
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"vpn_port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  443,
-				ValidateFunc: validation.IntInSlice([]int{
-					443,
-					1194,
-				}),
-			},
+				"client_login_banner_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"banner_text": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1400),
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"client_route_enforcement_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforced": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"connection_log_options": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_log_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"cloudwatch_log_stream": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"disconnect_on_session_timeout": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_servers": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"endpoint_ip_address_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EndpointIpAddressType](),
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					MaxItems: 5,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"self_service_portal": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SelfServicePortalDisabled,
+					ValidateDiagFunc: enum.Validate[awstypes.SelfServicePortal](),
+				},
+				"self_service_portal_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"server_certificate_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"session_timeout_hours": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      24,
+					ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
+				},
+				"split_tunnel": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_ip_address_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
+				},
+				"transit_gateway_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					ForceNew: true,
+					ConflictsWith: []string{
+						names.AttrSecurityGroupIDs,
+						names.AttrVPCID,
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{
+									"transit_gateway_configuration.0.availability_zone_ids",
+								},
+							},
+							"availability_zone_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{
+									"transit_gateway_configuration.0.availability_zones",
+								},
+							},
+							names.AttrTransitGatewayAttachmentID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTransitGatewayID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"transport_protocol": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.TransportProtocolUdp,
+					ValidateDiagFunc: enum.Validate[awstypes.TransportProtocol](),
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"vpn_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  443,
+					ValidateFunc: validation.IntInSlice([]int{
+						443,
+						1194,
+					}),
+				},
+			}
 		},
 	}
 }

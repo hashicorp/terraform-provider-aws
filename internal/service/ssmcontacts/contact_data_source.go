@@ -24,24 +24,26 @@ func DataSourceContact() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDisplayName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDisplayName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

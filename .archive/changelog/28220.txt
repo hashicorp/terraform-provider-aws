@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dms_s3_endpoint: Fix disparate handling of endpoint attributes in different regions
-```

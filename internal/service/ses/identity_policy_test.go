@@ -43,6 +43,37 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccSESIdentityPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	domain := acctest.RandomDomainName(t)
+	resourceName := "aws_ses_identity_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityPolicyConfig_domain(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIdentityPolicyExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceIdentityPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 	ctx := acctest.Context(t)
 	emailPrefix := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

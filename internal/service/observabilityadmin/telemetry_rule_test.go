@@ -160,6 +160,163 @@ func testAccTelemetryRule_tags(t *testing.T) {
 	})
 }
 
+func testAccTelemetryRule_vpcFlowLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_observabilityadmin_telemetry_rule.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryRuleConfig_vpcFlowLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "telemetry-rule/"+rName)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+		},
+	})
+}
+
+func testAccTelemetryRule_allRegions(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_observabilityadmin_telemetry_rule.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryRuleConfig_allRegions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "telemetry-rule/"+rName)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+		},
+	})
+}
+
+func testAccTelemetryRule_regions(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_observabilityadmin_telemetry_rule.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryRuleConfig_regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "telemetry-rule/"+rName)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+		},
+	})
+}
+
+func testAccTelemetryRule_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_observabilityadmin_telemetry_rule.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryRuleConfig_updateStep1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "telemetry-rule/"+rName)),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("destination_configuration").AtSliceIndex(0).AtMapKey("retention_in_days"),
+						knownvalue.Int32Exact(7),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("destination_configuration").AtSliceIndex(0).AtMapKey("vpc_flow_log_parameters").AtSliceIndex(0).AtMapKey("max_aggregation_interval"),
+						knownvalue.Int32Exact(60),
+					),
+				},
+			},
+			{
+				Config: testAccTelemetryRuleConfig_updateStep2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("destination_configuration").AtSliceIndex(0).AtMapKey("retention_in_days"),
+						knownvalue.Int32Exact(14),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("destination_configuration").AtSliceIndex(0).AtMapKey("vpc_flow_log_parameters").AtSliceIndex(0).AtMapKey("max_aggregation_interval"),
+						knownvalue.Int32Exact(600),
+					),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+		},
+	})
+}
+
 func testAccCheckTelemetryRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
@@ -259,4 +416,128 @@ resource "aws_observabilityadmin_telemetry_rule" "test" {
 
 resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccTelemetryRuleConfig_vpcFlowLogs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type          = "AWS::EC2::VPC"
+    telemetry_type         = "Logs"
+    telemetry_source_types = ["VPC_FLOW_LOGS"]
+
+    destination_configuration {
+      destination_type    = "cloud-watch-logs"
+      destination_pattern = "/aws/vpcflowlogs/<resourceId>"
+      retention_in_days   = 7
+
+      vpc_flow_log_parameters {
+        traffic_type             = "ALL"
+        max_aggregation_interval = 60
+      }
+    }
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
+`, rName)
+}
+
+func testAccTelemetryRuleConfig_allRegions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type          = "AWS::EKS::Cluster"
+    telemetry_type         = "Logs"
+    telemetry_source_types = ["EKS_AUDIT_LOGS"]
+    all_regions            = true
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
+`, rName)
+}
+
+func testAccTelemetryRuleConfig_regions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type  = "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    telemetry_type = "Logs"
+    regions        = [%[2]q]
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
+`, rName, acctest.AlternateRegion())
+}
+
+func testAccTelemetryRuleConfig_updateStep1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type          = "AWS::EC2::VPC"
+    telemetry_type         = "Logs"
+    telemetry_source_types = ["VPC_FLOW_LOGS"]
+
+    destination_configuration {
+      destination_type    = "cloud-watch-logs"
+      destination_pattern = "/aws/vpcflowlogs/<resourceId>"
+      retention_in_days   = 7
+
+      vpc_flow_log_parameters {
+        traffic_type             = "ALL"
+        max_aggregation_interval = 60
+      }
+    }
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
+`, rName)
+}
+
+func testAccTelemetryRuleConfig_updateStep2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_rule" "test" {
+  rule_name = %[1]q
+
+  rule {
+    resource_type          = "AWS::EC2::VPC"
+    telemetry_type         = "Logs"
+    telemetry_source_types = ["VPC_FLOW_LOGS"]
+
+    destination_configuration {
+      destination_type    = "cloud-watch-logs"
+      destination_pattern = "/aws/vpcflowlogs/<resourceId>"
+      retention_in_days   = 14
+
+      vpc_flow_log_parameters {
+        traffic_type             = "ALL"
+        max_aggregation_interval = 600
+      }
+    }
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_evaluation.test]
+}
+
+resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
+`, rName)
 }

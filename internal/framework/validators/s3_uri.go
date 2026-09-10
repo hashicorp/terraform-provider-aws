@@ -27,7 +27,7 @@ func (validator s3URIValidator) ValidateString(ctx context.Context, request vali
 		return
 	}
 
-	if !regexache.MustCompile(`^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$`).MatchString(request.ConfigValue.ValueString()) {
+	if !regexache.MustCompile(`^s3://` + canonicalBucketNamePatternNoAnchors + `(/.*)?$`).MatchString(request.ConfigValue.ValueString()) {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),

@@ -35,6 +35,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `relationship_status` - Status of the member relationship
 * `updated_at` - Date and time of the last update of the relationship
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Inspector Member Association using the `account_id`. For example:

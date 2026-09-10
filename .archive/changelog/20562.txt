@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_eks_addon: Treat `DEGRADED` as a pending state during creation
-```

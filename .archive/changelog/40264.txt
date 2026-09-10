@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Suppress `Warning: AWS account ID not found for provider` when `skip_requesting_account_id` is `true`
-```

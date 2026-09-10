@@ -33,156 +33,158 @@ func dataSourceTargetGroup() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_termination": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"deregistration_delay": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHealthCheck: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"healthy_threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrInterval: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"matcher": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrProtocol: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTimeout: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"unhealthy_threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"arn_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_termination": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"deregistration_delay": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHealthCheck: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"healthy_threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrInterval: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"matcher": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrProtocol: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTimeout: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"unhealthy_threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"lambda_multi_value_headers_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"load_balancing_algorithm_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"load_balancing_anomaly_mitigation": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"load_balancing_cross_zone_enabled": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preserve_client_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"protocol_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proxy_protocol_v2": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"slow_start": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"stickiness": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookie_duration": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"cookie_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"lambda_multi_value_headers_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"load_balancer_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"load_balancing_algorithm_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"load_balancing_anomaly_mitigation": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"load_balancing_cross_zone_enabled": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preserve_client_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protocol_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proxy_protocol_v2": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"slow_start": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"stickiness": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie_duration": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"cookie_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"target_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_control_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"target_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_control_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -28,4 +28,7 @@ func validClusterName(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validateIPv4CIDRPrivateRange = validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16")
+var ipV4CIDRString = `10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168`
+var cgNATString = `100\.(6[4-9]|7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])`
+var regexString = fmt.Sprintf(`^(%s|%s)\..*`, ipV4CIDRString, cgNATString)
+var validateIPv4CIDRPrivateRange = validation.StringMatch(regexache.MustCompile(regexString), "must be within 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 or 100.64.0.0/10")

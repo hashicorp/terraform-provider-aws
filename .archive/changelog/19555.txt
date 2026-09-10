@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_event_target: Fix `ecs_target.launch_type` not allowing empty string values.
-```

@@ -86,8 +86,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the global table. Must match underlying DynamoDB Table names in all regions.
 * `replica` - (Required) Underlying DynamoDB Table. At least 1 replica must be defined. See below.
 
-### Nested Fields
-
 #### `replica`
 
 * `region_name` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
@@ -98,6 +96,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the DynamoDB Global Table
 * `arn` - The ARN of the DynamoDB Global Table
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `1m`)
 
 ## Import
 

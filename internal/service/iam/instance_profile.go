@@ -46,47 +46,49 @@ func resourceInstanceProfile() *schema.Resource {
 		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
 		DeleteWithoutTimeout: resourceInstanceProfileDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-				ForceNew: true,
-			},
-			names.AttrRole: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "/",
+					ForceNew: true,
+				},
+				names.AttrRole: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -188,6 +190,12 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
+	resourceInstanceProfileFlatten(ctx, instanceProfile, d)
+
+	return diags
+}
+
+func resourceInstanceProfileFlatten(ctx context.Context, instanceProfile *awstypes.InstanceProfile, d *schema.ResourceData) {
 	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
 	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
@@ -204,8 +212,6 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
 
 	setTagsOut(ctx, instanceProfile.Tags)
-
-	return diags
 }
 
 func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -18,7 +18,7 @@ The wrapper can be turned off by using
 
 ```yaml
 steps:
-- uses: hashicorp/setup-terraform@v1
+- uses: hashicorp/setup-terraform@v4.0.1
   with:
     terraform_wrapper: false
 ```

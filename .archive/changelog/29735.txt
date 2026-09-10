@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.`
-```

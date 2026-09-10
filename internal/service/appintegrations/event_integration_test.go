@@ -32,7 +32,7 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 	var sourceName string
 	sourceName = os.Getenv(key)
 	if sourceName == "" {
-		sourceName = "aws.partner/examplepartner.com"
+		sourceName = "aws.partner/example.com"
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	var sourceName string
 	sourceName = os.Getenv(key)
 	if sourceName == "" {
-		sourceName = "aws.partner/examplepartner.com"
+		sourceName = "aws.partner/example.com"
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

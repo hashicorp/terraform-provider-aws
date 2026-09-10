@@ -31,29 +31,31 @@ func resourceClassificationExportConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceClassificationExportConfigurationDelete,
 		ReadWithoutTimeout:   resourceClassificationExportConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			"s3_destination": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"key_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"s3_destination": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"key_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -69,7 +71,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 			return sdkdiag.AppendErrorf(diags, "reading Macie classification export configuration failed: %s", err)
 		}
 
-		if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration {
 			return sdkdiag.AppendErrorf(diags, "creating Macie classification export configuration: a configuration already exists")
 		}
 	}
@@ -126,8 +128,8 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 		return sdkdiag.AppendErrorf(diags, "reading Macie classification export configuration failed: %s", err)
 	}
 
-	if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
-		if (awstypes.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+	if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration {
+		if (awstypes.S3Destination{}) != *output.Configuration.S3Destination {
 			var flattenedS3Destination = flattenClassificationExportConfigurationS3DestinationResult(output.Configuration.S3Destination)
 			if err := d.Set("s3_destination", []any{flattenedS3Destination}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting Macie classification export configuration s3_destination: %s", err)

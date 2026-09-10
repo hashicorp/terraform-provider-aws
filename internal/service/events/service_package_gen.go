@@ -38,7 +38,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 		{
 			Factory:  newEventBusesDataSource,
 			TypeName: "aws_cloudwatch_event_buses",
-			Name:     "Event Buses",
+			Name:     "Buses",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -53,7 +53,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 		{
 			Factory:  dataSourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
-			Name:     "Event Bus",
+			Name:     "Bus",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -78,45 +78,73 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudwatch_event_api_destination",
 			Name:     "API Destination",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceArchive,
 			TypeName: "aws_cloudwatch_event_archive",
 			Name:     "Archive",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
-			Name:     "Event Bus",
+			Name:     "Bus",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceBusPolicy,
 			TypeName: "aws_cloudwatch_event_bus_policy",
-			Name:     "Event Bus Policy",
+			Name:     "Bus Policy",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("event_bus_name", true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceConnection,
 			TypeName: "aws_cloudwatch_event_connection",
 			Name:     "Connection",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceEndpoint,
 			TypeName: "aws_cloudwatch_event_endpoint",
 			Name:     "Global Endpoint",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourcePermission,
 			TypeName: "aws_cloudwatch_event_permission",
 			Name:     "Permission",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("statement_id", true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceRule,

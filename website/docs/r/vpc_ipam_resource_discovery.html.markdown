@@ -53,12 +53,20 @@ The `organizational_unit_exclusion` configuration block supports the following a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of IPAM Resource Discovery
+* `arn` - ARN of IPAM Resource Discovery
 * `id` - The ID of the IPAM Resource Discovery
 * `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery
 * `owner_id` - The account ID for the account that manages the Resource Discovery
 * `ipam_resource_discovery_region` - The home region of the Resource Discovery
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `update` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 

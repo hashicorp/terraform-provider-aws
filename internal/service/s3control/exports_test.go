@@ -41,5 +41,6 @@ var (
 	FindPublicAccessBlockByAccountID                       = findPublicAccessBlockByAccountID
 	FindStorageLensConfigurationByTwoPartKey               = findStorageLensConfigurationByTwoPartKey
 
-	AccessPointParseResourceID = accessPointParseResourceID
+	AccessPointParseResourceID            = accessPointParseResourceID
+	MultiRegionAccessPointParseResourceID = multiRegionAccessPointParseResourceID
 )

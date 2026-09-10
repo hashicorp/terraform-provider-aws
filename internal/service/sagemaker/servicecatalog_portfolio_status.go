@@ -32,12 +32,14 @@ func resourceServicecatalogPortfolioStatus() *schema.Resource {
 		UpdateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SagemakerServicecatalogStatus](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SagemakerServicecatalogStatus](),
+				},
+			}
 		},
 	}
 }

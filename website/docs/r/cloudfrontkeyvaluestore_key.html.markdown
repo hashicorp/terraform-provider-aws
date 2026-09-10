@@ -34,7 +34,7 @@ resource "aws_cloudfrontkeyvaluestore_key" "example" {
 The following arguments are required:
 
 * `key` - (Required) Key to put.
-* `key_value_store_arn` - (Required) Amazon Resource Name (ARN) of the Key Value Store.
+* `key_value_store_arn` - (Required) ARN of the Key Value Store.
 * `value` - (Required) Value to put.
 
 ## Attribute Reference

@@ -16,16 +16,7 @@ Provides a DynamoDB table resource.
 
 ~> **Note:** If autoscaling creates drift for your `global_secondary_index` blocks and/or more granular `lifecycle` management for GSIs, we recommend using the new **experimental** resource [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index).
 
-## DynamoDB Table attributes
-
-Only define attributes on the table object that are going to be used as:
-
-* Table hash key or range key
-* LSI or GSI hash key or range key
-
-The DynamoDB API expects attribute structure (name and type) to be passed along when creating or updating GSI/LSIs or creating the initial table. In these cases it expects the Hash / Range keys to be provided. Because these get re-used in numerous places (i.e the table's range key could be a part of one or more GSIs), they are stored on the table object to prevent duplication and increase consistency. If you add attributes here that are not used in these scenarios it can cause an infinite loop in planning.
-
-~> **Note:** When using the [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index) resource, you do not need to define the attributes for externally managed GSIs in the `aws_dynamodb_table` resource.
+~> **Note:** Only define attributes on the table object that are going to be used as a hash key or range key for the table itself, or for LSI/GSI keys. Adding attributes not used in these scenarios causes an infinite plan loop. When using [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index), you do not need to define attributes for externally managed GSIs in the `aws_dynamodb_table` resource.
 
 ## Example Usage
 
@@ -482,15 +473,14 @@ The following arguments are optional:
 
 ~> **Note:** Explicitly configuring both `read_units_per_second` and `write_units_per_second` to the default/minimum values will cause Terraform to report differences.
 
-* `read_units_per_second` - (Optional) Number of read operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `12000` (default).
-* `write_units_per_second` - (Optional) Number of write operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `4000` (default).
+* `read_units_per_second` - (Optional) Number of read operations a table or index can instantaneously support. For the base table, this value cannot be decreased. For a global secondary index, this value can be increased or decreased. Minimum value of `12000` (default).
+* `write_units_per_second` - (Optional) Number of write operations a table or index can instantaneously support. For the base table, this value cannot be decreased. For a global secondary index, this value can be increased or decreased. Minimum value of `4000` (default).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table
-* `id` - Name of the table
 * `replica.*.arn` - ARN of the replica
 * `replica.*.stream_arn` - ARN of the replica Table Stream. Only available when `stream_enabled = true`.
 * `replica.*.stream_label` - Timestamp, in ISO 8601 format, for the replica stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`.

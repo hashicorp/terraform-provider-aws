@@ -62,7 +62,7 @@
     "autoflex.source.path": "Field2",
     "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.aws02",
     "autoflex.target.path": "Field2",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tf01·58]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tf01·62]"
   },
   {
     "@level": "trace",
