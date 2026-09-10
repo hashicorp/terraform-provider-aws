@@ -46,6 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `created_at` - Timestamp when the registry was created.
 * `description` - Description of the registry.
 * `discovery_configuration` - Discovery configuration for the registry. [See below](#discovery_configuration-block).
+* `encryption_configuration` - Server-side encryption configuration for the registry. [See below](#encryption_configuration-block).
 * `name` - Name of the registry.
 * `registry_arn` - ARN of the registry.
 * `status` - Current status of the registry. Valid values: `CREATING`, `READY`, `UPDATING`, `DELETING`, `CREATE_FAILED`, `UPDATE_FAILED`, `DELETE_FAILED`.
@@ -88,3 +89,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `match_value_string` - Single string value to match.
 * `match_value_string_list` - Set of string values to match.
+
+### `encryption_configuration` Block
+
+* `kms_key_arn` - ARN of the customer-managed AWS KMS key used to encrypt the registry's content.
