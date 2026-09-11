@@ -183,6 +183,69 @@ func testAccMailManagerIngressPoint_tlsPolicy(t *testing.T) {
 	})
 }
 
+func testAccMailManagerIngressPoint_statusToUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_ingress_point.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIngressPoint(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create is active by default; status_to_update is not set.
+				Config: testAccIngressPointConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckNoResourceAttr(resourceName, "status_to_update"),
+				),
+			},
+			{
+				// Deactivate: setting status_to_update to CLOSED is an in-place update.
+				Config: testAccIngressPointConfig_statusToUpdate(rName, "CLOSED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status_to_update", "CLOSED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "CLOSED"),
+				),
+			},
+			{
+				// Reactivate: setting status_to_update to ACTIVE is an in-place update.
+				Config: testAccIngressPointConfig_statusToUpdate(rName, "ACTIVE"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status_to_update", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Not returned by the API
+				ImportStateVerifyIgnore: []string{"status_to_update"},
+			},
+		},
+	})
+}
+
 func testAccMailManagerIngressPoint_type(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -502,6 +565,20 @@ resource "aws_mailmanager_ingress_point" "test" {
   tls_policy        = %[2]q
 }
 `, rName, tlsPolicy))
+}
+
+func testAccIngressPointConfig_statusToUpdate(rName, statusToUpdate string) string {
+	return acctest.ConfigCompose(
+		testAccIngressPointConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_mailmanager_ingress_point" "test" {
+  name              = %[1]q
+  type              = "OPEN"
+  rule_set_id       = aws_mailmanager_rule_set.test.id
+  traffic_policy_id = aws_mailmanager_traffic_policy.test.id
+  status_to_update  = %[2]q
+}
+`, rName, statusToUpdate))
 }
 
 func testAccIngressPointConfig_publicNetworkConfiguration(rName, ipType string) string {
