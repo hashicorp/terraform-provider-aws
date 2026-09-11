@@ -126,8 +126,10 @@ const (
 	targetGroupAttributeTargetHealthStateUnhealthyDrainingIntervalSeconds      = "target_health_state.unhealthy.draining_interval_seconds"
 
 	// The following attributes are supported only by Gateway Load Balancers:
-	targetGroupAttributeTargetFailoverOnDeregistration = "target_failover.on_deregistration"
-	targetGroupAttributeTargetFailoverOnUnhealthy      = "target_failover.on_unhealthy"
+	targetGroupAttributeSendTCPResetOnDeregistrationEnabled = "send_tcp_reset.on_deregistration.enabled"
+	targetGroupAttributeSendTCPResetOnUnhealthyEnabled      = "send_tcp_reset.on_unhealthy.enabled"
+	targetGroupAttributeTargetFailoverOnDeregistration      = "target_failover.on_deregistration"
+	targetGroupAttributeTargetFailoverOnUnhealthy           = "target_failover.on_unhealthy"
 )
 
 const (
