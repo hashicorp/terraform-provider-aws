@@ -5,6 +5,7 @@ package types_test
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -138,6 +139,37 @@ func TestAttributeTypes(t *testing.T) {
 				t.Errorf("unexpected diff (+expected, -got): %s", diff)
 			}
 		})
+	}
+}
+
+// TestAttributeTypesCacheIdentity confirms that AttributeTypes memoizes its result: repeated
+// calls for the same type, and calls for both T and *T, return the same cached map instance.
+func TestAttributeTypesCacheIdentity(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	value, diags := fwtypes.AttributeTypes[attributeTypesTestStruct2](ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	valueAgain, diags := fwtypes.AttributeTypes[attributeTypesTestStruct2](ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	pointer, diags := fwtypes.AttributeTypes[*attributeTypesTestStruct2](ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	// Map identity is compared by the underlying map header pointer.
+	if reflect.ValueOf(value).Pointer() != reflect.ValueOf(valueAgain).Pointer() {
+		t.Errorf("repeated calls for the same type returned different map instances")
+	}
+	if reflect.ValueOf(value).Pointer() != reflect.ValueOf(pointer).Pointer() {
+		t.Errorf("T and *T returned different map instances")
 	}
 }
 
