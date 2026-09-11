@@ -51,6 +51,10 @@ func TestAccQuickSight_serial(t *testing.T) {
 			acctest.CtDisappears: testAccRoleMembership_disappears,
 			"role":               testAccRoleMembership_role,
 		},
+		"SPICECapacityConfiguration": {
+			acctest.CtBasic: testAccSPICECapacityConfiguration_basic,
+			"update":        testAccSPICECapacityConfiguration_update,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

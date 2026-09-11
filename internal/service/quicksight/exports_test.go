@@ -9,31 +9,32 @@ import (
 
 // Exports for use in tests only.
 var (
-	ResourceAccountSettings      = newAccountSettingsResource
-	ResourceAccountSubscription  = resourceAccountSubscription
-	ResourceAnalysis             = resourceAnalysis
-	ResourceCustomPermissions    = newCustomPermissionsResource
-	ResourceDashboard            = resourceDashboard
-	ResourceDataSet              = resourceDataSet
-	ResourceDataSource           = resourceDataSource
-	ResourceFolder               = resourceFolder
-	ResourceFolderMembership     = newFolderMembershipResource
-	ResourceGroup                = resourceGroup
-	ResourceGroupMembership      = resourceGroupMembership
-	ResourceIAMPolicyAssignment  = newIAMPolicyAssignmentResource
-	ResourceIngestion            = newIngestionResource
-	ResourceIPRestriction        = newIPRestrictionResource
-	ResourceKeyRegistration      = newKeyRegistrationResource
-	ResourceNamespace            = newNamespaceResource
-	ResourceRefreshSchedule      = newRefreshScheduleResource
-	ResourceRoleCustomPermission = newRoleCustomPermissionResource
-	ResourceRoleMembership       = newRoleMembershipResource
-	ResourceTemplate             = resourceTemplate
-	ResourceTemplateAlias        = newTemplateAliasResource
-	ResourceTheme                = resourceTheme
-	ResourceUser                 = resourceUser
-	ResourceUserCustomPermission = newUserCustomPermissionResource
-	ResourceVPCConnection        = newVPCConnectionResource
+	ResourceAccountSettings            = newAccountSettingsResource
+	ResourceAccountSubscription        = resourceAccountSubscription
+	ResourceAnalysis                   = resourceAnalysis
+	ResourceCustomPermissions          = newCustomPermissionsResource
+	ResourceDashboard                  = resourceDashboard
+	ResourceDataSet                    = resourceDataSet
+	ResourceDataSource                 = resourceDataSource
+	ResourceFolder                     = resourceFolder
+	ResourceFolderMembership           = newFolderMembershipResource
+	ResourceGroup                      = resourceGroup
+	ResourceGroupMembership            = resourceGroupMembership
+	ResourceIAMPolicyAssignment        = newIAMPolicyAssignmentResource
+	ResourceIngestion                  = newIngestionResource
+	ResourceIPRestriction              = newIPRestrictionResource
+	ResourceKeyRegistration            = newKeyRegistrationResource
+	ResourceNamespace                  = newNamespaceResource
+	ResourceRefreshSchedule            = newRefreshScheduleResource
+	ResourceRoleCustomPermission       = newRoleCustomPermissionResource
+	ResourceRoleMembership             = newRoleMembershipResource
+	ResourceSPICECapacityConfiguration = newSPICECapacityConfigurationResource
+	ResourceTemplate                   = resourceTemplate
+	ResourceTemplateAlias              = newTemplateAliasResource
+	ResourceTheme                      = resourceTheme
+	ResourceUser                       = resourceUser
+	ResourceUserCustomPermission       = newUserCustomPermissionResource
+	ResourceVPCConnection              = newVPCConnectionResource
 
 	DashboardLatestVersion                 = dashboardLatestVersion
 	DefaultNamespace                       = quicksightschema.DefaultNamespace
