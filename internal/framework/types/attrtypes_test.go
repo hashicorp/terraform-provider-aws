@@ -37,6 +37,11 @@ type attributeTypesTestStructMissingTag struct {
 	Name types.String
 }
 
+type attributeTypesTestStructNonAttrValue struct {
+	Name    types.String `tfsdk:"name"`
+	NotAttr string       `tfsdk:"not_attr"`
+}
+
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 
@@ -85,6 +90,12 @@ func TestAttributeTypes(t *testing.T) {
 		},
 		"excluded field": {
 			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructExcludedField],
+			expected: map[string]attr.Type{
+				"name": types.StringType,
+			},
+		},
+		"non-attr.Value field skipped": {
+			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructNonAttrValue],
 			expected: map[string]attr.Type{
 				"name": types.StringType,
 			},
