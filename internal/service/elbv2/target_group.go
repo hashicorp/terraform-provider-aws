@@ -262,11 +262,13 @@ func resourceTargetGroup() *schema.Resource {
 						Schema: map[string]*schema.Schema{
 							"on_deregistration": {
 								Type:     schema.TypeBool,
-								Required: true,
+								Optional: true,
+								Computed: true,
 							},
 							"on_unhealthy": {
 								Type:     schema.TypeBool,
-								Required: true,
+								Optional: true,
+								Computed: true,
 							},
 						},
 					},
