@@ -68,6 +68,8 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	return cached, diags
 }
 
+// AttributeTypesMust is like AttributeTypes but panics if T is not a valid struct type.
+// The returned map is shared and must not be mutated by callers.
 func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
 	return fwdiag.Must(AttributeTypes[T](ctx))
 }
