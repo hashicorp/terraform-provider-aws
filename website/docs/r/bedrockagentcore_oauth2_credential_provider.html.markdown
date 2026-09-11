@@ -137,7 +137,7 @@ The `custom_oauth2_provider_config` block supports the following:
 * `client_authentication_method` - (Optional) Client authentication method used with the token endpoint. Valid values: `CLIENT_SECRET_BASIC`, `CLIENT_SECRET_POST`, `AWS_IAM_ID_TOKEN_JWT`.
 * `on_behalf_of_token_exchange_config` - (Optional) On-behalf-of token exchange configuration, enabling RFC 8693 token exchange or RFC 7523 JWT authorization grant flows. See [`on_behalf_of_token_exchange_config`](#on_behalf_of_token_exchange_config) below.
 * `private_endpoint` - (Optional) Default private endpoint for the custom OAuth2 provider, enabling secure connectivity through a VPC Lattice resource configuration. See [`private_endpoint`](#private_endpoint) below.
-* `private_endpoint_overrides` - (Optional) Private endpoint overrides for the custom OAuth2 provider configuration. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+* `private_endpoint_override` - (Optional) Private endpoint overrides for the custom OAuth2 provider configuration. See [`private_endpoint_override`](#private_endpoint_override) below.
 
 ### `client_secret_config`
 
@@ -167,9 +167,9 @@ The `private_endpoint` block supports exactly one of the following:
 * `managed_vpc_resource` - (Optional) Service-managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
 * `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
 
-### `private_endpoint_overrides`
+### `private_endpoint_override`
 
-The `private_endpoint_overrides` block supports the following:
+The `private_endpoint_override` block supports the following:
 
 * `domain` - (Optional) Domain the private endpoint override applies to.
 * `private_endpoint` - (Optional) Private endpoint configuration for the domain. See [`private_endpoint`](#private_endpoint) above.

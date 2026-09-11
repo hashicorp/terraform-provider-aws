@@ -11,9 +11,5 @@ resource/aws_bedrockagentcore_oauth2_credential_provider: Add `token_endpoint_au
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentication_method`, `on_behalf_of_token_exchange_config`, `private_endpoint`, and `private_endpoint_overrides` arguments to `custom_oauth2_provider_config`
-```
-
-```release-note:enhancement
-resource/aws_bedrockagentcore_oauth2_credential_provider: Add `atlassian_oauth2_provider_config`, `linkedin_oauth2_provider_config`, and `included_oauth2_provider_config` configuration blocks and the `token_endpoint_auth_methods` argument for custom OAuth2 authorization server metadata
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentication_method`, `on_behalf_of_token_exchange_config`, `private_endpoint`, `private_endpoint_override`, and `private_key_jwt_config` arguments to `oauth2_provider_config.custom_oauth2_provider_config` configuration block
 ```

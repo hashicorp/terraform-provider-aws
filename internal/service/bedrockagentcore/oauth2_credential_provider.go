@@ -88,7 +88,6 @@ func oauth2ProviderClientCredentialsAttributes(context.Context) map[string]schem
 			},
 		},
 		names.AttrClientID: schema.StringAttribute{
-			// TODO Required except for custom provider.
 			Optional:  true,
 			Sensitive: true,
 			Validators: []validator.String{
@@ -164,36 +163,13 @@ func oauth2ProviderClientCredentialsAttributes(context.Context) map[string]schem
 	}
 }
 
-func secretReferenceBlock(ctx context.Context) schema.Block {
-	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[secretReferenceModel](ctx),
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
-		},
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"json_key": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthBetween(1, 128),
-					},
-				},
-				"secret_id": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthBetween(1, 2048),
-					},
-				},
-			},
-		},
-	}
-}
-
 // Configuration schema shared by all non-custom OAuth2 providers.
 // See basicOAuth2ProviderConfigModel.
 func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.Block {
 	attrs := oauth2ProviderClientCredentialsAttributes(ctx)
-	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
+	maps.Copy(attrs, map[string]schema.Attribute{
+		"oauth_discovery": framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx),
+	})
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
@@ -203,7 +179,28 @@ func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.Block {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: attrs,
 			Blocks: map[string]schema.Block{
-				"client_secret_config": secretReferenceBlock(ctx),
+				"client_secret_config": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[secretReferenceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"json_key": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 128),
+								},
+							},
+							"secret_id": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 2048),
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -213,6 +210,22 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 	block := basicOAuth2ProviderConfigBlock[customOAuth2ProviderConfigModel](ctx).(schema.ListNestedBlock)
 	// Replace the Computed oauth_discovery attribute with a configurable block.
 	delete(block.NestedObject.Attributes, "oauth_discovery")
+	maps.Copy(block.NestedObject.Attributes, map[string]schema.Attribute{
+		"client_authentication_method": schema.StringAttribute{
+			CustomType: fwtypes.StringEnumType[awstypes.ClientAuthenticationMethodType](),
+			Optional:   true,
+			Validators: []validator.String{
+				tfstringvalidator.AlsoRequiresWhenEquals(
+					awstypes.ClientAuthenticationMethodTypeClientSecretBasic,
+					path.MatchRelative().AtParent().AtName(names.AttrClientID),
+				),
+				tfstringvalidator.AlsoRequiresWhenEquals(
+					awstypes.ClientAuthenticationMethodTypeClientSecretPost,
+					path.MatchRelative().AtParent().AtName(names.AttrClientID),
+				),
+			},
+		},
+	})
 	maps.Copy(block.NestedObject.Blocks, map[string]schema.Block{
 		"oauth_discovery": schema.ListNestedBlock{
 			CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
@@ -260,6 +273,107 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 										listvalidator.ValueStringsAre(
 											stringvalidator.RegexMatches(regexache.MustCompile(`^(client_secret_post|client_secret_basic)$`), ""),
 										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"on_behalf_of_token_exchange_config": schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[onBehalfOfTokenExchangeConfigTypeModel](ctx),
+			Validators: []validator.List{
+				listvalidator.SizeAtMost(1),
+			},
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					"grant_type": schema.StringAttribute{
+						CustomType: fwtypes.StringEnumType[awstypes.OnBehalfOfTokenExchangeGrantTypeType](),
+						Required:   true,
+						Validators: []validator.String{
+							tfstringvalidator.AlsoRequiresWhenEquals(
+								awstypes.OnBehalfOfTokenExchangeGrantTypeTypeTokenExchange,
+								path.MatchRelative().AtParent().AtName("token_exchange_grant_type_config"),
+							),
+						},
+					},
+				},
+				Blocks: map[string]schema.Block{
+					"token_exchange_grant_type_config": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[tokenExchangeGrantTypeConfigTypeModel](ctx),
+						Validators: []validator.List{
+							listvalidator.SizeAtMost(1),
+						},
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"actor_token_content": schema.StringAttribute{
+									CustomType: fwtypes.StringEnumType[awstypes.ActorTokenContentType](),
+									Required:   true,
+									Validators: []validator.String{
+										tfstringvalidator.ConflictsWithWhenNotEquals(
+											awstypes.ActorTokenContentTypeM2m,
+											path.MatchRelative().AtParent().AtName("actor_token_scopes"),
+										),
+									},
+								},
+								"actor_token_scopes": schema.SetAttribute{
+									CustomType: fwtypes.SetOfStringType,
+									Optional:   true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"private_endpoint":          privateEndpointBlock(ctx),
+		"private_endpoint_override": privateEndpointOverrideBlock(ctx),
+		"private_key_jwt_config": schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[privateKeyJwtConfigModel](ctx),
+			Validators: []validator.List{
+				listvalidator.SizeAtMost(1),
+			},
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					"additional_header_claims": schema.MapAttribute{
+						CustomType: fwtypes.MapOfStringType,
+						Optional:   true,
+					},
+					"additional_payload_claims": schema.MapAttribute{
+						CustomType: fwtypes.MapOfStringType,
+						Optional:   true,
+					},
+					"signing_algorithm": schema.StringAttribute{
+						CustomType: fwtypes.StringEnumType[awstypes.SigningAlgorithm](),
+						Optional:   true,
+					},
+				},
+				Blocks: map[string]schema.Block{
+					"private_key_source": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[privateKeySourceModel](ctx),
+						Validators: []validator.List{
+							listvalidator.SizeAtMost(1),
+						},
+						NestedObject: schema.NestedBlockObject{
+							Validators: []validator.Object{
+								tfobjectvalidator.ExactlyOneOfChildren(
+									path.MatchRelative().AtName("kms_key_source"),
+								),
+							},
+							Blocks: map[string]schema.Block{
+								"kms_key_source": schema.ListNestedBlock{
+									CustomType: fwtypes.NewListNestedObjectTypeOf[kmsKeySourceTypeModel](ctx),
+									Validators: []validator.List{
+										listvalidator.SizeAtMost(1),
+									},
+									NestedObject: schema.NestedBlockObject{
+										Attributes: map[string]schema.Attribute{
+											names.AttrKMSKeyARN: schema.StringAttribute{
+												CustomType: fwtypes.ARNType,
+												Required:   true,
+											},
+										},
 									},
 								},
 							},
@@ -797,8 +911,8 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 }
 
 var (
+	_ fwflex.Expander  = oauth2ProviderConfigModel{}
 	_ fwflex.Flattener = &oauth2ProviderConfigModel{}
-	_ fwflex.Expander  = &oauth2ProviderConfigModel{}
 )
 
 func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -1094,6 +1208,84 @@ type basicOAuth2ProviderConfigModel struct {
 
 type customOAuth2ProviderConfigModel struct {
 	basicOAuth2ProviderConfigModel
+	ClientAuthenticationMethod    fwtypes.StringEnum[awstypes.ClientAuthenticationMethodType]             `tfsdk:"client_authentication_method"`
+	OnBehalfOfTokenExchangeConfig fwtypes.ListNestedObjectValueOf[onBehalfOfTokenExchangeConfigTypeModel] `tfsdk:"on_behalf_of_token_exchange_config"`
+	PrivateEndpoint               fwtypes.ListNestedObjectValueOf[privateEndpointModel]                   `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides      fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]           `tfsdk:"private_endpoint_override"`
+	PrivateKeyJwtConfig           fwtypes.ListNestedObjectValueOf[privateKeyJwtConfigModel]               `tfsdk:"private_key_jwt_config"`
+}
+
+type onBehalfOfTokenExchangeConfigTypeModel struct {
+	GrantType                    fwtypes.StringEnum[awstypes.OnBehalfOfTokenExchangeGrantTypeType]      `tfsdk:"grant_type"`
+	TokenExchangeGrantTypeConfig fwtypes.ListNestedObjectValueOf[tokenExchangeGrantTypeConfigTypeModel] `tfsdk:"token_exchange_grant_type_config"`
+}
+
+type tokenExchangeGrantTypeConfigTypeModel struct {
+	ActorTokenContent fwtypes.StringEnum[awstypes.ActorTokenContentType] `tfsdk:"actor_token_content"`
+	ActorTokenScopes  fwtypes.SetOfString                                `tfsdk:"actor_token_scopes"`
+}
+
+type privateKeyJwtConfigModel struct {
+	AdditionalHeaderClaims  fwtypes.MapOfString                                    `tfsdk:"additional_header_claims"`
+	AdditionalPayloadClaims fwtypes.MapOfString                                    `tfsdk:"additional_payload_claims"`
+	PrivateKeySource        fwtypes.ListNestedObjectValueOf[privateKeySourceModel] `tfsdk:"private_key_source"`
+	SigningAlgorithm        fwtypes.StringEnum[awstypes.SigningAlgorithm]          `tfsdk:"signing_algorithm"`
+}
+
+type privateKeySourceModel struct {
+	KMSKeySource fwtypes.ListNestedObjectValueOf[kmsKeySourceTypeModel] `tfsdk:"kms_key_source"`
+}
+
+var (
+	_ fwflex.Expander  = privateKeySourceModel{}
+	_ fwflex.Flattener = &privateKeySourceModel{}
+)
+
+func (m *privateKeySourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.PrivateKeySourceMemberKmsKeySource:
+		var model kmsKeySourceTypeModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.KMSKeySource, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("privateKeySourceModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m privateKeySourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.KMSKeySource.IsNull():
+		model, d := m.KMSKeySource.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.PrivateKeySourceMemberKmsKeySource
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type kmsKeySourceTypeModel struct {
+	KMSKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
 }
 
 // These OAuth2 providers have only the common attributes.
@@ -1118,8 +1310,8 @@ type microsoftOAuth2ProviderConfigModel struct {
 }
 
 var (
+	_ fwflex.Expander  = oauth2DiscoveryModel{}
 	_ fwflex.Flattener = &oauth2DiscoveryModel{}
-	_ fwflex.Expander  = &oauth2DiscoveryModel{}
 )
 
 func (m *oauth2DiscoveryModel) Flatten(ctx context.Context, v any) diag.Diagnostics {

@@ -791,10 +791,15 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"client_authentication_method":  knownvalue.Null(),
 							"client_credentials_wo_version": knownvalue.Int64Exact(1),
 							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"discovery_url": knownvalue.StringExact("https://dev-example.auth0.com/.well-known/openid-configuration"),
 							})}),
+							"on_behalf_of_token_exchange_config": knownvalue.ListSizeExact(0),
+							"private_endpoint":                   knownvalue.ListSizeExact(0),
+							"private_endpoint_override":          knownvalue.ListSizeExact(0),
+							"private_key_jwt_config":             knownvalue.ListSizeExact(0),
 						})}),
 					})})),
 				},
