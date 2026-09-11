@@ -47,7 +47,7 @@ type wrappedDataSource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(ctx context.Context, spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -69,7 +69,7 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 		interceptors = append(interceptors, dataSourceTransparentTagging(spec.Tags))
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	return &wrappedDataSource{
 		inner:              inner,
@@ -200,7 +200,7 @@ type wrappedEphemeralResource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedEphemeralResource(spec *inttypes.ServicePackageEphemeralResource, servicePackageName string) ephemeral.EphemeralResourceWithConfigure {
+func newWrappedEphemeralResource(ctx context.Context, spec *inttypes.ServicePackageEphemeralResource, servicePackageName string) ephemeral.EphemeralResourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -218,7 +218,7 @@ func newWrappedEphemeralResource(spec *inttypes.ServicePackageEphemeralResource,
 		interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	return &wrappedEphemeralResource{
 		inner:              inner,
@@ -358,7 +358,7 @@ type wrappedAction struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
+func newWrappedAction(ctx context.Context, spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -375,7 +375,7 @@ func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName st
 		}
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	return &wrappedAction{
 		inner:              inner,
@@ -497,7 +497,7 @@ type wrappedResource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, servicePackageName string) resource.ResourceWithConfigure {
+func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFrameworkResource, servicePackageName string) resource.ResourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -527,7 +527,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 		interceptors = append(interceptors, resourceValidateRequiredTags())
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	if len(spec.Identity.Attributes) == 0 {
 		return &wrappedResource{

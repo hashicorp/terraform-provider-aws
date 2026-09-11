@@ -138,7 +138,7 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 				continue
 			}
 
-			outer := newWrappedDataSource(dataSourceSpec, sp.ServicePackageName())
+			outer := newWrappedDataSource(ctx, dataSourceSpec, sp.ServicePackageName())
 
 			outerResponse := datasource.SchemaResponse{}
 			outer.Schema(ctx, datasource.SchemaRequest{}, &outerResponse)
@@ -164,7 +164,7 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					continue
 				}
 
-				outer := newWrappedEphemeralResource(ephemeralResourceSpec, sp.ServicePackageName())
+				outer := newWrappedEphemeralResource(ctx, ephemeralResourceSpec, sp.ServicePackageName())
 
 				outerResponse := ephemeral.SchemaResponse{}
 				outer.Schema(ctx, ephemeral.SchemaRequest{}, &outerResponse)
@@ -191,7 +191,7 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					continue
 				}
 
-				outer := newWrappedAction(actionSpec, sp.ServicePackageName())
+				outer := newWrappedAction(ctx, actionSpec, sp.ServicePackageName())
 
 				outerResponse := action.SchemaResponse{}
 				outer.Schema(ctx, action.SchemaRequest{}, &outerResponse)
@@ -236,7 +236,7 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 				}
 			}
 
-			outer := newWrappedResource(resourceSpec, sp.ServicePackageName())
+			outer := newWrappedResource(ctx, resourceSpec, sp.ServicePackageName())
 
 			outerResponse := resource.SchemaResponse{}
 			outer.Schema(ctx, resource.SchemaRequest{}, &outerResponse)
