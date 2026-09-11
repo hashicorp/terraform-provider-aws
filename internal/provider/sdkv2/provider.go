@@ -563,21 +563,18 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			if isRegionOverrideEnabled {
 				v := v.Region.Value()
-				s := r.SchemaMap()
 
-				if _, ok := s[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					regionSchema := sdkv2.RegionOptionalComputed()
+				// Inject a top-level "region" attribute.
+				regionSchema := sdkv2.RegionOptionalComputed()
 
-					if f := r.SchemaFunc; f != nil {
-						r.SchemaFunc = func() map[string]*schema.Schema {
-							s := f()
-							s[names.AttrRegion] = regionSchema
-							return s
-						}
-					} else {
-						r.Schema[names.AttrRegion] = regionSchema
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
 					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
 				}
 
 				if v.IsValidateOverrideInPartition {
