@@ -14,7 +14,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
       client_authentication_method  = "CLIENT_SECRET_BASIC"
 
       oauth_discovery {
-        discovery_url = "https://dev-example.auth0.com/.well-known/openid-configuration"
+        discovery_url = "https://dev-example.auth0.com/.well-known/openid-configuration" # nosemgrep:ci.semgrep.domain-names.domain-names-tf
       }
 
       on_behalf_of_token_exchange_config {
