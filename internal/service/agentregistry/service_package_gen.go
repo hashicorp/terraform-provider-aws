@@ -51,6 +51,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newRegistryRecordResource,
+			TypeName: "aws_agentregistry_registry_record",
+			Name:     "Registry Record",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "record_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("registry_id", true),
+				inttypes.StringIdentityAttribute("record_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      registryRecordImportID{},
+			},
+		},
 	}
 }
 
