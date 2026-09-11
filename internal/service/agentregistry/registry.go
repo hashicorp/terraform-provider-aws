@@ -452,6 +452,7 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 		registryID := fwflex.StringValueFromFramework(ctx, plan.RegistryID)
 		optFns := []fwflex.AutoFlexOptionsFunc{
 			fwflex.WithIgnoredFieldNamesAppend("ApprovalConfiguration"),
+			fwflex.WithIgnoredFieldNamesAppend("AutoDetectionConfiguration"),
 			fwflex.WithIgnoredFieldNamesAppend("Description"),
 		}
 		var input agentregistrycontrol.UpdateRegistryInput
