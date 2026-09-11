@@ -15,6 +15,7 @@ var (
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
 	ResourceGlobalSecondaryIndex        = newResourceGlobalSecondaryIndex
+	ResourceVectorIndex                 = newVectorIndexResource
 
 	ARNForNewRegion                              = arnForNewRegion
 	ContributorInsightsParseResourceID           = contributorInsightsParseResourceID
@@ -23,6 +24,7 @@ var (
 	FindContributorInsightsByTwoPartKey          = findContributorInsightsByTwoPartKey
 	FindGlobalTableByName                        = findGlobalTableByName
 	FindGSIByTwoPartKey                          = findGSIByTwoPartKey
+	FindVectorIndexByTwoPartKey                  = findVectorIndexByTwoPartKey
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindTableByName                              = findTableByName
