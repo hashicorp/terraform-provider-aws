@@ -52,6 +52,14 @@ func TestAttributeTypes(t *testing.T) {
 				"include_property": types.BoolType,
 			},
 		},
+		"pointer to struct": {
+			attributeTypes: fwtypes.AttributeTypes[*attributeTypesTestStruct2],
+			expected: map[string]attr.Type{
+				"arn":              types.StringType,
+				"id":               types.Int64Type,
+				"include_property": types.BoolType,
+			},
+		},
 		"embedded struct": {
 			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStruct3],
 			expected: map[string]attr.Type{
