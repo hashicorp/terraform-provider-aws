@@ -29,6 +29,18 @@ var (
 	checkRegistryARNAlternateRegion knownvalue.Check = tfknownvalue.RegionalARNAlternateRegionRegexp("agent-registry", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}`))
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.AgentRegistryServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSequence(
+		acctest.ErrorCheckSkipMessagesMatches(t,
+			regexache.MustCompile(`ValidationException: privateEndpoint or privateEndpointOverrides are not yet\s+supported`),
+		),
+	)
+}
+
 func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -508,6 +520,64 @@ func TestAccAgentRegistryRegistry_customJWTAuthorizerFull(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Registry/custom_jwt_authorizer.full/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
+				ImportStateVerifyIdentifierAttribute: "registry_id",
+			},
+		},
+	})
+}
+
+func TestAccAgentRegistryRegistry_customJWTAuthorizerPrivateEndpointOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_agentregistry_registry.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AgentRegistryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/custom_jwt_authorizer.private_endpoint_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"authorizer_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"allowed_audience": knownvalue.Null(),
+								"allowed_clients": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.StringExact("client1"),
+								}),
+								"allowed_scopes":            knownvalue.Null(),
+								"custom_claim":              knownvalue.SetSizeExact(0),
+								"discovery_url":             knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								"private_endpoint":          knownvalue.ListSizeExact(1),
+								"private_endpoint_override": knownvalue.ListSizeExact(1),
+							})}),
+						})}),
+						"authorizer_type": tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeCustomJwt),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/custom_jwt_authorizer.private_endpoint_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
