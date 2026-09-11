@@ -522,7 +522,7 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 }
 
 // normalizePolicyStatements keeps an empty API result null so an omitted
-// policy_statement block (null in configuration) round-trips without a diff.
+// policy_statement block round-trips without a diff.
 func normalizePolicyStatements(ctx context.Context, data *trafficPolicyResourceModel, policyStatements []awstypes.PolicyStatement) {
 	if len(policyStatements) == 0 {
 		data.PolicyStatements = fwtypes.NewListNestedObjectValueOfNull[policyStatementModel](ctx)
