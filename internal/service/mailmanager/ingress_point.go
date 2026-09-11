@@ -454,8 +454,7 @@ func (r *ingressPointResource) flatten(ctx context.Context, apiObject *mailmanag
 }
 
 // expectedIngressPointStatus determines the target status an ingress point should
-// reach after an update. When status_to_update is set, it maps to the matching
-// stable status; otherwise the current status is preserved.
+// reach after an update.
 func expectedIngressPointStatus(plan, state ingressPointResourceModel) awstypes.IngressPointStatus {
 	switch plan.StatusToUpdate.ValueEnum() {
 	case awstypes.IngressPointStatusToUpdateClosed:
