@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_api_gateway_deployment
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_deployment: Add resource identity support
+```
