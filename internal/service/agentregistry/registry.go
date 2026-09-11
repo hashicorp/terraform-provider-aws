@@ -655,6 +655,8 @@ func (r *registryResource) flatten(ctx context.Context, out *agentregistrycontro
 		var d diag.Diagnostics
 		data.AutoDetectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		diags.Append(d...)
+	} else {
+		data.AutoDetectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[autoDetectionConfigurationModel](ctx)
 	}
 
 	return diags

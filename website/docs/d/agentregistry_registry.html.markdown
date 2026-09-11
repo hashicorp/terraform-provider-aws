@@ -94,7 +94,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `private_endpoint` Block
 
-Exactly one of the following must be specified:
+One of the following is returned:
 
 * `managed_vpc_resource` - Private endpoint backed by a service-managed VPC resource. [See below](#managed_vpc_resource-block).
 * `self_managed_lattice_resource` - Private endpoint backed by a self-managed VPC Lattice resource configuration. [See below](#self_managed_lattice_resource-block).
