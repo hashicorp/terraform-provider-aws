@@ -235,6 +235,13 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					continue
 				}
 			}
+
+			outer := newWrappedResource(resourceSpec, sp.ServicePackageName())
+
+			outerResponse := resource.SchemaResponse{}
+			outer.Schema(ctx, resource.SchemaRequest{}, &outerResponse)
+
+			validateSchemaModelForResource(ctx, t, typeName, outer, outerResponse.Schema)
 		}
 	}
 }
@@ -291,6 +298,31 @@ func validateSchemaModelForAction(ctx context.Context, t *testing.T, typeName st
 		diags := v.ValidateModel(ctx, &schema)
 		if diags.HasError() {
 			t.Errorf("action %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
+		}
+	}
+}
+
+func validateSchemaModelForResource(ctx context.Context, t *testing.T, typeName string, outer resource.ResourceWithConfigure, schema resourceschema.Schema) {
+	t.Helper()
+
+	var v *wrappedResource
+	switch x := outer.(type) {
+	case *wrappedResource:
+		v = x
+	case *wrappedResourceWithIdentity:
+		v = &x.wrappedResource
+	default:
+		t.Errorf("resource %q is not a wrappedResource or wrappedResourceWithIdentity", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.ResourceValidateModel); !ok {
+		if typeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
+			t.Errorf("resource %q does not implement framework.ResourceValidateModel", typeName)
+		}
+	} else {
+		if diags := v.ValidateModel(ctx, &schema); diags.HasError() {
+			t.Errorf("resource %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
 		}
 	}
 }

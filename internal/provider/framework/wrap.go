@@ -618,17 +618,6 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 
 	interceptedHandler(w.interceptors.resourceSchema(), w.inner.Schema, resourceSchemaHasError, w.meta)(ctx, request, response)
-
-	// Validate the resource's model against the schema.
-	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("resource model validation error", w.spec.TypeName)
-			return
-		}
-	} else if w.spec.TypeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
-		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
