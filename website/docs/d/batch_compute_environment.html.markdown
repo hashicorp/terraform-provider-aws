@@ -37,5 +37,6 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the compute environment (for example, `CREATING` or `VALID`).
 * `status_reason` - Short, human-readable string to provide additional details about the current status of the compute environment.
 * `state` - State of the compute environment (for example, `ENABLED` or `DISABLED`). If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
+* `unmanaged_vcpus` - Number of vCPUs for an unmanaged compute environment. This parameter is only used for fair-share scheduling to ensure that each compute environment has the correct number of vCPUs when it is used in a fair-share job queue. Only valid when `type` is `UNMANAGED`.
 * `update_policy` - Specifies the infrastructure update policy for the compute environment.
 * `tags` - Key-value map of resource tags
