@@ -637,7 +637,10 @@ func (r *registryResource) flatten(ctx context.Context, out *agentregistrycontro
 	if out.ApprovalConfiguration != nil && len(out.ApprovalConfiguration.AutoApprovalRules) == 0 {
 		out.ApprovalConfiguration = nil
 	}
-	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	optFns := []fwflex.AutoFlexOptionsFunc{
+		fwflex.WithIgnoredFieldNamesAppend("AutoDetectionConfiguration"),
+	}
+	diags.Append(fwflex.Flatten(ctx, out, data, optFns...)...)
 	if diags.HasError() {
 		return diags
 	}
