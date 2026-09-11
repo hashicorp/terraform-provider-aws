@@ -600,6 +600,7 @@ func testAccDataSource_managedKBConnector_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "MANAGED_KNOWLEDGE_BASE_CONNECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.sync_schedule.0.daily.#", "1"),
 				),
 			},
 			{
@@ -609,6 +610,14 @@ func testAccDataSource_managedKBConnector_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"data_source_configuration.0.managed_knowledge_base_connector_configuration.0.connector_parameters",
 				},
+			},
+			{
+				Config: testAccDataSourceConfig_managedKBConnector_syncScheduleMonthly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.sync_schedule.0.daily.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.sync_schedule.0.monthly.0.day_number", "15"),
+				),
 			},
 		},
 	})
@@ -1142,6 +1151,50 @@ resource "aws_bedrockagent_data_source" "test" {
       media_extraction_configuration {
         image_extraction_configuration {
           image_extraction_status = "ENABLED"
+        }
+      }
+
+      sync_schedule {
+        daily {}
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_managedKBConnector_syncScheduleMonthly(rName string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_managedKBConnector_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = aws_s3_bucket.test.bucket
+          bucketOwnerAccountId = data.aws_caller_identity.current.account_id
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
+        }
+      }
+
+      sync_schedule {
+        monthly {
+          day_number = 15
         }
       }
     }

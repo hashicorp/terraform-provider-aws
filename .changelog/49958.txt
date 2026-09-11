@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_data_source: Add `sync_schedule` configuration block to the `managed_knowledge_base_connector_configuration` block
+```
