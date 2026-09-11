@@ -199,27 +199,19 @@ func testAccMailManagerIngressPoint_statusToUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				// Create is active by default; status_to_update is not set.
-				Config: testAccIngressPointConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIngressPointExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckNoResourceAttr(resourceName, "status_to_update"),
-				),
-			},
-			{
-				// Deactivate: setting status_to_update to CLOSED is an in-place update.
+				// Create with status_to_update = CLOSED. AWS creates ingress points ACTIVE,
+				// so the provider applies the CLOSED status after creation.
 				Config: testAccIngressPointConfig_statusToUpdate(rName, "CLOSED"),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status_to_update", "CLOSED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "CLOSED"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				// Reactivate: setting status_to_update to ACTIVE is an in-place update.
@@ -233,6 +225,20 @@ func testAccMailManagerIngressPoint_statusToUpdate(t *testing.T) {
 					testAccCheckIngressPointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status_to_update", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+				),
+			},
+			{
+				// Deactivate again: setting status_to_update back to CLOSED is an in-place update.
+				Config: testAccIngressPointConfig_statusToUpdate(rName, "CLOSED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status_to_update", "CLOSED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "CLOSED"),
 				),
 			},
 			{
