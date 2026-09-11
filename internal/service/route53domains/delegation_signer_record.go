@@ -175,7 +175,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
+	_, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -190,14 +190,10 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	// Set attributes for import.
-	var signingAttributes delegationSignerRecordSigningAttributesModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, &signingAttributes)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &signingAttributes)
+	// Don't overwrite signing_attributes from API as GetDomainDetail
+	// doesn't return Algorithm, Flags, or PublicKey fields.
+	// These are write-only and all fields have RequiresReplace, so
+	// drift detection is not needed.
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -280,7 +276,7 @@ func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client,
 	}
 
 	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
-		return aws.ToString(v.Id) == keyID
+		return aws.ToString(v.Digest) == keyID
 	}))
 }
 
