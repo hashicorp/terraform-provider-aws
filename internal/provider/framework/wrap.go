@@ -135,17 +135,6 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Validate the data source's model against the schema.
-	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("data source model validation error", w.spec.TypeName)
-			return
-		}
-	} else {
-		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
