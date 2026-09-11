@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `send_tcp_reset` configuration block for Gateway Load Balancer target groups
+```
