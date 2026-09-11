@@ -8,6 +8,14 @@ FEATURES:
 * **New Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
 * **New Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
 
+ENHANCEMENTS:
+
+* resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
+
+BUG FIXES:
+
+* resource/aws_mailmanager_traffic_policy: Make `policy_statement` optional ([#49509](https://github.com/hashicorp/terraform-provider-aws/issues/49509))
+
 ## 6.64.0 (September 9, 2026)
 
 FEATURES:
