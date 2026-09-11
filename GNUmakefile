@@ -17,6 +17,10 @@ SWEEP_TIMEOUT                ?= 360m
 TEST                         ?= ./...
 TEST_COUNT                   ?= 1
 
+GOTOOLCHAIN_PIN     := $(or $(addprefix go,$(shell sed -n 's/^go //p' go.mod)),auto)
+GOTOOLCHAIN         ?= $(GOTOOLCHAIN_PIN)
+export GOTOOLCHAIN
+
 # NOTE:
 # 1. Keep targets in alphabetical order
 # 2. For any changes, also update:
