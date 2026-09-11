@@ -140,6 +140,14 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:      testAccTransitGatewayPolicyTableAssociation_basic,
 			acctest.CtDisappears: testAccTransitGatewayPolicyTableAssociation_disappears,
 		},
+		"PolicyTableEntry": {
+			acctest.CtBasic:      testAccTransitGatewayPolicyTableEntry_basic,
+			acctest.CtDisappears: testAccTransitGatewayPolicyTableEntry_disappears,
+			"fullRule":           testAccTransitGatewayPolicyTableEntry_fullRule,
+			"update":             testAccTransitGatewayPolicyTableEntry_update,
+			"protocolAny":        testAccTransitGatewayPolicyTableEntry_protocolAny,
+			"Identity":           testAccTransitGatewayPolicyTableEntry_identity,
+		},
 		"PrefixListReference": {
 			acctest.CtBasic:              testAccTransitGatewayPrefixListReference_basic,
 			acctest.CtDisappears:         testAccTransitGatewayPrefixListReference_disappears,
