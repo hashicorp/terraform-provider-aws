@@ -200,7 +200,7 @@ func testAccMailManagerIngressPoint_statusToUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Create with status_to_update = CLOSED. AWS creates ingress points ACTIVE,
-				// so the provider applies the CLOSED status after creation.
+				// so the Create applies the CLOSED status
 				Config: testAccIngressPointConfig_statusToUpdate(rName, "CLOSED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
