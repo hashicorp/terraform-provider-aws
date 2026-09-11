@@ -215,13 +215,15 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 			CustomType: fwtypes.StringEnumType[awstypes.ClientAuthenticationMethodType](),
 			Optional:   true,
 			Validators: []validator.String{
-				tfstringvalidator.AlsoRequiresWhenEquals(
+				tfstringvalidator.ExactlyOneOfWhenEquals(
 					awstypes.ClientAuthenticationMethodTypeClientSecretBasic,
 					path.MatchRelative().AtParent().AtName(names.AttrClientID),
+					path.MatchRelative().AtParent().AtName("client_id_wo"),
 				),
-				tfstringvalidator.AlsoRequiresWhenEquals(
+				tfstringvalidator.ExactlyOneOfWhenEquals(
 					awstypes.ClientAuthenticationMethodTypeClientSecretPost,
 					path.MatchRelative().AtParent().AtName(names.AttrClientID),
+					path.MatchRelative().AtParent().AtName("client_id_wo"),
 				),
 			},
 		},
