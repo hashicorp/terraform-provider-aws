@@ -28,6 +28,11 @@ type attributeTypesTestStruct3 struct {
 	F2 types.Int32 `tfsdk:"f2"`
 }
 
+type attributeTypesTestStructExcludedField struct {
+	Name     types.String `tfsdk:"name"`
+	Excluded types.String `tfsdk:"-"`
+}
+
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 
@@ -68,6 +73,12 @@ func TestAttributeTypes(t *testing.T) {
 				"id":               types.Int64Type,
 				"include_property": types.BoolType,
 				"f2":               types.Int32Type,
+			},
+		},
+		"excluded field": {
+			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructExcludedField],
+			expected: map[string]attr.Type{
+				"name": types.StringType,
 			},
 		},
 	}
