@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_mailmanager_traffic_policy: Allow empty `policy_statement` blocks
+resource/aws_mailmanager_traffic_policy: Make `policy_statement` optional
 ```
