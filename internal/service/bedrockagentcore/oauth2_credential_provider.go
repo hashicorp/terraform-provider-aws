@@ -232,6 +232,8 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 		"oauth_discovery": schema.ListNestedBlock{
 			CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
 			Validators: []validator.List{
+				listvalidator.IsRequired(),
+				listvalidator.SizeAtLeast(1),
 				listvalidator.SizeAtMost(1),
 			},
 			NestedObject: schema.NestedBlockObject{
@@ -329,8 +331,10 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 				},
 			},
 		},
-		"private_endpoint":          privateEndpointBlock(ctx),
-		"private_endpoint_override": privateEndpointOverrideBlock(ctx),
+		"private_endpoint": privateEndpointBlock(ctx),
+		"private_endpoint_override": privateEndpointOverrideBlock(ctx, listvalidator.AlsoRequires(
+			path.MatchRelative().AtParent().AtName("private_endpoint"),
+		)),
 		"private_key_jwt_config": schema.ListNestedBlock{
 			CustomType: fwtypes.NewListNestedObjectTypeOf[privateKeyJwtConfigModel](ctx),
 			Validators: []validator.List{
@@ -664,11 +668,17 @@ func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request r
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	const (
+		conflictTimeout = 2 * time.Minute
+	)
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteOauth2CredentialProviderInput{
 		Name: aws.String(name),
 	}
-	_, err := conn.DeleteOauth2CredentialProvider(ctx, &input)
+	// "ConflictException: UPDATE in progress for resource with id '...'. Please retry after update completes".
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, conflictTimeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteOauth2CredentialProvider(ctx, &input)
+	}, "Please retry")
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
