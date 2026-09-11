@@ -190,6 +190,13 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					t.Errorf("action type %q: %s", typeName, err)
 					continue
 				}
+
+				outer := newWrappedAction(actionSpec, sp.ServicePackageName())
+
+				outerResponse := action.SchemaResponse{}
+				outer.Schema(ctx, action.SchemaRequest{}, &outerResponse)
+
+				validateSchemaModelForAction(ctx, t, typeName, outer, outerResponse.Schema)
 			}
 		}
 
@@ -265,6 +272,25 @@ func validateSchemaModelForEphemeralResource(ctx context.Context, t *testing.T, 
 		diags := v.ValidateModel(ctx, &schema)
 		if diags.HasError() {
 			t.Errorf("ephemeral resource %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
+		}
+	}
+}
+
+func validateSchemaModelForAction(ctx context.Context, t *testing.T, typeName string, outer action.ActionWithConfigure, schema actionschema.Schema) {
+	t.Helper()
+
+	v, ok := outer.(*wrappedAction)
+	if !ok {
+		t.Errorf("action %q is not a wrappedAction", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.ActionValidateModel); !ok {
+		t.Errorf("action %q does not implement framework.ActionValidateModel", typeName)
+	} else {
+		diags := v.ValidateModel(ctx, &schema)
+		if diags.HasError() {
+			t.Errorf("action %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
 		}
 	}
 }

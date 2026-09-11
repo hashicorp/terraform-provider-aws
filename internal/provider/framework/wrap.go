@@ -429,17 +429,6 @@ func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest
 		w.inner.Schema(ctx, request, response)
 	}
 	interceptedHandler(w.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
-
-	// Validate the action's model against the schema.
-	if v, ok := w.inner.(framework.ActionValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("action model validation error", w.spec.TypeName)
-			return
-		}
-	} else {
-		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
