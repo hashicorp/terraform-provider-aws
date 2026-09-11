@@ -653,26 +653,23 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			if isRegionOverrideEnabled {
 				v := resource.Region.Value()
-				s := r.SchemaMap()
 
-				if _, ok := s[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					regionSchema := sdkv2.RegionOptionalComputed()
+				// Inject a top-level "region" attribute.
+				regionSchema := sdkv2.RegionOptionalComputed()
 
-					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
-					if r.UpdateWithoutTimeout == nil {
-						r.UpdateWithoutTimeout = schema.NoopContext
+				// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
+				if r.UpdateWithoutTimeout == nil {
+					r.UpdateWithoutTimeout = schema.NoopContext
+				}
+
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
 					}
-
-					if f := r.SchemaFunc; f != nil {
-						r.SchemaFunc = func() map[string]*schema.Schema {
-							s := f()
-							s[names.AttrRegion] = regionSchema
-							return s
-						}
-					} else {
-						r.Schema[names.AttrRegion] = regionSchema
-					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
 				}
 
 				if v.IsValidateOverrideInPartition {
