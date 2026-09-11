@@ -3,5 +3,13 @@ resource/aws_agentregistry_registry: Add `auto_detection_configuration` and `enc
 ```
 
 ```release-note:enhancement
+resource/aws_agentregistry_registry: Add `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint` and `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint_override` configuration blocks
+```
+
+```release-note:enhancement
 data-source/aws_agentregistry_registry: Add `encryption_configuration` attribute
+```
+
+```release-note:enhancement
+data-source/aws_agentregistry_registry: Add `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint` and `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint_override` attributes
 ```

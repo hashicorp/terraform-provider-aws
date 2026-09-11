@@ -67,6 +67,103 @@ type registryResource struct {
 	framework.WithImportByIdentity
 }
 
+func privateEndpointBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
+		Validators: append([]validator.List{
+			listvalidator.SizeAtMost(1),
+		}, extraValidators...),
+		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("managed_vpc_resource"),
+					path.MatchRelative().AtName("self_managed_lattice_resource"),
+				),
+			},
+			Blocks: map[string]schema.Block{
+				"managed_vpc_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"endpoint_ip_address_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
+								Required:   true,
+							},
+							"routing_domain": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 255),
+								},
+							},
+							names.AttrSecurityGroupIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+								Validators: []validator.Set{
+									setvalidator.SizeAtMost(5),
+								},
+							},
+							names.AttrSubnetIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Required:   true,
+							},
+							names.AttrTags: tftags.TagsAttribute(),
+							"vpc_identifier": schema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"self_managed_lattice_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("resource_configuration_identifier"),
+							),
+						},
+						Attributes: map[string]schema.Attribute{
+							"resource_configuration_identifier": schema.StringAttribute{
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func privateEndpointOverrideBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+		Validators: append([]validator.List{
+			listvalidator.SizeAtMost(5),
+		}, extraValidators...),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrDomain: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 253),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
+				// enforce it offline so a missing private_endpoint fails at plan
+				// instead of a client-side SDK error at apply.
+				"private_endpoint": privateEndpointBlock(ctx, listvalidator.IsRequired()),
+			},
+		},
+	}
+}
+
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -319,6 +416,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 														},
 													},
 												},
+												"private_endpoint":          privateEndpointBlock(ctx),
+												"private_endpoint_override": privateEndpointOverrideBlock(ctx),
 											},
 										},
 									},
@@ -747,14 +846,13 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.ListOfString                                           `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.ListOfString                                           `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.ListOfString                                           `tfsdk:"allowed_scopes"`
-	CustomClaims    fwtypes.SetNestedObjectValueOf[customClaimValidationTypeModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                   `tfsdk:"discovery_url"`
-	// TODO
-	// PrivateEndpoint          fwtypes.SetNestedObjectValueOf[privateEndpointModel]         `tfsdk:"private_endpoint"`
-	// PrivateEndpointOverrides fwtypes.SetNestedObjectValueOf[privateEndpointOverrideModel] `tfsdk:"private_endpoint_override"`
+	AllowedAudience          fwtypes.ListOfString                                           `tfsdk:"allowed_audience"`
+	AllowedClients           fwtypes.ListOfString                                           `tfsdk:"allowed_clients"`
+	AllowedScopes            fwtypes.ListOfString                                           `tfsdk:"allowed_scopes"`
+	CustomClaims             fwtypes.SetNestedObjectValueOf[customClaimValidationTypeModel] `tfsdk:"custom_claim"`
+	DiscoveryURL             types.String                                                   `tfsdk:"discovery_url"`
+	PrivateEndpoint          fwtypes.ListNestedObjectValueOf[privateEndpointModel]          `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]  `tfsdk:"private_endpoint_override"`
 }
 
 type customClaimValidationTypeModel struct {
@@ -812,6 +910,139 @@ func (m claimMatchValueTypeModel) Expand(ctx context.Context) (any, diag.Diagnos
 	}
 
 	return nil, diags
+}
+
+type privateEndpointModel struct {
+	ManagedVPCResource         fwtypes.ListNestedObjectValueOf[managedVPCResourceModel]         `tfsdk:"managed_vpc_resource"`
+	SelfManagedLatticeResource fwtypes.ListNestedObjectValueOf[selfManagedLatticeResourceModel] `tfsdk:"self_managed_lattice_resource"`
+}
+
+var (
+	_ fwflex.Expander  = privateEndpointModel{}
+	_ fwflex.Flattener = &privateEndpointModel{}
+)
+
+func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.PrivateEndpointMemberManagedVpcResource:
+		var model managedVPCResourceModel
+		model.Tags = tftags.NewMapValueNull() // Tags are not handled by AutoFlex.
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		// Tags are not handled by AutoFlex.
+		model.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, t.Value.Tags))
+		var d diag.Diagnostics
+		m.ManagedVPCResource, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
+		var model selfManagedLatticeResourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.SelfManagedLatticeResource, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("privateEndpointModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m privateEndpointModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.ManagedVPCResource.IsNull():
+		model, d := m.ManagedVPCResource.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.PrivateEndpointMemberManagedVpcResource
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		// Tags are not handled by AutoFlex.
+		r.Value.Tags = fwflex.ExpandFrameworkStringValueMap(ctx, model.Tags)
+		return &r, diags
+
+	case !m.SelfManagedLatticeResource.IsNull():
+		model, d := m.SelfManagedLatticeResource.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.PrivateEndpointMemberSelfManagedLatticeResource
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type managedVPCResourceModel struct {
+	EndpointIPAddressType fwtypes.StringEnum[awstypes.EndpointIpAddressType] `tfsdk:"endpoint_ip_address_type"`
+	RoutingDomain         types.String                                       `tfsdk:"routing_domain"`
+	SecurityGroupIDs      fwtypes.SetOfString                                `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetOfString                                `tfsdk:"subnet_ids"`
+	Tags                  tftags.Map                                         `tfsdk:"tags"`
+	VPCIdentifier         types.String                                       `tfsdk:"vpc_identifier"`
+}
+
+type selfManagedLatticeResourceModel struct {
+	ResourceConfigurationIdentifier types.String `tfsdk:"resource_configuration_identifier"`
+}
+
+var (
+	_ fwflex.Expander  = selfManagedLatticeResourceModel{}
+	_ fwflex.Flattener = &selfManagedLatticeResourceModel{}
+)
+
+func (m *selfManagedLatticeResourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier:
+		m.ResourceConfigurationIdentifier = fwflex.StringValueToFramework(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("selfManagedLatticeResourceModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m selfManagedLatticeResourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.ResourceConfigurationIdentifier.IsNull():
+		r := awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+			Value: fwflex.StringValueFromFramework(ctx, m.ResourceConfigurationIdentifier),
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type privateEndpointOverrideModel struct {
+	Domain          types.String                                          `tfsdk:"domain"`
+	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
 }
 
 type encryptionConfigurationModel struct {

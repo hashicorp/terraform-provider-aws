@@ -73,6 +73,8 @@ This data source exports the following attributes in addition to the arguments a
 * `allowed_scopes` - Scopes accepted during JWT validation.
 * `custom_claim` - Custom claims for additional JWT validation beyond standard OIDC claims. [See below](#custom_claim-block).
 * `discovery_url` - OpenID Connect discovery URL used to retrieve the identity provider's metadata and signing keys.
+* `private_endpoint` - Private endpoint used to reach the identity provider's discovery URL over a private network path. [See below](#private_endpoint-block).
+* `private_endpoint_override` - Per-domain private endpoint overrides that route specific identity provider domains through distinct private endpoints. [See below](#private_endpoint_override-block).
 
 ### `custom_claim` Block
 
@@ -89,6 +91,31 @@ This data source exports the following attributes in addition to the arguments a
 
 * `match_value_string` - Single string value to match.
 * `match_value_string_list` - Set of string values to match.
+
+### `private_endpoint` Block
+
+Exactly one of the following must be specified:
+
+* `managed_vpc_resource` - Private endpoint backed by a service-managed VPC resource. [See below](#managed_vpc_resource-block).
+* `self_managed_lattice_resource` - Private endpoint backed by a self-managed VPC Lattice resource configuration. [See below](#self_managed_lattice_resource-block).
+
+### `managed_vpc_resource` Block
+
+* `endpoint_ip_address_type` - IP address type used by the private endpoint, either `IPV4` or `IPV6`.
+* `routing_domain` - Routing domain used to resolve traffic through the private endpoint.
+* `security_group_ids` - IDs of the security groups associated with the private endpoint network interfaces.
+* `subnet_ids` - IDs of the subnets in which the private endpoint network interfaces are placed.
+* `tags` - Tags applied to the service-managed VPC resource.
+* `vpc_identifier` - ID of the VPC in which the private endpoint is provisioned.
+
+### `self_managed_lattice_resource` Block
+
+* `resource_configuration_identifier` - Identifier of the VPC Lattice resource configuration, specified as a resource configuration ID or ARN.
+
+### `private_endpoint_override` Block
+
+* `domain` - Domain name to which this private endpoint override applies.
+* `private_endpoint` - Private endpoint used to reach the specified domain. [See above](#private_endpoint-block).
 
 ### `encryption_configuration` Block
 

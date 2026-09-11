@@ -140,6 +140,8 @@ The `custom_jwt_authorizer` configuration block supports the following arguments
 * `allowed_scopes` - (Optional) Scopes accepted during JWT validation. A token is rejected if it does not carry one of these scopes.
 * `custom_claim` - (Optional) Custom claims for additional JWT validation beyond standard OIDC claims. [See below](#custom_claim-block).
 * `discovery_url` - (Required) OpenID Connect discovery URL used to retrieve the identity provider's metadata and signing keys.
+* `private_endpoint` - (Optional) Private endpoint used to reach the identity provider's discovery URL over a private network path. [See below](#private_endpoint-block).
+* `private_endpoint_override` - (Optional) Per-domain private endpoint overrides that route specific identity provider domains through distinct private endpoints. [See below](#private_endpoint_override-block).
 
 ### `custom_claim` Block
 
@@ -162,6 +164,31 @@ The `claim_match_value` configuration block supports exactly one of the followin
 
 * `match_value_string` - (Optional) Single string value to match. Must contain only letters, numbers, and the characters `_`, `.`, `-`, `:`.
 * `match_value_string_list` - (Optional) Set of string values to match. Each value must contain only letters, numbers, and the characters `_`, `.`, `-`, `:`.
+
+### `private_endpoint` Block
+
+Exactly one of the following must be specified:
+
+* `managed_vpc_resource` - (Optional) Private endpoint backed by a service-managed VPC resource. [See below](#managed_vpc_resource-block).
+* `self_managed_lattice_resource` - (Optional) Private endpoint backed by a self-managed VPC Lattice resource configuration. [See below](#self_managed_lattice_resource-block).
+
+### `managed_vpc_resource` Block
+
+* `endpoint_ip_address_type` - (Required) IP address type used by the private endpoint, either `IPV4` or `IPV6`.
+* `routing_domain` - (Optional) Routing domain used to resolve traffic through the private endpoint.
+* `security_group_ids` - (Optional) IDs of the security groups associated with the private endpoint network interfaces.
+* `subnet_ids` - (Required) IDs of the subnets in which the private endpoint network interfaces are placed.
+* `tags` - (Optional) Tags applied to the service-managed VPC resource.
+* `vpc_identifier` - (Required) ID of the VPC in which the private endpoint is provisioned.
+
+### `self_managed_lattice_resource` Block
+
+* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration, specified as a resource configuration ID or ARN.
+
+### `private_endpoint_override` Block
+
+* `domain` - (Required) Domain name to which this private endpoint override applies.
+* `private_endpoint` - (Required) Private endpoint used to reach the specified domain. [See above](#private_endpoint-block).
 
 ### `encryption_configuration` Block
 
