@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_resiliencehub_app
+```
+
+```release-note:new-resource
+aws_resiliencehub_app_version
+```
