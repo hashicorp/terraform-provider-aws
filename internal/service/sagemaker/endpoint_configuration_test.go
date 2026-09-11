@@ -1981,3 +1981,165 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 `, rName)
 }
+
+func TestAccSageMakerEndpointConfiguration_vpcConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_vpcConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_explainerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_explainerConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.0.clarify_explainer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.0.clarify_explainer_config.0.shap_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.0.clarify_explainer_config.0.shap_config.0.shap_baseline_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.0.clarify_explainer_config.0.shap_config.0.shap_baseline_config.0.shap_baseline", `"1","2","3","4","5"`),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.0.clarify_explainer_config.0.shap_config.0.shap_baseline_config.0.mime_type", "text/csv"),
+					resource.TestCheckResourceAttr(resourceName, "explainer_config.0.clarify_explainer_config.0.shap_config.0.number_of_samples", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEndpointConfigurationConfig_vpcConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "sagemaker.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  production_variants {
+    variant_name           = "variant-1"
+    initial_instance_count = 1
+    instance_type          = "ml.g5.xlarge"
+  }
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccEndpointConfigurationConfig_explainerConfig(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 1
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  explainer_config {
+    clarify_explainer_config {
+      shap_config {
+        shap_baseline_config {
+          shap_baseline = "\"1\",\"2\",\"3\",\"4\",\"5\""
+          mime_type     = "text/csv"
+        }
+
+        number_of_samples = 100
+      }
+    }
+  }
+}
+`, rName))
+}
