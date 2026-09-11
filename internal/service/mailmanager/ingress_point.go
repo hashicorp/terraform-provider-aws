@@ -98,9 +98,10 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.IngressPointStatus](),
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+			},
+			"status_to_update": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.IngressPointStatusToUpdate](),
+				Optional:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -281,7 +282,7 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), ingressPointID))
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	ingressPointOut, err := waitIngressPointActive(ctx, conn, ingressPointID, createTimeout)
+	ingressPointOut, err := waitIngressPointActive(ctx, conn, ingressPointID, awstypes.IngressPointStatusActive, createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ingressPointID)
 		return
@@ -367,7 +368,7 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		ingressPointOut, err := waitIngressPointActive(ctx, conn, state.ID.ValueString(), updateTimeout)
+		ingressPointOut, err := waitIngressPointActive(ctx, conn, state.ID.ValueString(), expectedIngressPointStatus(plan, state), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 			return
@@ -379,6 +380,7 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 		}
 	} else {
 		plan.LastUpdatedTimestamp = state.LastUpdatedTimestamp
+		plan.Status = state.Status
 		plan.TLSPolicy = state.TLSPolicy
 	}
 
@@ -432,13 +434,31 @@ func (r *ingressPointResource) flatten(ctx context.Context, apiObject *mailmanag
 	return diags
 }
 
-func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id string, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
+// expectedIngressPointStatus determines the target status an ingress point should
+// reach after an update. When status_to_update is set, it maps to the matching
+// stable status; otherwise the current status is preserved.
+func expectedIngressPointStatus(plan, state ingressPointResourceModel) awstypes.IngressPointStatus {
+	switch plan.StatusToUpdate.ValueEnum() {
+	case awstypes.IngressPointStatusToUpdateClosed:
+		return awstypes.IngressPointStatusClosed
+	case awstypes.IngressPointStatusToUpdateActive:
+		return awstypes.IngressPointStatusActive
+	}
+
+	if state.Status.ValueEnum() == awstypes.IngressPointStatusClosed {
+		return awstypes.IngressPointStatusClosed
+	}
+
+	return awstypes.IngressPointStatusActive
+}
+
+func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id string, target awstypes.IngressPointStatus, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.IngressPointStatusProvisioning,
 			awstypes.IngressPointStatusUpdating,
 		),
-		Target:                    enum.Slice(awstypes.IngressPointStatusActive),
+		Target:                    enum.Slice(target),
 		Refresh:                   statusIngressPoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -456,6 +476,7 @@ func waitIngressPointDeleted(ctx context.Context, conn *mailmanager.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.IngressPointStatusActive,
+			awstypes.IngressPointStatusClosed,
 			awstypes.IngressPointStatusDeprovisioning,
 			awstypes.IngressPointStatusFailed,
 		),
@@ -625,6 +646,7 @@ type ingressPointResourceModel struct {
 	NetworkConfiguration      fwtypes.ListNestedObjectValueOf[networkConfigurationModel]      `tfsdk:"network_configuration"`
 	RuleSetID                 types.String                                                    `tfsdk:"rule_set_id"`
 	Status                    fwtypes.StringEnum[awstypes.IngressPointStatus]                 `tfsdk:"status"`
+	StatusToUpdate            fwtypes.StringEnum[awstypes.IngressPointStatusToUpdate]         `tfsdk:"status_to_update"`
 	Tags                      tftags.Map                                                      `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
