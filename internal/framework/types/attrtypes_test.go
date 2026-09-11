@@ -33,6 +33,10 @@ type attributeTypesTestStructExcludedField struct {
 	Excluded types.String `tfsdk:"-"`
 }
 
+type attributeTypesTestStructMissingTag struct {
+	Name types.String
+}
+
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 
@@ -47,6 +51,10 @@ func TestAttributeTypes(t *testing.T) {
 		},
 		"non-struct type": {
 			attributeTypes: fwtypes.AttributeTypes[int],
+			expectErr:      true,
+		},
+		"missing tfsdk tag": {
+			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructMissingTag],
 			expectErr:      true,
 		},
 		"flat struct": {
