@@ -42,6 +42,16 @@ type attributeTypesTestStructNonAttrValue struct {
 	NotAttr string       `tfsdk:"not_attr"`
 }
 
+type attributeTypesTestInnerModel struct {
+	Value types.String `tfsdk:"value"`
+}
+
+type attributeTypesTestNestedModel struct {
+	Name   types.String                                                  `tfsdk:"name"`
+	Nested fwtypes.ObjectValueOf[attributeTypesTestInnerModel]           `tfsdk:"nested"`
+	List   fwtypes.ListNestedObjectValueOf[attributeTypesTestInnerModel] `tfsdk:"list"`
+}
+
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 
@@ -98,6 +108,14 @@ func TestAttributeTypes(t *testing.T) {
 			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructNonAttrValue],
 			expected: map[string]attr.Type{
 				"name": types.StringType,
+			},
+		},
+		"nested framework value fields": {
+			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestNestedModel],
+			expected: map[string]attr.Type{
+				"name":   types.StringType,
+				"nested": fwtypes.NewObjectTypeOf[attributeTypesTestInnerModel](context.Background()),
+				"list":   fwtypes.NewListNestedObjectTypeOf[attributeTypesTestInnerModel](context.Background()),
 			},
 		},
 	}
