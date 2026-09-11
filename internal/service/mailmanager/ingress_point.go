@@ -288,6 +288,25 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
+	// AWS always creates an ingress point in the ACTIVE state, update to required state if user requests it
+	if data.StatusToUpdate.ValueEnum() == awstypes.IngressPointStatusToUpdateClosed {
+		updateInput := mailmanager.UpdateIngressPointInput{
+			IngressPointId: aws.String(ingressPointID),
+			StatusToUpdate: awstypes.IngressPointStatusToUpdateClosed,
+		}
+
+		if _, err := conn.UpdateIngressPoint(ctx, &updateInput); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ingressPointID)
+			return
+		}
+
+		ingressPointOut, err = waitIngressPointActive(ctx, conn, ingressPointID, awstypes.IngressPointStatusClosed, createTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ingressPointID)
+			return
+		}
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, ingressPointOut, &data))
 	if resp.Diagnostics.HasError() {
 		return
