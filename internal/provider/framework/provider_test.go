@@ -163,6 +163,13 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					t.Errorf("ephemeral resource type %q: %s", typeName, err)
 					continue
 				}
+
+				outer := newWrappedEphemeralResource(ephemeralResourceSpec, sp.ServicePackageName())
+
+				outerResponse := ephemeral.SchemaResponse{}
+				outer.Schema(ctx, ephemeral.SchemaRequest{}, &outerResponse)
+
+				validateSchemaModelForEphemeralResource(ctx, t, typeName, outer, outerResponse.Schema)
 			}
 		}
 
@@ -239,6 +246,25 @@ func validateSchemaModelForDataSource(ctx context.Context, t *testing.T, typeNam
 	} else {
 		if diags := v.ValidateModel(ctx, &schema); diags.HasError() {
 			t.Errorf("data source %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
+		}
+	}
+}
+
+func validateSchemaModelForEphemeralResource(ctx context.Context, t *testing.T, typeName string, outer ephemeral.EphemeralResourceWithConfigure, schema ephemeralschema.Schema) {
+	t.Helper()
+
+	v, ok := outer.(*wrappedEphemeralResource)
+	if !ok {
+		t.Errorf("ephemeral resource %q is not a wrappedEphemeralResource", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.EphemeralResourceValidateModel); !ok {
+		t.Errorf("ephemeral resource %q does not implement framework.EphemeralResourceValidateModel", typeName)
+	} else {
+		diags := v.ValidateModel(ctx, &schema)
+		if diags.HasError() {
+			t.Errorf("ephemeral resource %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
 		}
 	}
 }

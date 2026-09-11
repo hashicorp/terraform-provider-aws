@@ -269,17 +269,6 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 	}
 
 	interceptedHandler(w.interceptors.ephemeralResourceSchema(), w.inner.Schema, ephemeralSchemaHasError, w.meta)(ctx, request, response)
-
-	// Validate the ephemeral resource's model against the schema.
-	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("ephemeral resource model validation error", w.spec.TypeName)
-			return
-		}
-	} else {
-		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
