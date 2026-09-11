@@ -282,7 +282,7 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), ingressPointID))
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	ingressPointOut, err := waitIngressPointActive(ctx, conn, ingressPointID, awstypes.IngressPointStatusActive, createTimeout)
+	ingressPointOut, err := waitIngressPointStatus(ctx, conn, ingressPointID, awstypes.IngressPointStatusActive, createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ingressPointID)
 		return
@@ -300,7 +300,7 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 			return
 		}
 
-		ingressPointOut, err = waitIngressPointActive(ctx, conn, ingressPointID, awstypes.IngressPointStatusClosed, createTimeout)
+		ingressPointOut, err = waitIngressPointStatus(ctx, conn, ingressPointID, awstypes.IngressPointStatusClosed, createTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ingressPointID)
 			return
@@ -387,7 +387,7 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		ingressPointOut, err := waitIngressPointActive(ctx, conn, state.ID.ValueString(), expectedIngressPointStatus(plan, state), updateTimeout)
+		ingressPointOut, err := waitIngressPointStatus(ctx, conn, state.ID.ValueString(), expectedIngressPointStatus(plan, state), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 			return
@@ -471,7 +471,7 @@ func expectedIngressPointStatus(plan, state ingressPointResourceModel) awstypes.
 	return awstypes.IngressPointStatusActive
 }
 
-func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id string, target awstypes.IngressPointStatus, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
+func waitIngressPointStatus(ctx context.Context, conn *mailmanager.Client, id string, target awstypes.IngressPointStatus, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
 	pending := enum.Slice(
 		awstypes.IngressPointStatusProvisioning,
 		awstypes.IngressPointStatusUpdating,
