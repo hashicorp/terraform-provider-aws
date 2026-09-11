@@ -140,3 +140,19 @@ func TestAttributeTypes(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkAttributeTypes(b *testing.B) {
+	ctx := b.Context()
+
+	b.Run("flat", func(b *testing.B) {
+		for b.Loop() {
+			fwtypes.AttributeTypesMust[attributeTypesTestStruct2](ctx)
+		}
+	})
+
+	b.Run("nested", func(b *testing.B) {
+		for b.Loop() {
+			fwtypes.AttributeTypesMust[attributeTypesTestNestedModel](ctx)
+		}
+	})
+}
