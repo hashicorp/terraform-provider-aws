@@ -300,6 +300,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newCatalogTableResourceAsListResource,
+			TypeName: "aws_glue_catalog_table",
+			Name:     "Catalog Table",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrDatabaseName, true),
+				inttypes.StringIdentityAttribute(names.AttrCatalogID, true),
+			}),
+		},
+		{
 			Factory:  newJobResourceAsListResource,
 			TypeName: "aws_glue_job",
 			Name:     "Job",
