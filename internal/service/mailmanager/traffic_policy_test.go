@@ -47,14 +47,16 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
 					resource.TestCheckNoResourceAttr(resourceName, "max_message_size_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.action", "DENY"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.evaluate.0.attribute", "SENDER_IP"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "CIDR_MATCHES"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.0", "192.0.2.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "0"),
 				),
+			},
+			{
+				Config: testAccTrafficPolicyConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -183,7 +185,7 @@ func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
+func TestAccMailManagerTrafficPolicy_policyStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -199,21 +201,34 @@ func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "0"),
 				),
 			},
 			{
-				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrafficPolicyConfig_policyStatement(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.action", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.evaluate.0.attribute", "SENDER_IP"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "CIDR_MATCHES"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.0", "192.0.2.0/24"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -229,28 +244,8 @@ func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "1"),
-				),
-			},
-			{
-				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "0"),
 				),
-			},
-			{
-				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
 			},
 		},
 	})
@@ -307,6 +302,15 @@ func testAccPreCheckTrafficPolicy(ctx context.Context, t *testing.T) {
 }
 
 func testAccTrafficPolicyConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_mailmanager_traffic_policy" "test" {
+  default_action = "ALLOW"
+  name           = %[1]q
+}
+`, rName)
+}
+
+func testAccTrafficPolicyConfig_policyStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mailmanager_traffic_policy" "test" {
   default_action = "ALLOW"
@@ -397,15 +401,6 @@ resource "aws_mailmanager_traffic_policy" "test" {
       }
     }
   }
-}
-`, rName)
-}
-
-func testAccTrafficPolicyConfig_emptyPolicyStatements(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_mailmanager_traffic_policy" "test" {
-  default_action = "ALLOW"
-  name           = %[1]q
 }
 `, rName)
 }
