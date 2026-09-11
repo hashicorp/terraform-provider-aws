@@ -69,7 +69,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
   protocol_configuration {
     mcp {
       instructions       = "Gateway for handling MCP requests"
-      search_type        = "HYBRID"
+      search_type        = "SEMANTIC"
       supported_versions = ["2025-03-26", "2025-06-18"]
     }
   }
