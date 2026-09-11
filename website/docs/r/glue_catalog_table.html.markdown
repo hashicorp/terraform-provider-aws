@@ -371,6 +371,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_catalog_table.MyTable
+  identity = {
+    name          = "MyTable"
+    database_name = "MyDatabase"
+    catalog_id    = "123456789012"
+  }
+}
+
+resource "aws_glue_catalog_table" "MyTable" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `catalog_id` - (String) ID of the Glue Catalog.
+* `database_name` - (String) Name of the Glue Catalog Database.
+* `name` - (String) Name of the Glue Catalog Table.
+
+#### Optional
+
+* `account_id` - (String) AWS account where this resource is managed.
+* `region` - (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Tables using the catalog ID (usually AWS account ID), database name, and table name. For example:
 
 ```terraform

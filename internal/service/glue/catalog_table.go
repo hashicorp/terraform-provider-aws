@@ -30,21 +30,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_catalog_table", name="Catalog Table")
+// @IdentityAttribute("name")
+// @IdentityAttribute("database_name")
+// @IdentityAttribute("catalog_id")
+// @ImportIDHandler("catalogTableImportID")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogTableCreate,
 		ReadWithoutTimeout:   resourceCatalogTableRead,
 		UpdateWithoutTimeout: resourceCatalogTableUpdate,
 		DeleteWithoutTimeout: resourceCatalogTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -712,6 +714,16 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceCatalogTableFlatten(ctx, c, catalogID, dbName, name, table, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceCatalogTableFlatten(ctx context.Context, c *conns.AWSClient, catalogID, dbName, name string, table *awstypes.Table, d *schema.ResourceData) error {
+	conn := c.GlueClient(ctx)
+
 	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
@@ -719,19 +731,19 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, table.Name)
 	d.Set(names.AttrOwner, table.Owner)
 	if err := d.Set(names.AttrParameters, flattenNonManagedParameters(table.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
+		return fmt.Errorf("setting parameters: %w", err)
 	}
 	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
+		return fmt.Errorf("setting partition_keys: %w", err)
 	}
 	d.Set("retention", table.Retention)
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
+		return fmt.Errorf("setting storage_descriptor: %w", err)
 	}
 	d.Set("table_type", table.TableType)
 	if table.TargetTable != nil {
 		if err := d.Set("target_table", []any{flattenTableIdentifier(table.TargetTable)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
+			return fmt.Errorf("setting target_table: %w", err)
 		}
 	} else {
 		d.Set("target_table", nil)
@@ -751,7 +763,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, priorRepresentations)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
+			return fmt.Errorf("setting view_definition: %w", err)
 		}
 	} else {
 		d.Set("view_definition", nil)
@@ -770,14 +782,14 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	case errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Operation not supported"):
 		d.Set("partition_index", nil)
 	case err != nil:
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
+		return fmt.Errorf("reading partition indexes: %w", err)
 	default:
 		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
+			return fmt.Errorf("setting partition_index: %w", err)
 		}
 	}
 
-	return diags
+	return nil
 }
 
 func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -2029,4 +2041,27 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
 	return c.RegionalARN(ctx, "glue", "table/"+dbName+"/"+name)
+}
+
+var _ inttypes.SDKv2ImportID = catalogTableImportID{}
+
+type catalogTableImportID struct{}
+
+func (catalogTableImportID) Create(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s:%s:%s", d.Get(names.AttrCatalogID).(string), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string))
+}
+
+func (catalogTableImportID) Parse(id string) (string, map[string]any, error) {
+	catalogId, databaseName, tableName, err := catalogTableParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrCatalogID:    catalogId,
+		names.AttrDatabaseName: databaseName,
+		names.AttrName:         tableName,
+	}
+
+	return id, result, nil
 }

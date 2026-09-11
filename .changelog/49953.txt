@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_glue_catalog_table
+```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add resource identity support
+```
