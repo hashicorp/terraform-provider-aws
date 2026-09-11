@@ -1,0 +1,8 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_workload_identity: Add resource identity support
+```
+
