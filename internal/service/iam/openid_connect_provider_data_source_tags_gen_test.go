@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOIDCProviderDataSource_tags(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -38,7 +38,7 @@ func TestAccIAMOIDCProviderDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OIDCProvider/data.tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/data.tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -55,7 +55,7 @@ func TestAccIAMOIDCProviderDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccIAMOIDCProviderDataSource_Tags_nullMap(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -70,7 +70,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_nullMap(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OIDCProvider/data.tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/data.tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -83,7 +83,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_nullMap(t *testing.T) {
 	})
 }
 
-func TestAccIAMOIDCProviderDataSource_Tags_emptyMap(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -98,7 +98,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_emptyMap(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OIDCProvider/data.tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/data.tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
@@ -111,7 +111,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_emptyMap(t *testing.T) {
 	})
 }
 
-func TestAccIAMOIDCProviderDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -126,7 +126,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_DefaultTags_nonOverlapping(t *testing
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OIDCProvider/data.tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/data.tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -147,7 +147,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_DefaultTags_nonOverlapping(t *testing
 	})
 }
 
-func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -162,7 +162,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *test
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OIDCProvider/data.tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/data.tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -179,7 +179,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *test
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullOIDCProviderDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullOpenIDConnectProviderDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -189,7 +189,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *test
 	})
 }
 
-func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -204,7 +204,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OIDCProvider/data.tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/data.tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -216,7 +216,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullOIDCProviderDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullOpenIDConnectProviderDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -226,7 +226,7 @@ func TestAccIAMOIDCProviderDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 	})
 }
 
-func expectFullOIDCProviderDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+func expectFullOpenIDConnectProviderDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 		ResourceType:        "OIDCProvider",

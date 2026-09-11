@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -66,7 +67,12 @@ func init() {
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"no identity-based policy allows the iam:SetSecurityTokenServicePreferences action",
+	return acctest.ErrorCheckSequence(
+		acctest.ErrorCheckSkipMessagesContaining(t,
+			"no identity-based policy allows the iam:SetSecurityTokenServicePreferences action",
+		),
+		acctest.ErrorCheckSkipMessagesMatches(t,
+			regexache.MustCompile(`not authorized to perform: iam:CreateOpenIDConnectProvider.+(with an explicit deny|no identity-based policy allows)`),
+		),
 	)
 }
