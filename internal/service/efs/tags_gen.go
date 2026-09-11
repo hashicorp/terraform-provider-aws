@@ -23,13 +23,13 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *efs.Client, identifier string, optFns ...func(*efs.Options)) (tftags.KeyValueTags, error) {
-	input := efs.DescribeTagsInput{
-		FileSystemId: aws.String(identifier),
+	input := efs.ListTagsForResourceInput{
+		ResourceId: aws.String(identifier),
 	}
 
 	var output []awstypes.Tag
 
-	pages := efs.NewDescribeTagsPaginator(conn, &input)
+	pages := efs.NewListTagsForResourcePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
