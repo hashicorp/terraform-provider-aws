@@ -472,11 +472,20 @@ func expectedIngressPointStatus(plan, state ingressPointResourceModel) awstypes.
 }
 
 func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id string, target awstypes.IngressPointStatus, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
+	pending := enum.Slice(
+		awstypes.IngressPointStatusProvisioning,
+		awstypes.IngressPointStatusUpdating,
+	)
+
+	switch target {
+	case awstypes.IngressPointStatusActive:
+		pending = append(pending, string(awstypes.IngressPointStatusClosed))
+	case awstypes.IngressPointStatusClosed:
+		pending = append(pending, string(awstypes.IngressPointStatusActive))
+	}
+
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.IngressPointStatusProvisioning,
-			awstypes.IngressPointStatusUpdating,
-		),
+		Pending:                   pending,
 		Target:                    enum.Slice(target),
 		Refresh:                   statusIngressPoint(conn, id),
 		Timeout:                   timeout,
