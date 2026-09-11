@@ -42,11 +42,11 @@ The following arguments are required:
 
 * `default_action` - (Required) Default action for traffic that does not match any policy statement. Valid values are `ALLOW` and `DENY`.
 * `name` - (Required) Name of the traffic policy.
-* `policy_statement` - (Required) Traffic policy statements. See [`policy_statement` Block](#policy_statement-block) below.
 
 The following arguments are optional:
 
 * `max_message_size_bytes` - (Optional) Maximum message size, in bytes, allowed by the traffic policy.
+* `policy_statement` - (Optional) Traffic policy statements. See [`policy_statement` Block](#policy_statement-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
