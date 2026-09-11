@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_apigatewayv2_integration` ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * **New List Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
 * **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
 * **New List Resource:** `aws_network_acl_rule` ([#49916](https://github.com/hashicorp/terraform-provider-aws/issues/49916))
@@ -10,6 +11,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_apigatewayv2_integration: Add resource identity support ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
 
 BUG FIXES:
