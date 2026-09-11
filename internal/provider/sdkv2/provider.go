@@ -651,7 +651,9 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorInvocations
+			// Pre-size to the maximum number of interceptors added below to avoid
+			// reallocating the backing array as interceptors are appended.
+			interceptors := make(interceptorInvocations, 0, 9)
 
 			if isRegionOverrideEnabled {
 				v := resource.Region.Value()
