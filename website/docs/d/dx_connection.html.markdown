@@ -10,6 +10,8 @@ description: |-
 
 Retrieve information about a Direct Connect Connection.
 
+~> **Note:** This data source is different from the [`aws_dx_connections`](/docs/providers/aws/d/dx_connections.html) data source which retrieves information about all the AWS Direct Connect connections in the current AWS Region.
+
 ## Example Usage
 
 ```terraform
