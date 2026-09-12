@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_subnet: Fix resource leaking bug
+```
+
+```release-note:bug
+resource/aws_ec2_subnet_cidr_reservation: Fix resource leaking bug
+```
+
+```release-note:bug
+resource/aws_security_group_rule: Fix resource leaking bug
+```
+
+```release-note:BUG
+resource/aws_network_acl_rule: Fix resource leaking bug
+```
