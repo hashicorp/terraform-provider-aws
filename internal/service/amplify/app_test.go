@@ -1098,3 +1098,153 @@ resource "aws_amplify_app" "test" {
 }
 `, rName, buildComputeType)
 }
+
+func TestSuppressCustomHeadersDiff(t *testing.T) {
+	t.Parallel()
+
+	// What GetApp actually returns: a bare JSON array, no top-level key.
+	stateValue := `[{"pattern":"/index.html","headers":[{"key":"Cache-Control","value":"public, max-age=0, must-revalidate, s-maxage=31536000"}]},{"pattern":"**/*.{js,css}","headers":[{"key":"Cache-Control","value":"public, max-age=31536000, immutable"}]}]`
+
+	// What .tf config declares: YAML with the customHeaders key UpdateApp requires.
+	configValue := `
+customHeaders:
+  - pattern: '/index.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=0, must-revalidate, s-maxage=31536000'
+  - pattern: '**/*.{js,css}'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+`
+
+	t.Run("equivalent content across bare-array and keyed-YAML forms suppresses diff", func(t *testing.T) {
+		t.Parallel()
+		if !tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, configValue, nil) {
+			t.Fatal("expected diff to be suppressed for semantically identical custom_headers, but it was not")
+		}
+	})
+
+	t.Run("genuinely different content still shows a diff", func(t *testing.T) {
+		t.Parallel()
+		changedConfigValue := `
+customHeaders:
+  - pattern: '/index.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'no-store'
+`
+		if tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, changedConfigValue, nil) {
+			t.Fatal("expected diff to NOT be suppressed when custom_headers content actually changed, but it was suppressed")
+		}
+	})
+
+	t.Run("bare JSON on both sides still compares correctly", func(t *testing.T) {
+		t.Parallel()
+		if !tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, stateValue, nil) {
+			t.Fatal("expected diff to be suppressed when both sides are identical")
+		}
+	})
+
+	t.Run("unparseable new value falls back to no suppression", func(t *testing.T) {
+		t.Parallel()
+		if tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, "not: [valid: yaml:::", nil) {
+			t.Fatal("expected no suppression when new value fails to parse")
+		}
+	})
+
+	t.Run("unparseable old value falls back to no suppression", func(t *testing.T) {
+		t.Parallel()
+		if tfamplify.SuppressCustomHeadersDiff("custom_headers", "not: [valid: yaml:::", configValue, nil) {
+			t.Fatal("expected no suppression when old value fails to parse")
+		}
+	})
+
+	t.Run("both empty suppresses (nothing to compare)", func(t *testing.T) {
+		t.Parallel()
+		if !tfamplify.SuppressCustomHeadersDiff("custom_headers", "", "", nil) {
+			t.Fatal("expected suppression when both old and new are empty")
+		}
+	})
+
+	t.Run("old empty, new non-empty does not suppress (initial create/config-add)", func(t *testing.T) {
+		t.Parallel()
+		if tfamplify.SuppressCustomHeadersDiff("custom_headers", "", configValue, nil) {
+			t.Fatal("expected no suppression when old is empty and new is not (e.g. first apply)")
+		}
+	})
+
+	t.Run("old non-empty, new empty does not suppress (attribute removed from config)", func(t *testing.T) {
+		t.Parallel()
+		if tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, "", nil) {
+			t.Fatal("expected no suppression when new is empty and old is not (e.g. attribute removed)")
+		}
+	})
+
+	t.Run("reordered rule list is currently treated as a diff (documents current behavior)", func(t *testing.T) {
+		t.Parallel()
+		reorderedConfigValue := `
+customHeaders:
+  - pattern: '**/*.{js,css}'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '/index.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=0, must-revalidate, s-maxage=31536000'
+`
+		if tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, reorderedConfigValue, nil) {
+			t.Fatal("list order-sensitivity assumption changed: reordered-but-equivalent rules are now suppressed; update this test to match the new intended behavior")
+		}
+	})
+
+	t.Run("whitespace/quote-style-only YAML differences still suppress", func(t *testing.T) {
+		t.Parallel()
+		differentlyFormattedConfigValue := "customHeaders:\n" +
+			"    - pattern: \"/index.html\"\n" +
+			"      headers:\n" +
+			"          - key: \"Cache-Control\"\n" +
+			"            value: \"public, max-age=0, must-revalidate, s-maxage=31536000\"\n" +
+			"    - pattern: \"**/*.{js,css}\"\n" +
+			"      headers:\n" +
+			"          - key: \"Cache-Control\"\n" +
+			"            value: \"public, max-age=31536000, immutable\"\n"
+
+		if !tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, differentlyFormattedConfigValue, nil) {
+			t.Fatal("expected suppression for a purely cosmetic (indentation/quote-style) YAML formatting difference")
+		}
+	})
+
+	t.Run("config given as a bare array (no customHeaders wrapper) also compares correctly", func(t *testing.T) {
+		t.Parallel()
+		bareConfigValue := `
+- pattern: '/index.html'
+  headers:
+    - key: 'Cache-Control'
+      value: 'public, max-age=0, must-revalidate, s-maxage=31536000'
+- pattern: '**/*.{js,css}'
+  headers:
+    - key: 'Cache-Control'
+      value: 'public, max-age=31536000, immutable'
+`
+		if !tfamplify.SuppressCustomHeadersDiff("custom_headers", stateValue, bareConfigValue, nil) {
+			t.Fatal("expected suppression when config itself uses the bare-array form matching state")
+		}
+	})
+
+	t.Run("numeric-looking values compare equal regardless of int vs float literal form", func(t *testing.T) {
+		t.Parallel()
+		// Not a realistic custom_headers value (key/value are always strings in
+		// practice), but guards against int-vs-float literal mismatches (e.g. 1
+		// vs 1.0) after unmarshaling, which a naive comparison would treat as
+		// different even though they're the same JSON number.
+		oldNumeric := `[{"n":1}]`
+		newNumeric := `customHeaders:
+  - n: 1.0
+`
+		if !tfamplify.SuppressCustomHeadersDiff("custom_headers", oldNumeric, newNumeric, nil) {
+			t.Fatal("expected suppression for numerically-equivalent values (1 vs 1.0) after JSON round-trip normalization")
+		}
+	})
+}
