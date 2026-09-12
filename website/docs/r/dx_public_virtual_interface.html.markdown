@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name for the virtual interface.
 * `vlan` - (Required) The VLAN ID.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
-* `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
+* `bgp_auth_key` - (Optional) Authentication key for BGP configuration. Terraform marks this value as sensitive and redacts it from normal output, but configured or Direct Connect-generated values remain stored in Terraform state. References to this attribute propagate sensitivity, so outputs exposing it must also be marked sensitive. Users must secure and restrict access to Terraform state.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 * `rate_limit` - (Optional) Maximum bandwidth allocation for the virtual interface, restricting the bandwidth it can use on the parent connection. Specify a supported bandwidth value without a space (for example, `50Mbps`, `1Gbps`, or `10Gbps`); the value cannot exceed the bandwidth of the parent connection or link aggregation group (LAG), and supported values range up to `1.6Tbps`. See the [VIF Rate Limiters documentation](https://docs.aws.amazon.com/directconnect/latest/UserGuide/vif-rate-limiters.html) for the full list of supported values. Rate Limiters are supported only on Direct Connect dedicated connections (including LAGs); they are not supported on hosted connections.
 * `route_filter_prefixes` - (Required) A list of routes to be advertised to the AWS network in this region.

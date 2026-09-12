@@ -30,7 +30,7 @@ This resource supports the following arguments:
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface on which to create the BGP peer.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon.
 Required for IPv4 BGP peers on public virtual interfaces.
-* `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
+* `bgp_auth_key` - (Optional) Authentication key for BGP configuration. Terraform marks this value as sensitive and redacts it from normal output, but configured or Direct Connect-generated values remain stored in Terraform state. References to this attribute propagate sensitivity, so outputs exposing it must also be marked sensitive. Users must secure and restrict access to Terraform state.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic.
 Required for IPv4 BGP peers on public virtual interfaces.
 

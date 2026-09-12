@@ -70,10 +70,11 @@ func resourceHostedPrivateVirtualInterface() *schema.Resource {
 					ForceNew: true,
 				},
 				"bgp_auth_key": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-					ForceNew: true,
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					ForceNew:  true,
+					Sensitive: true,
 				},
 				names.AttrConnectionID: {
 					Type:     schema.TypeString,
