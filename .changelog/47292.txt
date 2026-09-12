@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53_record: Add validation that each quoted string part in TXT and SPF records does not exceed the DNS 255-character limit
+```
