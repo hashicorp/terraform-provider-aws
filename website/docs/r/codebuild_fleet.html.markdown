@@ -45,7 +45,7 @@ resource "aws_codebuild_fleet" "example" {
 The following arguments are required:
 
 * `name` - (Required) Fleet name.
-* `base_capacity` - (Required) Number of machines allocated to the ﬂeet.
+* `base_capacity` - (Required) Number of machines allocated to the fleet. Minimum value of `0`.
 * `compute_type` - (Required) Compute resources the compute fleet uses. See [compute types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
 * `environment_type` - (Required) Environment type of the compute fleet. See [environment types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
 
