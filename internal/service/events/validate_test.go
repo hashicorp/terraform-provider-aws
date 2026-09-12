@@ -11,6 +11,122 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestSuppressEquivalentBusNameOrARN(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Name     string
+		Old      string
+		New      string
+		Suppress bool
+	}{
+		{
+			Name:     "same name",
+			Old:      "my-bus",
+			New:      "my-bus",
+			Suppress: true,
+		},
+		{
+			Name:     "same ARN",
+			Old:      "arn:aws:events:us-east-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			New:      "arn:aws:events:us-east-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			Suppress: true,
+		},
+		{
+			Name:     "name to equivalent ARN",
+			Old:      "my-bus",
+			New:      "arn:aws:events:us-east-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			Suppress: true,
+		},
+		{
+			Name:     "ARN to equivalent name",
+			Old:      "arn:aws:events:us-east-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			New:      "my-bus",
+			Suppress: true,
+		},
+		{
+			Name:     "different bus names",
+			Old:      "my-bus",
+			New:      "other-bus",
+			Suppress: false,
+		},
+		{
+			Name:     "name vs different ARN",
+			Old:      "my-bus",
+			New:      "arn:aws:events:us-east-1:123456789012:event-bus/other-bus", //lintignore:AWSAT003,AWSAT005
+			Suppress: false,
+		},
+		{
+			// In practice, the provider configures a single region so cross-region
+			// comparison doesn't occur. We suppress based on bus name only.
+			Name:     "ARNs in different regions same bus name",
+			Old:      "arn:aws:events:us-east-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			New:      "arn:aws:events:eu-west-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			Suppress: true,
+		},
+		{
+			Name:     "default bus name vs default ARN",
+			Old:      "default",
+			New:      "arn:aws:events:us-east-1:123456789012:event-bus/default", //lintignore:AWSAT003,AWSAT005
+			Suppress: true,
+		},
+		{
+			Name:     "govcloud ARN to name",
+			Old:      "arn:aws-us-gov:events:us-gov-west-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			New:      "my-bus",
+			Suppress: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfevents.SuppressEquivalentBusNameOrARN("event_bus_name", tc.Old, tc.New, nil); got != tc.Suppress {
+				t.Errorf("SuppressEquivalentBusNameOrARN(%q, %q) = %t, want %t", tc.Old, tc.New, got, tc.Suppress)
+			}
+		})
+	}
+}
+
+func TestBusNameFromNameOrARN(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Input    string
+		Expected string
+	}{
+		{
+			Input:    "my-bus",
+			Expected: "my-bus",
+		},
+		{
+			Input:    "arn:aws:events:us-east-1:123456789012:event-bus/my-bus", //lintignore:AWSAT003,AWSAT005
+			Expected: "my-bus",
+		},
+		{
+			Input:    "arn:aws-us-gov:events:us-gov-west-1:123456789012:event-bus/custom_bus-123", //lintignore:AWSAT003,AWSAT005
+			Expected: "custom_bus-123",
+		},
+		{
+			Input:    "default",
+			Expected: "default",
+		},
+		{
+			Input:    "arn:aws:events:us-east-1:123456789012:event-bus/default", //lintignore:AWSAT003,AWSAT005
+			Expected: "default",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Input, func(t *testing.T) {
+			t.Parallel()
+			if got := tfevents.BusNameFromNameOrARN(tc.Input); got != tc.Expected {
+				t.Errorf("BusNameFromNameOrARN(%q) = %q, want %q", tc.Input, got, tc.Expected)
+			}
+		})
+	}
+}
+
 func TestValidCustomEventBusSourceName(t *testing.T) {
 	t.Parallel()
 

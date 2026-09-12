@@ -257,11 +257,12 @@ func resourceTarget() *schema.Resource {
 					},
 				},
 				"event_bus_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ForceNew:     true,
-					ValidateFunc: validBusNameOrARN,
-					Default:      defaultEventBusName,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentBusNameOrARN,
+					ValidateFunc:     validBusNameOrARN,
+					Default:          defaultEventBusName,
 				},
 				names.AttrForceDestroy: {
 					Type:     schema.TypeBool,

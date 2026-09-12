@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudwatch_event_rule: Suppress `event_bus_name` diff when name and equivalent ARN refer to the same event bus
+```
+
+```release-note:bug
+resource/aws_cloudwatch_event_target: Suppress `event_bus_name` diff when name and equivalent ARN refer to the same event bus
+```
