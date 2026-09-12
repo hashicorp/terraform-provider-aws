@@ -341,6 +341,29 @@ func TestAccElastiCacheReplicationGroup_OutOfBandUpgrade(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_EngineVersion_unavailable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// "7.999" is well-formed but will *probably* never be a real ElastiCache Redis version.
+				Config:      testAccReplicationGroupConfig_engineVersion(rName, "7.999"),
+				ExpectError: regexache.MustCompile(`engine_version "7\.999" is not available for engine "redis"`),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

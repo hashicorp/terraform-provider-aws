@@ -54,3 +54,9 @@ var (
 type (
 	VersionDiff = versionDiff
 )
+
+var (
+	AvailableEngineVersionStrings   = availableEngineVersionStrings
+	EngineVersionMatches            = engineVersionMatches
+	FindAvailableCacheEngineVersion = findAvailableCacheEngineVersion
+)
