@@ -91,6 +91,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newEnforcedGuardrailConfigurationResource,
+			TypeName: "aws_bedrock_enforced_guardrail_configuration",
+			Name:     "Enforced Guardrail Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newEvaluationJobResource,
 			TypeName: "aws_bedrock_evaluation_job",
 			Name:     "Evaluation Job",
