@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix `theme_arn` not being passed to `CreateDashboard` and `UpdateDashboard` API calls, and not being read back from the API
+```
