@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -124,18 +125,25 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 				continue
 			}
 
-			schemaResponse := datasource.SchemaResponse{}
-			inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+			innerResponse := datasource.SchemaResponse{}
+			inner.Schema(ctx, datasource.SchemaRequest{}, &innerResponse)
 
-			if err := validateSchemaRegionForDataSource(dataSourceSpec.Region, schemaResponse.Schema); err != nil {
+			if err := validateSchemaRegionForDataSource(dataSourceSpec.Region, innerResponse.Schema); err != nil {
 				t.Errorf("data source type %q: %s", typeName, err)
 				continue
 			}
 
-			if err := validateSchemaTagsForDataSource(dataSourceSpec.Tags, schemaResponse.Schema); err != nil {
+			if err := validateSchemaTagsForDataSource(dataSourceSpec.Tags, innerResponse.Schema); err != nil {
 				t.Errorf("data source type %q: %s", typeName, err)
 				continue
 			}
+
+			outer := newWrappedDataSource(ctx, dataSourceSpec, sp.ServicePackageName())
+
+			outerResponse := datasource.SchemaResponse{}
+			outer.Schema(ctx, datasource.SchemaRequest{}, &outerResponse)
+
+			validateSchemaModelForDataSource(ctx, t, typeName, outer, outerResponse.Schema)
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
@@ -155,6 +163,13 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					t.Errorf("ephemeral resource type %q: %s", typeName, err)
 					continue
 				}
+
+				outer := newWrappedEphemeralResource(ctx, ephemeralResourceSpec, sp.ServicePackageName())
+
+				outerResponse := ephemeral.SchemaResponse{}
+				outer.Schema(ctx, ephemeral.SchemaRequest{}, &outerResponse)
+
+				validateSchemaModelForEphemeralResource(ctx, t, typeName, outer, outerResponse.Schema)
 			}
 		}
 
@@ -175,6 +190,13 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					t.Errorf("action type %q: %s", typeName, err)
 					continue
 				}
+
+				outer := newWrappedAction(ctx, actionSpec, sp.ServicePackageName())
+
+				outerResponse := action.SchemaResponse{}
+				outer.Schema(ctx, action.SchemaRequest{}, &outerResponse)
+
+				validateSchemaModelForAction(ctx, t, typeName, outer, outerResponse.Schema)
 			}
 		}
 
@@ -213,6 +235,94 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 					continue
 				}
 			}
+
+			outer := newWrappedResource(ctx, resourceSpec, sp.ServicePackageName())
+
+			outerResponse := resource.SchemaResponse{}
+			outer.Schema(ctx, resource.SchemaRequest{}, &outerResponse)
+
+			validateSchemaModelForResource(ctx, t, typeName, outer, outerResponse.Schema)
+		}
+	}
+}
+
+func validateSchemaModelForDataSource(ctx context.Context, t *testing.T, typeName string, outer datasource.DataSourceWithConfigure, schema datasourceschema.Schema) {
+	t.Helper()
+
+	v, ok := outer.(*wrappedDataSource)
+	if !ok {
+		t.Errorf("data source %q is not a wrappedDataSource", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.DataSourceValidateModel); !ok {
+		t.Errorf("data source %q does not implement framework.DataSourceValidateModel", typeName)
+	} else {
+		if diags := v.ValidateModel(ctx, &schema); diags.HasError() {
+			t.Errorf("data source %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
+		}
+	}
+}
+
+func validateSchemaModelForEphemeralResource(ctx context.Context, t *testing.T, typeName string, outer ephemeral.EphemeralResourceWithConfigure, schema ephemeralschema.Schema) {
+	t.Helper()
+
+	v, ok := outer.(*wrappedEphemeralResource)
+	if !ok {
+		t.Errorf("ephemeral resource %q is not a wrappedEphemeralResource", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.EphemeralResourceValidateModel); !ok {
+		t.Errorf("ephemeral resource %q does not implement framework.EphemeralResourceValidateModel", typeName)
+	} else {
+		diags := v.ValidateModel(ctx, &schema)
+		if diags.HasError() {
+			t.Errorf("ephemeral resource %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
+		}
+	}
+}
+
+func validateSchemaModelForAction(ctx context.Context, t *testing.T, typeName string, outer action.ActionWithConfigure, schema actionschema.Schema) {
+	t.Helper()
+
+	v, ok := outer.(*wrappedAction)
+	if !ok {
+		t.Errorf("action %q is not a wrappedAction", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.ActionValidateModel); !ok {
+		t.Errorf("action %q does not implement framework.ActionValidateModel", typeName)
+	} else {
+		diags := v.ValidateModel(ctx, &schema)
+		if diags.HasError() {
+			t.Errorf("action %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
+		}
+	}
+}
+
+func validateSchemaModelForResource(ctx context.Context, t *testing.T, typeName string, outer resource.ResourceWithConfigure, schema resourceschema.Schema) {
+	t.Helper()
+
+	var v *wrappedResource
+	switch x := outer.(type) {
+	case *wrappedResource:
+		v = x
+	case *wrappedResourceWithIdentity:
+		v = &x.wrappedResource
+	default:
+		t.Errorf("resource %q is not a wrappedResource or wrappedResourceWithIdentity", typeName)
+		return
+	}
+
+	if v, ok := v.inner.(framework.ResourceValidateModel); !ok {
+		if typeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
+			t.Errorf("resource %q does not implement framework.ResourceValidateModel", typeName)
+		}
+	} else {
+		if diags := v.ValidateModel(ctx, &schema); diags.HasError() {
+			t.Errorf("resource %q model validation error: %s", typeName, fwdiag.DiagnosticsString(diags))
 		}
 	}
 }
