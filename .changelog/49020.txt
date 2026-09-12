@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_endpoint: Detect when a configuration update is silently rolled back and return an error instead of reporting success
+```

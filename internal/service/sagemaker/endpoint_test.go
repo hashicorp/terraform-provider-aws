@@ -461,6 +461,47 @@ func TestAccSageMakerEndpoint_AppAutoScaling_replaceEndpointConfiguration(t *tes
 	})
 }
 
+func TestEndpointConfigNameApplied(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		got     string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "config applied successfully",
+			got:     "config-v2",
+			want:    "config-v2",
+			wantErr: false,
+		},
+		{
+			name:    "config rolled back to previous",
+			got:     "config-v1",
+			want:    "config-v2",
+			wantErr: true,
+		},
+		{
+			name:    "empty applied config",
+			got:     "",
+			want:    "config-v2",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tfsagemaker.EndpointConfigNameApplied(tt.got, tt.want)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EndpointConfigNameApplied(%q, %q) error = %v, wantErr %v", tt.got, tt.want, err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
