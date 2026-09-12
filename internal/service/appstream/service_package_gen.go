@@ -81,6 +81,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  resourceUsageReportSubscription,
+			TypeName: "aws_appstream_usage_report_subscription",
+			Name:     "Usage Report Subscription",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  resourceUser,
 			TypeName: "aws_appstream_user",
 			Name:     "User",
