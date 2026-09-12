@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lakeformation_permissions: Add `lf_tag_expression` configuration block support
+```
+
+```release-note:enhancement
+data-source/aws_lakeformation_permissions: Add `lf_tag_expression` attribute support
+```
