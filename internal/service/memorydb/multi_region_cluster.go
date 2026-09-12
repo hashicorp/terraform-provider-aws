@@ -106,9 +106,6 @@ func (r *multiRegionClusterResource) Schema(ctx context.Context, request resourc
 			},
 			"node_type": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"num_shards": schema.Int64Attribute{
 				Computed: true,
