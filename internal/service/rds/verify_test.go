@@ -43,6 +43,38 @@ func TestEngineVersionIsNewer(t *testing.T) {
 			v2:   "8.0.mysql_aurora.3.10.0",
 			want: false,
 		},
+		// PostgreSQL cases from https://github.com/hashicorp/terraform-provider-aws/issues/39579.
+		// A major-only prefix or an older minor must not be considered newer than
+		// the running minor (otherwise it would be sent to RDS as a downgrade),
+		// while a newer minor or major must be.
+		"postgres major prefix not newer than running minor": {
+			v1:   "14",
+			v2:   "14.22",
+			want: false,
+		},
+		"postgres older minor not newer": {
+			v1:   "14.22",
+			v2:   "14.23",
+			want: false,
+		},
+		"postgres newer minor": {
+			v1:   "14.23",
+			v2:   "14.22",
+			want: true,
+		},
+		"postgres newer major": {
+			v1:   "15",
+			v2:   "14.22",
+			want: true,
+		},
+		// Guards create/import, where engine_version_actual is not yet known: a
+		// concrete configured version must be treated as newer than an empty
+		// actual so the diff is not suppressed before the resource exists.
+		"nonempty newer than empty actual": {
+			v1:   "14",
+			v2:   "",
+			want: true,
+		},
 	}
 
 	for name, test := range tests {
