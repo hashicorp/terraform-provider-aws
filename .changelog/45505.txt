@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_appstream_entitlement
+```
+
+```release-note:new-resource
+aws_appstream_application_entitlement_association
+```
