@@ -1,0 +1,3 @@
+```release-note:new-data-source
+aws_servicequotas_service_quotas: lists all default service quotas for a given service code.
+```
