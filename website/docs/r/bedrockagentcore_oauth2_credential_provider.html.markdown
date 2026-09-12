@@ -251,6 +251,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `callback_url` - Callback URL to register on the OAuth2 credential provider as an allowed callback URL. This URL is where the OAuth2 authorization server redirects users after they complete the authorization flow.
 * `credential_provider_arn` - ARN of the OAuth2 credential provider.
 * `client_secret_arn` - ARN of the AWS Secrets Manager secret containing the client secret.
     * `secret_arn` - ARN of the secret in AWS Secrets Manager.

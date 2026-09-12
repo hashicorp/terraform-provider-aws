@@ -17,3 +17,7 @@ resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentica
 ```release-note:enhancement
 resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id`, `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo`, and `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo_version` arguments 
 ```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `callback_url` attribute
+```

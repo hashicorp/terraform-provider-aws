@@ -453,6 +453,12 @@ func microsoftOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"callback_url": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"client_secret_arn":       framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"credential_provider_arn": framework.ARNAttributeComputedOnly(),
 			"credential_provider_vendor": schema.StringAttribute{
@@ -844,6 +850,7 @@ func waitOAuth2CredentialProviderDeleted(ctx context.Context, conn *bedrockagent
 
 type oauth2CredentialProviderResourceModel struct {
 	framework.WithRegionModel
+	CallbackURL              types.String                                               `tfsdk:"callback_url"`
 	ClientSecretARN          fwtypes.ListNestedObjectValueOf[secretModel]               `tfsdk:"client_secret_arn"`
 	CredentialProviderARN    types.String                                               `tfsdk:"credential_provider_arn"`
 	CredentialProviderVendor fwtypes.StringEnum[awstypes.CredentialProviderVendorType]  `tfsdk:"credential_provider_vendor"`
