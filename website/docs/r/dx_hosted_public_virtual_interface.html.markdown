@@ -38,7 +38,8 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
-* `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+* `bgp_asn` - (Optional) BGP autonomous system number as an integer between `1` and `2147483646`. For larger values, use `bgp_asn_long`. Exactly one of `bgp_asn` or `bgp_asn_long` must be specified.
+* `bgp_asn_long` - (Optional) BGP autonomous system number as an asplain decimal string between `1` and `4294967294`. This argument also accepts values in the `bgp_asn` range. Exactly one of `bgp_asn` or `bgp_asn_long` must be specified.
 * `connection_id` - (Required) The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
 * `name` - (Required) The name for the virtual interface.
 * `owner_account_id` - (Required) The AWS account that will own the new virtual interface.
