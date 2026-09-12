@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_user: Retry `ModifyUser` on `InvalidUserState` errors so updates succeed when a concurrent operation has briefly put the user in the `modifying` state
+```
