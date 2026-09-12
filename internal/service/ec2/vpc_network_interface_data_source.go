@@ -87,6 +87,10 @@ func dataSourceNetworkInterface() *schema.Resource {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
+							"ena_queue_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 							names.AttrInstanceID: {
 								Type:     schema.TypeString,
 								Computed: true,
@@ -275,6 +279,10 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkI
 
 	if v := apiObject.DeviceIndex; v != nil {
 		tfMap["device_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.EnaQueueCount; v != nil {
+		tfMap["ena_queue_count"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.InstanceId; v != nil {
