@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -40,7 +41,14 @@ func statusTableWarmThroughput(conn *dynamodb.Client, tableName string) retry.St
 			return nil, "", err
 		}
 
-		if output == nil || output.WarmThroughput == nil {
+		if output == nil || output.TableArn == nil {
+			return nil, "", nil
+		} else if output.TableStatus == awstypes.TableStatusActive {
+			// DynamoDB Local does not return WarmThroughput
+			a, err := arn.Parse(*output.TableArn)
+			if err == nil && (a.Region == "ddblocal" || a.AccountID == "000000000000") {
+				return output, string(awstypes.TableStatusActive), nil
+			}
 			return nil, "", nil
 		}
 
@@ -170,7 +178,14 @@ func statusGSIWarmThroughput(conn *dynamodb.Client, tableName, indexName string)
 			return nil, "", err
 		}
 
-		if output == nil || output.WarmThroughput == nil {
+		if output == nil || output.IndexArn == nil {
+			return nil, "", nil
+		} else if output.IndexStatus == awstypes.IndexStatusActive {
+			// DynamoDB Local does not return WarmThroughput
+			a, err := arn.Parse(*output.IndexArn)
+			if err == nil && (a.Region == "ddblocal" || a.AccountID == "000000000000") {
+				return output, string(awstypes.IndexStatusActive), nil
+			}
 			return nil, "", nil
 		}
 
