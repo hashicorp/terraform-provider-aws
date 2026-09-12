@@ -84,6 +84,7 @@ func TestBGPASNResourceSchemas(t *testing.T) {
 	resourceFactories := map[string]func() *schema.Resource{
 		"private VIF": resourcePrivateVirtualInterface,
 		"transit VIF": resourceTransitVirtualInterface,
+		"public VIF":  resourcePublicVirtualInterface,
 	}
 
 	for name, resourceFactory := range resourceFactories {
