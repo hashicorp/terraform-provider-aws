@@ -8,6 +8,7 @@ var (
 	ResourceCluster                      = resourceCluster
 	ResourceClusterPolicy                = resourceClusterPolicy
 	ResourceConfiguration                = resourceConfiguration
+	ResourceChannel                      = newChannelResource
 	ResourceReplicator                   = resourceReplicator
 	ResourceSCRAMSecretAssociation       = resourceSCRAMSecretAssociation
 	ResourceSingleSCRAMSecretAssociation = newSingleSCRAMSecretAssociationResource
@@ -15,6 +16,7 @@ var (
 	ResourceTopic                        = newTopicResource
 	ResourceVPCConnection                = resourceVPCConnection
 
+	FindChannelByTwoPartKey                      = findChannelByTwoPartKey
 	FindClusterByARN                             = findClusterByARN
 	FindClusterPolicyByARN                       = findClusterPolicyByARN
 	FindConfigurationByARN                       = findConfigurationByARN
