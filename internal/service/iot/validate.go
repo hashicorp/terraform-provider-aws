@@ -46,6 +46,45 @@ func validThingTypeSearchableAttribute(v any, k string) (ws []string, errors []e
 	return
 }
 
+func validThingTypeMqttPropagatingConnectionAttribute(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 128 characters", k))
+	}
+	if !regexache.MustCompile(`[a-zA-Z0-9:.]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, colons  and dots allowed in %q", k))
+	}
+	return
+}
+
+func validThingTypeMqttPropagatingThingAttribute(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 128 characters", k))
+	}
+	if !regexache.MustCompile(`[a-zA-Z0-9_.,@/:#-]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
+	}
+	return
+}
+
+func validThingTypeMqttPropagatingUserPropertyKey(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 128 characters", k))
+	}
+	if !regexache.MustCompile(`[a-zA-Z0-9:$.]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, colons, dollar signs and dots allowed in %q", k))
+	}
+	return
+}
+
 func validTopicRuleCloudWatchAlarmStateValue(v any, s string) ([]string, []error) {
 	switch v.(string) {
 	case
