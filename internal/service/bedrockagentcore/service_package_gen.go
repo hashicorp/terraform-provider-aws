@@ -139,6 +139,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newGatewayWAFConfigurationResource,
+			TypeName: "aws_bedrockagentcore_gateway_waf_configuration",
+			Name:     "Gateway WAF Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newHarnessResource,
 			TypeName: "aws_bedrockagentcore_harness",
 			Name:     "Harness",
