@@ -5,6 +5,8 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
+	ResourceCapacityProvider         = newCapacityProviderResource
+	FindCapacityProviderByID         = findCapacityProviderByID
 	ResourceAgentRuntime             = newAgentRuntimeResource
 	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
 	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource

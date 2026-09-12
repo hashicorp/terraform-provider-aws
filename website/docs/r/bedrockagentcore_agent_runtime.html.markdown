@@ -157,6 +157,34 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 }
 ```
 
+### Runtime Instances
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example_instances_runtime"
+  role_arn           = aws_iam_role.example.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "123456789012.dkr.ecr.us-west-2.amazonaws.com/example-agent:latest"
+    }
+  }
+
+  capacity_provider_configuration {
+    capacity_provider_arn = aws_bedrockagentcore_capacity_provider.example.arn
+  }
+
+  filesystem_configuration {
+    capacity_provider_volume {
+      volume_name = "data"
+      mount_path  = "/mnt/data"
+    }
+  }
+}
+```
+
+The capacity provider must define the referenced volume. Networking comes from the capacity provider. Adding, removing, or changing `capacity_provider_configuration` replaces the runtime. Old runtime versions retain capacity-provider references, so replacement allows a previously associated capacity provider to be deleted.
+
 ## Argument Reference
 
 The following arguments are required:
@@ -164,15 +192,16 @@ The following arguments are required:
 * `agent_runtime_name` - (Required) Name of the agent runtime.
 * `role_arn` - (Required) ARN of the IAM role that the agent runtime assumes to access AWS services.
 * `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent-runtime-artifact) below.
-* `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration) below.
+* `network_configuration` - (Optional) Network configuration for a microVM runtime. Exactly one of `network_configuration` and `capacity_provider_configuration` must be configured. See [`network_configuration`](#network_configuration) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `capacity_provider_configuration` - (Optional) Capacity provider for the [Instances compute type](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-instances-how-it-works.html). See [`capacity_provider_configuration`](#capacity_provider_configuration) below.
 * `description` - (Optional) Description of the agent runtime.
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
-* `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration) below.
+* `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, Amazon EFS access point, or a capacity provider volume. See [`filesystem_configuration`](#filesystem_configuration) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
@@ -288,13 +317,20 @@ The `claim_match_value` block supports the following:
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 
+### `capacity_provider_configuration`
+
+The `capacity_provider_configuration` block supports the following:
+
+* `capacity_provider_arn` - (Required) ARN of a Bedrock AgentCore capacity provider.
+
 ### `filesystem_configuration`
 
-Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
+Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, `efs_access_point`, or `capacity_provider_volume`.
 
-* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage) below.
-* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
-* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point) below.
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, `efs_access_point`, or `capacity_provider_volume` must be specified. See [`session_storage`](#session_storage) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, `efs_access_point`, or `capacity_provider_volume` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
+* `capacity_provider_volume` - (Optional) Persistent volume defined on the capacity provider. Only supported for Instances runtimes. See [`capacity_provider_volume`](#capacity_provider_volume) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, `efs_access_point`, or `capacity_provider_volume` must be specified. See [`efs_access_point`](#efs_access_point) below.
 
 ### `session_storage`
 
@@ -322,6 +358,13 @@ The `lifecycle_configuration` block supports the following:
 
 * `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle runtime sessions.
 * `max_lifetime` - (Optional) Maximum lifetime for the instance in seconds.
+
+### `capacity_provider_volume`
+
+The `capacity_provider_volume` block supports the following:
+
+* `mount_path` - (Required) Mount path under `/mnt` with exactly one subdirectory, such as `/mnt/data`. Must be between 6 and 200 characters.
+* `volume_name` - (Required) Logical name of a persistent volume defined on the capacity provider.
 
 ### `network_configuration`
 

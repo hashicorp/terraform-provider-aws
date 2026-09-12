@@ -228,11 +228,23 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				},
 			},
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
-			"filesystem_configuration": filesystemConfigurationSchema(ctx),
+			"capacity_provider_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[capacityProviderConfigurationModel](ctx),
+				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				PlanModifiers: []planmodifier.List{
+					// Old runtime versions retain capacity-provider references and prevent its deletion.
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+					"capacity_provider_arn": schema.StringAttribute{Required: true, CustomType: fwtypes.ARNType},
+				}},
+			},
+
+			"filesystem_configuration": runtimeFilesystemConfigurationSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
+					listvalidator.ExactlyOneOf(path.MatchRoot("capacity_provider_configuration")),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -630,6 +642,29 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
+func runtimeFilesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+	result := filesystemConfigurationSchema(ctx)
+	result.CustomType = fwtypes.NewListNestedObjectTypeOf[runtimeFilesystemConfigurationModel](ctx)
+	result.NestedObject.Validators = []validator.Object{tfobjectvalidator.ExactlyOneOfChildren(
+		path.MatchRelative().AtName("capacity_provider_volume"),
+		path.MatchRelative().AtName("efs_access_point"),
+		path.MatchRelative().AtName("s3_files_access_point"),
+		path.MatchRelative().AtName("session_storage"),
+	)}
+	result.NestedObject.Blocks["capacity_provider_volume"] = schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[capacityProviderVolumeConfigurationModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+			"volume_name": schema.StringAttribute{Required: true},
+			"mount_path": schema.StringAttribute{Required: true, Validators: []validator.String{
+				stringvalidator.LengthBetween(6, 200),
+				stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+			}},
+		}},
+	}
+	return result
+}
+
 func (r *agentRuntimeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data agentRuntimeResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
@@ -946,25 +981,26 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 }
 
 type agentRuntimeResourceModel struct {
+	CapacityProviderConfiguration fwtypes.ListNestedObjectValueOf[capacityProviderConfigurationModel] `tfsdk:"capacity_provider_configuration"`
 	framework.WithRegionModel
-	AgentRuntimeARN            types.String                                                     `tfsdk:"agent_runtime_arn"`
-	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]       `tfsdk:"agent_runtime_artifact"`
-	AgentRuntimeID             types.String                                                     `tfsdk:"agent_runtime_id"`
-	AgentRuntimeName           types.String                                                     `tfsdk:"agent_runtime_name"`
-	AgentRuntimeVersion        types.String                                                     `tfsdk:"agent_runtime_version"`
-	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
-	Description                types.String                                                     `tfsdk:"description"`
-	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
-	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]    `tfsdk:"filesystem_configuration"`
-	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
-	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
-	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
-	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
-	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
-	Tags                       tftags.Map                                                       `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
-	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]    `tfsdk:"workload_identity_details"`
+	AgentRuntimeARN            types.String                                                         `tfsdk:"agent_runtime_arn"`
+	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]           `tfsdk:"agent_runtime_artifact"`
+	AgentRuntimeID             types.String                                                         `tfsdk:"agent_runtime_id"`
+	AgentRuntimeName           types.String                                                         `tfsdk:"agent_runtime_name"`
+	AgentRuntimeVersion        types.String                                                         `tfsdk:"agent_runtime_version"`
+	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]        `tfsdk:"authorizer_configuration"`
+	Description                types.String                                                         `tfsdk:"description"`
+	EnvironmentVariables       fwtypes.MapOfString                                                  `tfsdk:"environment_variables"`
+	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[runtimeFilesystemConfigurationModel] `tfsdk:"filesystem_configuration"`
+	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]         `tfsdk:"lifecycle_configuration"`
+	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]           `tfsdk:"network_configuration"`
+	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]          `tfsdk:"protocol_configuration"`
+	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel]     `tfsdk:"request_header_configuration"`
+	RoleARN                    fwtypes.ARN                                                          `tfsdk:"role_arn"`
+	Tags                       tftags.Map                                                           `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                           `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                                                       `tfsdk:"timeouts"`
+	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]        `tfsdk:"workload_identity_details"`
 }
 
 type agentRuntimeArtifactModel struct {
@@ -1464,4 +1500,65 @@ func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (any, diag.
 
 type workloadIdentityDetailsModel struct {
 	WorkloadIdentityARN types.String `tfsdk:"workload_identity_arn"`
+}
+
+type capacityProviderConfigurationModel struct {
+	CapacityProviderARN fwtypes.ARN `tfsdk:"capacity_provider_arn"`
+}
+
+type capacityProviderVolumeConfigurationModel struct {
+	MountPath  types.String `tfsdk:"mount_path"`
+	VolumeName types.String `tfsdk:"volume_name"`
+}
+
+type runtimeFilesystemConfigurationModel struct {
+	CapacityProviderVolume fwtypes.ListNestedObjectValueOf[capacityProviderVolumeConfigurationModel] `tfsdk:"capacity_provider_volume"`
+	EFSAccessPoint         fwtypes.ListNestedObjectValueOf[efsAccessPointConfigurationModel]         `tfsdk:"efs_access_point"`
+	S3FilesAccessPoint     fwtypes.ListNestedObjectValueOf[s3FilesAccessPointConfigurationModel]     `tfsdk:"s3_files_access_point"`
+	SessionStorage         fwtypes.ListNestedObjectValueOf[sessionStorageConfigurationModel]         `tfsdk:"session_storage"`
+}
+
+func (m *runtimeFilesystemConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.FilesystemConfigurationMemberCapacityProviderVolume:
+		var data capacityProviderVolumeConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.CapacityProviderVolume = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	default:
+		legacy := filesystemConfigurationModel{
+			EFSAccessPoint:     m.EFSAccessPoint,
+			S3FilesAccessPoint: m.S3FilesAccessPoint,
+			SessionStorage:     m.SessionStorage,
+		}
+		smerr.AddEnrich(ctx, &diags, legacy.Flatten(ctx, v))
+		if diags.HasError() {
+			return diags
+		}
+		m.EFSAccessPoint = legacy.EFSAccessPoint
+		m.S3FilesAccessPoint = legacy.S3FilesAccessPoint
+		m.SessionStorage = legacy.SessionStorage
+	}
+	return diags
+}
+
+func (m runtimeFilesystemConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.CapacityProviderVolume.IsNull():
+		data, d := m.CapacityProviderVolume.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var out awstypes.FilesystemConfigurationMemberCapacityProviderVolume
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &out.Value))
+		return &out, diags
+	default:
+		legacy := filesystemConfigurationModel{EFSAccessPoint: m.EFSAccessPoint, S3FilesAccessPoint: m.S3FilesAccessPoint, SessionStorage: m.SessionStorage}
+		return legacy.Expand(ctx)
+	}
 }
