@@ -44,6 +44,39 @@ func TestAccVPCLatticeServiceNetworkDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeServiceNetworkDataSource_byName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_service_network.test"
+	dataSourceName := "data.aws_vpclattice_service_network.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceNetworkDataSourceConfig_byName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "service_network_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeServiceNetworkDataSource_shared(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -89,6 +122,22 @@ resource "aws_vpclattice_service_network" "test" {
 
 data "aws_vpclattice_service_network" "test" {
   service_network_identifier = aws_vpclattice_service_network.test.id
+}
+`, rName)
+}
+
+func testAccServiceNetworkDataSourceConfig_byName(rName string) string {
+	return fmt.Sprintf(`  
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_vpclattice_service_network" "test" {
+  name = aws_vpclattice_service_network.test.name
 }
 `, rName)
 }
