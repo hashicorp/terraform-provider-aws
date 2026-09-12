@@ -28,7 +28,8 @@ resource "aws_ebs_volume" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `availability_zone` - (Required) Availability zone where the EBS volume will exist.
+* `availability_zone` - (Optional) Availability zone where the EBS volume will exist. Exactly one of `availability_zone` or `availability_zone_id` must be specified.
+* `availability_zone_id` - (Optional) ID of the Availability Zone where the EBS volume will exist (e.g., `use1-az1`). Exactly one of `availability_zone` or `availability_zone_id` must be specified.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
 * `final_snapshot` - (Optional) If true, snapshot will be created before volume deletion. Any tags on the volume will be migrated to the snapshot. By default set to false
 * `iops` - (Optional) Amount of IOPS to provision for the disk. Only valid for `type` of `io1`, `io2` or `gp3`.
