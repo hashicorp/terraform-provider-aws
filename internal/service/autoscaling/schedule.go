@@ -122,8 +122,8 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.Recurrence = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrStartTime); ok {
-		v, _ := time.Parse(ScheduleTimeLayout, v.(string))
+	if v := d.GetRawConfig().GetAttr(names.AttrStartTime); v.IsKnown() && !v.IsNull() {
+		v, _ := time.Parse(ScheduleTimeLayout, v.AsString())
 
 		input.StartTime = aws.Time(v)
 	}
