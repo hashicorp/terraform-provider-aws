@@ -367,6 +367,13 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		// Preserve fields not returned by UpdateAgent API to avoid inconsistent result errors.
+		// See: https://github.com/hashicorp/terraform-provider-aws/issues/43849
+		new.PreparedAt = old.PreparedAt
+		if new.GuardrailConfiguration.IsNull() && !old.GuardrailConfiguration.IsNull() {
+			new.GuardrailConfiguration = old.GuardrailConfiguration
+		}
 	} else {
 		new.AgentVersion = old.AgentVersion
 	}

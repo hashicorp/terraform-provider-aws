@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagent_agent: Fix `Provider produced inconsistent result after apply` error during updates by preserving `PreparedAt` and `GuardrailConfiguration` values
+```
