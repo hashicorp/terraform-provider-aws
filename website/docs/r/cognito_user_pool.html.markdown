@@ -61,6 +61,52 @@ resource "aws_cognito_user_pool" "test" {
 }
 ```
 
+### With Customer-Managed KMS Key (Multi-Region Replication)
+
+```terraform
+resource "aws_kms_key" "example" {
+  description             = "cognito-multi-region"
+  deletion_window_in_days = 7
+  multi_region            = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Cognito to use this key"
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_cognito_user_pool" "example" {
+  name = "example"
+
+  key_configuration {
+    key_type    = "CUSTOMER_MANAGED_KEY"
+    kms_key_arn = aws_kms_key.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -77,6 +123,7 @@ This resource supports the following arguments:
 * `email_mfa_configuration` -  (Optional) Configuration block for configuring email Multi-Factor Authentication (MFA); requires at least 2 `account_recovery_setting` entries; requires an `email_configuration` configuration block. Effective only when `mfa_configuration` is `ON` or `OPTIONAL`. [Detailed below](#email_mfa_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
+* `key_configuration` - (Optional) Configuration block for the user pool's encryption key. [Detailed below](#key_configuration).
 * `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `email_mfa_configuration`, `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `email_mfa_configuration`, `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
@@ -129,6 +176,13 @@ This resource supports the following arguments:
 
 * `message` - (Optional) The template for the email messages that your user pool sends to users with codes for MFA and sign-in with email OTPs. The message must contain the {####} placeholder. In the message, Amazon Cognito replaces this placeholder with the code. If you don't provide this parameter, Amazon Cognito sends messages in the default format.
 * `subject` - (Optional) The subject of the email messages that your user pool sends to users with codes for MFA and email OTP sign-in.
+
+### key_configuration
+
+~> **NOTE:** When using `CUSTOMER_MANAGED_KEY`, the KMS key policy must grant `cognito-idp.amazonaws.com` the `kms:CreateGrant` and `kms:DescribeKey` permissions. See the [With Customer-Managed KMS Key](#with-customer-managed-kms-key-multi-region-replication) example above.
+
+* `key_type` - (Optional) Type of encryption key for the user pool. Valid values are `AWS_OWNED_KEY` and `CUSTOMER_MANAGED_KEY`. Use `CUSTOMER_MANAGED_KEY` with a multi-Region KMS key to enable multi-Region replication of the user pool.
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the user pool. Required when `key_type` is `CUSTOMER_MANAGED_KEY`.
 
 ### lambda_config
 

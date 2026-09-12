@@ -260,6 +260,26 @@ func resourceUserPool() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
+				"key_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.EncryptionKeyType](),
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
 				"lambda_config": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -775,6 +795,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if v, ok := d.GetOk("key_configuration"); ok {
+		input.KeyConfiguration = expandKeyConfigurationType(v.([]any))
+	}
+
 	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]any)) > 0 {
 		input.EmailConfiguration = expandEmailConfigurationType(v.([]any))
 	}
@@ -950,6 +974,9 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set("email_configuration", flattenEmailConfigurationType(userPool.EmailConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting email_configuration: %s", err)
 	}
+	if err := d.Set("key_configuration", flattenKeyConfigurationType(userPool.KeyConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting key_configuration: %s", err)
+	}
 	d.Set("email_verification_subject", userPool.EmailVerificationSubject)
 	d.Set("email_verification_message", userPool.EmailVerificationMessage)
 	d.Set(names.AttrEndpoint, fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname(ctx, "cognito-idp"), d.Id()))
@@ -1071,6 +1098,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"email_configuration",
 		"email_verification_message",
 		"email_verification_subject",
+		"key_configuration",
 		"lambda_config",
 		names.AttrName,
 		"password_policy",
@@ -1116,6 +1144,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				input.DeviceConfiguration = expandDeviceConfigurationType(v)
 			}
+		}
+
+		if v, ok := d.GetOk("key_configuration"); ok {
+			input.KeyConfiguration = expandKeyConfigurationType(v.([]any))
 		}
 
 		if v, ok := d.GetOk("email_configuration"); ok && len(v.([]any)) > 0 {
@@ -2319,6 +2351,39 @@ func flattenUserAttributeUpdateSettingsType(apiObject *awstypes.UserAttributeUpd
 
 	tfMap := map[string]any{}
 	tfMap["attributes_require_verification_before_update"] = apiObject.AttributesRequireVerificationBeforeUpdate
+
+	return []any{tfMap}
+}
+
+func expandKeyConfigurationType(tfList []any) *awstypes.KeyConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.KeyConfigurationType{}
+
+	if v, ok := tfMap["key_type"].(string); ok && v != "" {
+		apiObject.KeyType = awstypes.EncryptionKeyType(v)
+	}
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+		apiObject.KmsKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenKeyConfigurationType(apiObject *awstypes.KeyConfigurationType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"key_type": apiObject.KeyType,
+	}
+	if apiObject.KmsKeyArn != nil {
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(apiObject.KmsKeyArn)
+	}
 
 	return []any{tfMap}
 }
