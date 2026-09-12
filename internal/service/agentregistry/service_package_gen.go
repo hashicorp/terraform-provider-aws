@@ -22,6 +22,23 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newSubmitRegistryRecordForApprovalAction,
+			TypeName: "aws_agentregistry_submit_registry_record_for_approval",
+			Name:     "Submit Registry Record For Approval",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newUpdateRegistryRecordStatusAction,
+			TypeName: "aws_agentregistry_update_registry_record_status",
+			Name:     "Update Registry Record Status",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
@@ -30,6 +47,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Registry",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "registry_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newRegistryRecordDataSource,
+			TypeName: "aws_agentregistry_registry_record",
+			Name:     "Registry Record",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "record_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
@@ -49,6 +75,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newRegistryRecordResource,
+			TypeName: "aws_agentregistry_registry_record",
+			Name:     "Registry Record",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "record_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("registry_id", true),
+				inttypes.StringIdentityAttribute("record_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      registryRecordImportID{},
 			},
 		},
 	}

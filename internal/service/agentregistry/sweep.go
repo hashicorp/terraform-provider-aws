@@ -16,7 +16,8 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_agentregistry_registry", sweepRegistries)
+	awsv2.Register("aws_agentregistry_registry", sweepRegistries, "aws_agentregistry_registry_record")
+	awsv2.Register("aws_agentregistry_registry_record", sweepRegistryRecords)
 }
 
 func sweepRegistries(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -35,6 +36,43 @@ func sweepRegistries(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 			sweepResources = append(sweepResources, framework.NewSweepResource(newRegistryResource, client,
 				framework.NewAttribute("registry_id", aws.ToString(v.RegistryId))),
 			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRegistryRecords(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input agentregistrycontrol.ListRegistriesInput
+	conn := client.AgentRegistryClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := agentregistrycontrol.NewListRegistriesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, registry := range page.Registries {
+			registryID := aws.ToString(registry.RegistryId)
+			input := agentregistrycontrol.ListRegistryRecordsInput{
+				RegistryId: registry.RegistryId,
+			}
+			pages := agentregistrycontrol.NewListRegistryRecordsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.RegistryRecords {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newRegistryRecordResource, client,
+						framework.NewAttribute("registry_id", registryID),
+						framework.NewAttribute("record_id", aws.ToString(v.RecordId))),
+					)
+				}
+			}
 		}
 	}
 
