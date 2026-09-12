@@ -28,6 +28,7 @@ func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "inference_types_supported.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "input_modalities.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_arn"),
+					resource.TestCheckResourceAttrSet(datasourceName, "model_lifecycle.status"),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_name"),
 					resource.TestCheckResourceAttrSet(datasourceName, "output_modalities.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrProviderName),
