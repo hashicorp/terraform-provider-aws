@@ -4674,7 +4674,7 @@ func findImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 
 	if state := output.State; state == awstypes.ImageStateDeregistered {
 		return nil, &retry.NotFoundError{
-			Message: string(state),
+			Message: fmt.Sprintf("AMI %s is deregistered. The AMI may have been recently deregistered. If this is a new resource, the AMI may not have been available yet when Terraform tried to use it.", id),
 		}
 	}
 
