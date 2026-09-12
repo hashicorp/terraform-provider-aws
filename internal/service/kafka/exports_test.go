@@ -27,6 +27,7 @@ var (
 
 	ClusterUUIDFromARN    = clusterUUIDFromARN
 	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
+	ReconcileTopicConfigs = reconcileTopicConfigs
 	SortEndpointsString   = sortEndpointsString
 
 	ExpandKafkaCluster                      = expandKafkaCluster                      // nosemgrep:ci.kafka-in-var-name
