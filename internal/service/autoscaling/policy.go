@@ -118,6 +118,11 @@ func resourcePolicy() *schema.Resource {
 									},
 								},
 							},
+							"period": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
+							},
 							"return_data": {
 								Type:     schema.TypeBool,
 								Optional: true,
@@ -448,6 +453,11 @@ func resourcePolicy() *schema.Resource {
 																},
 															},
 														},
+													},
+													"period": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntInSlice([]int{10, 30, 60}),
 													},
 													"return_data": {
 														Type:     schema.TypeBool,
@@ -855,6 +865,9 @@ func expandTargetTrackingMetricDataQueries(tfList []any) []awstypes.TargetTracki
 			}
 			apiObject.MetricStat = targetTrackingMetricStat
 		}
+		if v, ok := tfMap["period"].(int); ok && v != 0 {
+			apiObject.Period = aws.Int32(int32(v))
+		}
 		if v, ok := tfMap["return_data"]; ok {
 			apiObject.ReturnData = aws.Bool(v.(bool))
 		}
@@ -1169,6 +1182,9 @@ func flattenTargetTrackingMetricDataQueries(apiObjects []awstypes.TargetTracking
 				tfMapMetricStat[names.AttrUnit] = aws.ToString(v)
 			}
 			tfMap["metric_stat"] = []map[string]any{tfMapMetricStat}
+		}
+		if v := apiObject.Period; v != nil {
+			tfMap["period"] = aws.ToInt32(v)
 		}
 		if v := apiObject.ReturnData; v != nil {
 			tfMap["return_data"] = aws.ToBool(v)

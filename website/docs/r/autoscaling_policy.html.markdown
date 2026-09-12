@@ -89,6 +89,7 @@ resource "aws_autoscaling_policy" "example" {
         label       = "Calculate the backlog per instance"
         id          = "e1"
         expression  = "m1 / m2"
+        period      = 10
         return_data = true
       }
     }
@@ -294,6 +295,7 @@ This configuration block supports the following arguments:
 * `id` - (Required) Short name for the metric used in target tracking scaling policy.
 * `label` - (Optional) Human-readable label for this metric or expression.
 * `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `period` - (Optional) The period of the metric in seconds.
 * `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ##### metric_stat
