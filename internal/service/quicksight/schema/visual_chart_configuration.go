@@ -1810,7 +1810,7 @@ func flattenContributionAnalysisDefault(apiObjects []awstypes.ContributionAnalys
 		}
 
 		if apiObject.ContributorDimensions != nil {
-			tfMap["contribution_dimensions"] = flattenColumnIdentifiers(apiObject.ContributorDimensions)
+			tfMap["contributor_dimensions"] = flattenColumnIdentifiers(apiObject.ContributorDimensions)
 		}
 
 		tfList = append(tfList, tfMap)
