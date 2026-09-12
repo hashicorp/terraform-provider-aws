@@ -369,6 +369,35 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_scalingTargetDefaults(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_scalingTargetDefaults(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
 // TestAccECSExpressGatewayService_environmentVariableOrdering verifies that
 // non-alphabetical environment variables don't cause inconsistent apply errors.
 // See: https://github.com/hashicorp/terraform-provider-aws/issues/45792
@@ -1086,4 +1115,28 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 `)
+}
+
+func testAccExpressGatewayServiceConfig_scalingTargetDefaults(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  service_name            = %[1]q
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  scaling_target {
+    min_task_count = 1
+    max_task_count = 2
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName))
 }
