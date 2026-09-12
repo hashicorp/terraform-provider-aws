@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3tables_table_replication: Fix missing `versionToken` on Create by fetching and sending `versionToken` with the replication Put API
+```
+
+```release-note:bug
+resource/aws_s3tables_table_bucket_replication: Fix missing `versionToken` on Create by fetching and sending `versionToken` with the replication Put API
+```
