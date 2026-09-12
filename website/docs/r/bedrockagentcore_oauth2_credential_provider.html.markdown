@@ -206,6 +206,19 @@ The `atlassian_oauth2_provider_config`, `github_oauth2_provider_config`, `google
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
+**Microsoft-Specific Configuration:**
+
+The Microsoft OAuth2 provider supports additional tenant-specific arguments:
+
+**Standard Tenant ID:**
+
+* `tenant_id` - (Optional, Microsoft only) Microsoft Entra (Azure AD) tenant ID. Cannot be used with `tenant_id_wo`.
+
+**Write-Only Tenant ID:**
+
+* `tenant_id_wo` - (Optional, Microsoft only) Write-only Microsoft Entra (Azure AD) tenant ID. Cannot be used with `tenant_id`. Must be used together with `tenant_id_wo_version`.
+* `tenant_id_wo_version` - (Optional, Microsoft only) Used together with write-only tenant ID to trigger an update. Increment this value when an update to `tenant_id_wo` is required.
+
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
 
 ### `oauth_discovery`

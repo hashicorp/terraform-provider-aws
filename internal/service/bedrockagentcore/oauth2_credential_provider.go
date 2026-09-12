@@ -47,7 +47,7 @@ import (
 )
 
 var (
-	oauth2ClientCredentialsCtxKey = inttypes.NewContextKey[oauth2ProviderClientCredentialsModel]()
+	oauth2ClientCredentialsCtxKey = inttypes.NewContextKey[oauth2CredentialProviderWriteOnlyCredentialsModel]()
 )
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
@@ -336,7 +336,7 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 			path.MatchRelative().AtParent().AtName("private_endpoint"),
 		)),
 		"private_key_jwt_config": schema.ListNestedBlock{
-			CustomType: fwtypes.NewListNestedObjectTypeOf[privateKeyJwtConfigModel](ctx),
+			CustomType: fwtypes.NewListNestedObjectTypeOf[privateKeyJWTConfigModel](ctx),
 			Validators: []validator.List{
 				listvalidator.SizeAtMost(1),
 			},
@@ -410,6 +410,46 @@ func includedOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 	return block
 }
 
+func microsoftOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
+	block := basicOAuth2ProviderConfigBlock[microsoftOAuth2ProviderConfigModel](ctx).(schema.ListNestedBlock)
+	maps.Copy(block.NestedObject.Attributes, map[string]schema.Attribute{
+		"tenant_id": schema.StringAttribute{
+			Optional:  true,
+			Sensitive: true,
+			Validators: []validator.String{
+				stringvalidator.LengthBetween(1, 256),
+				stringvalidator.ConflictsWith(
+					path.MatchRelative().AtParent().AtName("tenant_id_wo"),
+				),
+			},
+		},
+		"tenant_id_wo": schema.StringAttribute{
+			Optional:  true,
+			WriteOnly: true,
+			Sensitive: true,
+			Validators: []validator.String{
+				stringvalidator.LengthBetween(1, 256),
+				stringvalidator.ConflictsWith(
+					path.MatchRelative().AtParent().AtName("tenant_id"),
+				),
+				stringvalidator.AlsoRequires(
+					path.MatchRelative().AtParent().AtName("tenant_id_wo_version"),
+				),
+			},
+		},
+		"tenant_id_wo_version": schema.Int64Attribute{
+			Optional: true,
+			Validators: []validator.Int64{
+				int64validator.AlsoRequires(
+					path.MatchRelative().AtParent().AtName("tenant_id_wo"),
+				),
+			},
+		},
+	})
+
+	return block
+}
+
 func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -475,7 +515,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 						"google_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[googleOAuth2ProviderConfigModel](ctx),
 						"included_oauth2_provider_config":   includedOAuth2ProviderConfigBlock(ctx),
 						"linkedin_oauth2_provider_config":   basicOAuth2ProviderConfigBlock[linkedinOAuth2ProviderConfigModel](ctx),
-						"microsoft_oauth2_provider_config":  basicOAuth2ProviderConfigBlock[microsoftOAuth2ProviderConfigModel](ctx),
+						"microsoft_oauth2_provider_config":  microsoftOAuth2ProviderConfigBlock(ctx),
 						"salesforce_oauth2_provider_config": basicOAuth2ProviderConfigBlock[salesforceOAuth2ProviderConfigModel](ctx),
 						"slack_oauth2_provider_config":      basicOAuth2ProviderConfigBlock[slackOAuth2ProviderConfigModel](ctx),
 					},
@@ -501,14 +541,14 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	// Get the effective client credentials.
-	clientCredentials, d := plan.clientCredentials(ctx)
+	clientCredentials, d := plan.writeOnlyCredentials(ctx)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Write-only attribute are only in Config.
-	fromConfig, d := config.clientCredentials(ctx)
+	// Terraform WO attributes are only in Config.
+	fromConfig, d := config.writeOnlyCredentials(ctx)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -561,7 +601,7 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 	}
 
 	// Get the client credentials from State.
-	clientCredentials, d := data.clientCredentials(ctx)
+	clientCredentials, d := data.writeOnlyCredentials(ctx)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -611,14 +651,14 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 
 	if diff.HasChanges() {
 		// Get the effective client credentials.
-		clientCredentials, d := plan.clientCredentials(ctx)
+		clientCredentials, d := plan.writeOnlyCredentials(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		// Write-only attribute are only in Config.
-		fromConfig, d := config.clientCredentials(ctx)
+		// Terraform WO attributes are only in Config.
+		fromConfig, d := config.writeOnlyCredentials(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
@@ -814,18 +854,18 @@ type oauth2CredentialProviderResourceModel struct {
 	Timeouts                 timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
-func (m *oauth2CredentialProviderResourceModel) clientCredentials(ctx context.Context) (oauth2ProviderClientCredentialsModel, diag.Diagnostics) {
+func (m *oauth2CredentialProviderResourceModel) writeOnlyCredentials(ctx context.Context) (oauth2CredentialProviderWriteOnlyCredentialsModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model, d := m.OAuth2ProviderConfig.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() || model == nil {
-		v, d := fwtypes.Nullified[oauth2ProviderClientCredentialsModel](ctx)
+		v, d := fwtypes.Nullified[oauth2CredentialProviderWriteOnlyCredentialsModel](ctx)
 		diags.Append(d...)
 		return v, diags
 	}
 
-	v, d := model.clientCredentials(ctx)
+	v, d := model.writeOnlyCredentials(ctx)
 	diags.Append(d...)
 
 	return v, diags
@@ -843,83 +883,88 @@ type oauth2ProviderConfigModel struct {
 	SlackOAuth2ProviderConfig      fwtypes.ListNestedObjectValueOf[slackOAuth2ProviderConfigModel]      `tfsdk:"slack_oauth2_provider_config"`
 }
 
-func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oauth2ProviderClientCredentialsModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
+func (m *oauth2ProviderConfigModel) writeOnlyCredentials(ctx context.Context) (oauth2CredentialProviderWriteOnlyCredentialsModel, diag.Diagnostics) {
+	r, diags := fwtypes.Nullified[oauth2CredentialProviderWriteOnlyCredentialsModel](ctx)
+	if diags.HasError() {
+		return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
+	}
+
 	switch {
 	case !m.AtlassianOAuth2ProviderConfig.IsNull():
 		model, d := m.AtlassianOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.CustomOAuth2ProviderConfig.IsNull():
 		model, d := m.CustomOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.GithubOAuth2ProviderConfig.IsNull():
 		model, d := m.GithubOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.GoogleOAuth2ProviderConfig.IsNull():
 		model, d := m.GoogleOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.IncludedOAuth2ProviderConfig.IsNull():
 		model, d := m.IncludedOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.LinkedinOAuth2ProviderConfig.IsNull():
 		model, d := m.LinkedinOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.MicrosoftOAuth2ProviderConfig.IsNull():
 		model, d := m.MicrosoftOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.microsoftOAuth2ProviderTenantIDModel = model.microsoftOAuth2ProviderTenantIDModel
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.SalesforceOAuth2ProviderConfig.IsNull():
 		model, d := m.SalesforceOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 
 	case !m.SlackOAuth2ProviderConfig.IsNull():
 		model, d := m.SlackOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
-			return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+			return inttypes.Zero[oauth2CredentialProviderWriteOnlyCredentialsModel](), diags
 		}
-		return model.oauth2ProviderClientCredentialsModel, diags
+		r.oauth2ProviderClientCredentialsModel = model.oauth2ProviderClientCredentialsModel
 	}
 
-	return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
+	return r, diags
 }
 
 var (
@@ -939,7 +984,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.AtlassianOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -950,7 +995,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.CustomOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -961,7 +1006,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.GithubOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -972,7 +1017,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.GoogleOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -984,7 +1029,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		// Copy over additional attributes from oauth_discovery.authorization_server_metadata.
 		switch t := v.OauthDiscovery.(type) {
 		case *awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata:
@@ -1003,7 +1048,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.LinkedinOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1014,7 +1059,8 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.microsoftOAuth2ProviderTenantIDModel = clientCredentials.microsoftOAuth2ProviderTenantIDModel
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.MicrosoftOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1025,7 +1071,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.SalesforceOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1036,7 +1082,7 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		if diags.HasError() {
 			return diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var d diag.Diagnostics
 		m.SlackOAuth2ProviderConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1067,7 +1113,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberAtlassianOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1081,7 +1127,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberCustomOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1095,7 +1141,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberGithubOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1109,7 +1155,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberGoogleOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1123,7 +1169,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberIncludedOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1137,7 +1183,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberLinkedinOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1151,7 +1197,8 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.microsoftOAuth2ProviderTenantIDModel = clientCredentials.microsoftOAuth2ProviderTenantIDModel
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberMicrosoftOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1165,7 +1212,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberSalesforceOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1179,7 +1226,7 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		if diags.HasError() {
 			return nil, diags
 		}
-		model.oauth2ProviderClientCredentialsModel = clientCredentials
+		model.oauth2ProviderClientCredentialsModel = clientCredentials.oauth2ProviderClientCredentialsModel
 		var r awstypes.Oauth2ProviderConfigInputMemberSlackOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
@@ -1207,11 +1254,6 @@ type secretReferenceModel struct {
 	SecretID types.String `tfsdk:"secret_id"`
 }
 
-type oauth2DiscoveryModel struct {
-	AuthorizationServerMetadata fwtypes.ListNestedObjectValueOf[oauth2AuthorizationServerMetadataModel] `tfsdk:"authorization_server_metadata"`
-	DiscoveryURL                types.String                                                            `tfsdk:"discovery_url"`
-}
-
 // Configuration attributes shared by all OAuth2 providers.
 type basicOAuth2ProviderConfigModel struct {
 	oauth2ProviderClientCredentialsModel
@@ -1224,7 +1266,7 @@ type customOAuth2ProviderConfigModel struct {
 	OnBehalfOfTokenExchangeConfig fwtypes.ListNestedObjectValueOf[onBehalfOfTokenExchangeConfigTypeModel] `tfsdk:"on_behalf_of_token_exchange_config"`
 	PrivateEndpoint               fwtypes.ListNestedObjectValueOf[privateEndpointModel]                   `tfsdk:"private_endpoint"`
 	PrivateEndpointOverrides      fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]           `tfsdk:"private_endpoint_override"`
-	PrivateKeyJwtConfig           fwtypes.ListNestedObjectValueOf[privateKeyJwtConfigModel]               `tfsdk:"private_key_jwt_config"`
+	PrivateKeyJWTConfig           fwtypes.ListNestedObjectValueOf[privateKeyJWTConfigModel]               `tfsdk:"private_key_jwt_config"`
 }
 
 type onBehalfOfTokenExchangeConfigTypeModel struct {
@@ -1237,7 +1279,7 @@ type tokenExchangeGrantTypeConfigTypeModel struct {
 	ActorTokenScopes  fwtypes.SetOfString                                `tfsdk:"actor_token_scopes"`
 }
 
-type privateKeyJwtConfigModel struct {
+type privateKeyJWTConfigModel struct {
 	AdditionalHeaderClaims  fwtypes.MapOfString                                    `tfsdk:"additional_header_claims"`
 	AdditionalPayloadClaims fwtypes.MapOfString                                    `tfsdk:"additional_payload_claims"`
 	PrivateKeySource        fwtypes.ListNestedObjectValueOf[privateKeySourceModel] `tfsdk:"private_key_source"`
@@ -1317,8 +1359,20 @@ type includedOAuth2ProviderConfigModel struct {
 	TokenEndpoint         types.String `tfsdk:"token_endpoint"`
 }
 
+type microsoftOAuth2ProviderTenantIDModel struct {
+	TenantID          types.String `tfsdk:"tenant_id"`
+	TenantIDWO        types.String `tfsdk:"tenant_id_wo"`
+	TenantIDWOVersion types.Int64  `tfsdk:"tenant_id_wo_version"`
+}
+
 type microsoftOAuth2ProviderConfigModel struct {
 	basicOAuth2ProviderConfigModel
+	microsoftOAuth2ProviderTenantIDModel
+}
+
+type oauth2DiscoveryModel struct {
+	AuthorizationServerMetadata fwtypes.ListNestedObjectValueOf[oauth2AuthorizationServerMetadataModel] `tfsdk:"authorization_server_metadata"`
+	DiscoveryURL                types.String                                                            `tfsdk:"discovery_url"`
 }
 
 var (
@@ -1383,4 +1437,10 @@ type oauth2AuthorizationServerMetadataModel struct {
 	ResponseTypes            fwtypes.SetOfString  `tfsdk:"response_types"`
 	TokenEndpoint            types.String         `tfsdk:"token_endpoint"`
 	TokenEndpointAuthMethods fwtypes.ListOfString `tfsdk:"token_endpoint_auth_methods"`
+}
+
+// Credentials not returned by the AWS API.
+type oauth2CredentialProviderWriteOnlyCredentialsModel struct {
+	oauth2ProviderClientCredentialsModel
+	microsoftOAuth2ProviderTenantIDModel
 }
