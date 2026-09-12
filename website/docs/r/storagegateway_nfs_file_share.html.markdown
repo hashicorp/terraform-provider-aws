@@ -60,7 +60,7 @@ Files and folders stored as Amazon S3 objects in S3 buckets don't, by default, h
 
 * `cache_stale_timeout_in_seconds` - (Optional) Refreshes a file share's cache by using Time To Live (TTL).
  TTL is the length of time since the last refresh after which access to the directory would cause the file gateway
-  to first refresh that directory's contents from the Amazon S3 bucket. Valid Values: 300 to 2,592,000 seconds (5 minutes to 30 days)
+  to first refresh that directory's contents from the Amazon S3 bucket. Valid Values: `0` (disables automatic cache refresh), or `300` to `2592000` seconds (5 minutes to 30 days)
 
 ## Attribute Reference
 
