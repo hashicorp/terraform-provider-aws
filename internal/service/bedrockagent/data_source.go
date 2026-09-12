@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -279,8 +280,12 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 												},
 												"deletion_protection_threshold": schema.Int32Attribute{
 													Optional: true,
+													Computed: true,
 													Validators: []validator.Int32{
 														int32validator.Between(0, 100),
+													},
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
 													},
 												},
 											},
@@ -1009,6 +1014,14 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	data.DataDeletionPolicy = fwtypes.StringEnumValue(ds.DataDeletionPolicy)
 
+	// Server-side defaults (e.g. deletion_protection_threshold) are only
+	// present on the post-create API response, so re-flatten the nested
+	// configuration to resolve any Computed values left unknown by config.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, ds.DataSourceConfiguration, &data.DataSourceConfiguration)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -1081,9 +1094,18 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, new.Timeouts)); err != nil {
+	ds, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, new.Timeouts))
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) update", dataSourceID, knowledgeBaseID), err.Error())
 
+		return
+	}
+
+	// Server-side defaults (e.g. deletion_protection_threshold) are only
+	// present on the post-update API response, so re-flatten the nested
+	// configuration to resolve any Computed values left unknown by config.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, ds.DataSourceConfiguration, &new.DataSourceConfiguration)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
