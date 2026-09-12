@@ -812,6 +812,11 @@ func resourceDomain() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								Set:      schema.HashString,
 							},
+							"egress_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							names.AttrSecurityGroupIDs: {
 								Type:     schema.TypeSet,
 								Optional: true,
