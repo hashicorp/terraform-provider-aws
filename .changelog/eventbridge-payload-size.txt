@@ -1,0 +1,4 @@
+```yaml
+enhancements:
+  - action/aws_events_put_events: Increased event payload size limit to 1MB.
+```
