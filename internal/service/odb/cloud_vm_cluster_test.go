@@ -10,12 +10,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -126,6 +129,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 		return
 	}
 	vmcNoTag, vmcWithTag := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(t, vmcDisplayName, publicKey)
+	vmcReplacement := strings.Replace(vmcWithTag, `hostname_prefix                 = "apollo-12"`, `hostname_prefix                 = "apollo-13"`, 1)
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -168,6 +172,17 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config:             vmcReplacement,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("system_version")),
+					},
+				},
 			},
 		},
 	})
@@ -383,6 +398,63 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 	})
 }
 
+func TestAccODBCloudVmCluster_systemVersion(t *testing.T) {
+	// This acceptance test suite runs against fake resources, where the DBaaS
+	// backend currently returns a system version that can differ from the
+	// requested value. The DBaaS backend owners are working to fix this mismatch
+	// for fake resources. As part of this change, the behavior was separately
+	// validated against a real resource, where the configured and returned system
+	// versions matched.
+	t.Skip("skipping until fake DBaaS resources return the requested system version")
+
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cloudvmcluster odbtypes.CloudVmCluster
+	var systemVersion string
+	systemVersionVariables := config.Variables{}
+	vmcClusterDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	resourceName := "aws_odb_cloud_vm_cluster.test"
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+			systemVersion = vmClusterTestEntity.testAccSystemVersion(ctx, t, "23.0.0.0", "Exadata.X9M")
+			systemVersionVariables["system_version"] = config.StringVariable(systemVersion)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:          vmClusterTestEntity.cloudVmClusterWithSystemVersion(t, vmcClusterDisplayName, publicKey),
+				ConfigVariables: systemVersionVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, t, resourceName, &cloudvmcluster),
+					resource.TestCheckResourceAttrWith(resourceName, "system_version", func(value string) error {
+						if value != systemVersion {
+							return fmt.Errorf("expected system_version %q, got %q", systemVersion, value)
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ConfigVariables:   systemVersionVariables,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccODBCloudVmCluster_variables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -458,6 +530,30 @@ func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testin
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func (cloudVmClusterResourceTest) testAccSystemVersion(ctx context.Context, t *testing.T, giVersion, shape string) string {
+	t.Helper()
+
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
+	output, err := conn.ListSystemVersions(ctx, &odb.ListSystemVersionsInput{
+		GiVersion: aws.String(giVersion),
+		Shape:     aws.String(shape),
+	})
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("listing ODB system versions: %s", err)
+	}
+	for _, summary := range output.SystemVersions {
+		if len(summary.SystemVersions) > 0 {
+			return summary.SystemVersions[0]
+		}
+	}
+
+	t.Skipf("skipping acceptance testing: no ODB system versions available for GI version %q and shape %q", giVersion, shape)
+	return ""
 }
 
 func testAccCloudVmClusterConfig_useVariables(rName string) string {
@@ -618,6 +714,52 @@ resource "aws_odb_cloud_vm_cluster" "test" {
     is_diagnostics_events_enabled = true
     is_health_monitoring_enabled  = true
     is_incident_logs_enabled      = true
+  }
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+	return res
+}
+
+func (cloudVmClusterResourceTest) cloudVmClusterWithSystemVersion(t *testing.T, vmClusterDisplayName, sshKey string) string {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := acctest.RandomWithPrefix(t, vmClusterTestEntity.odbNetDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
+
+	res := fmt.Sprintf(`
+
+%s
+
+%s
+
+variable "system_version" {
+  type = string
+}
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  system_version                  = var.system_version
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
   }
 }
 `, exaInfra, odbNet, vmClusterDisplayName, sshKey)
