@@ -18,6 +18,8 @@ When importing an existing key pair the public key material may be in any format
 * Base64 encoded DER format
 * SSH public key file format as specified in RFC4716
 
+Amazon EC2 supports RSA keys (Linux and Windows instances) and ED25519 keys (Linux instances only); DSA keys are not accepted. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws) for details.
+
 ## Example Usage
 
 ```terraform
