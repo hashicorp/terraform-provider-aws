@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Fix issue where `target_db_parameter_group_name` was not passed during Blue/Green deployment creation when `parameter_group_name` was unchanged
+```
