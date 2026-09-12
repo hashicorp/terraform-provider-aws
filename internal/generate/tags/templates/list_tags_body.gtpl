@@ -27,7 +27,13 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	}
 {{- if .ListTagsOpPaginated }}
     {{- if .RetryTagOps }}
-		output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		{{- if eq (len .RetryConditions) 1 }}
+		output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ (index .RetryConditions 0).Code }}](ctx, {{ .RetryTimeout }},
+		{{- else if eq (len .RetryConditions) 2 }}
+		output, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ (index .RetryConditions 0).Code }}, *{{ (index .RetryConditions 1).Code }}](ctx, {{ .RetryTimeout }},
+		{{- else if eq (len .RetryConditions) 3 }}
+		output, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ (index .RetryConditions 0).Code }}, *{{ (index .RetryConditions 1).Code }}, *{{ (index .RetryConditions 2).Code }}](ctx, {{ .RetryTimeout }},
+		{{- end }}
 			func(ctx context.Context) (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 				var output []awstypes.{{ or .TagType2 .TagType }}
 
@@ -56,7 +62,9 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 					output = append(output, page.{{ .ListTagsOutTagsElem }}...)
 				}
 			},
-			"{{ .RetryErrorMessage }}",
+		{{- range .RetryConditions }}
+			"{{ .Message }}",
+		{{- end }}
 		)
 	{{ else }}
 		{{ if .ServiceTagsMap }}
@@ -132,11 +140,19 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 {{- else }}
     {{ if .RetryTagOps }}
-		output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		{{- if eq (len .RetryConditions) 1 }}
+		output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ (index .RetryConditions 0).Code }}](ctx, {{ .RetryTimeout }},
+		{{- else if eq (len .RetryConditions) 2 }}
+		output, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ (index .RetryConditions 0).Code }}, *{{ (index .RetryConditions 1).Code }}](ctx, {{ .RetryTimeout }},
+		{{- else if eq (len .RetryConditions) 3 }}
+		output, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ (index .RetryConditions 0).Code }}, *{{ (index .RetryConditions 1).Code }}, *{{ (index .RetryConditions 2).Code }}](ctx, {{ .RetryTimeout }},
+		{{- end }}
 			func(ctx context.Context) (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 				return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
 			},
-			"{{ .RetryErrorMessage }}",
+		{{- range .RetryConditions }}
+			"{{ .Message }}",
+		{{- end }}
 		)
 	{{- else }}
 		output, err := conn.{{ .ListTagsOp }}(ctx, &input, optFns...)

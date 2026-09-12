@@ -500,3 +500,186 @@ func TestOptionsApply(t *testing.T) {
 		})
 	}
 }
+
+// Distinct fake error types used by the OneOf*ErrorMessageContains tests below — each
+// implements errs.ErrorWithErrorMessage so the generic dispatch can disambiguate by type.
+type retryTestErrA struct{ msg string }
+
+func (e *retryTestErrA) Error() string        { return e.msg }
+func (e *retryTestErrA) ErrorMessage() string { return e.msg }
+
+type retryTestErrB struct{ msg string }
+
+func (e *retryTestErrB) Error() string        { return e.msg }
+func (e *retryTestErrB) ErrorMessage() string { return e.msg }
+
+type retryTestErrC struct{ msg string }
+
+func (e *retryTestErrC) Error() string        { return e.msg }
+func (e *retryTestErrC) ErrorMessage() string { return e.msg }
+
+func TestRetryWhenIsOneOf2ErrorMessageContains(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	t.Run("no error", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[any, *retryTestErrA, *retryTestErrB](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, nil },
+			"needle-a", "needle-b",
+		)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	})
+
+	t.Run("non-retryable other error", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[any, *retryTestErrA, *retryTestErrB](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, errors.New("unrelated") },
+			"needle-a", "needle-b",
+		)
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("retries first error type then succeeds", func(t *testing.T) {
+		t.Parallel()
+		var count int32
+		_, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[any, *retryTestErrA, *retryTestErrB](ctx, 5*time.Second,
+			func(context.Context) (any, error) {
+				if atomic.AddInt32(&count, 1) == 1 {
+					return nil, &retryTestErrA{msg: "wraps needle-a inside"}
+				}
+				return nil, nil
+			},
+			"needle-a", "needle-b",
+		)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if got := atomic.LoadInt32(&count); got < 2 {
+			t.Errorf("expected at least 2 attempts, got %d", got)
+		}
+	})
+
+	t.Run("retries second error type then succeeds", func(t *testing.T) {
+		t.Parallel()
+		var count int32
+		_, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[any, *retryTestErrA, *retryTestErrB](ctx, 5*time.Second,
+			func(context.Context) (any, error) {
+				if atomic.AddInt32(&count, 1) == 1 {
+					return nil, &retryTestErrB{msg: "needle-b appears"}
+				}
+				return nil, nil
+			},
+			"needle-a", "needle-b",
+		)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	})
+
+	t.Run("type matches but needle does not", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[any, *retryTestErrA, *retryTestErrB](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, &retryTestErrA{msg: "wrong message"} },
+			"needle-a", "needle-b",
+		)
+		if err == nil {
+			t.Fatal("expected error: type matches but needle does not")
+		}
+	})
+
+	t.Run("first type with second needle does not retry", func(t *testing.T) {
+		// Pairing must be by index: E1 retries on needle1, E2 on needle2.
+		// An error of type E1 carrying needle2's text must NOT trigger a retry.
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf2ErrorMessageContains[any, *retryTestErrA, *retryTestErrB](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, &retryTestErrA{msg: "needle-b but type A"} },
+			"needle-a", "needle-b",
+		)
+		if err == nil {
+			t.Fatal("expected error: needle is paired with its type by index, not interchangeable")
+		}
+	})
+}
+
+func TestRetryWhenIsOneOf3ErrorMessageContains(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	t.Run("no error", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *retryTestErrA, *retryTestErrB, *retryTestErrC](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, nil },
+			"needle-a", "needle-b", "needle-c",
+		)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	})
+
+	t.Run("non-retryable other error", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *retryTestErrA, *retryTestErrB, *retryTestErrC](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, errors.New("unrelated") },
+			"needle-a", "needle-b", "needle-c",
+		)
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("retries each of the three types then succeeds", func(t *testing.T) {
+		t.Parallel()
+		// Cycles through type A, B, C on consecutive failures, then returns success.
+		var count int32
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *retryTestErrA, *retryTestErrB, *retryTestErrC](ctx, 5*time.Second,
+			func(context.Context) (any, error) {
+				switch atomic.AddInt32(&count, 1) {
+				case 1:
+					return nil, &retryTestErrA{msg: "before needle-a after"}
+				case 2:
+					return nil, &retryTestErrB{msg: "needle-b mid"}
+				case 3:
+					return nil, &retryTestErrC{msg: "trailing needle-c"}
+				default:
+					return nil, nil
+				}
+			},
+			"needle-a", "needle-b", "needle-c",
+		)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if got := atomic.LoadInt32(&count); got < 4 {
+			t.Errorf("expected at least 4 attempts (A, B, C, success), got %d", got)
+		}
+	})
+
+	t.Run("type matches but needle does not", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *retryTestErrA, *retryTestErrB, *retryTestErrC](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, &retryTestErrB{msg: "wrong message"} },
+			"needle-a", "needle-b", "needle-c",
+		)
+		if err == nil {
+			t.Fatal("expected error: type matches but needle does not")
+		}
+	})
+
+	t.Run("third type with first needle does not retry", func(t *testing.T) {
+		t.Parallel()
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *retryTestErrA, *retryTestErrB, *retryTestErrC](ctx, 5*time.Second,
+			func(context.Context) (any, error) { return nil, &retryTestErrC{msg: "needle-a but type C"} },
+			"needle-a", "needle-b", "needle-c",
+		)
+		if err == nil {
+			t.Fatal("expected error: needle is paired with its type by index, not interchangeable")
+		}
+	})
+}

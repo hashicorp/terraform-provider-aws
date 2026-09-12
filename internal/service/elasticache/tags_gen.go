@@ -29,11 +29,13 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := tfresource.RetryWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+	output, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault, *awstypes.UserNotFoundFault, *awstypes.UserGroupNotFoundFault](ctx, 15*time.Minute,
 		func(ctx context.Context) (*elasticache.ListTagsForResourceOutput, error) {
 			return conn.ListTagsForResource(ctx, &input, optFns...)
 		},
 		"not in available state",
+		"not available for tagging",
+		"not available for tagging",
 	)
 
 	if err != nil {
@@ -133,11 +135,13 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault, *awstypes.UserNotFoundFault, *awstypes.UserGroupNotFoundFault](ctx, 15*time.Minute,
 			func(ctx context.Context) (any, error) {
 				return conn.RemoveTagsFromResource(ctx, &input, optFns...)
 			},
 			"not in available state",
+			"not available for tagging",
+			"not available for tagging",
 		)
 
 		if err != nil {
@@ -153,11 +157,13 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			Tags:         svcTags(updatedTags),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+		_, err := tfresource.RetryWhenIsOneOf3ErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault, *awstypes.UserNotFoundFault, *awstypes.UserGroupNotFoundFault](ctx, 15*time.Minute,
 			func(ctx context.Context) (any, error) {
 				return conn.AddTagsToResource(ctx, &input, optFns...)
 			},
 			"not in available state",
+			"not available for tagging",
+			"not available for tagging",
 		)
 
 		if err != nil {
