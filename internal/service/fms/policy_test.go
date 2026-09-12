@@ -309,6 +309,17 @@ func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "OR"),
 				),
 			},
+			{
+				// Removing resource_tag_logical_operator from the configuration, while
+				// applying an unrelated change, must not silently reset the previously
+				// set "OR" back to the API's own default ("AND"): the attribute is
+				// Optional+Computed, so an unconfigured value must be preserved.
+				Config: testAccPolicyConfig_resourceTagLogicalOperator_default(rName, acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "OR"),
+				),
+			},
 		},
 	})
 }

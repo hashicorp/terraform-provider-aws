@@ -501,7 +501,15 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 				Key:   aws.String(k),
 				Value: aws.String(v),
 			})
-			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
+		}
+
+		// resource_tag_logical_operator is Optional+Computed with no default, so an
+		// unconfigured value must not be sent as "": d.Get would return the empty
+		// string and the API would silently reset it to its own default ("AND"),
+		// clobbering a value that was only ever set out-of-band. GetOk sends it
+		// whenever a value is known, whether from config or the last Read.
+		if v, ok := d.GetOk("resource_tag_logical_operator"); ok {
+			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(v.(string))
 		}
 	}
 
