@@ -14,6 +14,7 @@ var (
 	ResourceRestoreTestingPlan      = newRestoreTestingPlanResource
 	ResourceRestoreTestingSelection = newRestoreTestingSelectionResource
 	ResourceSelection               = resourceSelection
+	ResourceTieringConfiguration    = newTieringConfigurationResource
 	ResourceVault                   = resourceVault
 	ResourceVaultLockConfiguration  = resourceVaultLockConfiguration
 	ResourceVaultNotifications      = resourceVaultNotifications
@@ -29,6 +30,7 @@ var (
 	FindRestoreTestingPlanByName            = findRestoreTestingPlanByName
 	FindRestoreTestingSelectionByTwoPartKey = findRestoreTestingSelectionByTwoPartKey
 	FindSelectionByTwoPartKey               = findSelectionByTwoPartKey
+	FindTieringConfigurationByName          = findTieringConfigurationByName
 	FindVaultAccessPolicyByName             = findVaultAccessPolicyByName
 	FindVaultNotificationsByName            = findVaultNotificationsByName
 )
