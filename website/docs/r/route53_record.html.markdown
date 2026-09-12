@@ -10,6 +10,8 @@ description: |-
 
 Provides a Route53 record resource.
 
+~> When updating between records of different types for the same `name`, such as replacing a CNAME with an A and TXT record, the change is not applied atomically and may temporarily or (in the case of errors during apply) persistently exist in an inconsistent state. To avoid this, use the `aws_route53_records_exclusive` resource instead, either for a particular `name` or entire hosted zone.
+
 ## Example Usage
 
 ### Simple routing policy
