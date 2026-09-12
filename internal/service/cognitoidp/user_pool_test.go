@@ -1480,6 +1480,55 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 	})
 }
 
+func TestAccCognitoIDPUserPool_WithLambda_inboundFederation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	lambdaUpdatedResourceName := "aws_lambda_function.second"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_lambdaInboundFederation(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.inbound_federation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.inbound_federation.0.lambda_arn", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.inbound_federation.0.lambda_version", "V1_0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaInboundFederationUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.inbound_federation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.inbound_federation.0.lambda_arn", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.inbound_federation.0.lambda_version", "V1_0"),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaInboundFederationRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.inbound_federation.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/38164.
 func TestAccCognitoIDPUserPool_addLambda(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -3046,6 +3095,52 @@ resource "aws_cognito_user_pool" "test" {
     advanced_security_mode = "ENFORCED"
   }
 
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaInboundFederation(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+    inbound_federation {
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
+    }
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaInboundFederationUpdated(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_lambda_function" "second" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s_second"
+  role          = aws_iam_role.test.arn
+  handler       = "exports.example"
+  runtime       = "nodejs24.x"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+    inbound_federation {
+      lambda_arn     = aws_lambda_function.second.arn
+      lambda_version = "V1_0"
+    }
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaInboundFederationRemove(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 `, name))
 }
