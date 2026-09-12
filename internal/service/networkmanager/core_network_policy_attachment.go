@@ -36,6 +36,7 @@ func resourceCoreNetworkPolicyAttachment() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -123,7 +124,12 @@ func resourceCoreNetworkPolicyAttachmentUpdate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChange("policy_document") {
-		err := putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
+		timeout := d.Timeout(schema.TimeoutUpdate)
+		if d.IsNewResource() {
+			timeout = d.Timeout(schema.TimeoutCreate)
+		}
+
+		err := putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string), timeout)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
