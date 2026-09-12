@@ -52,7 +52,17 @@ This resource supports the following arguments:
 * `role_arns` - (Optional) A list of IAM roles that this profile can assume
 * `session_policy` - (Optional) A session policy that applies to the trust boundary of the vended session credentials.
 * `accept_role_session_name` - (Optional) Whether or not a custom role session name is accepted.
+* `attribute_mappings` - (Optional) A mapping applied to the incoming end-entity certificate during the authentication process. See [`attribute_mappings`](#attribute_mappings) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### attribute_mappings
+
+* `certificate_field` - (Required) Field within the X.509 certificate to map attributes from. Valid values are `x509Subject`, `x509Issuer`, and `x509SAN`.
+* `mapping_rules` - (Required) A list of mapping entries for every supported specifier or sub-field in the certificate field. See [`mapping_rules`](#mapping_rules) below.
+
+### mapping_rules
+
+* `specifier` - (Required) Specifier within the certificate field, such as `CN`, `OU`, or `UID` from the Subject field.
 
 ## Attribute Reference
 
