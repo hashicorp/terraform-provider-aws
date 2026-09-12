@@ -5,6 +5,8 @@ package types_test
 
 import (
 	"context"
+	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -139,4 +141,114 @@ func TestAttributeTypes(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Concurrency test models. Kept unique to TestAttributeTypesConcurrent so their cache entries
+// are cold when the test runs, exercising the concurrent LoadOrStore path.
+type attributeTypesConcurrentModelA struct {
+	Name types.String `tfsdk:"name"`
+	ID   types.Int64  `tfsdk:"id"`
+}
+
+type attributeTypesConcurrentModelB struct {
+	ARN types.String `tfsdk:"arn"`
+}
+
+// TestAttributeTypesConcurrent exercises concurrent access to the cache: many goroutines call
+// AttributeTypes simultaneously for both the same type (racing on one key) and distinct types.
+// Run with -race -count=N to observe multiple interleavings.
+func TestAttributeTypesConcurrent(t *testing.T) {
+	t.Parallel()
+
+	const goroutines = 50
+
+	ctx := context.Background()
+	start := make(chan struct{})
+
+	var wg sync.WaitGroup
+	resultsA := make([]map[string]attr.Type, goroutines)
+	wg.Add(goroutines)
+	for i := range goroutines {
+		go func() {
+			defer wg.Done()
+			<-start // Release all goroutines together to maximize contention.
+
+			// Alternate between two types so the cache sees concurrent same-key and
+			// distinct-key access.
+			if i%2 == 0 {
+				m, diags := fwtypes.AttributeTypes[attributeTypesConcurrentModelA](ctx)
+				if diags.HasError() {
+					t.Errorf("unexpected diagnostics: %v", diags)
+					return
+				}
+				resultsA[i] = m
+			} else {
+				if _, diags := fwtypes.AttributeTypes[attributeTypesConcurrentModelB](ctx); diags.HasError() {
+					t.Errorf("unexpected diagnostics: %v", diags)
+				}
+			}
+		}()
+	}
+
+	close(start)
+	wg.Wait()
+
+	// All goroutines that requested type A must observe the same cached map instance.
+	var first map[string]attr.Type
+	for i := 0; i < goroutines; i += 2 {
+		if first == nil {
+			first = resultsA[i]
+			continue
+		}
+		if reflect.ValueOf(resultsA[i]).Pointer() != reflect.ValueOf(first).Pointer() {
+			t.Errorf("concurrent calls for the same type returned different map instances")
+		}
+	}
+}
+
+// TestAttributeTypesCacheIdentity confirms that AttributeTypes memoizes its result: repeated
+// calls for the same type, and calls for both T and *T, return the same cached map instance.
+func TestAttributeTypesCacheIdentity(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	value, diags := fwtypes.AttributeTypes[attributeTypesTestStruct2](ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	valueAgain, diags := fwtypes.AttributeTypes[attributeTypesTestStruct2](ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	pointer, diags := fwtypes.AttributeTypes[*attributeTypesTestStruct2](ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	// Map identity is compared by the underlying map header pointer.
+	if reflect.ValueOf(value).Pointer() != reflect.ValueOf(valueAgain).Pointer() {
+		t.Errorf("repeated calls for the same type returned different map instances")
+	}
+	if reflect.ValueOf(value).Pointer() != reflect.ValueOf(pointer).Pointer() {
+		t.Errorf("T and *T returned different map instances")
+	}
+}
+
+func BenchmarkAttributeTypes(b *testing.B) {
+	ctx := b.Context()
+
+	b.Run("flat", func(b *testing.B) {
+		for b.Loop() {
+			fwtypes.AttributeTypesMust[attributeTypesTestStruct2](ctx)
+		}
+	})
+
+	b.Run("nested", func(b *testing.B) {
+		for b.Loop() {
+			fwtypes.AttributeTypesMust[attributeTypesTestNestedModel](ctx)
+		}
+	})
 }
