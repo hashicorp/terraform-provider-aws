@@ -70,6 +70,56 @@ func testAccPrimaryContact_basic(t *testing.T) {
 	})
 }
 
+func testAccPrimaryContact_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
+	ctx := acctest.Context(t)
+	resourceName := "aws_account_primary_contact.test"
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrimaryContactConfig_organization(rName1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPrimaryContactExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
+					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
+					resource.TestCheckResourceAttr(resourceName, "country_code", "US"),
+					resource.TestCheckResourceAttr(resourceName, "full_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "phone_number", "+64211111111"),
+					resource.TestCheckResourceAttr(resourceName, "postal_code", "98101"),
+				),
+			},
+			{
+				// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/41154:
+				// importing by member account ID must not produce a diff.
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Config:            testAccPrimaryContactConfig_organization(rName1),
+			},
+			{
+				Config: testAccPrimaryContactConfig_organization(rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPrimaryContactExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "full_name", rName2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPrimaryContactExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -87,6 +137,25 @@ func testAccCheckPrimaryContactExists(ctx context.Context, t *testing.T, n strin
 
 		return err
 	}
+}
+
+func testAccPrimaryContactConfig_organization(name string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "test" {
+  provider = "awsalternate"
+}
+
+resource "aws_account_primary_contact" "test" {
+  account_id      = data.aws_caller_identity.test.account_id
+  address_line_1  = "123 Any Street"
+  city            = "Seattle"
+  country_code    = "US"
+  full_name       = %[1]q
+  phone_number    = "+64211111111"
+  postal_code     = "98101"
+  state_or_region = "WA"
+}
+`, name))
 }
 
 func testAccPrimaryConfig_basic(name string) string {
