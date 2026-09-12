@@ -31,6 +31,16 @@ func TestTLSRSAPublicKeyPEM(t *testing.T) {
 	}
 }
 
+func TestTLSRSAPKCS8PrivateKeyPEM(t *testing.T) {
+	t.Parallel()
+
+	key := acctest.TLSRSAPKCS8PrivateKeyPEM(t, 2048)
+
+	if !strings.Contains(key, acctest.PEMBlockTypePrivateKey) {
+		t.Errorf("key does not contain PRIVATE KEY: %s", key)
+	}
+}
+
 func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
 	t.Parallel()
 

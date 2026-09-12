@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_quicksight_data_source: Add `key_pair_credentials` block to `credentials`
+```
+
+```release-note:enhancement
+resource/aws_quicksight_data_source: Add `authentication_type` to `snowflake` parameters
+```
