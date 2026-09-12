@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -1033,7 +1034,96 @@ func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awst
 		}
 	}
 
+	// Both the cache cluster and the replication group report pending configurations.
+	// The replication group's are authoritative, so appending last lets them win.
+	var pendingLogDeliveryConfigurations []awstypes.PendingLogDeliveryConfiguration
+	if c.PendingModifiedValues != nil {
+		pendingLogDeliveryConfigurations = append(pendingLogDeliveryConfigurations, c.PendingModifiedValues.LogDeliveryConfigurations...)
+	}
+	if rgp.PendingModifiedValues != nil {
+		pendingLogDeliveryConfigurations = append(pendingLogDeliveryConfigurations, rgp.PendingModifiedValues.LogDeliveryConfigurations...)
+	}
+
+	// Set even when nothing is pending: a log type being turned off can show up only
+	// as a live configuration with a "disabling" status.
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurationsWithPending(rgp.LogDeliveryConfigurations, pendingLogDeliveryConfigurations))
+
 	return nil
+}
+
+// Merges pending log delivery configurations into the live ones by log type.
+// ElastiCache reports only the types being modified, so pending is partial, not whole.
+func flattenLogDeliveryConfigurationsWithPending(apiObjects []awstypes.LogDeliveryConfiguration, pendingAPIObjects []awstypes.PendingLogDeliveryConfiguration) []any {
+	tfMaps := make(map[awstypes.LogType]map[string]any, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		if apiObject.Status == awstypes.LogDeliveryConfigurationStatusDisabling {
+			continue
+		}
+
+		tfMaps[apiObject.LogType] = map[string]any{
+			names.AttrDestination: logDeliveryConfigurationDestination(apiObject.DestinationType, apiObject.DestinationDetails),
+			"destination_type":    apiObject.DestinationType,
+			"log_format":          apiObject.LogFormat,
+			"log_type":            apiObject.LogType,
+		}
+	}
+
+	for _, apiObject := range pendingAPIObjects {
+		hasDestination := apiObject.DestinationType != "" && apiObject.DestinationDetails != nil
+		tfMap, hasLive := tfMaps[apiObject.LogType]
+
+		// PendingLogDeliveryConfiguration has no "enabled" field, so a log type being
+		// turned off arrives as an empty entry. Also dropped when there is no live entry.
+		if !hasDestination && (apiObject.LogFormat == "" || !hasLive) {
+			delete(tfMaps, apiObject.LogType)
+			continue
+		}
+
+		if !hasLive {
+			tfMap = map[string]any{
+				"log_format": apiObject.LogFormat,
+				"log_type":   apiObject.LogType,
+			}
+		}
+
+		if hasDestination {
+			tfMap[names.AttrDestination] = logDeliveryConfigurationDestination(apiObject.DestinationType, apiObject.DestinationDetails)
+			tfMap["destination_type"] = apiObject.DestinationType
+		}
+		if apiObject.LogFormat != "" {
+			tfMap["log_format"] = apiObject.LogFormat
+		}
+
+		tfMaps[apiObject.LogType] = tfMap
+	}
+
+	var tfList []any
+
+	for _, logType := range slices.Sorted(maps.Keys(tfMaps)) {
+		tfList = append(tfList, tfMaps[logType])
+	}
+
+	return tfList
+}
+
+func logDeliveryConfigurationDestination(destinationType awstypes.DestinationType, destinationDetails *awstypes.DestinationDetails) string {
+	if destinationDetails == nil {
+		return ""
+	}
+
+	switch destinationType {
+	case awstypes.DestinationTypeCloudWatchLogs:
+		if v := destinationDetails.CloudWatchLogsDetails; v != nil {
+			return aws.ToString(v.LogGroup)
+		}
+	case awstypes.DestinationTypeKinesisFirehose:
+		if v := destinationDetails.KinesisFirehoseDetails; v != nil {
+			return aws.ToString(v.DeliveryStream)
+		}
+	}
+
+	return ""
 }
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

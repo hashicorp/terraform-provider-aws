@@ -4510,6 +4510,218 @@ func TestAccElastiCacheReplicationGroup_PendingNodeType_Valkey(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_PendingLogDeliveryConfiguration_Redis(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfiguration(rName, "redis", "7.1", "text", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          "text",
+						"log_type":            "slow-log",
+					}),
+				),
+			},
+			{
+				// The modification is deferred to the maintenance window
+				// (apply_immediately = false), so the live configuration still reports
+				// the old log format and the pending one must be reflected in state.
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfiguration(rName, "redis", "7.1", names.AttrJSON, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          names.AttrJSON,
+						"log_type":            "slow-log",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_PendingLogDeliveryConfiguration_Valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfiguration(rName, "valkey", "7.2", "text", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          "text",
+						"log_type":            "slow-log",
+					}),
+				),
+			},
+			{
+				// The modification is deferred to the maintenance window
+				// (apply_immediately = false), so the live configuration still reports
+				// the old log format and the pending one must be reflected in state.
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfiguration(rName, "valkey", "7.2", names.AttrJSON, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          names.AttrJSON,
+						"log_type":            "slow-log",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_PendingLogDeliveryConfiguration_removed(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfiguration(rName, "redis", "7.1", "text", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+				),
+			},
+			{
+				// The log type is still being delivered until the maintenance window,
+				// but must be dropped from state anyway, otherwise the removal
+				// perpetually diffs in the opposite direction.
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfigurationRemoved(rName, "redis", "7.1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_PendingLogDeliveryConfiguration_partial(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfigurationMultiple(rName, "redis", "7.1", "text", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						"log_format": "text",
+						"log_type":   "slow-log",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						"log_format": "text",
+						"log_type":   "engine-log",
+					}),
+				),
+			},
+			{
+				// Only slow-log changes. ElastiCache reports just the log types being
+				// modified in its pending values, so engine-log must be preserved from
+				// the live configuration while slow-log takes the pending value.
+				Config: testAccReplicationGroupConfig_pendingLogDeliveryConfigurationMultiple(rName, "redis", "7.1", names.AttrJSON, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName + "-slow",
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          names.AttrJSON,
+						"log_type":            "slow-log",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName + "-engine",
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          "text",
+						"log_type":            "engine-log",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_SlowLog_Redis5ToValkey7(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -5081,6 +5293,98 @@ resource "aws_elasticache_replication_group" "test" {
     log_format       = "text"
     log_type         = "slow-log"
   }
+}
+`, rName, engine, engineVersion)
+}
+
+func testAccReplicationGroupConfig_pendingLogDeliveryConfiguration(rName, engine, engineVersion, logFormat string, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = %[1]q
+  retention_in_days = 7
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test pending log delivery configuration"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = %[4]t
+  maintenance_window         = "sun:05:00-sun:09:00"
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
+  transit_encryption_enabled = true
+
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.test.name
+    destination_type = "cloudwatch-logs"
+    log_format       = %[5]q
+    log_type         = "slow-log"
+  }
+}
+`, rName, engine, engineVersion, applyImmediately, logFormat)
+}
+
+func testAccReplicationGroupConfig_pendingLogDeliveryConfigurationMultiple(rName, engine, engineVersion, slowLogFormat string, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "slow" {
+  name              = "%[1]s-slow"
+  retention_in_days = 7
+}
+
+resource "aws_cloudwatch_log_group" "engine" {
+  name              = "%[1]s-engine"
+  retention_in_days = 7
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test pending log delivery configuration"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = %[4]t
+  maintenance_window         = "sun:05:00-sun:09:00"
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
+  transit_encryption_enabled = true
+
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.slow.name
+    destination_type = "cloudwatch-logs"
+    log_format       = %[5]q
+    log_type         = "slow-log"
+  }
+
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.engine.name
+    destination_type = "cloudwatch-logs"
+    log_format       = "text"
+    log_type         = "engine-log"
+  }
+}
+`, rName, engine, engineVersion, applyImmediately, slowLogFormat)
+}
+
+func testAccReplicationGroupConfig_pendingLogDeliveryConfigurationRemoved(rName, engine, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = %[1]q
+  retention_in_days = 7
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test pending log delivery configuration"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = false
+  maintenance_window         = "sun:05:00-sun:09:00"
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
+  transit_encryption_enabled = true
 }
 `, rName, engine, engineVersion)
 }
