@@ -2531,6 +2531,9 @@ func expandOracleSettings(tfMap map[string]any, endpointType awstypes.Replicatio
 		if v, ok := tfMap["standby_delay_time"].(int); ok {
 			apiObject.StandbyDelayTime = aws.Int32(int32(v))
 		}
+		if v, ok := tfMap["trim_space_in_char"].(bool); ok {
+			apiObject.TrimSpaceInChar = aws.Bool(v)
+		}
 		if v, ok := tfMap["use_alternate_folder_for_online"].(bool); ok {
 			apiObject.UseAlternateFolderForOnline = aws.Bool(v)
 		}
