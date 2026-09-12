@@ -1443,7 +1443,23 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				TableName:      aws.String(d.Id()),
 				ReplicaUpdates: replicaUpdates,
 			}
-			_, err := conn.UpdateTable(ctx, &input)
+			err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
+				_, err := conn.UpdateTable(ctx, &input)
+				if err != nil {
+					if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+						return tfresource.RetryableError(err)
+					}
+					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created.") {
+						return tfresource.NonRetryableError(err)
+					}
+					if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
+						return tfresource.RetryableError(err)
+					}
+
+					return tfresource.NonRetryableError(err)
+				}
+				return nil
+			})
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
 			}
