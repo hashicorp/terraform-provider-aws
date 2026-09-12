@@ -24,8 +24,8 @@ resource "aws_config_aggregate_authorization" "example" {
 This resource supports the following arguments:
 
 * `account_id` - (Required) Account ID.
-* `authorized_aws_region` - (Optional) The region authorized to collect aggregated data.
-* `region` - (Optional, **Deprecated**) The region authorized to collect aggregated data. Use `authorized_aws_region` instead.
+* `authorized_aws_region` - (Optional) The region authorized to collect aggregated data. Conflicts with `region`.
+* `region` - (Optional, **Deprecated**) The region authorized to collect aggregated data. Conflicts with `authorized_aws_region`. Use `authorized_aws_region` instead.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

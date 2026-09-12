@@ -37,7 +37,7 @@ func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{authorized_aws_region}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttr(resourceName, "authorized_aws_region", acctest.Region()),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
 			{
@@ -67,9 +67,41 @@ func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &aa),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{region}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
-					resource.TestCheckNoResourceAttr(resourceName, "authorized_aws_region"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_aws_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
+			},
+		},
+	})
+}
+
+func testAccConfigServiceAggregateAuthorization_regionMigration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var aa types.AggregationAuthorization
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
+	resourceName := "aws_config_aggregate_authorization.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAggregateAuthorizationConfig_deprecatedRegion(accountID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &aa),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "authorized_aws_region", acctest.Region()),
+				),
+			},
+			{
+				Config: testAccAggregateAuthorizationConfig_basic(accountID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
