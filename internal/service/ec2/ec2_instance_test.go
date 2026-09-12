@@ -230,6 +230,101 @@ func TestAccEC2Instance_basic(t *testing.T) {
 	})
 }
 
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-queues.html.
+// This test requires an expensive instance type that supports configurable ENA queue allocation, such as "c6i.4xlarge".
+// Set the environment variable `EC2_INSTANCE_TEST_ENA_QUEUE_COUNT` to run this test.
+func TestAccEC2Instance_enaQueueCount(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "EC2_INSTANCE_TEST_ENA_QUEUE_COUNT")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	var instanceID string
+	resourceName := "aws_instance.test"
+	dataSourceName := "data.aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_enaQueueCount(rName, "ena_queue_count = 4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ena_queue_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "instance_state", string(awstypes.InstanceStateNameRunning)),
+					resource.TestCheckResourceAttr(dataSourceName, "ena_queue_count", "4"),
+					testAccCheckInstanceEnaQueueCount(&v, 4),
+					testAccCheckInstanceIDStable(&v, &instanceID),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_enaQueueCount(rName, "ena_queue_count = 16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ena_queue_count", "16"),
+					resource.TestCheckResourceAttr(resourceName, "instance_state", string(awstypes.InstanceStateNameRunning)),
+					resource.TestCheckResourceAttr(dataSourceName, "ena_queue_count", "16"),
+					testAccCheckInstanceEnaQueueCount(&v, 16),
+					testAccCheckInstanceIDStable(&v, &instanceID),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_enaQueueCount(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ena_queue_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_state", string(awstypes.InstanceStateNameRunning)),
+					resource.TestCheckResourceAttr(dataSourceName, "ena_queue_count", "0"),
+					testAccCheckInstanceEnaQueueCount(&v, 0),
+					testAccCheckInstanceIDStable(&v, &instanceID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ena_queue_count", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func testAccCheckInstanceEnaQueueCount(instance *awstypes.Instance, expected int32) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		for _, networkInterface := range instance.NetworkInterfaces {
+			if aws.ToInt32(networkInterface.Attachment.DeviceIndex) == 0 {
+				if got := aws.ToInt32(networkInterface.Attachment.EnaQueueCount); got != expected {
+					return fmt.Errorf("expected ENA queue count %d, got %d", expected, got)
+				}
+				return nil
+			}
+		}
+
+		return fmt.Errorf("primary network interface not found")
+	}
+}
+
+func testAccCheckInstanceIDStable(instance *awstypes.Instance, instanceID *string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		got := aws.ToString(instance.InstanceId)
+		if *instanceID == "" {
+			*instanceID = got
+			return nil
+		}
+		if got != *instanceID {
+			return fmt.Errorf("expected EC2 Instance ID %s, got %s", *instanceID, got)
+		}
+
+		return nil
+	}
+}
+
 func TestAccEC2Instance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -7605,6 +7700,59 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, mapPublicIpOnLaunch))
+}
+
+func testAccInstanceConfig_enaQueueCount(rName, enaQueueCount string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6i.4xlarge"),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.10.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                    = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type          = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id              = aws_subnet.test.id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  %[2]s
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+
+  depends_on = [aws_instance.test]
+}
+`, rName, enaQueueCount))
 }
 
 func testAccInstanceConfig_basic() string {
