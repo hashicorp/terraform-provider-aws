@@ -178,6 +178,72 @@ func TestValidUserPoolID(t *testing.T) {
 	}
 }
 
+func TestValidUserPoolInviteTemplateEmailMessage(t *testing.T) {
+	t.Parallel()
+
+	validValues := []string{
+		"{username}",
+		"Sign in as {username}.",
+		"Your username is {username} and temporary password is {####}.",
+		"{username}" + strings.Repeat("W", 19990), // = 20000
+		"{username}" + strings.Repeat("あ", 19990), // = 20000, multi-byte UTF-8
+	}
+
+	for _, s := range validValues {
+		_, errors := validUserPoolInviteTemplateEmailMessage(s, "email_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool invite template email message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"short",
+		"Your account is ready.",
+		"{username}" + strings.Repeat("W", 19991), // > 20000
+		"{username}" + strings.Repeat("あ", 19991), // > 20000, multi-byte UTF-8
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validUserPoolInviteTemplateEmailMessage(s, "email_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool invite template email message: %v", s, errors)
+		}
+	}
+}
+
+func TestValidUserPoolInviteTemplateSMSMessage(t *testing.T) {
+	t.Parallel()
+
+	validValues := []string{
+		"{username}",
+		"Sign in as {username}.",
+		"Your username is {username} and temporary password is {####}.",
+		"{username}" + strings.Repeat("W", 130), // = 140
+		"{username}" + strings.Repeat("あ", 130), // = 140, multi-byte UTF-8
+	}
+
+	for _, s := range validValues {
+		_, errors := validUserPoolInviteTemplateSMSMessage(s, "sms_message")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool invite template SMS message: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"short",
+		"Your account is ready.",
+		"{username}" + strings.Repeat("W", 131), // > 140
+		"{username}" + strings.Repeat("あ", 131), // > 140, multi-byte UTF-8
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validUserPoolInviteTemplateSMSMessage(s, "sms_message")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool invite template SMS message: %v", s, errors)
+		}
+	}
+}
+
 func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
 	t.Parallel()
 
