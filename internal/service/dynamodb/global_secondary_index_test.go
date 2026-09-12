@@ -96,6 +96,42 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBGlobalSecondaryIndex_createAsync(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_createAsync(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceName, "create_async", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
+					testAccCheckGSIStatusReached(ctx, t, rNameTable, rName,
+						awstypes.IndexStatusCreating, awstypes.IndexStatusActive),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("create_async"), knownvalue.Bool(true)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -2984,6 +3020,43 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   index_name = %[2]q
   projection {
     projection_type = "ALL"
+  }
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
+  key_schema {
+    attribute_name = %[1]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, tableName, indexName)
+}
+
+func testAccGlobalSecondaryIndexConfig_createAsync(tableName, indexName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table_name   = aws_dynamodb_table.test.name
+  index_name   = %[2]q
+  create_async = true
+
+  projection {
+    projection_type = "KEYS_ONLY"
   }
 
   provisioned_throughput {
