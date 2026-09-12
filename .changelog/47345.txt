@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_records_exclusive: Fix spurious diff on import for wildcard records where `\052` and `*` were treated as different set elements
+```
