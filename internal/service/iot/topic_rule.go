@@ -705,6 +705,51 @@ func resourceTopicRule() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"headers": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrContentType: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"correlation_data": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"message_expiry": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"payload_format_indicator": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"response_topic": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"user_properties": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrKey: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrValue: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 										"qos": {
 											Type:         schema.TypeInt,
 											Optional:     true,
@@ -1077,6 +1122,51 @@ func resourceTopicRule() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"headers": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrContentType: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"correlation_data": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"message_expiry": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"payload_format_indicator": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"response_topic": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"user_properties": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"qos": {
 								Type:         schema.TypeInt,
 								Optional:     true,
@@ -1890,6 +1980,10 @@ func expandRepublishAction(tfList []any) *awstypes.RepublishAction {
 	apiObject := &awstypes.RepublishAction{}
 	tfMap := tfList[0].(map[string]any)
 
+	if v, ok := tfMap["headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Headers = expandMqttHeaders(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap["qos"].(int); ok {
 		apiObject.Qos = aws.Int32(int32(v))
 	}
@@ -1900,6 +1994,50 @@ func expandRepublishAction(tfList []any) *awstypes.RepublishAction {
 
 	if v, ok := tfMap["topic"].(string); ok && v != "" {
 		apiObject.Topic = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandMqttHeaders(tfMap map[string]any) *awstypes.MqttHeaders {
+	apiObject := &awstypes.MqttHeaders{}
+
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
+		apiObject.ContentType = aws.String(v)
+	}
+
+	if v, ok := tfMap["correlation_data"].(string); ok && v != "" {
+		apiObject.CorrelationData = aws.String(v)
+	}
+
+	if v, ok := tfMap["message_expiry"].(string); ok && v != "" {
+		apiObject.MessageExpiry = aws.String(v)
+	}
+
+	if v, ok := tfMap["payload_format_indicator"].(string); ok && v != "" {
+		apiObject.PayloadFormatIndicator = aws.String(v)
+	}
+
+	if v, ok := tfMap["response_topic"].(string); ok && v != "" {
+		apiObject.ResponseTopic = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_properties"].([]any); ok && len(v) > 0 {
+		userProperties := make([]awstypes.UserProperty, 0, len(v))
+
+		for _, tfMapRaw := range v {
+			tfMap, ok := tfMapRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			userProperties = append(userProperties, awstypes.UserProperty{
+				Key:   aws.String(tfMap[names.AttrKey].(string)),
+				Value: aws.String(tfMap[names.AttrValue].(string)),
+			})
+		}
+
+		apiObject.UserProperties = userProperties
 	}
 
 	return apiObject
@@ -3075,6 +3213,10 @@ func flattenRepublishAction(apiObject *awstypes.RepublishAction) []any {
 
 	tfMap := make(map[string]any)
 
+	if v := apiObject.Headers; v != nil {
+		tfMap["headers"] = flattenMqttHeaders(v)
+	}
+
 	if v := apiObject.Qos; v != nil {
 		tfMap["qos"] = aws.ToInt32(v)
 	}
@@ -3085,6 +3227,45 @@ func flattenRepublishAction(apiObject *awstypes.RepublishAction) []any {
 
 	if v := apiObject.Topic; v != nil {
 		tfMap["topic"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMqttHeaders(apiObject *awstypes.MqttHeaders) []any {
+	tfMap := make(map[string]any)
+
+	if v := apiObject.ContentType; v != nil {
+		tfMap[names.AttrContentType] = aws.ToString(v)
+	}
+
+	if v := apiObject.CorrelationData; v != nil {
+		tfMap["correlation_data"] = aws.ToString(v)
+	}
+
+	if v := apiObject.MessageExpiry; v != nil {
+		tfMap["message_expiry"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PayloadFormatIndicator; v != nil {
+		tfMap["payload_format_indicator"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ResponseTopic; v != nil {
+		tfMap["response_topic"] = aws.ToString(v)
+	}
+
+	if v := apiObject.UserProperties; len(v) > 0 {
+		userProperties := make([]any, 0, len(v))
+
+		for _, userProperty := range v {
+			userProperties = append(userProperties, map[string]any{
+				names.AttrKey:   aws.ToString(userProperty.Key),
+				names.AttrValue: aws.ToString(userProperty.Value),
+			})
+		}
+
+		tfMap["user_properties"] = userProperties
 	}
 
 	return []any{tfMap}
