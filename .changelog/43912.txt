@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_guardrail: Fix topic definition length cap by tier. Classic tier is 200, Standard tier is 1000.
+```
