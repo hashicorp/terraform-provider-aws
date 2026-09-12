@@ -27,6 +27,32 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func TestValidCloudWatchMetricTimestamp(t *testing.T) {
+	t.Parallel()
+
+	valid := []string{
+		"2006-01-02T15:04:05Z",
+		"${timestamp()}",
+		"${my_timestamp}",
+		"prefix-${timestamp()}-suffix",
+	}
+	for _, v := range valid {
+		if _, errors := tfiot.ValidCloudWatchMetricTimestamp(v, "metric_timestamp"); len(errors) > 0 {
+			t.Errorf("%q should be valid, got errors: %v", v, errors)
+		}
+	}
+
+	invalid := []string{
+		"2015-03-07 23:45:00",
+		"not-a-timestamp",
+	}
+	for _, v := range invalid {
+		if _, errors := tfiot.ValidCloudWatchMetricTimestamp(v, "metric_timestamp"); len(errors) == 0 {
+			t.Errorf("%q should be invalid", v)
+		}
+	}
+}
+
 func TestAccIoTTopicRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := testAccTopicRuleName(t)
@@ -481,6 +507,39 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRule_cloudWatchMetricTimestampSubstitution(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccTopicRuleName(t)
+	resourceName := "aws_iot_topic_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// metric_timestamp must accept an IoT SQL substitution template, not
+				// just a literal UTC timestamp: AWS resolves the template at rule
+				// execution time.
+				Config: testAccTopicRuleConfig_cloudWatchMetricTimestampSubstitution(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_metric.*", map[string]string{
+						"metric_timestamp": "${timestamp()}",
+					}),
 				),
 			},
 			{
@@ -2644,6 +2703,28 @@ resource "aws_iot_topic_rule" "test" {
   }
 }
 `, rName, metricName))
+}
+
+func testAccTopicRuleConfig_cloudWatchMetricTimestampSubstitution(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleConfig_destinationRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  cloudwatch_metric {
+    metric_name      = "TestName"
+    metric_namespace = "TestNS"
+    metric_value     = "10"
+    metric_unit      = "s"
+    metric_timestamp = "$${timestamp()}"
+    role_arn         = aws_iam_role.test.arn
+  }
+}
+`, rName))
 }
 
 func testAccTopicRuleConfig_dynamoDB(rName string, tableName string) string {
