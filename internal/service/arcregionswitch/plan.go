@@ -625,6 +625,39 @@ func neptuneGlobalDatabaseConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func rdsSwitchoverReadReplicaConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[rdsSwitchoverReadReplicaConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				"db_instance_arn_map": fwschema.MapAttribute{
+					CustomType: fwtypes.MapOfStringType,
+					Required:   true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[rdsSwitchoverUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"ungraceful": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RdsUngracefulBehavior](), Optional: true},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func route53HealthCheckConfigBlock(ctx context.Context) fwschema.Block {
 	return fwschema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
@@ -869,6 +902,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"neptune_global_database_config":              neptuneGlobalDatabaseConfigBlock(ctx),
 									"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
 									"rds_promote_read_replica_config":             rdsPromoteReadReplicaConfigBlock(ctx),
+									"rds_switchover_read_replica_config":          rdsSwitchoverReadReplicaConfigBlock(ctx),
 									"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
 									"parallel_config": fwschema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[parallelConfigModel](ctx),
@@ -904,6 +938,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"neptune_global_database_config":              neptuneGlobalDatabaseConfigBlock(ctx),
 															"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
 															"rds_promote_read_replica_config":             rdsPromoteReadReplicaConfigBlock(ctx),
+															"rds_switchover_read_replica_config":          rdsSwitchoverReadReplicaConfigBlock(ctx),
 															"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
 															"route53_health_check_config":                 route53HealthCheckConfigBlock(ctx),
 														},
@@ -1289,6 +1324,7 @@ type stepModel struct {
 	ParallelConfig                        fwtypes.ListNestedObjectValueOf[parallelConfigModel]                        `tfsdk:"parallel_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
+	RdsSwitchoverReadReplicaConfig        fwtypes.ListNestedObjectValueOf[rdsSwitchoverReadReplicaConfigModel]        `tfsdk:"rds_switchover_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
 	Route53HealthCheckConfig              fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]              `tfsdk:"route53_health_check_config" autoflex:"-"`
 }
@@ -1504,6 +1540,18 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.RdsSwitchoverReadReplicaConfig.IsNull():
+		config, d := m.RdsSwitchoverReadReplicaConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.Route53HealthCheckConfig.IsNull():
 		config, d := m.Route53HealthCheckConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1573,6 +1621,8 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsCreateCrossRegionReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsPromoteReadReplicaConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsSwitchoverReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
 		}
@@ -1950,6 +2000,7 @@ type parallelStepModel struct {
 	NeptuneGlobalDatabaseConfig           fwtypes.ListNestedObjectValueOf[neptuneGlobalDatabaseConfigModel]           `tfsdk:"neptune_global_database_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
+	RdsSwitchoverReadReplicaConfig        fwtypes.ListNestedObjectValueOf[rdsSwitchoverReadReplicaConfigModel]        `tfsdk:"rds_switchover_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
 	Route53HealthCheckConfig              fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]              `tfsdk:"route53_health_check_config" autoflex:"-"`
 }
@@ -2153,6 +2204,18 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.RdsSwitchoverReadReplicaConfig.IsNull():
+		config, d := m.RdsSwitchoverReadReplicaConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.Route53HealthCheckConfig.IsNull():
 		config, d := m.Route53HealthCheckConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -2220,6 +2283,8 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsCreateCrossRegionReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsPromoteReadReplicaConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsSwitchoverReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
 		}
@@ -2262,6 +2327,18 @@ type rdsPromoteReadReplicaConfigModel struct {
 	DbInstanceArnMap fwtypes.MapOfString `tfsdk:"db_instance_arn_map"`
 	ExternalID       types.String        `tfsdk:"external_id"`
 	TimeoutMinutes   types.Int32         `tfsdk:"timeout_minutes"`
+}
+
+type rdsSwitchoverReadReplicaConfigModel struct {
+	CrossAccountRole types.String                                                  `tfsdk:"cross_account_role"`
+	DbInstanceArnMap fwtypes.MapOfString                                           `tfsdk:"db_instance_arn_map"`
+	ExternalID       types.String                                                  `tfsdk:"external_id"`
+	TimeoutMinutes   types.Int32                                                   `tfsdk:"timeout_minutes"`
+	Ungraceful       fwtypes.ListNestedObjectValueOf[rdsSwitchoverUngracefulModel] `tfsdk:"ungraceful"`
+}
+
+type rdsSwitchoverUngracefulModel struct {
+	Ungraceful fwtypes.StringEnum[awstypes.RdsUngracefulBehavior] `tfsdk:"ungraceful"`
 }
 
 // Trigger Configuration Models
