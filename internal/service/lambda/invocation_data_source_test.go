@@ -119,6 +119,27 @@ func TestAccLambdaInvocationDataSource_tenantId(t *testing.T) {
 	})
 }
 
+func TestAccLambdaInvocationDataSource_maximumRetryAttempts(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	testData := "value3"
+	retryAttempts := 10
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationDataSourceConfig_maximumRetryAttempts(rName, testData, retryAttempts),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+				),
+			},
+		},
+	})
+}
+
 func testAccInvocationDataSource_base_config(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
@@ -282,4 +303,36 @@ data "aws_lambda_invocation" "invocation_test" {
 JSON
 }
 `, rName, testData)
+}
+
+func testAccInvocationDataSourceConfig_maximumRetryAttempts(rName, testData string, attempts int) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
+resource "aws_lambda_function" "lambda" {
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+
+  environment {
+    variables = {
+      TEST_DATA = %[2]q
+    }
+  }
+}
+
+data "aws_lambda_invocation" "invocation_test" {
+  function_name          = aws_lambda_function.lambda.function_name
+  maximum_retry_attempts = %[3]d
+
+  input = <<JSON
+{
+  "key1": "value1",
+  "key2": "value2"
+}
+JSON
+}
+`, rName, testData, attempts)
 }
