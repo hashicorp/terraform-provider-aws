@@ -138,7 +138,7 @@ func TestAccRoute53RecordsExclusive_multiple(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("resource_record_set"),
-						knownvalue.SetPartial([]knownvalue.Check{
+						knownvalue.ListPartial([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								names.AttrName: knownvalue.StringRegexp(regexache.MustCompile("a." + zoneName.String())),
 								names.AttrType: knownvalue.StringExact(string(types.RRTypeA)),
@@ -268,7 +268,7 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("resource_record_set"),
-						knownvalue.SetPartial([]knownvalue.Check{
+						knownvalue.ListPartial([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(recordName.String())),
 								"ttl":          knownvalue.Int64Exact(30),
@@ -293,7 +293,7 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("resource_record_set"),
-						knownvalue.SetPartial([]knownvalue.Check{
+						knownvalue.ListPartial([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(recordName.String())),
 								"ttl":          knownvalue.Int64Exact(20),
@@ -318,7 +318,7 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("resource_record_set"),
-						knownvalue.SetPartial([]knownvalue.Check{
+						knownvalue.ListPartial([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								names.AttrName: knownvalue.StringRegexp(regexache.MustCompile(recordName.String())),
 								"ttl":          knownvalue.Int64Exact(30),
@@ -359,7 +359,7 @@ func TestAccRoute53RecordsExclusive_empty(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						resourceName,
 						tfjsonpath.New("resource_record_set"),
-						knownvalue.SetExact([]knownvalue.Check{}),
+						knownvalue.ListExact([]knownvalue.Check{}),
 					),
 				},
 				// The _exclusive resource will remove the record set created by the _record resource,
