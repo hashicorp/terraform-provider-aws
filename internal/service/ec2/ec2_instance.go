@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -3498,7 +3499,18 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
 				}
-				rd.Set("user_data", string(data))
+				if utf8.Valid(data) {
+					rd.Set("user_data", string(data))
+				} else {
+					// user_data is a TypeString field; Terraform's state/wire encoding
+					// requires valid UTF-8. Binary UserData (e.g. gzip-compressed data
+					// set outside Terraform) set here as cleartext produces a "Provider
+					// produced inconsistent final plan" error, since different
+					// serializers handle invalid UTF-8 differently. Fall back to
+					// user_data_base64, which is safe because the API already returned
+					// base64 ciphertext (always ASCII/valid UTF-8).
+					rd.Set("user_data_base64", attr.UserData.Value)
+				}
 			}
 		}
 	}
