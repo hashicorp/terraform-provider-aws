@@ -20,6 +20,8 @@ Manages an AWS MQ broker. Use to create and manage message brokers for ActiveMQ 
 
 ~> **Note:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
 
+~> **Note:** Reducing `storage_size` is applied on reboot in a rolling manner across broker nodes. Amazon MQ first validates that current disk usage fits within the new size and blocks the change if it does not, raising a critical action required code on the broker. Terraform cannot detect this at plan time because disk usage is only available as a CloudWatch metric. While a change to `storage_size` is waiting to be applied, Amazon MQ reports the requested size in `pending_storage_size` and continues to report the size in use in `storage_size`.
+
 ## Example Usage
 
 ### Basic Example
@@ -147,6 +149,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_share_arns` - (Optional) Set of [AWS RAM](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html) resource share ARNs that grant the broker access to shared resources for [private networking](https://aws.amazon.com/blogs/big-data/introducing-private-networking-for-amazon-mq-for-rabbitmq/). Applies to `engine_type` of `RabbitMQ` only. Because Amazon MQ applies resource shares during a reboot, set `apply_immediately` to `true` for changes to take effect without waiting for the next maintenance window.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
+* `storage_size` - (Optional) Storage size of the broker, in GB, in increments of 5. Only supported for `engine_type` `RabbitMQ` with `engine_version` `4.2` or later, `deployment_mode` `CLUSTER_MULTI_AZ`, and an `mq.m7g` `host_instance_type`. Defaults to the minimum size for the `host_instance_type`, which Amazon MQ does not report until a configured size has been applied. The supported range varies by instance type, see [Configurable storage best practices](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/best-practices-configurable-storage.html) in the Amazon MQ Developer Guide. Because Amazon MQ applies storage changes during a reboot, set `apply_immediately` to `true` for changes to take effect without waiting for the next maintenance window.
 * `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, valid values are `efs` and `ebs` (AWS-default is `efs`). For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
 * `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -232,6 +235,7 @@ This resource exports the following attributes in addition to the arguments abov
             * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
             * `instances.0.endpoints.1` - `https://broker-id.mq.us-west-2.amazonaws.com:16001`
 * `pending_data_replication_mode` - Data replication mode that will be applied after reboot.
+* `pending_storage_size` - Storage size, in GB, that will be applied after reboot.
 * `shared_resources` - List of resources shared with the broker via `resource_share_arns`. Only populated for `engine_type` of `RabbitMQ`.
     * `shared_resources.0.dns_names` - DNS names through which the broker reaches the shared resource.
     * `shared_resources.0.resource_arn` - ARN of the shared resource.
@@ -244,7 +248,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
-* `update` - (Default `30m`)
+* `update` - (Default `90m`)
 * `delete` - (Default `30m`)
 
 ## Import
