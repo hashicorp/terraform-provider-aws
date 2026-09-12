@@ -2487,3 +2487,81 @@ EOF
 }
 `, roleName, policyName)
 }
+
+func TestAccIAMRole_forceDetachPoliciesFalseWithExternalPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_forceDetachFalseExternalPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+					testAccRoleAttachPolicyExternal(ctx, t, rName),
+				),
+			},
+			{
+				Config:      testAccRoleConfig_forceDetachFalseExternalPolicy(rName),
+				Destroy:     true,
+				ExpectError: regexache.MustCompile(`DeleteConflict`),
+			},
+			{
+				// Detach external policy so cleanup can succeed
+				Config: testAccRoleConfig_forceDetachFalseExternalPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccRoleDetachPolicyExternal(ctx, t, rName),
+				),
+			},
+		},
+	})
+}
+
+func testAccRoleAttachPolicyExternal(ctx context.Context, t *testing.T, roleName string) resource.TestCheckFunc {
+    return func(s *terraform.State) error {
+        conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
+        _, err := conn.AttachRolePolicy(ctx, &iam.AttachRolePolicyInput{
+            RoleName:  aws.String(roleName),
+            PolicyArn: aws.String("arn:aws:iam::aws:policy/ReadOnlyAccess"),
+        })
+        return err
+    }
+}
+func testAccRoleDetachPolicyExternal(ctx context.Context, t *testing.T, roleName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
+		_, err := conn.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
+			RoleName:  aws.String(roleName),
+			PolicyArn: aws.String("arn:aws:iam::aws:policy/ReadOnlyAccess"),
+		})
+		return err
+	}
+}
+
+func testAccRoleConfig_forceDetachFalseExternalPolicy(rName string) string {
+    return fmt.Sprintf(`
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+resource "aws_iam_role" "test" {
+  name                  = %[1]q
+  force_detach_policies = false
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = data.aws_service_principal.ec2.name
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+`, rName)
+}
