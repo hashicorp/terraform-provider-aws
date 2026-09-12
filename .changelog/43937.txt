@@ -1,0 +1,9 @@
+resource/aws_batch_compute_environment: Add `userdata_type` support for launch templates
+
+- Add `userdata_type` field to `LaunchTemplateSpecification` schema
+- Support `EKS_BOOTSTRAP_SH` and `EKS_NODEADM` values
+- Add validation for valid `userdata_type` values
+- Update expand/flatten functions for proper AWS SDK mapping
+- Add comprehensive unit and integration tests
+
+Closes #43937
