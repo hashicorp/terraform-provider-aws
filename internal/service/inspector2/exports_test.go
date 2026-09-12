@@ -5,11 +5,13 @@ package inspector2
 
 // Exports for use in tests only.
 var (
+	ResourceConfiguration             = resourceConfiguration
 	ResourceDelegatedAdminAccount     = resourceDelegatedAdminAccount
 	ResourceFilter                    = newFilterResource
 	ResourceMemberAssociation         = resourceMemberAssociation
 	ResourceOrganizationConfiguration = resourceOrganizationConfiguration
 
+	FindConfiguration             = findConfiguration
 	FindDelegatedAdminAccountByID = findDelegatedAdminAccountByID
 	FindFilterByARN               = findFilterByARN
 	FindMemberByAccountID         = findMemberByAccountID
