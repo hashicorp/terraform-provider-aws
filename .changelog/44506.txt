@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Don't store invalid string in user_data attribute
+```
