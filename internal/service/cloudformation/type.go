@@ -467,8 +467,8 @@ func expandOperationPreferences(tfMap map[string]any) *awstypes.StackSetOperatio
 	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
 		apiObject.RegionConcurrencyType = awstypes.RegionConcurrencyType(v)
 	}
-	if v, ok := tfMap["region_order"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.RegionOrder = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap["region_order"].([]any); ok && len(v) > 0 {
+		apiObject.RegionOrder = flex.ExpandStringValueList(v)
 	}
 
 	if ftc, ftp := aws.ToInt32(apiObject.FailureToleranceCount), aws.ToInt32(apiObject.FailureTolerancePercentage); ftp == 0 {
