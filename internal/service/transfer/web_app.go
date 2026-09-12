@@ -9,9 +9,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -93,6 +95,14 @@ func (r *webAppResource) Schema(ctx context.Context, request resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									names.AttrIPAddressType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
+										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
 									names.AttrSecurityGroupIDs: schema.SetAttribute{
 										ElementType: types.StringType,
 										Optional:    true,
@@ -201,6 +211,18 @@ func (r *webAppResource) Create(ctx context.Context, request resource.CreateRequ
 	if webApp.DescribedEndpointDetails != nil {
 		switch t := webApp.DescribedEndpointDetails.(type) {
 		case *awstypes.DescribedWebAppEndpointDetailsMemberVpc:
+			vpcEndpointID := aws.ToString(t.Value.VpcEndpointId)
+			ipAddressType, err := webAppVPCEndpointIPAddressType(ctx, r.Meta().EC2Client(ctx), vpcEndpointID)
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPC Endpoint (%s)", vpcEndpointID), err.Error())
+				return
+			}
+
+			response.Diagnostics.Append(setIPAddressTypeInWebAppEndpointDetailsVPC(ctx, ipAddressType, &data)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
 			response.Diagnostics.Append(setSecurityGroupIDsFromVPCEndpointID(ctx, r.Meta().EC2Client(ctx), t.Value, &data)...)
 			if response.Diagnostics.HasError() {
 				return
@@ -240,6 +262,18 @@ func (r *webAppResource) Read(ctx context.Context, request resource.ReadRequest,
 	if out.DescribedEndpointDetails != nil {
 		switch t := out.DescribedEndpointDetails.(type) {
 		case *awstypes.DescribedWebAppEndpointDetailsMemberVpc:
+			vpcEndpointID := aws.ToString(t.Value.VpcEndpointId)
+			ipAddressType, err := webAppVPCEndpointIPAddressType(ctx, r.Meta().EC2Client(ctx), vpcEndpointID)
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPC Endpoint (%s)", vpcEndpointID), err.Error())
+				return
+			}
+
+			response.Diagnostics.Append(setIPAddressTypeInWebAppEndpointDetailsVPC(ctx, ipAddressType, &data)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
 			response.Diagnostics.Append(setSecurityGroupIDsFromVPCEndpointID(ctx, r.Meta().EC2Client(ctx), t.Value, &data)...)
 			if response.Diagnostics.HasError() {
 				return
@@ -271,7 +305,7 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 	if diff.HasChanges() {
 		webAppID := fwflex.StringValueFromFramework(ctx, new.WebAppID)
 		var input transfer.UpdateWebAppInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithIgnoredFieldNamesAppend("IdentityProviderDetails"), fwflex.WithIgnoredFieldNamesAppend("EndpointDetails"))...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithIgnoredFieldNamesAppend("IdentityProviderDetails"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -295,31 +329,18 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 			}
 		}
 		if !new.EndpointDetails.Equal(old.EndpointDetails) {
-			if v, diags := new.EndpointDetails.ToPtr(ctx); v != nil && !diags.HasError() {
-				if v, diags := v.VPC.ToPtr(ctx); v != nil && !diags.HasError() {
-					input.EndpointDetails = &awstypes.UpdateWebAppEndpointDetailsMemberVpc{
-						Value: awstypes.UpdateWebAppVpcConfig{
-							SubnetIds: fwflex.ExpandFrameworkStringValueSet(ctx, v.SubnetIDs),
-						},
-					}
-					// Reset AccessEndpoint to null to avoid conflicts.
-					// AccessEndpoint must not be specified when EndpointDetails is set.
-					// Note:
-					// AccessEndpoint is a computed attribute when endpoint_details.vpc is specified,
-					// because endpoint_details.vpc and access_endpoint are defined as conflicting
-					// attributes in the schema.
-					input.AccessEndpoint = nil
-				} else {
-					response.Diagnostics.Append(diags...)
-					return
-				}
-			} else {
-				response.Diagnostics.Append(diags...)
-				return
-			}
+			// Reset AccessEndpoint to null to avoid conflicts.
+			// AccessEndpoint must not be specified when EndpointDetails is set.
+			// Note:
+			// AccessEndpoint is a computed attribute when endpoint_details.vpc is specified,
+			// because endpoint_details.vpc and access_endpoint are defined as conflicting
+			// attributes in the schema.
+			input.AccessEndpoint = nil
 		}
 
-		_, err := conn.UpdateWebApp(ctx, &input)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
+			return conn.UpdateWebApp(ctx, &input)
+		}, "VpcEndpoint modify operation in progress")
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Transfer Web App (%s)", webAppID), err.Error())
 
@@ -341,6 +362,18 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 		if webApp.DescribedEndpointDetails != nil {
 			switch t := webApp.DescribedEndpointDetails.(type) {
 			case *awstypes.DescribedWebAppEndpointDetailsMemberVpc:
+				vpcEndpointID := aws.ToString(t.Value.VpcEndpointId)
+				ipAddressType, err := webAppVPCEndpointIPAddressType(ctx, r.Meta().EC2Client(ctx), vpcEndpointID)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPC Endpoint (%s)", vpcEndpointID), err.Error())
+					return
+				}
+
+				response.Diagnostics.Append(setIPAddressTypeInWebAppEndpointDetailsVPC(ctx, ipAddressType, &new)...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+
 				response.Diagnostics.Append(setSecurityGroupIDsFromVPCEndpointID(ctx, r.Meta().EC2Client(ctx), t.Value, &new)...)
 				if response.Diagnostics.HasError() {
 					return
@@ -426,18 +459,19 @@ type webAppEndpointDetailsModel struct {
 }
 
 type webAppEndpointDetailsVPCModel struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
-	VPCEndpointID    types.String                     `tfsdk:"vpc_endpoint_id"`
-	VPCID            types.String                     `tfsdk:"vpc_id"`
+	IpAddressType    fwtypes.StringEnum[awstypes.IpAddressType] `tfsdk:"ip_address_type"`
+	SecurityGroupIDs fwtypes.SetValueOf[types.String]           `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetValueOf[types.String]           `tfsdk:"subnet_ids"`
+	VPCEndpointID    types.String                               `tfsdk:"vpc_endpoint_id"`
+	VPCID            types.String                               `tfsdk:"vpc_id"`
 }
 
 var (
-	_ fwflex.Expander  = webAppEndpointDetailsModel{}
-	_ fwflex.Flattener = &webAppEndpointDetailsModel{}
+	_ fwflex.TypedExpander = webAppEndpointDetailsModel{}
+	_ fwflex.Flattener     = &webAppEndpointDetailsModel{}
 )
 
-func (m webAppEndpointDetailsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m webAppEndpointDetailsModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	switch {
@@ -447,12 +481,27 @@ func (m webAppEndpointDetailsModel) Expand(ctx context.Context) (any, diag.Diagn
 		if diags.HasError() {
 			return nil, diags
 		}
-		var r awstypes.WebAppEndpointDetailsMemberVpc
-		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
+		switch targetType {
+		case reflect.TypeFor[awstypes.WebAppEndpointDetails]():
+			var r awstypes.WebAppEndpointDetailsMemberVpc
+			diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &r, diags
+		case reflect.TypeFor[awstypes.UpdateWebAppEndpointDetails]():
+			var r awstypes.UpdateWebAppEndpointDetailsMemberVpc
+			diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &r, diags
+		default:
+			diags.AddError(
+				"Unsupported Type",
+				fmt.Sprintf("web app endpoint details expand: %s", targetType.String()),
+			)
 		}
-		return &r, diags
 	}
 	return nil, diags
 }
@@ -477,6 +526,46 @@ func (m *webAppEndpointDetailsModel) Flatten(ctx context.Context, v any) diag.Di
 			fmt.Sprintf("artifact flatten: %s", reflect.TypeOf(v).String()),
 		)
 	}
+	return diags
+}
+
+// The DescribeWebApp API does not return ipAddressType.
+// Instead, retrieve it from the DescribeVpcEndpoints API using the vpcEndpointId returned by DescribeWebApp.
+func webAppVPCEndpointIPAddressType(ctx context.Context, conn *ec2.Client, vpcEndpointID string) (fwtypes.StringEnum[awstypes.IpAddressType], error) {
+	vpcEndpoint, err := tfec2.FindVPCEndpointByID(ctx, conn, vpcEndpointID)
+	if err != nil {
+		return fwtypes.StringEnumNull[awstypes.IpAddressType](), err
+	}
+
+	switch vpcEndpoint.IpAddressType {
+	case ec2types.IpAddressTypeIpv4:
+		return fwtypes.StringEnumValue(awstypes.IpAddressTypeIpv4), nil
+	case ec2types.IpAddressTypeDualstack:
+		return fwtypes.StringEnumValue(awstypes.IpAddressTypeDualstack), nil
+	default:
+		return fwtypes.StringEnumNull[awstypes.IpAddressType](), fmt.Errorf("unsupported IP address type: %s", vpcEndpoint.IpAddressType)
+	}
+}
+
+func setIPAddressTypeInWebAppEndpointDetailsVPC(ctx context.Context, ipAddressType fwtypes.StringEnum[awstypes.IpAddressType], data *webAppResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	endpointDetailsData, d := data.EndpointDetails.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || endpointDetailsData == nil {
+		return diags
+	}
+
+	vpcData, d := endpointDetailsData.VPC.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || vpcData == nil {
+		return diags
+	}
+
+	vpcData.IpAddressType = ipAddressType
+	endpointDetailsData.VPC = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, vpcData)
+	data.EndpointDetails = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, endpointDetailsData)
+
 	return diags
 }
 
