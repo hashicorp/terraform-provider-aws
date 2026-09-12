@@ -488,6 +488,36 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSet_columnSubType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet awstypes.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigColumnSubType(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, t, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.cast_column_type_operation.0.new_column_type", "DECIMAL"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.cast_column_type_operation.0.sub_type", "FIXED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet awstypes.DataSet
@@ -1260,4 +1290,44 @@ resource "aws_quicksight_data_set" "test" {
   }
 }
 	`, rId, rName))
+}
+
+func testAccDataSetConfigColumnSubType(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+    data_transforms {
+      cast_column_type_operation {
+        column_name     = "Column1"
+        new_column_type = "DECIMAL"
+        sub_type        = "FIXED"
+      }
+    }
+  }
+}
+`, rId, rName))
 }
