@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -195,6 +196,32 @@ func TestAccSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSOAdminPermissionSet_duplicateName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create first permission set
+				Config: testAccPermissionSetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSOAdminPermissionSetExists(ctx, t, "aws_ssoadmin_permission_set.test"),
+				),
+			},
+			{
+				// Try to create second permission set with the same name - should fail immediately
+				Config:      testAccPermissionSetConfig_duplicateName(rName),
+				ExpectError: regexache.MustCompile("SSO Permission Set .* already exists"),
 			},
 		},
 	})
@@ -430,6 +457,25 @@ resource "aws_ssoadmin_permission_set" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPermissionSetConfig_duplicateName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+# This will already exist from previous step
+resource "aws_ssoadmin_permission_set" "test" {
+  name         = %[1]q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+
+# This should fail due to duplicate name
+resource "aws_ssoadmin_permission_set" "test_duplicate" {
+  name         = %[1]q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  description  = "This should fail - duplicate name"
+}
+`, rName)
 }
 
 func testAccPermissionSetConfig_mixedPolicyAttachments(rName string) string {
