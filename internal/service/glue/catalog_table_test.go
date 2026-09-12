@@ -223,6 +223,86 @@ func TestFlattenViewRepresentations(t *testing.T) {
 	}
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/49323
+func TestExpandViewRepresentationInputs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name   string
+		tfList []any
+		want   []awstypes.ViewRepresentationInput
+	}{
+		{
+			name: "suppresses view_expanded_text for ATHENA dialect",
+			tfList: []any{
+				map[string]any{
+					"dialect":               "ATHENA",
+					"dialect_version":       "3",
+					"validation_connection": "athena-conn",
+					"view_expanded_text":    "/* Presto View */",
+					"view_original_text":    "SELECT 1 AS x",
+				},
+			},
+			want: []awstypes.ViewRepresentationInput{
+				{
+					Dialect:              awstypes.ViewDialectAthena,
+					DialectVersion:       aws.String("3"),
+					ValidationConnection: aws.String("athena-conn"),
+					ViewOriginalText:     aws.String("SELECT 1 AS x"),
+				},
+			},
+		},
+		{
+			name: "sends view_expanded_text for SPARK dialect",
+			tfList: []any{
+				map[string]any{
+					"dialect":            "SPARK",
+					"dialect_version":    "1.0",
+					"view_expanded_text": "SELECT 1 AS x",
+					"view_original_text": "SELECT 1 AS x",
+				},
+			},
+			want: []awstypes.ViewRepresentationInput{
+				{
+					Dialect:          awstypes.ViewDialectSpark,
+					DialectVersion:   aws.String("1.0"),
+					ViewExpandedText: aws.String("SELECT 1 AS x"),
+					ViewOriginalText: aws.String("SELECT 1 AS x"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfglue.ExpandViewRepresentationInputs(tc.tfList)
+
+			if len(got) != len(tc.want) {
+				t.Fatalf("len(got) = %d, want %d", len(got), len(tc.want))
+			}
+			for i, want := range tc.want {
+				if got[i].Dialect != want.Dialect {
+					t.Errorf("[%d] Dialect = %v, want %v", i, got[i].Dialect, want.Dialect)
+				}
+				if aws.ToString(got[i].DialectVersion) != aws.ToString(want.DialectVersion) {
+					t.Errorf("[%d] DialectVersion = %v, want %v", i, aws.ToString(got[i].DialectVersion), aws.ToString(want.DialectVersion))
+				}
+				if aws.ToString(got[i].ValidationConnection) != aws.ToString(want.ValidationConnection) {
+					t.Errorf("[%d] ValidationConnection = %v, want %v", i, aws.ToString(got[i].ValidationConnection), aws.ToString(want.ValidationConnection))
+				}
+				if aws.ToString(got[i].ViewExpandedText) != aws.ToString(want.ViewExpandedText) {
+					t.Errorf("[%d] ViewExpandedText = %v, want %v", i, aws.ToString(got[i].ViewExpandedText), aws.ToString(want.ViewExpandedText))
+				}
+				if aws.ToString(got[i].ViewOriginalText) != aws.ToString(want.ViewOriginalText) {
+					t.Errorf("[%d] ViewOriginalText = %v, want %v", i, aws.ToString(got[i].ViewOriginalText), aws.ToString(want.ViewOriginalText))
+				}
+			}
+		})
+	}
+}
+
 func TestAccGlueCatalogTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
