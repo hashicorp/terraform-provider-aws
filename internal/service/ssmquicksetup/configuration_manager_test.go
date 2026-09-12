@@ -41,6 +41,11 @@ func TestAccSSMQuickSetupConfigurationManager_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
