@@ -238,6 +238,34 @@ func dataSourceAMI() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"watermarks": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_image_creation_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"source_image_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"source_image_region": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"watermark_creation_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"watermark_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -346,6 +374,9 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
+	if err := d.Set("watermarks", flattenImageWatermarks(image.ImageWatermarks)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting watermarks: %s", err)
+	}
 
 	getInstanceUEFIDataInput := ec2.GetInstanceUefiDataInput{
 		InstanceId: aws.String(d.Id()),
@@ -437,6 +468,38 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]any {
 		s[names.AttrMessage] = "UNSET"
 	}
 	return s
+}
+
+func flattenImageWatermarks(apiObjects []awstypes.ImageWatermark) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"source_image_id":     aws.ToString(apiObject.SourceImageId),
+			"source_image_region": aws.ToString(apiObject.SourceImageRegion),
+			"watermark_key":       aws.ToString(apiObject.WatermarkKey),
+		}
+
+		if v := apiObject.SourceImageCreationTime; v != nil {
+			tfMap["source_image_creation_time"] = v.Format(time.RFC3339)
+		} else {
+			tfMap["source_image_creation_time"] = ""
+		}
+
+		if v := apiObject.WatermarkCreationTime; v != nil {
+			tfMap["watermark_creation_time"] = v.Format(time.RFC3339)
+		} else {
+			tfMap["watermark_creation_time"] = ""
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 // checkMostRecentAndMissingFilters appends a diagnostic if the provided configuration

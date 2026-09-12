@@ -90,8 +90,8 @@ func TestAccDataZoneUserProfile_Identity_basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_identifier"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_identifier"), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("domain_identifier")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("user_identifier")),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -110,8 +110,8 @@ func TestAccDataZoneUserProfile_Identity_basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_identifier"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_identifier"), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("domain_identifier")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("user_identifier")),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -188,8 +188,8 @@ func TestAccDataZoneUserProfile_Identity_regionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_identifier"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_identifier"), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("domain_identifier")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("user_identifier")),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -209,8 +209,8 @@ func TestAccDataZoneUserProfile_Identity_regionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_identifier"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_identifier"), knownvalue.NotNull()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("domain_identifier")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("user_identifier")),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
