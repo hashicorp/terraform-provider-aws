@@ -29,4 +29,4 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `names` - A list if AWS Elastic Container Registries for the region.
+* `names` - A list of AWS Elastic Container Registries for the region. Empty list if no repositories are found.
