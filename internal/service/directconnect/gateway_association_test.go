@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,6 +23,58 @@ import (
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestGatewayAssociationAllowedPrefixesSchema(t *testing.T) {
+	t.Parallel()
+
+	const (
+		compressed = "2600:1f26:74::/48"
+		expanded   = "2600:1f26:0074:0000:0000:0000:0000:0000/48"
+	)
+
+	for name, resource := range map[string]*schema.Resource{
+		"aws_dx_gateway_association":          tfdirectconnect.ResourceGatewayAssociation(),
+		"aws_dx_gateway_association_proposal": tfdirectconnect.ResourceGatewayAssociationProposal(),
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			prefixesSchema := resource.SchemaFunc()["allowed_prefixes"]
+			elementSchema, ok := prefixesSchema.Elem.(*schema.Schema)
+			if !ok {
+				t.Fatalf("expected allowed_prefixes elements to use *schema.Schema, got %T", prefixesSchema.Elem)
+			}
+			if elementSchema.StateFunc == nil {
+				t.Fatal("expected allowed_prefixes elements to have a StateFunc")
+			}
+
+			compressedState := elementSchema.StateFunc(compressed)
+			expandedState := elementSchema.StateFunc(expanded)
+			if compressedState != expandedState {
+				t.Fatalf("expected equivalent IPv6 CIDRs to have equal state, got %q and %q", compressedState, expandedState)
+			}
+			if got := compressedState; got != compressed {
+				t.Fatalf("expected canonical IPv6 CIDR %q, got %q", compressed, got)
+			}
+
+			if _, errors := elementSchema.ValidateFunc(compressed, "allowed_prefixes.0"); len(errors) != 0 {
+				t.Fatalf("expected valid IPv6 CIDR, got errors: %v", errors)
+			}
+			if _, errors := elementSchema.ValidateFunc("not-a-cidr", "allowed_prefixes.0"); len(errors) == 0 {
+				t.Fatal("expected invalid CIDR to return a validation error")
+			}
+		})
+	}
+
+	t.Run("flatten API response", func(t *testing.T) {
+		t.Parallel()
+
+		got := tfdirectconnect.FlattenCanonicalRouteFilterPrefixes([]awstypes.RouteFilterPrefix{{Cidr: aws.String(expanded)}})
+		if len(got) != 1 || got[0] != compressed {
+			t.Fatalf("expected canonical IPv6 CIDR %q, got %#v", compressed, got)
+		}
+	})
+}
 
 // V0 state upgrade testing must be done via acceptance testing due to API call
 func TestAccDirectConnectGatewayAssociation_v0StateUpgrade(t *testing.T) {
@@ -216,6 +269,37 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 				ImportStateIdFunc: testAccGatewayAssociationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDirectConnectGatewayAssociation_ipv6AllowedPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dx_gateway_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayAssociationConfig_ipv6AllowedPrefix(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, t, resourceName, &ga, &gap),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "2600:1f26:74::/48"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -663,6 +747,28 @@ resource "aws_dx_gateway_association" "test" {
     "10.255.255.0/30",
     "10.255.255.8/30",
   ]
+}
+`, rName, rBgpAsn)
+}
+
+func testAccGatewayAssociationConfig_ipv6AllowedPrefix(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name            = %[1]q
+  amazon_side_asn = "%[2]d"
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_dx_gateway_association" "test" {
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_ec2_transit_gateway.test.id
+
+  allowed_prefixes = ["2600:1f26:74::/48"]
 }
 `, rName, rBgpAsn)
 }

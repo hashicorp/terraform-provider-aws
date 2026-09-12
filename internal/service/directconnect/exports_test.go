@@ -25,16 +25,17 @@ var (
 	ResourcePublicVirtualInterface                = resourcePublicVirtualInterface
 	ResourceTransitVirtualInterface               = resourceTransitVirtualInterface
 
-	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
-	FindConnectionByID                 = findConnectionByID
-	FindConnectionLAGAssociation       = findConnectionLAGAssociation
-	FindGatewayAssociationByID         = findGatewayAssociationByID
-	FindGatewayAssociationProposalByID = findGatewayAssociationProposalByID
-	FindGatewayByID                    = findGatewayByID
-	FindHostedConnectionByID           = findHostedConnectionByID
-	FindLagByID                        = findLagByID
-	FindMacSecKeyByTwoPartKey          = findMacSecKeyByTwoPartKey
-	FindVirtualInterfaceByID           = findVirtualInterfaceByID
-	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
-	GatewayAssociationStateUpgradeV1   = gatewayAssociationStateUpgradeV1
+	FindBGPPeerByThreePartKey           = findBGPPeerByThreePartKey
+	FindConnectionByID                  = findConnectionByID
+	FindConnectionLAGAssociation        = findConnectionLAGAssociation
+	FindGatewayAssociationByID          = findGatewayAssociationByID
+	FindGatewayAssociationProposalByID  = findGatewayAssociationProposalByID
+	FlattenCanonicalRouteFilterPrefixes = flattenCanonicalRouteFilterPrefixes
+	FindGatewayByID                     = findGatewayByID
+	FindHostedConnectionByID            = findHostedConnectionByID
+	FindLagByID                         = findLagByID
+	FindMacSecKeyByTwoPartKey           = findMacSecKeyByTwoPartKey
+	FindVirtualInterfaceByID            = findVirtualInterfaceByID
+	GatewayAssociationStateUpgradeV0    = gatewayAssociationStateUpgradeV0
+	GatewayAssociationStateUpgradeV1    = gatewayAssociationStateUpgradeV1
 )

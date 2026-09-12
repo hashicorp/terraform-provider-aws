@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dx_gateway_association: Prevent perpetual differences when `allowed_prefixes` contains compressed IPv6 CIDRs
+```
+
+```release-note:bug
+resource/aws_dx_gateway_association_proposal: Prevent perpetual differences when `allowed_prefixes` contains compressed IPv6 CIDRs
+```
