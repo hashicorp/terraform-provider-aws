@@ -31,6 +31,25 @@ resource "aws_opensearch_domain" "example" {
 }
 ```
 
+### Log analytics workload
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "example"
+  engine_version = "OpenSearch_3.5"
+  engine_mode    = "OPTIMIZED"
+  use_case       = "OBSERVABILITY"
+
+  cluster_config {
+    instance_type = "or1.medium.search"
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+}
+```
+
 ### Access Policy
 
 -> See also: [`aws_opensearch_domain_policy` resource](/docs/providers/aws/r/opensearch_domain_policy.html)
@@ -316,6 +335,7 @@ The following arguments are optional:
 * `deployment_strategy_options` - (Optional) Configuration block for the deployment strategy options of the domain. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
+* `engine_mode` - (Optional) Engine mode for the domain. Valid values are `GENERAL` (default) and `OPTIMIZED`. `OPTIMIZED` is only compatible with `use_case` values `OBSERVABILITY` and `MIXED`, and requires `engine_version` `OpenSearch_3.5` or later. Changing this value forces a new resource.
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
@@ -327,6 +347,7 @@ The following arguments are optional:
 * `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon OpenSearch takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions, OpenSearch takes daily automated snapshots.
 * `software_update_options` - (Optional) Software update options for the domain. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `use_case` - (Optional) Primary use case for the domain. Valid values are `SEARCH` (default), `VECTOR`, `OBSERVABILITY`, and `MIXED`. Only `OBSERVABILITY` and `MIXED` are compatible with `engine_mode = OPTIMIZED`. Changing this value forces a new resource.
 * `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html)). Detailed below.
 * `off_peak_window_options` - (Optional) Configuration to add Off Peak update options. ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)). Detailed below.
 
