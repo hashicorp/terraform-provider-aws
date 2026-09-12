@@ -1531,6 +1531,37 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_timeoutsOnlyChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var route awstypes.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	destinationCidr := "10.3.0.0/16"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
+				Check:  testAccCheckRouteExists(ctx, t, resourceName, &route),
+			},
+			{
+				Config: testAccVPCRouteConfig_ipv4InternetGatewayWithTimeouts(rName, destinationCidr),
+				Check:  testAccCheckRouteExists(ctx, t, resourceName, &route),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCRoute_ipv4ToVPCEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2723,6 +2754,45 @@ resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = %[2]q
   gateway_id             = aws_internet_gateway.test.id
+}
+`, rName, destinationCidr)
+}
+
+func testAccVPCRouteConfig_ipv4InternetGatewayWithTimeouts(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  gateway_id             = aws_internet_gateway.test.id
+
+  timeouts {
+    create = "5m"
+    delete = "5m"
+  }
 }
 `, rName, destinationCidr)
 }
