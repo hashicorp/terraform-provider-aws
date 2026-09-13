@@ -138,8 +138,8 @@ func oauth2ProviderClientCredentialsAttributes(context.Context) map[string]schem
 					awstypes.SecretSourceTypeExternal,
 					path.MatchRelative().AtParent().AtName("client_secret_config"),
 				),
-				tfstringvalidator.ConflictsWithWhenEquals(
-					awstypes.SecretSourceTypeExternal,
+				tfstringvalidator.ExactlyOneOfWhenEquals(
+					awstypes.SecretSourceTypeManaged,
 					path.MatchRelative().AtParent().AtName(names.AttrClientSecret),
 					path.MatchRelative().AtParent().AtName("client_secret_wo"),
 				),
