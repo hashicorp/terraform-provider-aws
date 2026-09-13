@@ -171,8 +171,8 @@ The `private_endpoint` block supports exactly one of the following:
 
 The `private_endpoint_override` block supports the following:
 
-* `domain` - (Optional) Domain the private endpoint override applies to.
-* `private_endpoint` - (Optional) Private endpoint configuration for the domain. See [`private_endpoint`](#private_endpoint) above.
+* `domain` - (Required) Domain the private endpoint override applies to.
+* `private_endpoint` - (Required) Private endpoint configuration for the domain. See [`private_endpoint`](#private_endpoint) above.
 
 ### `managed_vpc_resource`
 
