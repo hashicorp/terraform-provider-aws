@@ -16,12 +16,12 @@ import (
 func nameValidator(t *testing.T, block string) schema.SchemaValidateFunc {
 	t.Helper()
 
-	elem, ok := fieldToMatchBaseSchema().Schema[block].Elem.(*schema.Resource)
+	elem, ok := fieldToMatchBaseSchema().SchemaMap()[block].Elem.(*schema.Resource)
 	if !ok {
 		t.Fatalf("%s Elem is not a *schema.Resource", block)
 	}
 
-	validate := elem.Schema[names.AttrName].ValidateFunc
+	validate := elem.SchemaMap()[names.AttrName].ValidateFunc
 	if validate == nil {
 		t.Fatalf("%s.name has no ValidateFunc", block)
 	}
