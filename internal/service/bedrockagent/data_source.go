@@ -53,13 +53,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	hierarchicalLevelConfigurations          = 2
-	hierarchicalMaxTokens                    = 8192
-	semanticBreakpointPercentileThresholdMin = 50
-	semanticBreakpointPercentileThresholdMax = 99
-)
-
 // @FrameworkResource("aws_bedrockagent_data_source", name="Data Source")
 func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataSourceResource{}
@@ -78,6 +71,12 @@ type dataSourceResource struct {
 }
 
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	const (
+		hierarchicalLevelConfigurations          = 2
+		hierarchicalMaxTokens                    = 8192
+		semanticBreakpointPercentileThresholdMin = 50
+		semanticBreakpointPercentileThresholdMax = 99
+	)
 	crawlerConfigurationNestedObjectSchema := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
 			"filter_configuration": schema.ListNestedBlock{
@@ -285,7 +284,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 														int32validator.Between(0, 100),
 													},
 													PlanModifiers: []planmodifier.Int32{
-														int32planmodifier.UseStateForUnknown(),
+														int32planmodifier.UseNonNullStateForUnknown(),
 													},
 												},
 											},
@@ -997,9 +996,8 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	}
 
 	ds := output.DataSource
-	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
+	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), aws.ToString(ds.KnowledgeBaseId)
 	id := dataSourceCreateResourceID(dataSourceID, knowledgeBaseID)
-	data.DataSourceID = fwflex.StringValueToFramework(ctx, dataSourceID)
 	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
@@ -1014,10 +1012,8 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	data.DataDeletionPolicy = fwtypes.StringEnumValue(ds.DataDeletionPolicy)
 
-	// Server-side defaults (e.g. deletion_protection_threshold) are only
-	// present on the post-create API response, so re-flatten the nested
-	// configuration to resolve any Computed values left unknown by config.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, ds.DataSourceConfiguration, &data.DataSourceConfiguration)...)
+	// Set values for unknowns.
+	response.Diagnostics.Append(r.flatten(ctx, ds, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1056,7 +1052,7 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, ds, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, ds, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1094,18 +1090,9 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	ds, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, new.Timeouts))
-	if err != nil {
+	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) update", dataSourceID, knowledgeBaseID), err.Error())
 
-		return
-	}
-
-	// Server-side defaults (e.g. deletion_protection_threshold) are only
-	// present on the post-update API response, so re-flatten the nested
-	// configuration to resolve any Computed values left unknown by config.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, ds.DataSourceConfiguration, &new.DataSourceConfiguration)...)
-	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -1143,6 +1130,12 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 		return
 	}
+}
+
+func (r *dataSourceResource) flatten(ctx context.Context, ds *awstypes.DataSource, data *dataSourceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, ds, data)...)
+	return diags
 }
 
 func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) (*awstypes.DataSource, error) {
