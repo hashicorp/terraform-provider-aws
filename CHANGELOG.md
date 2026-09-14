@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_api_gateway_deployment` ([#49820](https://github.com/hashicorp/terraform-provider-aws/issues/49820))
 * **New List Resource:** `aws_apigatewayv2_integration` ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * **New List Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
 * **New List Resource:** `aws_glue_catalog_table` ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
@@ -18,6 +19,7 @@ ENHANCEMENTS:
 * data-source/aws_agentregistry_registry: Add `encryption_configuration` attribute ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
 * resource/aws_agentregistry_registry: Add `auto_detection_configuration` and `encryption_configuration` configuration blocks ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
 * resource/aws_agentregistry_registry: Add `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint` and `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint_override` configuration blocks ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
+* resource/aws_api_gateway_deployment: Add resource identity support ([#49820](https://github.com/hashicorp/terraform-provider-aws/issues/49820))
 * resource/aws_apigatewayv2_integration: Add resource identity support ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `callback_url` attribute ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentication_method`, `on_behalf_of_token_exchange_config`, `private_endpoint`, `private_endpoint_override`, and `private_key_jwt_config` arguments to `oauth2_provider_config.custom_oauth2_provider_config` configuration block ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
