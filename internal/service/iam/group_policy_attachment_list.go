@@ -87,25 +87,6 @@ func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request li
 	}
 }
 
-func listGroups(ctx context.Context, conn *iam.Client, input *iam.ListGroupsInput) iter.Seq2[awstypes.Group, error] {
-	return func(yield func(awstypes.Group, error) bool) {
-		pages := iam.NewListGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Group{}, err)
-				return
-			}
-
-			for _, role := range page.Groups {
-				if !yield(role, nil) {
-					return
-				}
-			}
-		}
-	}
-}
-
 func listGroupPolicyAttachments(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput) iter.Seq2[awstypes.AttachedPolicy, error] {
 	return func(yield func(awstypes.AttachedPolicy, error) bool) {
 		pages := iam.NewListAttachedGroupPoliciesPaginator(conn, input)
