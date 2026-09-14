@@ -10,6 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -933,5 +936,137 @@ func TestParamGroupNameRequiresEngineOrMajorVersionUpgrade(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestEngineVersionMatches(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		engine        string
+		configVersion string
+		apiVersion    string
+		expected      bool
+	}{
+		"redis exact minor match": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "7.1",
+			apiVersion:    "7.1",
+			expected:      true,
+		},
+		"redis exact minor mismatch": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "7.1",
+			apiVersion:    "7.0",
+			expected:      false,
+		},
+		"redis major wildcard matches minor": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "6.x",
+			apiVersion:    "6.2",
+			expected:      true,
+		},
+		"redis major wildcard different major": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "6.x",
+			apiVersion:    "7.0",
+			expected:      false,
+		},
+		"redis pre-v6 patch match": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "5.0.6",
+			apiVersion:    "5.0.6",
+			expected:      true,
+		},
+		"valkey exact match": {
+			engine:        tfelasticache.EngineValkey,
+			configVersion: "7.2",
+			apiVersion:    "7.2",
+			expected:      true,
+		},
+		"valkey does not honor wildcard": {
+			engine:        tfelasticache.EngineValkey,
+			configVersion: "7.x",
+			apiVersion:    "7.2",
+			expected:      false,
+		},
+		"empty api version": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "7.1",
+			apiVersion:    "",
+			expected:      false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfelasticache.EngineVersionMatches(testcase.engine, testcase.configVersion, testcase.apiVersion); got != testcase.expected {
+				t.Errorf("EngineVersionMatches(%q, %q, %q) = %t, want %t", testcase.engine, testcase.configVersion, testcase.apiVersion, got, testcase.expected)
+			}
+		})
+	}
+}
+
+func TestFindAvailableCacheEngineVersion(t *testing.T) {
+	t.Parallel()
+
+	available := []awstypes.CacheEngineVersion{
+		{EngineVersion: aws.String("6.0")},
+		{EngineVersion: aws.String("6.2")},
+		{EngineVersion: aws.String("7.0")},
+		{EngineVersion: aws.String("7.1")},
+	}
+
+	testcases := map[string]struct {
+		engine        string
+		configVersion string
+		expected      bool
+	}{
+		"available exact": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "7.0",
+			expected:      true,
+		},
+		"available wildcard": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "6.x",
+			expected:      true,
+		},
+		"unavailable": {
+			engine:        tfelasticache.EngineRedis,
+			configVersion: "7.4",
+			expected:      false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfelasticache.FindAvailableCacheEngineVersion(testcase.engine, testcase.configVersion, available); got != testcase.expected {
+				t.Errorf("FindAvailableCacheEngineVersion(%q, %q) = %t, want %t", testcase.engine, testcase.configVersion, got, testcase.expected)
+			}
+		})
+	}
+}
+
+func TestAvailableEngineVersionStrings(t *testing.T) {
+	t.Parallel()
+
+	available := []awstypes.CacheEngineVersion{
+		{EngineVersion: aws.String("7.1")},
+		{EngineVersion: aws.String("6.0")},
+		{EngineVersion: aws.String("7.1")}, // duplicate
+		{EngineVersion: aws.String("7.0")},
+		{EngineVersion: aws.String("")}, // skipped
+	}
+
+	got := tfelasticache.AvailableEngineVersionStrings(available)
+	want := []string{"6.0", "7.0", "7.1"}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected result (-want +got):\n%s", diff)
 	}
 }
