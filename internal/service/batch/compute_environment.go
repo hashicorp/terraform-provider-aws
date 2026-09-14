@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -50,12 +51,17 @@ func resourceComputeEnvironment() *schema.Resource {
 
 		CustomizeDiff: resourceComputeEnvironmentCustomizeDiff,
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    computeEnvironmentSchemaV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: computeEnvironmentStateUpgradeV0,
 				Version: 0,
+			},
+			{
+				Type:    computeEnvironmentSchemaV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: computeEnvironmentStateUpgradeV1,
+				Version: 1,
 			},
 		},
 
@@ -145,9 +151,12 @@ func resourceComputeEnvironment() *schema.Resource {
 								ValidateFunc: verify.ValidARN,
 							},
 							names.AttrInstanceType: {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
+								// A list, not a set: BEST_FIT_PROGRESSIVE_ORDERED and
+								// SPOT_CAPACITY_OPTIMIZED_PRIORITIZED read this as a priority order.
+								Type:             schema.TypeList,
+								Optional:         true,
+								Elem:             &schema.Schema{Type: schema.TypeString},
+								DiffSuppressFunc: suppressInstanceTypeOrderOnlyChange,
 							},
 							names.AttrLaunchTemplate: {
 								Type:     schema.TypeList,
@@ -510,7 +519,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 				}
 
 				if d.HasChange("compute_resources.0.instance_type") {
-					computeResourceUpdate.InstanceTypes = flex.ExpandStringValueSet(d.Get("compute_resources.0.instance_type").(*schema.Set))
+					computeResourceUpdate.InstanceTypes = flex.ExpandStringValueList(d.Get("compute_resources.0.instance_type").([]any))
 				}
 
 				if d.HasChange("compute_resources.0.launch_template") {
@@ -895,9 +904,68 @@ func isUpdatableAllocationStrategyDiff(diff *schema.ResourceDiff) bool {
 	return false
 }
 
+// suppressInstanceTypeOrderOnlyChange hides a change that only re-orders
+// instance_type. Order is meaningful to BEST_FIT_PROGRESSIVE_ORDERED and
+// SPOT_CAPACITY_OPTIMIZED_PRIORITIZED and meaningless to every other strategy, and
+// this attribute was a set until the schema reached version 2. Without this, the
+// upgrade would plan a diff for anyone whose configured order differs from the order
+// the set happened to store, and the ForceNew in the CustomizeDiff would turn that
+// diff into a replacement.
+func suppressInstanceTypeOrderOnlyChange(_, _, _ string, d *schema.ResourceData) bool {
+	// allocation_strategy accepts any case and is upper-cased by its StateFunc, so
+	// normalise before comparing rather than relying on which of the two we are given.
+	v, _ := d.Get("compute_resources.0.allocation_strategy").(string)
+	if isOrderedAllocationStrategy(awstypes.CRAllocationStrategy(strings.ToUpper(v))) {
+		return false
+	}
+
+	o, n := d.GetChange("compute_resources.0.instance_type")
+
+	return sameInstanceTypesIgnoringOrder(o, n)
+}
+
+// isOrderedAllocationStrategy reports whether an allocation strategy treats
+// instance_type as a priority order.
+func isOrderedAllocationStrategy(allocationStrategy awstypes.CRAllocationStrategy) bool {
+	switch allocationStrategy {
+	case awstypes.CRAllocationStrategyBestFitProgressiveOrdered, awstypes.CRAllocationStrategySpotCapacityOptimizedPrioritized:
+		return true
+	}
+
+	return false
+}
+
+// sameInstanceTypesIgnoringOrder reports whether two instance_type values hold the
+// same elements, differing only in order.
+func sameInstanceTypesIgnoringOrder(o, n any) bool {
+	oList, ok := o.([]any)
+	if !ok {
+		return false
+	}
+
+	nList, ok := n.([]any)
+	if !ok {
+		return false
+	}
+
+	if len(oList) != len(nList) {
+		return false
+	}
+
+	oStrings, nStrings := flex.ExpandStringValueList(oList), flex.ExpandStringValueList(nList)
+	slices.Sort(oStrings)
+	slices.Sort(nStrings)
+
+	return slices.Equal(oStrings, nStrings)
+}
+
 func isUpdatableAllocationStrategy(allocationStrategy awstypes.CRAllocationStrategy) bool {
 	switch allocationStrategy {
-	case awstypes.CRAllocationStrategyBestFitProgressive, awstypes.CRAllocationStrategySpotCapacityOptimized, awstypes.CRAllocationStrategySpotPriceCapacityOptimized:
+	case awstypes.CRAllocationStrategyBestFitProgressive,
+		awstypes.CRAllocationStrategyBestFitProgressiveOrdered,
+		awstypes.CRAllocationStrategySpotCapacityOptimized,
+		awstypes.CRAllocationStrategySpotPriceCapacityOptimized,
+		awstypes.CRAllocationStrategySpotCapacityOptimizedPrioritized:
 		return true
 	}
 	return false
@@ -944,8 +1012,8 @@ func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.
 		apiObject.InstanceRole = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrInstanceType].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.InstanceTypes = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap[names.AttrInstanceType].([]any); ok && len(v) > 0 {
+		apiObject.InstanceTypes = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap[names.AttrLaunchTemplate].([]any); ok && len(v) > 0 && v[0] != nil {
