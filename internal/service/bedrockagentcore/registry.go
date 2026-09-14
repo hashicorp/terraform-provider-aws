@@ -44,6 +44,7 @@ import (
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="registry_id")
 // @Testing(preCheck="testAccPreCheckRegistries")
+// @Testing(identityTest=false)
 func newRegistryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &registryResource{}
 
