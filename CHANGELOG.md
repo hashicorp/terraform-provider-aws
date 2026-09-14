@@ -11,12 +11,24 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_agentregistry_registry: Add `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint` and `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint_override` attributes ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
+* data-source/aws_agentregistry_registry: Add `encryption_configuration` attribute ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
+* resource/aws_agentregistry_registry: Add `auto_detection_configuration` and `encryption_configuration` configuration blocks ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
+* resource/aws_agentregistry_registry: Add `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint` and `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.private_endpoint_override` configuration blocks ([#49964](https://github.com/hashicorp/terraform-provider-aws/issues/49964))
 * resource/aws_apigatewayv2_integration: Add resource identity support ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add `callback_url` attribute ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentication_method`, `on_behalf_of_token_exchange_config`, `private_endpoint`, `private_endpoint_override`, and `private_key_jwt_config` arguments to `oauth2_provider_config.custom_oauth2_provider_config` configuration block ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_secret_config` and `client_secret_source` arguments to `oauth2_provider_config.custom_oauth2_provider_config`, `oauth2_provider_config.github_oauth2_provider_config`, `oauth2_provider_config.google_oauth2_provider_config`, `oauth2_provider_config.microsoft_oauth2_provider_config`, `oauth2_provider_config.salesforce_oauth2_provider_config`, and `oauth2_provider_config.slack_oauth2_provider_config` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.atlassian_oauth2_provider_config`, `oauth2_provider_config.included_oauth2_provider_config`, and `oauth2_provider_config.linkedin_oauth2_provider_config` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id`, `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo`, and `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo_version` arguments ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add `token_endpoint_auth_methods` attribute to all `oauth2_provider_config.*.oauth_discovery` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
 
 BUG FIXES:
 
 * resource/aws_mailmanager_traffic_policy: Make `policy_statement` optional ([#49509](https://github.com/hashicorp/terraform-provider-aws/issues/49509))
+* resource/aws_wafv2_rule_group: Fix `field_to_match.single_header.name` and `field_to_match.single_query_argument.name` rejecting values the AWS WAF API accepts, such as names containing `.` ([#49984](https://github.com/hashicorp/terraform-provider-aws/issues/49984))
+* resource/aws_wafv2_web_acl: Fix `field_to_match.single_header.name` and `field_to_match.single_query_argument.name` rejecting values the AWS WAF API accepts, such as names containing `.` ([#49984](https://github.com/hashicorp/terraform-provider-aws/issues/49984))
 
 ## 6.64.0 (September 9, 2026)
 
