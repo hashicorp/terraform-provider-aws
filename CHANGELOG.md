@@ -4,6 +4,8 @@ FEATURES:
 
 * **New List Resource:** `aws_apigatewayv2_integration` ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * **New List Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
+* **New List Resource:** `aws_iam_group` ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
+* **New List Resource:** `aws_iam_user_policy` ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
 * **New List Resource:** `aws_network_acl_rule` ([#49916](https://github.com/hashicorp/terraform-provider-aws/issues/49916))
 * **New Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
@@ -22,6 +24,8 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.atlassian_oauth2_provider_config`, `oauth2_provider_config.included_oauth2_provider_config`, and `oauth2_provider_config.linkedin_oauth2_provider_config` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id`, `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo`, and `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo_version` arguments ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `token_endpoint_auth_methods` attribute to all `oauth2_provider_config.*.oauth_discovery` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_iam_group: Add resource identity support ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
+* resource/aws_iam_user_policy: Add resource identity support ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
 
 BUG FIXES:
