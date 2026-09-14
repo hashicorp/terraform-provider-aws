@@ -50,7 +50,9 @@ func TestIsClusterCreateErrorRetryable(t *testing.T) {
 	}{
 		"KMS grant propagation": {
 			err: &types.InvalidParameterException{
-				Message: aws.String("Access denied to KMS key arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab due to explicit deny policy or revoked grant"),
+				Message: aws.String(
+					"Access denied to KMS key test-key due to explicit deny policy or revoked grant",
+				),
 			},
 			retryable: true,
 		},
