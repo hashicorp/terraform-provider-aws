@@ -118,12 +118,16 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
+	resourceGroupFlatten(group, d)
+
+	return diags
+}
+
+func resourceGroupFlatten(group *awstypes.Group, d *schema.ResourceData) {
 	d.Set(names.AttrARN, group.Arn)
 	d.Set(names.AttrName, group.GroupName)
 	d.Set(names.AttrPath, group.Path)
 	d.Set("unique_id", group.GroupId)
-
-	return diags
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

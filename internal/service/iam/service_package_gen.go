@@ -510,6 +510,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newGroupResourceAsListResource,
+			TypeName: "aws_iam_group",
+			Name:     "Group",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.WithMutableIdentity(),
+			),
+		},
+		{
 			Factory:  newGroupPolicyAttachmentResourceAsListResource,
 			TypeName: "aws_iam_group_policy_attachment",
 			Name:     "Group Policy Attachment",
