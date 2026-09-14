@@ -98,7 +98,6 @@ package {{ .ProviderPackage }}_test
 import (
 	{{ if .OverrideIdentifier }}
 	"context"
-	"unique"
 	{{- end }}
 	"testing"
 
