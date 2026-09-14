@@ -398,7 +398,7 @@ resource "aws_glue_catalog_table" "MyTable" {
 
 #### Optional
 
-* `account_id` - (String) AWS account where this resource is managed.
+* `account_id` - (String) AWS Account where this resource is managed.
 * `region` - (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Tables using the catalog ID (usually AWS account ID), database name, and table name. For example:
