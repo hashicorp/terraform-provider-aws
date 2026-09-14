@@ -26,16 +26,16 @@ import (
 )
 
 // @SDKResource("aws_iam_group", name="Group")
+// @IdentityAttribute("name")
+// @MutableIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Group")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{

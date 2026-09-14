@@ -243,6 +243,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_group",
 			Name:     "Group",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceGroupMembership,
