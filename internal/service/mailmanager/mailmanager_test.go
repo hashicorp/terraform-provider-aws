@@ -26,6 +26,7 @@ func TestAccMailManager_serial(t *testing.T) {
 			acctest.CtBasic:                testAccMailManagerIngressPoint_basic,
 			acctest.CtDisappears:           testAccMailManagerIngressPoint_disappears,
 			"update":                       testAccMailManagerIngressPoint_update,
+			"statusToUpdate":               testAccMailManagerIngressPoint_statusToUpdate,
 			"tlsPolicy":                    testAccMailManagerIngressPoint_tlsPolicy,
 			"type":                         testAccMailManagerIngressPoint_type,
 			"networkConfiguration_public":  testAccMailManagerIngressPoint_networkConfiguration_public,

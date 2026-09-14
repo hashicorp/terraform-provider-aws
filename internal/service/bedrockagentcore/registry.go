@@ -99,7 +99,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			"registry_id":  framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,

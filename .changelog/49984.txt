@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix `field_to_match.single_header.name` and `field_to_match.single_query_argument.name` rejecting values the AWS WAF API accepts, such as names containing `.`
+```
+
+```release-note:bug
+resource/aws_wafv2_rule_group: Fix `field_to_match.single_header.name` and `field_to_match.single_query_argument.name` rejecting values the AWS WAF API accepts, such as names containing `.`
+```
