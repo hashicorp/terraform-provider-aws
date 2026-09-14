@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_apigatewayv2_integration` ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * **New List Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
+* **New List Resource:** `aws_glue_catalog_table` ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
 * **New List Resource:** `aws_iam_group` ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
 * **New List Resource:** `aws_iam_user_policy` ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
@@ -24,6 +25,8 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.atlassian_oauth2_provider_config`, `oauth2_provider_config.included_oauth2_provider_config`, and `oauth2_provider_config.linkedin_oauth2_provider_config` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id`, `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo`, and `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo_version` arguments ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `token_endpoint_auth_methods` attribute to all `oauth2_provider_config.*.oauth_discovery` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_glue_catalog_table: Add resource identity support ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
+* resource/aws_glue_catalog_table: Change `storage_descriptor.additional_locations`, `storage_descriptor.bucket_columns`, `storage_descriptor.columns.parameters`, `storage_descriptor.parameters`, `storage_descriptor.ser_de_info`, `storage_descriptor.ser_de_info.parameters`, `view_definition`, `view_definition.definer`, `view_definition.is_protected`, `view_definition.representations.validation_connection`, `view_definition.representations.view_expanded_text`, `view_definition.representations.view_original_text`, `view_definition.sub_object_version_ids`, and `view_definition.sub_objects` to Optional and Computed ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
 * resource/aws_iam_group: Add resource identity support ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
 * resource/aws_iam_user_policy: Add resource identity support ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
