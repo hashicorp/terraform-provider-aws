@@ -155,12 +155,12 @@ func TestAttributeTypesInvalidType(t *testing.T) {
 	}{
 		"int": {
 			attributeTypes:  fwtypes.AttributeTypes[int],
-			expectedSummary: "Invalid type",
+			expectedSummary: "Invalid Type",
 			expectedDetail:  "int has unsupported type: int",
 		},
 		"pointer to int": {
 			attributeTypes:  fwtypes.AttributeTypes[*int],
-			expectedSummary: "Invalid type",
+			expectedSummary: "Invalid Type",
 			expectedDetail:  "*int has unsupported type: *int",
 		},
 	}
