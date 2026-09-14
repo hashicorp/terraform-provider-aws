@@ -143,6 +143,56 @@ func TestAttributeTypes(t *testing.T) {
 	}
 }
 
+// TestAttributeTypesInvalidType asserts the exact diagnostic returned for unsupported types.
+// Pointers to non-struct types (e.g. *int) must report the pointer type, not the element type.
+func TestAttributeTypesInvalidType(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		attributeTypes  func(context.Context) (map[string]attr.Type, diag.Diagnostics)
+		expectedSummary string
+		expectedDetail  string
+	}{
+		"int": {
+			attributeTypes:  fwtypes.AttributeTypes[int],
+			expectedSummary: "Invalid type",
+			expectedDetail:  "int has unsupported type: int",
+		},
+		"pointer to int": {
+			attributeTypes:  fwtypes.AttributeTypes[*int],
+			expectedSummary: "Invalid type",
+			expectedDetail:  "*int has unsupported type: *int",
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			got, diags := testCase.attributeTypes(ctx)
+
+			if got != nil {
+				t.Errorf("expected nil result, got: %v", got)
+			}
+			if !diags.HasError() {
+				t.Fatalf("expected error diagnostic, got none")
+			}
+			if l := len(diags); l != 1 {
+				t.Fatalf("expected 1 diagnostic, got %d: %v", l, diags)
+			}
+
+			d := diags[0]
+			if got, want := d.Summary(), testCase.expectedSummary; got != want {
+				t.Errorf("summary = %q, want %q", got, want)
+			}
+			if got, want := d.Detail(), testCase.expectedDetail; got != want {
+				t.Errorf("detail = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 // Concurrency test models. Kept unique to TestAttributeTypesConcurrent so their cache entries
 // are cold when the test runs, exercising the concurrent LoadOrStore path.
 type attributeTypesConcurrentModelA struct {

@@ -26,8 +26,16 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	var diags diag.Diagnostics
 
 	typ := reflect.TypeFor[T]()
-	if typ.Kind() == reflect.Pointer {
+	kind := typ.Kind()
+	if kind == reflect.Pointer {
 		typ = typ.Elem()
+		kind = typ.Kind()
+	}
+
+	if kind != reflect.Struct {
+		var t T
+		diags.Append(diag.NewErrorDiagnostic("Invalid type", fmt.Sprintf("%T has unsupported type: %s", t, reflect.TypeFor[T]())))
+		return nil, diags
 	}
 
 	if cached, ok := attributeTypesCache.Load(typ); ok {
@@ -39,11 +47,6 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 
 	if val.Kind() == reflect.Pointer && val.Type().Elem().Kind() == reflect.Struct {
 		val = reflect.New(val.Type().Elem()).Elem()
-	}
-
-	if typ.Kind() != reflect.Struct {
-		diags.Append(diag.NewErrorDiagnostic("Invalid type", fmt.Sprintf("%T has unsupported type: %s", t, typ)))
-		return nil, diags
 	}
 
 	attributeTypes := make(map[string]attr.Type)
