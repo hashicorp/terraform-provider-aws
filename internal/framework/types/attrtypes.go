@@ -33,8 +33,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	}
 
 	if kind != reflect.Struct {
-		var t T
-		diags.Append(diag.NewErrorDiagnostic("Invalid Type", fmt.Sprintf("%T has unsupported type: %s", t, reflect.TypeFor[T]())))
+		diags.Append(diag.NewErrorDiagnostic("Invalid Type", fmt.Sprintf("Type %q is unsupported.", reflect.TypeFor[T]())))
 		return nil, diags
 	}
 
@@ -42,7 +41,6 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 		return cached, diags
 	}
 
-	var t T
 	attrValueType := reflect.TypeFor[attr.Value]()
 
 	attributeTypes := make(map[string]attr.Type)
@@ -52,7 +50,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 			continue // Skip explicitly excluded fields.
 		}
 		if tag == "" {
-			diags.Append(diag.NewErrorDiagnostic("Invalid Type", fmt.Sprintf(`%T needs a struct tag for "tfsdk" on %s`, t, field.Name)))
+			diags.Append(diag.NewErrorDiagnostic("Invalid Type", fmt.Sprintf(`Type %q needs a "tfsdk" struct tag for field %q.`, reflect.TypeFor[T](), field.Name)))
 			return nil, diags
 		}
 
