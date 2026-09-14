@@ -336,11 +336,13 @@ func resourceCatalogTable() *schema.Resource {
 							"additional_locations": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"bucket_columns": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
 									ValidateFunc: validation.StringLenBetween(1, 255),
@@ -365,6 +367,7 @@ func resourceCatalogTable() *schema.Resource {
 										names.AttrParameters: {
 											Type:     schema.TypeMap,
 											Optional: true,
+											Computed: true,
 											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 										names.AttrType: {
@@ -398,11 +401,13 @@ func resourceCatalogTable() *schema.Resource {
 							names.AttrParameters: {
 								Type:     schema.TypeMap,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"ser_de_info": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -414,6 +419,7 @@ func resourceCatalogTable() *schema.Resource {
 										names.AttrParameters: {
 											Type:     schema.TypeMap,
 											Optional: true,
+											Computed: true,
 											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 										"serialization_library": {
@@ -554,6 +560,7 @@ func resourceCatalogTable() *schema.Resource {
 				"view_definition": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -615,11 +622,13 @@ func resourceCatalogTable() *schema.Resource {
 							"sub_object_version_ids": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeInt},
 							},
 							"sub_objects": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"view_version_id": {
