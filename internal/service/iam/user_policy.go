@@ -28,16 +28,18 @@ import (
 )
 
 // @SDKResource("aws_iam_user_policy", name="User Policy")
+// @IdentityAttribute("user")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{user}:{name}")
+// @ImportIDHandler("userPolicyImportID")
+// @Testing(existsType="string")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyPut,
 		ReadWithoutTimeout:   resourceUserPolicyRead,
 		UpdateWithoutTimeout: resourceUserPolicyPut,
 		DeleteWithoutTimeout: resourceUserPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -225,4 +227,24 @@ func userPolicyParseResourceID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+type userPolicyImportID struct{}
+
+func (userPolicyImportID) Create(d *schema.ResourceData) string {
+	return userPolicyCreateResourceID(d.Get("user").(string), d.Get(names.AttrName).(string))
+}
+
+func (userPolicyImportID) Parse(id string) (string, map[string]any, error) {
+	userName, policyName, err := userPolicyParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"user":         userName,
+		names.AttrName: policyName,
+	}
+
+	return id, result, nil
 }

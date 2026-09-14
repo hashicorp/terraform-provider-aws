@@ -460,6 +460,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_user_policy",
 			Name:     "User Policy",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("user", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      userPolicyImportID{},
+			},
 		},
 		{
 			Factory:  resourceUserPolicyAttachment,
