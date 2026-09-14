@@ -77,7 +77,7 @@ func testAccTransitGatewayTransitGatewayPolicyTableEntry_Identity_basic(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    testAccTransitGatewayPolicyTableEntryImportState(resourceName),
+				ImportStateIdFunc:                    testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -93,7 +93,7 @@ func testAccTransitGatewayTransitGatewayPolicyTableEntry_Identity_basic(t *testi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: testAccTransitGatewayPolicyTableEntryImportState(resourceName),
+				ImportStateIdFunc: testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_policy_table_id"), knownvalue.NotNull()),
@@ -167,7 +167,7 @@ func testAccTransitGatewayTransitGatewayPolicyTableEntry_Identity_regionOverride
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTransitGatewayPolicyTableEntryImportState),
+				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTransitGatewayPolicyTableEntryImportStateIDFunc),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -184,7 +184,7 @@ func testAccTransitGatewayTransitGatewayPolicyTableEntry_Identity_regionOverride
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTransitGatewayPolicyTableEntryImportState),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTransitGatewayPolicyTableEntryImportStateIDFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_policy_table_id"), knownvalue.NotNull()),

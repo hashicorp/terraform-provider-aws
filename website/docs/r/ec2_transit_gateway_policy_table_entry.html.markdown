@@ -76,17 +76,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `state` - State of the transit gateway policy table entry.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
+This resource exports no additional attributes.
 
 ## Import
 

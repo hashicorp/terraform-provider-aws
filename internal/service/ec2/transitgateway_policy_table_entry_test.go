@@ -5,13 +5,11 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -33,8 +31,6 @@ func testAccTransitGatewayPolicyTableEntry_basic(t *testing.T, semaphore tfsync.
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPolicyTableEntry
 	resourceName := "aws_ec2_transit_gateway_policy_table_entry.test"
-	policyTableResourceName := "aws_ec2_transit_gateway_policy_table.test"
-	routeTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -48,11 +44,12 @@ func testAccTransitGatewayPolicyTableEntry_basic(t *testing.T, semaphore tfsync.
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPolicyTableEntryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableEntryExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_policy_table_id", policyTableResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "target_route_table_id", routeTableResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -60,16 +57,22 @@ func testAccTransitGatewayPolicyTableEntry_basic(t *testing.T, semaphore tfsync.
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule_number"), knownvalue.StringExact("100")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_route_table_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_policy_table_id"), knownvalue.NotNull()),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "transit_gateway_policy_table_id",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_policy_table_id", "policy_rule_number"),
+				ImportStateIdFunc:                    testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -92,24 +95,13 @@ func testAccTransitGatewayPolicyTableEntry_disappears(t *testing.T, semaphore tf
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPolicyTableEntryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableEntryExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfec2.ResourceTransitGatewayPolicyTableEntry, resourceName, func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-						v, ok := is.Attributes["transit_gateway_policy_table_id"]
-						if !ok {
-							return errors.New(`Identifying attribute "transit_gateway_policy_table_id" not defined`)
-						}
-						state.SetAttribute(ctx, path.Root("transit_gateway_policy_table_id"), v)
-
-						v, ok = is.Attributes["policy_rule_number"]
-						if !ok {
-							return errors.New(`Identifying attribute "policy_rule_number" not defined`)
-						}
-						state.SetAttribute(ctx, path.Root("policy_rule_number"), v)
-
-						return nil
-					}),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayPolicyTableEntry, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -167,10 +159,12 @@ func testAccTransitGatewayPolicyTableEntry_fullRule(t *testing.T, semaphore tfsy
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "transit_gateway_policy_table_id",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_policy_table_id", "policy_rule_number"),
+				ImportStateIdFunc:                    testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName),
 				// The EC2 API doesn't return policy rule metadata via
 				// GetTransitGatewayPolicyTableEntries, so it can't be recovered on import.
-				ImportStateVerifyIgnore: []string{"policy_rule.0.metadata.0.key", "policy_rule.0.metadata.0.value"},
+				ImportStateVerifyIgnore: []string{
+					"policy_rule.0.metadata",
+				},
 			},
 		},
 	})
@@ -255,13 +249,13 @@ func testAccTransitGatewayPolicyTableEntry_protocolAny(t *testing.T, semaphore t
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "transit_gateway_policy_table_id",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_policy_table_id", "policy_rule_number"),
+				ImportStateIdFunc:                    testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName),
 			},
 		},
 	})
 }
 
-func testAccTransitGatewayPolicyTableEntryImportState(resourceName string) resource.ImportStateIdFunc {
+func testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_policy_table_id", "policy_rule_number")
 }
 
@@ -336,19 +330,6 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
   }
 }
 `, rName)
-}
-
-func testAccTransitGatewayPolicyTableEntryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPolicyTableEntryConfig_base(rName),
-		`
-resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
-  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
-  policy_rule_number              = 100
-  target_route_table_id           = aws_ec2_transit_gateway_route_table.test.id
-}
-`,
-	)
 }
 
 func testAccTransitGatewayPolicyTableEntryConfig_fullRule(rName string) string {

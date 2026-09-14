@@ -7,12 +7,11 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -39,21 +38,15 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayPolicyTableEntry")
-// @Testing(importStateIdFunc="testAccTransitGatewayPolicyTableEntryImportState")
-// @Testing(importStateIdAttributes="transit_gateway_policy_table_id;policy_rule_number", importStateIdAttributesSep="intflex.ResourceIdSeparator")
+// @Testing(importStateIdFunc="testAccTransitGatewayPolicyTableEntryImportStateIDFunc")
+// @Testing(importStateIdAttribute="transit_gateway_policy_table_id")
 func newTransitGatewayPolicyTableEntryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transitGatewayPolicyTableEntryResource{}
-
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
-
 	return r, nil
 }
 
 type transitGatewayPolicyTableEntryResource struct {
 	framework.ResourceWithModel[transitGatewayPolicyTableEntryResourceModel]
-	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -65,9 +58,6 @@ func (r *transitGatewayPolicyTableEntryResource) Schema(ctx context.Context, req
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			names.AttrState: schema.StringAttribute{
-				Computed: true,
 			},
 			"target_route_table_id": schema.StringAttribute{
 				Required: true,
@@ -125,11 +115,6 @@ func (r *transitGatewayPolicyTableEntryResource) Schema(ctx context.Context, req
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -143,27 +128,29 @@ func (r *transitGatewayPolicyTableEntryResource) Create(ctx context.Context, req
 
 	conn := r.Meta().EC2Client(ctx)
 
+	policyTableID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayPolicyTableID)
 	var input ec2.CreateTransitGatewayPolicyTableEntryInput
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	planPolicyRule := data.PolicyRule
+	var priorMetaData *awstypes.TransitGatewayPolicyRuleMetaData
+	if v := input.PolicyRule; v != nil && v.MetaData != nil {
+		priorMetaData = new(awstypes.TransitGatewayPolicyRuleMetaData{
+			MetaDataKey:   v.MetaData.MetaDataKey,
+			MetaDataValue: v.MetaData.MetaDataValue,
+		})
+	}
 
 	output, err := conn.CreateTransitGatewayPolicyTableEntry(ctx, &input)
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.TransitGatewayPolicyTableID.ValueString())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, policyTableID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.TransitGatewayPolicyTableEntry, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, fixupTransitGatewayPolicyRule(ctx, &data.PolicyRule, planPolicyRule))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output.TransitGatewayPolicyTableEntry, priorMetaData, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -194,14 +181,17 @@ func (r *transitGatewayPolicyTableEntryResource) Read(ctx context.Context, reque
 		return
 	}
 
-	statePolicyRule := data.PolicyRule
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, entry, &data))
-	if response.Diagnostics.HasError() {
-		return
+	var priorMetaData *awstypes.TransitGatewayPolicyRuleMetaData
+	if !data.PolicyRule.IsNull() {
+		var rule awstypes.TransitGatewayPolicyRule
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data.PolicyRule, &rule))
+		if response.Diagnostics.HasError() {
+			return
+		}
+		priorMetaData = rule.MetaData
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fixupTransitGatewayPolicyRule(ctx, &data.PolicyRule, statePolicyRule))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, entry, priorMetaData, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -218,27 +208,29 @@ func (r *transitGatewayPolicyTableEntryResource) Update(ctx context.Context, req
 
 	conn := r.Meta().EC2Client(ctx)
 
+	policyTableID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayPolicyTableID)
 	var input ec2.ModifyTransitGatewayPolicyTableEntryInput
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	planPolicyRule := data.PolicyRule
+	var priorMetaData *awstypes.TransitGatewayPolicyRuleMetaData
+	if v := input.PolicyRule; v != nil && v.MetaData != nil {
+		priorMetaData = new(awstypes.TransitGatewayPolicyRuleMetaData{
+			MetaDataKey:   v.MetaData.MetaDataKey,
+			MetaDataValue: v.MetaData.MetaDataValue,
+		})
+	}
 
 	output, err := conn.ModifyTransitGatewayPolicyTableEntry(ctx, &input)
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.TransitGatewayPolicyTableID.ValueString())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, policyTableID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.TransitGatewayPolicyTableEntry, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, fixupTransitGatewayPolicyRule(ctx, &data.PolicyRule, planPolicyRule))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output.TransitGatewayPolicyTableEntry, priorMetaData, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -272,19 +264,63 @@ func (r *transitGatewayPolicyTableEntryResource) Delete(ctx context.Context, req
 	}
 }
 
+func (r *transitGatewayPolicyTableEntryResource) flatten(ctx context.Context, entry *awstypes.TransitGatewayPolicyTableEntry, priorMetaData *awstypes.TransitGatewayPolicyRuleMetaData, data *transitGatewayPolicyTableEntryResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Corrects two AWS API quirks:
+	//   - AWS always returns a PolicyRule, even when no policy_rule block was configured,
+	//     reporting every unset match criterion as "*" (all) rather than omitting it. Such
+	//     an all-wildcard rule carries no configuration, so it's restored to the prior
+	//     value; returning it verbatim would make Terraform report "block count changed
+	//     from 0 to 1" after apply. A rule that wildcards only some criteria (e.g.
+	//     protocol = "*" alongside real CIDRs) is a real rule and is kept.
+	//   - The API never returns the rule's metadata, so it's restored from the prior value
+	//     (unavailable, e.g. on import, it's simply left null).
+	if v := entry.PolicyRule; v != nil {
+		// transitGatewayPolicyRuleWildcard is how AWS reports a policy rule match criterion
+		// that matches everything, including one that was never configured.
+		const transitGatewayPolicyRuleWildcard = "*"
+		if aws.ToString(v.DestinationCidrBlock) == transitGatewayPolicyRuleWildcard &&
+			aws.ToString(v.DestinationPortRange) == transitGatewayPolicyRuleWildcard &&
+			aws.ToString(v.Protocol) == transitGatewayPolicyRuleWildcard &&
+			aws.ToString(v.SourceCidrBlock) == transitGatewayPolicyRuleWildcard &&
+			aws.ToString(v.SourcePortRange) == transitGatewayPolicyRuleWildcard {
+			entry.PolicyRule = nil
+		} else {
+			entry.PolicyRule.MetaData = priorMetaData
+		}
+	}
+
+	diags.Append(fwflex.Flatten(ctx, entry, data)...)
+
+	return diags
+}
+
+const transitGatewayPolicyTableEntryImportIDSeparator = intflex.ResourceIdSeparator
+
+func parseTransitGatewayPolicyTableEntryImportID(id string) (string, string, error) {
+	parts := strings.Split(id, transitGatewayPolicyTableEntryImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected transit-gateway-policy-table-id%[2]spolicy-rule-number", id, transitGatewayPolicyTableEntryImportIDSeparator)
+}
+
 var _ inttypes.ImportIDParser = transitGatewayPolicyTableEntryImportID{}
 
 type transitGatewayPolicyTableEntryImportID struct{}
 
 func (transitGatewayPolicyTableEntryImportID) Parse(id string) (string, map[string]any, error) {
-	policyTableID, ruleNumber, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <transit-gateway-policy-table-id>"+intflex.ResourceIdSeparator+"<policy-rule-number>", id)
+	policyTableID, ruleNumber, err := parseTransitGatewayPolicyTableEntryImportID(id)
+	if err != nil {
+		return "", nil, err
 	}
 
 	result := map[string]any{
-		"transit_gateway_policy_table_id": policyTableID,
 		"policy_rule_number":              ruleNumber,
+		"transit_gateway_policy_table_id": policyTableID,
 	}
 
 	return id, result, nil
@@ -294,9 +330,7 @@ type transitGatewayPolicyTableEntryResourceModel struct {
 	framework.WithRegionModel
 	PolicyRule                  fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel] `tfsdk:"policy_rule"`
 	PolicyRuleNumber            types.String                                                   `tfsdk:"policy_rule_number"`
-	State                       types.String                                                   `tfsdk:"state"`
 	TargetRouteTableID          types.String                                                   `tfsdk:"target_route_table_id"`
-	Timeouts                    timeouts.Value                                                 `tfsdk:"timeouts"`
 	TransitGatewayPolicyTableID types.String                                                   `tfsdk:"transit_gateway_policy_table_id"`
 }
 
@@ -312,64 +346,4 @@ type transitGatewayPolicyRuleModel struct {
 type transitGatewayPolicyRuleMetaDataModel struct {
 	MetaDataKey   types.String `tfsdk:"key"`
 	MetaDataValue types.String `tfsdk:"value"`
-}
-
-// fixupTransitGatewayPolicyRule corrects two AWS API quirks after flattening a
-// CreateTransitGatewayPolicyTableEntry/GetTransitGatewayPolicyTableEntries response
-// into policyRule, using priorPolicyRule (the plan on create/update, prior state on
-// read) as the reference:
-//   - AWS always returns a PolicyRule, even when no policy_rule block was configured,
-//     reporting every unset match criterion as "*" (all) rather than omitting it. Such
-//     an all-wildcard rule carries no configuration, so it's restored to the prior
-//     value; returning it verbatim would make Terraform report "block count changed
-//     from 0 to 1" after apply. A rule that wildcards only some criteria (e.g.
-//     protocol = "*" alongside real CIDRs) is a real rule and is kept.
-//   - The API never returns the rule's metadata, so it's restored from the prior value
-//     (unavailable, e.g. on import, it's simply left null).
-func fixupTransitGatewayPolicyRule(ctx context.Context, policyRule *fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel], priorPolicyRule fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	rule, d := policyRule.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() || rule == nil {
-		return diags
-	}
-
-	if isUnsetTransitGatewayPolicyRuleCriterion(rule.DestinationCIDRBlock) &&
-		isUnsetTransitGatewayPolicyRuleCriterion(rule.Protocol) &&
-		isUnsetTransitGatewayPolicyRuleCriterion(rule.SourceCIDRBlock) &&
-		isUnsetTransitGatewayPolicyRuleCriterion(rule.DestinationPortRange) &&
-		isUnsetTransitGatewayPolicyRuleCriterion(rule.SourcePortRange) {
-		*policyRule = priorPolicyRule
-		return diags
-	}
-
-	priorRule, d := priorPolicyRule.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-	if priorRule != nil {
-		rule.Metadata = priorRule.Metadata
-	}
-
-	newPolicyRule, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, rule)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-	*policyRule = newPolicyRule
-
-	return diags
-}
-
-// transitGatewayPolicyRuleWildcard is how AWS reports a policy rule match criterion
-// that matches everything, including one that was never configured.
-const transitGatewayPolicyRuleWildcard = "*"
-
-// isUnsetTransitGatewayPolicyRuleCriterion reports whether a policy rule match
-// criterion carries no configuration. AWS reports an unset criterion as "*" (all)
-// rather than omitting it.
-func isUnsetTransitGatewayPolicyRuleCriterion(v types.String) bool {
-	return v.ValueString() == "" || v.ValueString() == transitGatewayPolicyRuleWildcard
 }
