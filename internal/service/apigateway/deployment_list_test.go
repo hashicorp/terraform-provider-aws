@@ -115,6 +115,7 @@ func TestAccAPIGatewayDeployment_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_api_gateway_deployment.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_api_gateway_deployment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_api_gateway_deployment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreatedDate), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("rest_api_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(rName+"-0")),
