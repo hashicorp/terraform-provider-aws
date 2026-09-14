@@ -41,6 +41,47 @@ const (
 	clusterVersionUpgradeForceUpdated = clusterVersion131
 )
 
+func TestIsClusterCreateErrorRetryable(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		err       error
+		retryable bool
+	}{
+		"KMS grant propagation": {
+			err: &types.InvalidParameterException{
+				Message: aws.String("Access denied to KMS key arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab due to explicit deny policy or revoked grant"),
+			},
+			retryable: true,
+		},
+		"unrelated invalid parameter": {
+			err: &types.InvalidParameterException{
+				Message: aws.String("unsupported Kubernetes version"),
+			},
+			retryable: false,
+		},
+		"unrelated error type with matching message": {
+			err:       errors.New("due to explicit deny policy or revoked grant"),
+			retryable: false,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			retryable, err := tfeks.IsClusterCreateErrorRetryable(testCase.err)
+
+			if got, want := retryable, testCase.retryable; got != want {
+				t.Errorf("retryable = %v, want %v", got, want)
+			}
+			if !errors.Is(err, testCase.err) {
+				t.Errorf("error = %v, want %v", err, testCase.err)
+			}
+		})
+	}
+}
+
 func TestAccEKSCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
