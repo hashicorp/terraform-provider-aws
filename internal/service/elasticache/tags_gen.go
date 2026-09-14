@@ -113,13 +113,13 @@ func createTags(ctx context.Context, conn *elasticache.Client, identifier string
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags), optFns...)
+	return updateTagsBase(ctx, conn, identifier, nil, keyValueTags(ctx, tags), optFns...)
 }
 
-// updateTags updates elasticache service tags.
+// updateTagsBase updates elasticache service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *elasticache.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*elasticache.Options)) error {
+func updateTagsBase(ctx context.Context, conn *elasticache.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*elasticache.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -166,10 +166,4 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 	}
 
 	return nil
-}
-
-// UpdateTags updates elasticache service tags.
-// It is called from outside this package.
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier, oldTags, newTags)
 }
