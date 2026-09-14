@@ -5,3 +5,7 @@ aws_glue_catalog_table
 ```release-note:enhancement
 resource/aws_glue_catalog_table: Add resource identity support
 ```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Change `storage_descriptor.additional_locations`, `storage_descriptor.bucket_columns`, `storage_descriptor.columns.parameters`, `storage_descriptor.parameters`, `storage_descriptor.ser_de_info`, `storage_descriptor.ser_de_info.parameters`, `view_definition`, `view_definition.definer`, `view_definition.is_protected`, `view_definition.representations.validation_connection`, `view_definition.representations.view_expanded_text`, `view_definition.representations.view_original_text`, `view_definition.sub_object_version_ids`, and `view_definition.sub_objects` to Optional and Computed
+```
