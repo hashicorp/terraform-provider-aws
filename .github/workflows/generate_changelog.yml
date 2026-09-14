@@ -26,7 +26,10 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - run: cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+          cache: false
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: github.com/hashicorp/go-changelog/cmd/changelog-build
       - run: ./.ci/scripts/generate-changelog.sh
       - run: |
           if [[ `git status --porcelain` ]]; then
