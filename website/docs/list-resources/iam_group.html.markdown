@@ -22,7 +22,7 @@ list "aws_iam_group" "example" {
 
 ### Filter by Path Prefix
 
-This example will return IAM Groups with a `path` equal to or beginning with `/example/`.
+This example returns IAM Groups with a `path` equal to or beginning with `/example/`.
 
 ```terraform
 list "aws_iam_group" "example" {
