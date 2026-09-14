@@ -23,22 +23,28 @@ var attributeTypesCache tfsync.Map[reflect.Type, map[string]attr.Type]
 // T must be a struct and reflection is used to find exported fields of T with the `tfsdk` tag.
 // The returned map is shared and must not be mutated by callers.
 func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diagnostics) {
+	typ := reflect.TypeFor[T]()
+	if typ.Kind() == reflect.Pointer {
+		typ = typ.Elem()
+	}
+
+	// Fast path: return the memoized result without touching the builder.
+	if cached, ok := attributeTypesCache.Load(typ); ok {
+		return cached, nil
+	}
+
+	return attributeTypesSlow[T](ctx, typ)
+}
+
+// attributeTypesSlow builds (and memoizes) the attribute type map on a cache miss.
+// It is deliberately kept out of AttributeTypes so the cache-hit fast path stays small
+// enough for the compiler to inline into callers.
+func attributeTypesSlow[T any](ctx context.Context, typ reflect.Type) (map[string]attr.Type, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	typ := reflect.TypeFor[T]()
-	kind := typ.Kind()
-	if kind == reflect.Pointer {
-		typ = typ.Elem()
-		kind = typ.Kind()
-	}
-
-	if kind != reflect.Struct {
+	if typ.Kind() != reflect.Struct {
 		diags.Append(diag.NewErrorDiagnostic("Invalid Type", fmt.Sprintf("Type %q is unsupported.", reflect.TypeFor[T]())))
 		return nil, diags
-	}
-
-	if cached, ok := attributeTypesCache.Load(typ); ok {
-		return cached, diags
 	}
 
 	attrValueType := reflect.TypeFor[attr.Value]()
@@ -60,8 +66,6 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 		}
 	}
 
-	// Store the successful result. LoadOrStore returns the canonical map if another
-	// goroutine populated the same key concurrently.
 	cached, _ := attributeTypesCache.LoadOrStore(typ, attributeTypes)
 	return cached, diags
 }
