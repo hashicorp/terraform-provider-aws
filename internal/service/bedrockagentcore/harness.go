@@ -146,7 +146,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"truncation": framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessTruncationConfigurationModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
 			names.AttrEnvironment: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentProviderModel](ctx),
 				Validators: []validator.List{
@@ -201,7 +201,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"filesystem_configuration": filesystemConfigurationSchema(ctx),
+									"filesystem_configuration": filesystemConfigurationBlock(ctx),
 									names.AttrNetworkConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 										Validators: []validator.List{
