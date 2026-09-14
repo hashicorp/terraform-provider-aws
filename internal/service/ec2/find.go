@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -5413,7 +5414,7 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 }
 
 func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) ([]awstypes.TransitGatewayMeteringPolicy, error) {
-	output, err := tfslices.CollectWithError(listTransitGatewayMeteringPolicies(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listTransitGatewayMeteringPolicyPages(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -5424,26 +5425,28 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 	return output, nil
 }
 
-func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
-	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
+func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
+	return tfiter.ConcatValuesWithError(listTransitGatewayMeteringPolicyPages(ctx, conn, input, optFns...))
+}
+
+func listTransitGatewayMeteringPolicyPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.TransitGatewayMeteringPolicy, error] {
+	return func(yield func([]awstypes.TransitGatewayMeteringPolicy, error) bool) {
 		var stopped bool
 		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
-			for _, v := range page.TransitGatewayMeteringPolicies {
-				if !yield(v, nil) {
-					stopped = true
-					return false
-				}
+			if !yield(page.TransitGatewayMeteringPolicies, nil) {
+				stopped = true
+				return false
 			}
 
 			return !lastPage
-		})
+		}, optFns...)
 
 		if !stopped && err != nil {
-			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
+			yield(nil, fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
 			return
 		}
 	}
@@ -5535,17 +5538,7 @@ func findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx context.Context, conn
 }
 
 func findTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput) ([]awstypes.TransitGatewayPolicyTableEntry, error) {
-	var output []awstypes.TransitGatewayPolicyTableEntry
-
-	err := getTransitGatewayPolicyTableEntriesPages(ctx, conn, input, func(page *ec2.GetTransitGatewayPolicyTableEntriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		output = append(output, page.TransitGatewayPolicyTableEntries...)
-
-		return !lastPage
-	})
+	output, err := tfslices.CollectAndConcatWithError(listTransitGatewayPolicyTableEntryPages(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -5556,11 +5549,31 @@ func findTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client,
 	return output, nil
 }
 
+func listTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.TransitGatewayPolicyTableEntry, error] {
+	return tfiter.ConcatValuesWithError(listTransitGatewayPolicyTableEntryPages(ctx, conn, input, optFns...))
+}
+
+func listTransitGatewayPolicyTableEntryPages(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.TransitGatewayPolicyTableEntry, error] {
+	return func(yield func([]awstypes.TransitGatewayPolicyTableEntry, error) bool) {
+		pages := ec2.NewGetTransitGatewayPolicyTableEntriesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing EC2 Transit Gateway Policy Table Entries: %w", err))
+				return
+			}
+
+			if !yield(page.TransitGatewayPolicyTableEntries, nil) {
+				return
+			}
+		}
+	}
+}
+
 func findTransitGatewayPolicyTableEntryByTwoPartKey(ctx context.Context, conn *ec2.Client, policyTableID, ruleNumber string) (*awstypes.TransitGatewayPolicyTableEntry, error) {
 	input := ec2.GetTransitGatewayPolicyTableEntriesInput{
 		TransitGatewayPolicyTableId: aws.String(policyTableID),
 	}
-
 	transitGatewayPolicyTableEntries, err := findTransitGatewayPolicyTableEntries(ctx, conn, &input)
 
 	if err != nil {
