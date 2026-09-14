@@ -4,6 +4,8 @@
 package glue_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -11,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,6 +21,9 @@ import (
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -165,7 +171,7 @@ func TestAccGlueCatalogTable_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckCatalogTableDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -202,4 +208,31 @@ func TestAccGlueCatalogTable_List_regionOverride(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckCatalogTableDestroyWithRegion(ctx context.Context, t *testing.T) acctest.TestCheckWithRegionFunc {
+	return func(s *terraform.State, region string) error {
+		ctx = conns.NewResourceContext(ctx, "Glue", "Catalog Table", "aws_glue_catalog_table", region)
+		for _, rs := range s.RootModule().Resources {
+			conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
+
+			if rs.Type != "aws_glue_catalog_table" {
+				continue
+			}
+
+			_, err := tfglue.FindTableByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrName])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Glue Catalog Table %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
