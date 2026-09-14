@@ -17,6 +17,10 @@ SWEEP_TIMEOUT                ?= 360m
 TEST                         ?= ./...
 TEST_COUNT                   ?= 1
 
+GOTOOLCHAIN_PIN     := $(or $(addprefix go,$(shell sed -n 's/^go //p' go.mod)),auto)
+GOTOOLCHAIN         ?= $(GOTOOLCHAIN_PIN)
+export GOTOOLCHAIN
+
 # NOTE:
 # 1. Keep targets in alphabetical order
 # 2. For any changes, also update:
@@ -909,8 +913,9 @@ smoke-identity: prereq-go ## Run Resource Identity smoke tests
 	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
 
 SMOKE_LOGGING_LEVELS := DEBUG WARN
+SMOKE_LOGGING_TARGETS := $(addprefix smoke-logging-,$(SMOKE_LOGGING_LEVELS))
 
-smoke-logging: $(addprefix smoke-logging-,$(SMOKE_LOGGING_LEVELS)) ## Run logging smoke tests at all log levels
+smoke-logging: $(SMOKE_LOGGING_TARGETS) ## Run logging smoke tests at all log levels
 
 smoke-logging-%: prereq-go ## Run logging smoke tests at a specific log level (e.g. make smoke-logging-DEBUG)
 	GO_BIN=$(GO_VER) TF_LOG=$* sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-logging.sh'"
@@ -1385,7 +1390,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke-core-services \
 	smoke-identity \
 	smoke-logging \
-	smoke-logging-% \
+	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \
