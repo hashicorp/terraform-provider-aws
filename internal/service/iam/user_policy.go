@@ -136,14 +136,22 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceUserPolicyFlatten(d, userName, policyName, policyDocument); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening IAM User Policy (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceUserPolicyFlatten(d *schema.ResourceData, userName, policyName, policyDocument string) error {
 	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	d.Set(names.AttrName, policyName)
@@ -151,7 +159,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("user", userName)
 
-	return diags
+	return nil
 }
 
 func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

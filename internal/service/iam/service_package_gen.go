@@ -588,6 +588,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newUserPolicyResourceAsListResource,
+			TypeName: "aws_iam_user_policy",
+			Name:     "User Policy",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("user", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
+		{
 			Factory:  newUserPolicyAttachmentResourceAsListResource,
 			TypeName: "aws_iam_user_policy_attachment",
 			Name:     "User Policy Attachment",
