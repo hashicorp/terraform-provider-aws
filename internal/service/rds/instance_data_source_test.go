@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -262,4 +263,74 @@ data "aws_db_instance" "test" {
   depends_on = [aws_db_instance.test]
 }
 `, rName))
+}
+
+func TestAccRDSInstanceDataSource_Oracle_multiTenant(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_db_instance.test"
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_Oracle_multiTenant(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_tenant", resourceName, "multi_tenant"),
+					resource.TestCheckResourceAttr(dataSourceName, "multi_tenant", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceDataSourceConfig_Oracle_multiTenant(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = %[1]q
+  license_model = "bring-your-own-license"
+  storage_type  = "gp3"
+
+  preferred_instance_classes = [%[2]s]
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[3]q
+  family = "oracle-se2-cdb-19"
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[3]q
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = "19"
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model        = "bring-your-own-license"
+  multi_tenant         = true
+  allocated_storage    = 200
+  storage_type         = "gp3"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  parameter_group_name = aws_db_parameter_group.test.name
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
+  username             = "tfacctest"
+  skip_final_snapshot  = true
+}
+
+data "aws_db_instance" "test" {
+  db_instance_identifier = aws_db_instance.test.identifier
+}
+`, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName))
 }
