@@ -13,6 +13,10 @@ func TestAccAccount_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"Account": {
+			"dataSourceBasic":     testAccAccountDataSource_basic,
+			"dataSourceAccountID": testAccAccountDataSource_accountID,
+		},
 		"AlternateContact": {
 			acctest.CtBasic:      testAccAlternateContact_basic,
 			acctest.CtDisappears: testAccAlternateContact_disappears,
