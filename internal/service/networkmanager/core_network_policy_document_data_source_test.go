@@ -1351,6 +1351,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_optionalSupportFla
 	})
 }
 
+// lintignore:AWSAT003
 const testAccCoreNetworkPolicyDocumentDataSourceConfig_optionalSupportFlags = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
