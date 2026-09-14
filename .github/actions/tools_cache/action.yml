@@ -3,11 +3,11 @@
 
 name: Tools Cache
 description: >-
-  Restore the .ci/tools cache lane (installed binaries + build cache) read-only.
-  The cache is written by the tools_cache writer job in provider.yml on
-  refs/heads/main. On a cache miss, the requested tools are installed as a
-  fallback. Callers must run actions/setup-go (with cache: false) beforehand.
-  See .github/workflows/README.md for the overall caching strategy.
+  Set up Go for the .ci/tools module and restore the tools cache lane (installed
+  binaries + build cache) read-only. The cache is written by the tools_cache
+  writer job in provider.yml on refs/heads/main. On a cache miss, the requested
+  tools are installed as a fallback. See .github/workflows/README.md for the
+  overall caching strategy.
 
 inputs:
   tools:
@@ -20,6 +20,12 @@ inputs:
 runs:
   using: composite
   steps:
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: .ci/tools/go.mod
+        # Disabled: this action manages the tools cache lane itself.
+        cache: false
+
     - name: Capture Go cache locations
       shell: bash
       run: |
