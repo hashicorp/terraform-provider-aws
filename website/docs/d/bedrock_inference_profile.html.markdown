@@ -33,7 +33,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-- `inference_profile_arn` - The Amazon Resource Name (ARN) of the inference profile.
+- `inference_profile_arn` - The ARN of the inference profile.
 - `inference_profile_name` - The unique identifier of the inference profile.
 - `models` - A list of information about each model in the inference profile. See [`models`](#models).
 - `status` - The status of the inference profile. `ACTIVE` means that the inference profile is available to use.
@@ -44,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `models`
 
-- `model_arn` - The Amazon Resource Name (ARN) of the model.
+- `model_arn` - The ARN of the model.

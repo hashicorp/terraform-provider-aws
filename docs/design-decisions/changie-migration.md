@@ -76,7 +76,7 @@ Five entry types are configured:
 
 - **Breaking Change**: Backward-incompatible changes
 - **Note**: Important notices (deprecations, removals)
-- **Feature**: New resources, data sources, ephemeral resources, functions, or list resources
+- **Feature**: New resources, data sources, ephemeral resources, functions, list resources, or actions
 - **Enhancement**: New attributes or arguments
 - **Bug**: Incorrect behavior
 

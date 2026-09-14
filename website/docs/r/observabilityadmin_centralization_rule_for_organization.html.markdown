@@ -192,6 +192,7 @@ The following arguments are optional:
 * `backup_configuration` - (Optional) Configuration block for backup settings. See [`backup_configuration`](#backup_configuration) below.
 * `log_group_name_configuration` - (Optional) Configuration block for a naming pattern for destination log groups created during centralization. See [`log_group_name_configuration`](#log_group_name_configuration) below.
 * `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration`](#logs_encryption_configuration) below.
+* `tag_propagation_configuration` - (Optional) Configuration block for propagating source resource tags to centralized destination log groups. See [`tag_propagation_configuration`](#tag_propagation_configuration) below.
 
 ##### backup_configuration
 
@@ -206,7 +207,13 @@ The following arguments are optional:
 
 * `encryption_strategy` - (Required) Encryption strategy for logs. Valid values: `AWS_OWNED`, `CUSTOMER_MANAGED`.
 * `encryption_conflict_resolution_strategy` - (Optional) Strategy for resolving encryption conflicts. Valid values: `ALLOW`, `SKIP`.
+* `encryption_scope` - (Optional) Determines which newly created destination log groups are encrypted with `kms_key_arn` when `encryption_strategy` is `CUSTOMER_MANAGED`. Valid values: `ENCRYPTED_SOURCE_ONLY` (default), `NEW_DESTINATION_LOG_GROUPS`. Not valid when `encryption_strategy` is `AWS_OWNED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for encryption when `encryption_strategy` is `CUSTOMER_MANAGED`.
+
+##### tag_propagation_configuration
+
+* `destination_role_arn` - (Required) ARN of the IAM role that the service assumes to propagate source resource tags to centralized destination log groups.
+* `tag_conflict_resolution_strategy` - (Optional) Strategy for resolving tag conflicts when propagating tags to destination log groups. Valid values: `IN_SYNC`, `ADD_ONLY`, `UPDATE_SYNC`.
 
 #### destination_metrics_configuration
 
@@ -238,6 +245,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `rule_arn` - ARN of the centralization rule.
+* `tag_propagation_status` - Health status of tag propagation for the rule (for example, `Healthy` or `Unhealthy`). Independent of the overall rule health.
+* `tag_propagation_failure_reason` - Reason tag propagation is unhealthy, when applicable (for example, `RoleNotAssumable` or `RoleLacksPermissions`).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

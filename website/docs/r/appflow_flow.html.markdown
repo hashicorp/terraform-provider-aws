@@ -135,7 +135,7 @@ This resource supports the following arguments:
 
 * `description` - (Optional) Description of the flow.
 * `destination_flow_config` - (Required) Configuration that controls how Amazon AppFlow places data in the destination connector. See the `destination_flow_config` Block for details.
-* `kms_arn` - (Optional) ARN of the Key Management Service (KMS) key you provide for encryption. Required if you do not want to use the Amazon AppFlow-managed KMS key. Uses the Amazon AppFlow-managed KMS key when not provided.
+* `kms_arn` - (Optional) ARN of the KMS key you provide for encryption. Required if you do not want to use the Amazon AppFlow-managed KMS key. Uses the Amazon AppFlow-managed KMS key when not provided.
 * `metadata_catalog_config` - (Optional) Configuration that determines how Amazon AppFlow catalogs the data that the flow transfers. See the `metadata_catalog_config` Block for details.
 * `name` - (Required) Name of the flow.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -252,7 +252,7 @@ This resource supports the following arguments:
 ### `destination_flow_config.destination_connector_properties.s3.s3_output_format_config.prefix_config` Block
 
 * `prefix_format` - (Optional) Level of granularity included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
-* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
+* `prefix_hierarchy` - (Optional) Whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
 * `prefix_type` - (Optional) Format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
 
 ### `destination_flow_config.destination_connector_properties.salesforce` Block
@@ -320,7 +320,7 @@ This resource supports the following arguments:
 ### `destination_flow_config.destination_connector_properties.upsolver.s3_output_format_config.prefix_config` Block
 
 * `prefix_format` - (Optional) Level of granularity included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
-* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
+* `prefix_hierarchy` - (Optional) Whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
 * `prefix_type` - (Required) Format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
 
 ### `destination_flow_config.destination_connector_properties.zendesk` Block

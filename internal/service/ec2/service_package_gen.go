@@ -1065,6 +1065,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ami_launch_permission",
 			Name:     "AMI Launch Permission",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("image_id", true),
+				inttypes.StringIdentityAttributeWithMappedName("launch_permission_account_id", false, names.AttrAccountID),
+				inttypes.StringIdentityAttribute("group", false),
+				inttypes.StringIdentityAttribute("organization_arn", false),
+				inttypes.StringIdentityAttribute("organizational_unit_arn", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      amiLaunchPermissionImportID{},
+			},
 		},
 		{
 			Factory:  resourceCustomerGateway,
@@ -1609,7 +1620,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "key_pair_id",
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("key_name", true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceLaunchTemplate,
@@ -2130,6 +2145,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newAMILaunchPermissionResourceAsListResource,
+			TypeName: "aws_ami_launch_permission",
+			Name:     "AMI Launch Permission",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("image_id", true),
+				inttypes.StringIdentityAttributeWithMappedName("launch_permission_account_id", false, names.AttrAccountID),
+				inttypes.StringIdentityAttribute("group", false),
+				inttypes.StringIdentityAttribute("organization_arn", false),
+				inttypes.StringIdentityAttribute("organizational_unit_arn", false),
+			}),
+		},
+		{
 			Factory:  newEBSVolumeResourceAsListResource,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
@@ -2180,6 +2208,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newKeyPairResourceAsListResource,
+			TypeName: "aws_key_pair",
+			Name:     "Key Pair",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "key_pair_id",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("key_name", true)),
+		},
+		{
 			Factory:  newLaunchTemplateResourceAsListResource,
 			TypeName: "aws_launch_template",
 			Name:     "Launch Template",
@@ -2198,6 +2236,18 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newNetworkACLRuleResourceAsListResource,
+			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("network_acl_id", true),
+				inttypes.BoolIdentityAttribute("egress", true),
+				inttypes.IntIdentityAttribute("rule_number", true),
+				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
+			}),
 		},
 		{
 			Factory:  newNetworkInterfaceResourceAsListResource,

@@ -34,7 +34,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - RDS Global Cluster Amazon Resource Name (ARN)
+* `arn` - RDS Global Cluster ARN
 * `database_name` - Name of the automatically created database on cluster creation.
 * `deletion_protection` -  If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`.
 * `endpoint` - The endpoint for the Global Cluster.
@@ -43,7 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 * `engine_version` -   Version of the database engine for this Global Cluster.
 * `storage_encrypted` - Whether the DB cluster is encrypted.
 * `members` -  Set of objects containing Global Cluster members.
-    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
+    * `db_cluster_arn` - ARN of member DB Cluster
     * `is_writer` - Whether the member is the primary DB Cluster
 * `resource_id` - AWS Region-unique, immutable identifier for the global database cluster.
 * `tags` - A map of tags to assigned to the Global Cluster.

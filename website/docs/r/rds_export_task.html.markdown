@@ -137,7 +137,7 @@ The following arguments are required:
 * `iam_role_arn` - (Required) ARN of the IAM role to use for writing to the Amazon S3 bucket.
 * `kms_key_id` - (Required) ID of the Amazon Web Services KMS key to use to encrypt the snapshot.
 * `s3_bucket_name` - (Required) Name of the Amazon S3 bucket to export the snapshot to.
-* `source_arn` - (Required) Amazon Resource Name (ARN) of the snapshot to export.
+* `source_arn` - (Required) ARN of the snapshot to export.
 
 The following arguments are optional:
 

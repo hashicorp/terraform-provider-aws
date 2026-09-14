@@ -89,7 +89,7 @@ resource "aws_codebuild_source_credential" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild source credential.
+- `arn` (String) ARN of the CodeBuild source credential.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:

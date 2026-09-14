@@ -514,6 +514,17 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 		},
 		{
+			Factory:  newInstanceProfileResourceAsListResource,
+			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrName,
+				ResourceType:        "InstanceProfile",
+			}),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",

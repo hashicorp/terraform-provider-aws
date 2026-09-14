@@ -136,8 +136,8 @@ This resource supports the following arguments:
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag) for details.
 * `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition) for details.
-* `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan.
-* `not_resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to exclude from a backup plan.
+* `resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to assign to a backup plan.
+* `not_resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to exclude from a backup plan.
 
 ### selection_tag
 
@@ -188,21 +188,49 @@ The `string_not_like` configuration block supports the following attributes:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Backup Selection identifier
+* `id` - Backup Selection identifier.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup selection using the role plan_id and id separated by `|`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_backup_selection.example
-  id = "plan-id|selection-id"
+  identity = {
+    plan_id = "abcd1234"
+    id      = "efgh5678"
+  }
+}
+
+resource "aws_backup_selection" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Backup selection using the role plan_id and id separated by `|`. For example:
+### Identity Schema
+
+#### Required
+
+* `plan_id` (Required) Backup plan ID associated with the selection of resources.
+* `id` (String) Backup selection ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup selection using the `plan_id` and `id` separated by `|`. For example:
+
+```terraform
+import {
+  to = aws_backup_selection.example
+  id = "abcd1234|efgh5678"
+}
+```
+
+Using `terraform import`, import Backup selection using the `plan_id` and `id` separated by `|`. For example:
 
 ```console
-% terraform import aws_backup_selection.example plan-id|selection-id
+% terraform import aws_backup_selection.example abcd1234|efgh5678
 ```

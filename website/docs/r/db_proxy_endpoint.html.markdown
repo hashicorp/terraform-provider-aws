@@ -38,7 +38,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the proxy and proxy endpoint separated by `/`, `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`.
-* `arn` - The Amazon Resource Name (ARN) for the proxy endpoint.
+* `arn` - ARN for the proxy endpoint.
 * `endpoint` - The endpoint that you can use to connect to the proxy. You include the endpoint value in the connection string for a database client application.
 * `is_default` - Indicates whether this endpoint is the default endpoint for the associated DB proxy.
 * `vpc_id` - The VPC ID of the DB proxy endpoint.

@@ -152,7 +152,7 @@ resource "aws_rds_integration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the RDS integration.
+- `arn` (String) ARN of the RDS integration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) Integration using the `arn`. For example:
 

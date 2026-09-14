@@ -7,13 +7,16 @@ package bedrockagentcore
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -26,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -44,15 +48,27 @@ var (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="credential_provider_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetOauth2CredentialProviderOutput")
+// @Testing(importIgnore="oauth2_provider_config.0.github_oauth2_provider_config.0.client_id;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret")
+// @Testing(importStateIdAttribute="name")
+// @Testing(preCheck="testAccPreCheckOAuth2CredentialProviders")
+// @Testing(preIdentityVersion="v6.63.0")
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &oauth2CredentialProviderResource{}
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
 type oauth2CredentialProviderResource struct {
 	framework.ResourceWithModel[oauth2CredentialProviderResourceModel]
+	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attribute {
@@ -156,8 +172,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9\-_]+$`), ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`), "Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters."),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -233,6 +248,11 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -280,14 +300,15 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 
 	_, err := conn.CreateOauth2CredentialProvider(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
-	// Refresh from GET as oauth_discovery is not returned in CreateOauth2CredentialProviderOutput.
-	provider, err := findOAuth2CredentialProviderByName(ctx, conn, name)
+	provider, err := waitOAuth2CredentialProviderCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrName), name)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -326,7 +347,7 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -391,14 +412,13 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 
 		_, err := conn.UpdateOauth2CredentialProvider(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 			return
 		}
 
-		// Refresh from GET as oauth_discovery is not returned in CreateOauth2CredentialProviderOutput.
-		got, err := findOAuth2CredentialProviderByName(ctx, conn, name)
+		got, err := waitOAuth2CredentialProviderUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 			return
 		}
 
@@ -432,20 +452,20 @@ func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request r
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
-}
 
-func (r *oauth2CredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+	if _, err := waitOAuth2CredentialProviderDeleted(ctx, conn, name, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
+		return
+	}
 }
 
 func findOAuth2CredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {
 	input := bedrockagentcorecontrol.GetOauth2CredentialProviderInput{
 		Name: aws.String(name),
 	}
-
 	return findOAuth2CredentialProvider(ctx, conn, &input)
 }
 
@@ -469,6 +489,74 @@ func findOAuth2CredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 	return out, nil
 }
 
+func statusOAuth2CredentialProvider(conn *bedrockagentcorecontrol.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findOAuth2CredentialProviderByName(ctx, conn, name)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.Status), nil
+	}
+}
+
+func waitOAuth2CredentialProviderCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string, timeout time.Duration) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.StatusCreating),
+		Target:                    enum.Slice(awstypes.StatusReady),
+		Refresh:                   statusOAuth2CredentialProvider(conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitOAuth2CredentialProviderUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string, timeout time.Duration) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.StatusUpdating),
+		Target:                    enum.Slice(awstypes.StatusReady),
+		Refresh:                   statusOAuth2CredentialProvider(conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitOAuth2CredentialProviderDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string, timeout time.Duration) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StatusDeleting, awstypes.StatusReady),
+		Target:  []string{},
+		Refresh: statusOAuth2CredentialProvider(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
 type oauth2CredentialProviderResourceModel struct {
 	framework.WithRegionModel
 	ClientSecretARN          fwtypes.ListNestedObjectValueOf[secretModel]               `tfsdk:"client_secret_arn"`
@@ -478,6 +566,7 @@ type oauth2CredentialProviderResourceModel struct {
 	OAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigModel] `tfsdk:"oauth2_provider_config"`
 	Tags                     tftags.Map                                                 `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                                 `tfsdk:"tags_all"`
+	Timeouts                 timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
 type oauth2ProviderConfigModel struct {

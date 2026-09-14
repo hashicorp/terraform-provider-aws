@@ -72,7 +72,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `api_key_version` - Version of the API keys used for the account.
 * `features` - List of features supported for the account.
-* `throttle_settings` - Account-Level throttle settings, including the burst limit (absolute maximum number of times API Gateway allows the API to be called per second) and the rate limit (number of times API Gateway allows the API to be called per second on average).
+* `throttle_settings` - Account-Level throttle settings. See [`throttle_settings` Block](#throttle_settings-block) below.
+
+### `throttle_settings` Block
+
+The `throttle_settings` block exports the following attributes:
+
+* `burst_limit` - Absolute maximum number of times API Gateway allows the API to be called per second.
+* `rate_limit` - Number of times API Gateway allows the API to be called per second on average.
 
 ## Import
 

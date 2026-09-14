@@ -70,7 +70,7 @@ resource "aws_apprunner_auto_scaling_configuration_version" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the App Runner auto scaling configuration version.
+- `arn` (String) ARN of the App Runner auto scaling configuration version.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner AutoScaling Configuration Versions using the `arn`. For example:
 

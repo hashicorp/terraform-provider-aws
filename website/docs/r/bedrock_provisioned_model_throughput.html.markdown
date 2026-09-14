@@ -66,7 +66,7 @@ resource "aws_bedrock_provisioned_model_throughput" "example" {
 
 #### Required
 
-- `provisioned_model_arn` (String) Amazon Resource Name (ARN) of the Bedrock provisioned model throughput.
+- `provisioned_model_arn` (String) ARN of the Bedrock provisioned model throughput.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Provisioned Throughput using the `provisioned_model_arn`. For example:
 

@@ -35,14 +35,6 @@ type connectorV2ListResource struct {
 func (l *connectorV2ListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SecurityHubClient(ctx)
 
-	var query listConnectorV2Model
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input securityhub.ListConnectorsV2Input
 		for item, err := range listConnectorV2s(ctx, conn, &input) {
@@ -80,10 +72,6 @@ func (l *connectorV2ListResource) List(ctx context.Context, request list.ListReq
 			}
 		}
 	}
-}
-
-type listConnectorV2Model struct {
-	framework.WithRegionModel
 }
 
 func listConnectorV2s(ctx context.Context, conn *securityhub.Client, input *securityhub.ListConnectorsV2Input) iter.Seq2[awstypes.ConnectorSummary, error] {

@@ -108,7 +108,7 @@ The `ebs_volumes` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `account_id` - The AWS account ID of the GuardDuty detector
-* `arn` - Amazon Resource Name (ARN) of the GuardDuty detector
+* `arn` - ARN of the GuardDuty detector
 * `id` - The ID of the GuardDuty detector
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

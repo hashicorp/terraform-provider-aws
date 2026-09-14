@@ -44,7 +44,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Required) The configuration for the third-party custom source.
     * `crawler_configuration` - (Required) The configuration for the Glue Crawler for the third-party custom source.
-        * `role_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
+        * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
     * `provider_identity` - (Required) The identity of the log provider for the third-party custom source.
         * `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
         * `principal` - (Required) The AWS identity principal.

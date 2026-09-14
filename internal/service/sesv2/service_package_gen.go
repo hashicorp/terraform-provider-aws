@@ -33,6 +33,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newMultiRegionEndpointResource,
+			TypeName: "aws_sesv2_multi_region_endpoint",
+			Name:     "Multi Region Endpoint",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newTenantResource,
 			TypeName: "aws_sesv2_tenant",
 			Name:     "Tenant",

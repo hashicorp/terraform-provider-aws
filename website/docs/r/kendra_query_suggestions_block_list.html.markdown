@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_kendra_query_suggestions_block_list
 
-Use the `aws_kendra_index_block_list` resource to manage an AWS Kendra block list used for query suggestions for an index.
+Use the `aws_kendra_query_suggestions_block_list` resource to manage an AWS Kendra block list used for query suggestions for an index.
 
 ## Example Usage
 

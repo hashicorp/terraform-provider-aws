@@ -182,7 +182,8 @@ var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 200),
 				},
-				attrTextTransformation: textTransformationSchema(),
+				attrPreParseTextTransformation: preParseTextTransformationSchema(),
+				attrTextTransformation:         textTransformationSchema(),
 			},
 		},
 	}
@@ -291,8 +292,9 @@ var regexMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 						validation.StringIsValidRegExp,
 					),
 				},
-				"field_to_match":       fieldToMatchSchema(),
-				attrTextTransformation: textTransformationSchema(),
+				"field_to_match":               fieldToMatchSchema(),
+				attrPreParseTextTransformation: preParseTextTransformationSchema(),
+				attrTextTransformation:         textTransformationSchema(),
 			},
 		},
 	}
@@ -310,8 +312,9 @@ var regexPatternSetReferenceStatementSchema = sync.OnceValue(func() *schema.Sche
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"field_to_match":       fieldToMatchSchema(),
-				attrTextTransformation: textTransformationSchema(),
+				"field_to_match":               fieldToMatchSchema(),
+				attrPreParseTextTransformation: preParseTextTransformationSchema(),
+				attrTextTransformation:         textTransformationSchema(),
 			},
 		},
 	}
@@ -335,7 +338,8 @@ var sizeConstraintSchema = sync.OnceValue(func() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 				},
-				attrTextTransformation: textTransformationSchema(),
+				attrPreParseTextTransformation: preParseTextTransformationSchema(),
+				attrTextTransformation:         textTransformationSchema(),
 			},
 		},
 	}
@@ -354,7 +358,8 @@ var sqliMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
 				},
-				attrTextTransformation: textTransformationSchema(),
+				attrPreParseTextTransformation: preParseTextTransformationSchema(),
+				attrTextTransformation:         textTransformationSchema(),
 			},
 		},
 	}
@@ -367,8 +372,9 @@ var xssMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":       fieldToMatchSchema(),
-				attrTextTransformation: textTransformationSchema(),
+				"field_to_match":               fieldToMatchSchema(),
+				attrPreParseTextTransformation: preParseTextTransformationSchema(),
+				attrTextTransformation:         textTransformationSchema(),
 			},
 		},
 	}
@@ -534,6 +540,27 @@ var rateLimitJAFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
+				},
+			},
+		},
+	}
+})
+
+var preParseTextTransformationSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		MaxItems: 10,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PreParseTextTransformationType](),
 				},
 			},
 		},

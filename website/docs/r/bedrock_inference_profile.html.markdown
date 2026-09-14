@@ -49,13 +49,13 @@ The following arguments are optional:
 
 ### `model_source`
 
-- `copy_from` - The Amazon Resource Name (ARN) of the model.
+- `copy_from` - The ARN of the model.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `arn` - The Amazon Resource Name (ARN) of the inference profile.
+- `arn` - The ARN of the inference profile.
 - `id` - The unique identifier of the inference profile.
 - `name` - The unique identifier of the inference profile.
 - `models` - A list of information about each model in the inference profile. See [`models`](#models).
@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `models`
 
-- `model_arn` - The Amazon Resource Name (ARN) of the model.
+- `model_arn` - The ARN of the model.
 
 ## Timeouts
 

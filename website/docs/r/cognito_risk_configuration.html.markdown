@@ -45,7 +45,7 @@ This resource supports the following arguments:
 * `no_action_email` - (Optional) The email template used when a detected risk event is allowed. See notify email type below.
 * `from` - (Optional) The email address that is sending the email. The address must be either individually verified with Amazon Simple Email Service, or from a domain that has been verified with Amazon SES.
 * `reply_to` - (Optional) The destination to which the receiver of an email should reply to.
-* `source_arn` - (Required) The Amazon Resource Name (ARN) of the identity that is associated with the sending authorization policy. This identity permits Amazon Cognito to send for the email address specified in the From parameter.
+* `source_arn` - (Required) ARN of the identity that is associated with the sending authorization policy. This identity permits Amazon Cognito to send for the email address specified in the From parameter.
 
 ##### notify email type
 

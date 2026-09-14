@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -166,6 +167,40 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 								},
 							},
 						},
+						"compaction_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[compactionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergCompactionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"strategy": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.CompactionStrategy](),
+													Optional:   true,
+													Computed:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
+												},
+												"min_input_files": schema.Int32Attribute{
+													Optional: true,
+												},
+												"delete_file_threshold": schema.Int32Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -242,8 +277,7 @@ func (r *catalogTableOptimizerResource) Create(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &plan)...)
-
+	plan.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -284,8 +318,7 @@ func (r *catalogTableOptimizerResource) Read(ctx context.Context, request resour
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &data)...)
-
+	data.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -344,8 +377,7 @@ func (r *catalogTableOptimizerResource) Update(ctx context.Context, request reso
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &plan)...)
-
+		plan.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -415,6 +447,28 @@ func (r *catalogTableOptimizerResource) ImportState(ctx context.Context, request
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[3])...)
 }
 
+func (c *catalogTableOptimizerResourceModel) flatten(ctx context.Context, data *awstypes.TableOptimizer, diags *diag.Diagnostics) {
+	configuration, d := c.Configuration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	// CompactionConfiguration causes persistent drift since the AWS API returns defaults.
+	// suppress it being flattened if it is not in plan or state
+	if configuration != nil && !configuration.CompactionConfiguration.IsNull() {
+		diags.Append(fwflex.Flatten(ctx, data, c)...)
+		if diags.HasError() {
+			return
+		}
+	} else {
+		diags.Append(fwflex.Flatten(ctx, data, c, fwflex.WithIgnoredFieldNamesAppend("CompactionConfiguration"))...)
+		if diags.HasError() {
+			return
+		}
+	}
+}
+
 type catalogTableOptimizerResourceModel struct {
 	framework.WithRegionModel
 	CatalogID     types.String                                       `tfsdk:"catalog_id"`
@@ -425,6 +479,7 @@ type catalogTableOptimizerResourceModel struct {
 }
 
 type configurationData struct {
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
 	Enabled                         types.Bool                                                           `tfsdk:"enabled"`
 	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
 	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
@@ -450,6 +505,16 @@ type icebergOrphanFileDeletionConfigurationData struct {
 	Location                        types.String `tfsdk:"location"`
 	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
 	RunRateInHours                  types.Int32  `tfsdk:"run_rate_in_hours"`
+}
+
+type compactionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergCompactionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergCompactionConfigurationData struct {
+	DeleteFileThreshold types.Int32                                     `tfsdk:"delete_file_threshold"`
+	MinInputFiles       types.Int32                                     `tfsdk:"min_input_files"`
+	Strategy            fwtypes.StringEnum[awstypes.CompactionStrategy] `tfsdk:"strategy"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {

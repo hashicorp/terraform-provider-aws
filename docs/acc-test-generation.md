@@ -158,6 +158,10 @@ To override the common name, set the annotation `@Testing(tlsKeyDomain=<referenc
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 
+Some acceptance tests require an SSH public key.
+This can be included by setting the annotation `@Testing(sshKeyPair=true)`.
+The Terraform variable name will be `public_key`.
+
 Some acceptance tests require a TLS ECDSA public key PEM.
 This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.
 The Terraform variable name will be `rTlsEcdsaPublicKeyPem`.

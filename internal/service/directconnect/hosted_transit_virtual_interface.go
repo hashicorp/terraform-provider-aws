@@ -97,10 +97,24 @@ func resourceHostedTransitVirtualInterface() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
 				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
+				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
 				},
 				names.AttrOwnerAccountID: {
 					Type:         schema.TypeString,
@@ -150,6 +164,10 @@ func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.
 
 	if v, ok := d.GetOk("customer_address"); ok {
 		input.NewTransitVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewTransitVirtualInterfaceAllocation.RateLimit = aws.String(v.(string))
 	}
 
 	output, err := conn.AllocateTransitVirtualInterface(ctx, input)
@@ -203,6 +221,9 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

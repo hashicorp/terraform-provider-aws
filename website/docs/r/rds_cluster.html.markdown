@@ -164,6 +164,36 @@ resource "aws_rds_cluster" "test" {
 }
 ```
 
+### Disabling Master Password Rotation
+
+~> **Note:** The `aws_secretsmanager_secret_rotation` resource must depend on a cluster instance, otherwise AWS re-enables rotation once the instance finishes provisioning. Use `depends_on` as shown below when the cluster and its instance are created together.
+
+When `manage_master_user_password` is enabled, Secrets Manager rotates the master user password automatically (every 7 days by default). To disable that rotation while keeping the managed secret, manage the secret's rotation with [`aws_secretsmanager_secret_rotation`](/docs/providers/aws/r/secretsmanager_secret_rotation.html) and set `rotation_enabled = false`.
+
+```terraform
+resource "aws_rds_cluster" "test" {
+  cluster_identifier          = "example"
+  database_name               = "test"
+  manage_master_user_password = true
+  master_username             = "test"
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier = aws_rds_cluster.test.id
+  identifier         = "example-1"
+  instance_class     = "db.r6g.large"
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id        = aws_rds_cluster.test.master_user_secret[0].secret_arn
+  rotation_enabled = false
+
+  depends_on = [aws_rds_cluster_instance.test]
+}
+```
+
 ### Global Cluster Restored From Snapshot
 
 ```terraform
@@ -269,6 +299,7 @@ This resource supports the following arguments:
 * `storage_type` - (Optional, Required for Multi-AZ DB cluster) (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, `storage_type` modifications can be done in-place. For Multi-AZ DB Clusters, the `iops` argument must also be set. Valid values are: `""`, `aurora-iopt1` (Aurora DB Clusters); `io1`, `io2`, `gp3` (Multi-AZ DB Clusters). Default: `""` (Aurora DB Clusters); `io1` (Multi-AZ DB Clusters).
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
+* `warning_event_categories` - (Optional) Set of RDS event categories (for example `failure`, `maintenance`) to check for after create and update operations. If set, Terraform describes RDS events reported for this cluster during the operation and surfaces a warning diagnostic, with the RDS event message, for each one found in these categories. Has no effect if unset; see [DescribeEvents](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html) and the [`aws_rds_events`](/docs/providers/aws/d/rds_events.html) data source for the source of these events. Requires the `rds:DescribeEvents` IAM permission when set.
 
 For more detailed documentation about each argument, refer to
 the AWS official documentation:
@@ -387,7 +418,7 @@ resource "aws_rds_cluster" "example" {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `id` - RDS Cluster Identifier
 * `cluster_identifier` - RDS Cluster Identifier
 * `cluster_resource_id` - RDS Cluster Resource ID
@@ -421,7 +452,7 @@ load-balanced across replicas
 The `master_user_secret` block supports the following attributes:
 
 * `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - Amazon Resource Name (ARN) of the secret.
+* `secret_arn` - ARN of the secret.
 * `secret_status` - Status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts

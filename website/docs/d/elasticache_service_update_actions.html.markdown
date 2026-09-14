@@ -43,10 +43,10 @@ This data source exports the following attributes in addition to the arguments a
     * `cache_cluster_id` - ID of Cache Cluster this update action applies to.
     * `engine` - Engine this update applies to.
     * `estimated_update_time` - Estimated duration of update.
-    * `replication_group_id` - ID of Replication Group this update action applies to.
-    * `service_update_name` - Name of the update.
     * `recommended_apply_by_date` - Date the update should be applied by.
     * `release_date` - Date the update was released.
+    * `replication_group_id` - ID of Replication Group this update action applies to.
+    * `service_update_name` - Name of the update.
     * `service_update_severity` - Severity of the update. One of `critical`, `important`, `medium`, or `low`.
     * `service_update_status` - Availability of the update. One of `available`, `cancelled`, or `expired`.
     * `service_update_type` - Type of the update.

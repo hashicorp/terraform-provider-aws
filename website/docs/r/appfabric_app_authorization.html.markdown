@@ -37,7 +37,7 @@ resource "aws_appfabric_app_authorization" "example" {
 The following arguments are required:
 
 * `app` - (Required) Name of the application. For valid values, see the [CreateAppAuthorization API reference](https://docs.aws.amazon.com/appfabric/latest/api/API_CreateAppAuthorization.html).
-* `app_bundle_arn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
+* `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
 * `auth_type` - (Required) Authorization type for the app authorization. Valid values are `oauth2` and `apiKey`.
 * `credential` - (Required) Credentials for the application, such as an API key or OAuth2 client ID and secret. Specify credentials that match the authorization type for your request. For example, if the authorization type for your request is OAuth2 (`oauth2`), then you should provide only the OAuth2 credentials. See [`credential` Block](#credential-block) for details.
 * `tenant` - (Required) Information about an application tenant, such as the application display name and identifier. See [`tenant` Block](#tenant-block) for details.

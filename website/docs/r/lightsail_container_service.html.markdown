@@ -135,7 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Same as `name`.
 * `power_id` - Power ID of the container service.
 * `principal_arn` - Principal ARN of the container service. The principal ARN can be used to create a trust relationship between your standard AWS account and your Lightsail container service. This allows you to give your service permission to access resources in your standard AWS account.
-* `private_domain_name` - Private domain name of the container service. The private domain name is accessible only by other resources within the default virtual private cloud (VPC) of your Lightsail account.
+* `private_domain_name` - Private domain name of the container service. The private domain name is accessible only by other resources within the default VPC of your Lightsail account.
 * `private_registry_access` - Configuration for the container service to access private container image repositories. Contains the following attributes:
     * `ecr_image_puller_role` - Configuration to access private container image repositories. Contains the following attributes:
         * `principal_arn` - Principal ARN of the container service. The principal ARN can be used to create a trust relationship between your standard AWS account and your Lightsail container service.

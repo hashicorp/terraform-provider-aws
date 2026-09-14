@@ -39,3 +39,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the service network.
 * `number_of_associated_services` - Number of services associated with this service network.
 * `number_of_associated_vpcs` - Number of VPCs associated with this service network.
+* `tags` - Map of tags assigned to the resource.

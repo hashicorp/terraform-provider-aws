@@ -275,7 +275,7 @@ The following arguments are required:
 * `artifacts` - (Required) Configuration block. Detailed below.
 * `environment` - (Required) Configuration block. Detailed below.
 * `name` - (Required) Project's name.
-* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that
+* `service_role` - (Required) ARN of the AWS Identity and Access Management (IAM) role that
   enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source` - (Required) Configuration block. Detailed below.
 
@@ -296,7 +296,7 @@ The following arguments are optional:
 * `description` - (Optional) Short description of the project.
 * `file_system_locations` - (Optional) A set of file system locations to mount inside the build. File system locations
   are documented below.
-* `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting
+* `encryption_key` - (Optional) KMS customer master key (CMK) to be used for encrypting
   the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
 * `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ`
@@ -620,7 +620,7 @@ resource "aws_codebuild_project" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild project.
+- `arn` (String) ARN of the CodeBuild project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:

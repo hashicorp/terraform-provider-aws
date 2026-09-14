@@ -36,14 +36,6 @@ func (l *algorithmListResource) List(ctx context.Context, request list.ListReque
 	awsClient := l.Meta()
 	conn := awsClient.SageMakerClient(ctx)
 
-	var query listAlgorithmModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing SageMaker Algorithm resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -92,10 +84,6 @@ func (l *algorithmListResource) List(ctx context.Context, request list.ListReque
 			}
 		}
 	}
-}
-
-type listAlgorithmModel struct {
-	framework.WithRegionModel
 }
 
 func listAlgorithms(ctx context.Context, conn *sagemaker.Client, input *sagemaker.ListAlgorithmsInput) iter.Seq2[awstypes.AlgorithmSummary, error] {
