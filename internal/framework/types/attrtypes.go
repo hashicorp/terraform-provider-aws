@@ -43,11 +43,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	}
 
 	var t T
-	val := reflect.ValueOf(t)
-
-	if val.Kind() == reflect.Pointer && val.Type().Elem().Kind() == reflect.Struct {
-		val = reflect.New(val.Type().Elem()).Elem()
-	}
+	attrValueType := reflect.TypeFor[attr.Value]()
 
 	attributeTypes := make(map[string]attr.Type)
 	for field := range tfreflect.ExportedStructFields(typ) {
@@ -60,7 +56,8 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 			return nil, diags
 		}
 
-		if v, ok := val.FieldByIndex(field.Index).Interface().(attr.Value); ok {
+		if field.Type.Implements(attrValueType) {
+			v := reflect.New(field.Type).Elem().Interface().(attr.Value)
 			attributeTypes[tag] = v.Type(ctx)
 		}
 	}
