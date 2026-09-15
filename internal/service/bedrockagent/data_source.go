@@ -286,6 +286,65 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 											},
 										},
 									},
+									"sync_schedule": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[syncScheduleModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"daily": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[dailyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("daily"),
+															path.MatchRelative().AtParent().AtName("weekly"),
+															path.MatchRelative().AtParent().AtName("monthly"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{},
+												},
+												"weekly": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[weeklyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"day_of_week": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
+																Required:   true,
+															},
+														},
+													},
+												},
+												"monthly": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[monthlyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"day_number": schema.Int32Attribute{
+																Optional: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(1, 28),
+																	int32validator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("day_number"),
+																		path.MatchRelative().AtParent().AtName("last_day_of_month"),
+																	),
+																},
+															},
+															"last_day_of_month": schema.BoolAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"media_extraction_configuration": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[mediaExtractionConfigurationModel](ctx),
 										Validators: []validator.List{
@@ -1271,6 +1330,7 @@ type managedKnowledgeBaseConnectorConfigurationModel struct {
 	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters"`
 	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
 	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
+	SyncSchedule                    fwtypes.ListNestedObjectValueOf[syncScheduleModel]                    `tfsdk:"sync_schedule"`
 }
 
 var (
@@ -1317,6 +1377,18 @@ func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Cont
 			return nil, diags
 		}
 		r.MediaExtractionConfiguration = &v
+	}
+
+	if !m.SyncSchedule.IsNull() {
+		data, d := m.SyncSchedule.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		diags.Append(fwflex.Expand(ctx, data, &r.SyncSchedule)...)
+		if diags.HasError() {
+			return nil, diags
+		}
 	}
 
 	return &r, diags
@@ -1368,9 +1440,118 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 		} else {
 			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfNull[mediaExtractionConfigurationModel](ctx)
 		}
+
+		if v := t.SyncSchedule; v != nil {
+			var data syncScheduleModel
+			diags.Append(fwflex.Flatten(ctx, v, &data)...)
+			if diags.HasError() {
+				return diags
+			}
+			m.SyncSchedule = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		} else {
+			m.SyncSchedule = fwtypes.NewListNestedObjectValueOfNull[syncScheduleModel](ctx)
+		}
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %T", v))
 	}
+	return diags
+}
+
+type syncScheduleModel struct {
+	Daily   fwtypes.ListNestedObjectValueOf[dailyScheduleModel]   `tfsdk:"daily"`
+	Weekly  fwtypes.ListNestedObjectValueOf[weeklyScheduleModel]  `tfsdk:"weekly"`
+	Monthly fwtypes.ListNestedObjectValueOf[monthlyScheduleModel] `tfsdk:"monthly"`
+}
+
+type dailyScheduleModel struct{}
+
+type weeklyScheduleModel struct {
+	DayOfWeek fwtypes.StringEnum[awstypes.DayOfWeek] `tfsdk:"day_of_week"`
+}
+
+type monthlyScheduleModel struct {
+	DayNumber      types.Int32 `tfsdk:"day_number"`
+	LastDayOfMonth types.Bool  `tfsdk:"last_day_of_month"`
+}
+
+var (
+	_ fwflex.Expander  = syncScheduleModel{}
+	_ fwflex.Flattener = &syncScheduleModel{}
+)
+
+func (m syncScheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.Daily.IsNull():
+		return &awstypes.SyncScheduleMemberDaily{}, diags
+
+	case !m.Weekly.IsNull():
+		weekly, d := m.Weekly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberWeekly
+		diags.Append(fwflex.Expand(ctx, weekly, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Monthly.IsNull():
+		monthly, d := m.Monthly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberMonthly
+		switch {
+		case !monthly.DayNumber.IsNull():
+			r.Value.DayOfMonth = &awstypes.DayOfMonthMemberDayNumber{Value: monthly.DayNumber.ValueInt32()}
+		case monthly.LastDayOfMonth.ValueBool():
+			r.Value.DayOfMonth = &awstypes.DayOfMonthMemberLastDayOfMonth{Value: awstypes.LastDayOfMonth{}}
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+func (m *syncScheduleModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.SyncScheduleMemberDaily:
+		m.Daily = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dailyScheduleModel{})
+
+	case awstypes.SyncScheduleMemberWeekly:
+		var data weeklyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Weekly = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	case awstypes.SyncScheduleMemberMonthly:
+		var data monthlyScheduleModel
+		switch dom := t.Value.DayOfMonth.(type) {
+		case *awstypes.DayOfMonthMemberDayNumber:
+			data.DayNumber = types.Int32Value(dom.Value)
+			data.LastDayOfMonth = types.BoolNull()
+		case *awstypes.DayOfMonthMemberLastDayOfMonth:
+			data.DayNumber = types.Int32Null()
+			data.LastDayOfMonth = types.BoolValue(true)
+		}
+		m.Monthly = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	case awstypes.UnknownUnionMember:
+		fwflex.HandleFlattenUnknownUnionMember(ctx, t.Tag, &diags)
+
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("sync_schedule flatten: %T", v))
+	}
+
 	return diags
 }
 

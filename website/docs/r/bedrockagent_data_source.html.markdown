@@ -174,6 +174,7 @@ The `managed_knowledge_base_connector_configuration` configuration block support
 * `connector_parameters` - (Optional) JSON-encoded string containing the connector-specific parameters. The structure depends on the connector type (S3, SharePoint, Google Drive, etc.). See [Managed Knowledge Base connector parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-connectors.html) for details on each connector type.
 * `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` block](#deletion_protection_configuration-block) for details.
 * `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` block](#media_extraction_configuration-block) for details.
+* `sync_schedule` - (Optional) Recurring schedule on which the managed connector automatically syncs the data source. If omitted, the data source is not synced automatically and each sync must be started manually. Not supported for the `Custom` connector. See [`sync_schedule` block](#sync_schedule-block) for details.
 
 ### `deletion_protection_configuration` block
 
@@ -207,6 +208,31 @@ The `image_extraction_configuration` configuration block supports the following 
 The `video_extraction_configuration` configuration block supports the following arguments:
 
 * `video_extraction_status` - (Required) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `sync_schedule` block
+
+The `sync_schedule` configuration block supports the following arguments. Exactly one of `daily`, `weekly`, or `monthly` must be specified.
+
+* `daily` - (Optional) Run the sync once a day at a system-chosen off-peak time. See [`daily` block](#daily-block) for details.
+* `weekly` - (Optional) Run the sync once a week on the specified day. See [`weekly` block](#weekly-block) for details.
+* `monthly` - (Optional) Run the sync once a month on the specified day. See [`monthly` block](#monthly-block) for details.
+
+### `daily` block
+
+The `daily` block takes no arguments. Its presence selects a daily sync that runs once a day at a system-chosen off-peak time. The run time is not configurable.
+
+### `weekly` block
+
+The `weekly` configuration block supports the following arguments:
+
+* `day_of_week` - (Required) Day of the week on which the weekly sync runs. Valid values: `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`.
+
+### `monthly` block
+
+The `monthly` configuration block supports the following arguments. Exactly one of `day_number` or `last_day_of_month` must be specified.
+
+* `day_number` - (Optional) Day of the month on which the monthly sync runs, from `1` to `28`. Values are capped at `28` so the sync runs in every month, including February.
+* `last_day_of_month` - (Optional) Set to `true` to run the monthly sync on the last calendar day of each month.
 
 ### `confluence_data_source_configuration` block
 
