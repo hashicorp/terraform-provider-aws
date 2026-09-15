@@ -35,6 +35,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Standard Bedrock AgentCore outbound auth provider resource name validator.
+var validOutboundAuthProviderResourceName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`),                                                            // AWS API definition.
+	`Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters.`, // AWS Console text.
+)
+
 // @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="API Key Credential Provider")
 // @Tags(identifierAttribute="credential_provider_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput")
@@ -94,8 +100,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), ""),
+					validOutboundAuthProviderResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
