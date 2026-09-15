@@ -45,6 +45,8 @@ var (
 	ResourceImageBlockPublicAccess                        = resourceImageBlockPublicAccess
 	ResourceInstance                                      = resourceInstance
 	ResourceInstanceConnectEndpoint                       = newInstanceConnectEndpointResource
+	ResourceInstanceEventWindow                           = newInstanceEventWindowResource
+	ResourceInstanceEventWindowAssociation                = newInstanceEventWindowAssociationResource
 	ResourceInstanceMetadataDefaults                      = newInstanceMetadataDefaultsResource
 	ResourceInstanceState                                 = resourceInstanceState
 	ResourceInternetGateway                               = resourceInternetGateway
@@ -184,6 +186,7 @@ var (
 	FindIPAMScopeByID                                           = findIPAMScopeByID
 	FindImageLaunchPermission                                   = findImageLaunchPermission
 	FindInstanceConnectEndpointByID                             = findInstanceConnectEndpointByID
+	FindInstanceEventWindowByID                                 = findInstanceEventWindowByID
 	FindInstanceMetadataDefaults                                = findInstanceMetadataDefaults
 	FindInstanceStateByID                                       = findInstanceStateByID
 	FindInternetGateway                                         = findInternetGateway
