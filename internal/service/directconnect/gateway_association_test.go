@@ -221,6 +221,41 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 	})
 }
 
+func TestAccDirectConnectGatewayAssociation_recreateTransitGateway(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dx_gateway_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, t, resourceName, &ga, &gap),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
+				),
+			},
+			{
+				Config: testAccGatewayAssociationConfigBase_transitGatewaySingleAccount(rName, rBgpAsn),
+			},
+			{
+				Config: testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, t, resourceName, &ga, &gap),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
@@ -642,7 +677,7 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccGatewayAssociationConfig_basicTransitSingleAccount(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationConfigBase_transitGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -654,7 +689,13 @@ resource "aws_ec2_transit_gateway" "test" {
     Name = %[1]q
   }
 }
+`, rName, rBgpAsn)
+}
 
+func testAccGatewayAssociationConfig_basicTransitSingleAccount(rName string, rBgpAsn int) string {
+	return acctest.ConfigCompose(
+		testAccGatewayAssociationConfigBase_transitGatewaySingleAccount(rName, rBgpAsn),
+		`
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = aws_dx_gateway.test.id
   associated_gateway_id = aws_ec2_transit_gateway.test.id
@@ -664,7 +705,7 @@ resource "aws_dx_gateway_association" "test" {
     "10.255.255.8/30",
   ]
 }
-`, rName, rBgpAsn)
+`)
 }
 
 func testAccGatewayAssociationConfig_basicTransitCrossAccount(rName string, rBgpAsn int) string {
