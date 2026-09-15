@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -63,12 +64,7 @@ func resourceGatewayAssociationProposal() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"allowed_prefixes": {
-					Type:     schema.TypeSet,
-					Optional: true,
-					Computed: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-				},
+				"allowed_prefixes": routeFilterPrefixesSchema(),
 				"associated_gateway_id": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -94,6 +90,21 @@ func resourceGatewayAssociationProposal() *schema.Resource {
 					ValidateFunc: verify.ValidAccountID,
 				},
 			}
+		},
+	}
+}
+
+func routeFilterPrefixesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: verify.ValidCIDRNetworkAddress,
+			StateFunc: func(v any) string {
+				return inttypes.CanonicalCIDRBlock(v.(string))
+			},
 		},
 	}
 }
@@ -154,7 +165,7 @@ func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.Resou
 		// to artificially populate the missing proposal in state as if it was still there.
 		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has reached end-of-life and has been removed by AWS", d.Id())
 
-		if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
+		if err := d.Set("allowed_prefixes", flattenCanonicalRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 		}
 
@@ -166,7 +177,7 @@ func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.Resou
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
 	} else {
-		if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
+		if err := d.Set("allowed_prefixes", flattenCanonicalRouteFilterPrefixes(output.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 		}
 
@@ -317,6 +328,20 @@ func flattenRouteFilterPrefixes(apiObjects []awstypes.RouteFilterPrefix) []any {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, aws.ToString(apiObject.Cidr))
+	}
+
+	return tfList
+}
+
+func flattenCanonicalRouteFilterPrefixes(apiObjects []awstypes.RouteFilterPrefix) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, inttypes.CanonicalCIDRBlock(aws.ToString(apiObject.Cidr)))
 	}
 
 	return tfList
