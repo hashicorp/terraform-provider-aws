@@ -5,15 +5,17 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -31,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -65,6 +68,46 @@ type channelResource struct {
 	framework.WithImportByIdentity
 }
 
+func deadLetterQueueS3Block(ctx context.Context, extraValidators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[deadLetterQueueS3Model](ctx),
+		Validators: append([]validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
+		}, extraValidators...),
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"bucket_arn": schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"error_output_prefix": schema.StringAttribute{
+					Optional: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrExpectedBucketOwner: schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						fwvalidators.AWSAccountID(),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -82,28 +125,8 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"cluster_operation_arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrCreationTime: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"destination_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ChannelDestinationType](),
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.ChannelStatus](),
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -113,60 +136,25 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
-			"topic_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[topicConfigurationModel](ctx),
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 1),
+					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrTopicARN: schema.StringAttribute{
+						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"record_converter": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[recordConverterModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"value_converter": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.ValueConverter](),
-										Required:   true,
-									},
-								},
-							},
-						},
-						"record_schema": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[recordSchemaModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"gsr_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-								},
-							},
 						},
 					},
 				},
 			},
 			"iceberg_destination": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[icebergDestinationModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[icebergDestinationConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -187,7 +175,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							// refreshed to unknown while another field is updated in place.
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplaceIfConfigured(),
-								stringplanmodifier.UseStateForUnknown(),
+								stringplanmodifier.UseNonNullStateForUnknown(),
 							},
 						},
 						// data_freshness_in_seconds is the only destination field that can
@@ -221,28 +209,27 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 									"catalog_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"warehouse_location": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
 						},
-						"dead_letter_queue_s3": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[deadLetterQueueS3Model](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: deadLetterQueueS3NestedObject(),
-						},
+						"dead_letter_queue_s3": deadLetterQueueS3Block(ctx),
 						"destination_table": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[destinationTableModel](ctx),
 							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
@@ -251,9 +238,15 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 								Attributes: map[string]schema.Attribute{
 									"destination_database_name": schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"destination_table_name": schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -262,20 +255,32 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"partition_strategy": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.PartitionStrategy](),
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 											Blocks: map[string]schema.Block{
 												names.AttrSource: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[partitionSourceModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"source_name": schema.StringAttribute{
 																Optional: true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 													},
@@ -289,7 +294,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"schema_evolution": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[schemaEvolutionModel](ctx),
 							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
@@ -298,6 +305,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 								Attributes: map[string]schema.Attribute{
 									"enable_schema_evolution": schema.BoolAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -305,7 +315,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"table_creation": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[tableCreationModel](ctx),
 							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
@@ -314,6 +326,103 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 								Attributes: map[string]schema.Attribute{
 									"enable_table_creation": schema.BoolAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"logging_info": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[channelLoggingInfoModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						names.AttrCloudWatchLogs: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrEnabled: schema.BoolAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+										},
+									},
+									"log_group": schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"firehose": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[firehoseModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"delivery_stream": schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									names.AttrEnabled: schema.BoolAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"s3": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LogModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrBucket: schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									names.AttrEnabled: schema.BoolAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+										},
+									},
+									names.AttrPrefix: schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -322,9 +431,12 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"s3_destination": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[s3DestinationModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[s3DestinationConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -346,20 +458,13 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"dead_letter_queue_s3": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[deadLetterQueueS3Model](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: deadLetterQueueS3NestedObject(),
-						},
+						"dead_letter_queue_s3": deadLetterQueueS3Block(ctx),
 						"storage": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3StorageModel](ctx),
 							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
@@ -369,23 +474,44 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 									"bucket_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"compression_type": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.S3CompressionType](),
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrExpectedBucketOwner: schema.StringAttribute{
 										Optional: true,
+										Validators: []validator.String{
+											fwvalidators.AWSAccountID(),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"output_key_template": schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"output_prefix": schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrStorageClass: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.S3StorageClass](),
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -393,9 +519,16 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigModel](ctx),
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+			"topic_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[topicConfigurationModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
@@ -403,70 +536,53 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrKMSKeyARN: schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
-				},
-			},
-			"logging_info": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[channelLoggingInfoModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						names.AttrCloudWatchLogs: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
+						"record_converter": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[recordConverterModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrEnabled: schema.BoolAttribute{
-										Required: true,
-									},
-									"log_group": schema.StringAttribute{
-										Optional: true,
+									"value_converter": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.ValueConverter](),
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
 						},
-						"firehose": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[firehoseModel](ctx),
+						"record_schema": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[recordSchemaModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"delivery_stream": schema.StringAttribute{
-										Optional: true,
-									},
-									names.AttrEnabled: schema.BoolAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-						"s3": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LogModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrBucket: schema.StringAttribute{
-										Optional: true,
-									},
-									names.AttrEnabled: schema.BoolAttribute{
-										Required: true,
-									},
-									names.AttrPrefix: schema.StringAttribute{
-										Optional: true,
+									"gsr_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -478,24 +594,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func deadLetterQueueS3NestedObject() schema.NestedBlockObject {
-	return schema.NestedBlockObject{
-		Attributes: map[string]schema.Attribute{
-			"bucket_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
-			},
-			"error_output_prefix": schema.StringAttribute{
-				Optional: true,
-			},
-			names.AttrExpectedBucketOwner: schema.StringAttribute{
-				Optional: true,
-			},
-		},
-	}
-}
-
-func (r *channelResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *channelResource) ConfigValidators(context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("iceberg_destination"),
@@ -522,26 +621,26 @@ func (r *channelResource) Create(ctx context.Context, req resource.CreateRequest
 
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateChannel(ctx, &input)
+	outputCC, err := conn.CreateChannel(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelName)
 		return
 	}
 
-	channelARN := aws.ToString(output.ChannelArn)
-	clusterARN := fwflex.StringValueFromFramework(ctx, plan.ClusterARN)
-
-	out, err := waitChannelCreated(ctx, conn, channelARN, clusterARN, r.CreateTimeout(ctx, plan.Timeouts))
+	channelARN, clusterARN := aws.ToString(outputCC.ChannelArn), fwflex.StringValueFromFramework(ctx, plan.ClusterARN)
+	outputGC, err := waitChannelCreated(ctx, conn, channelARN, clusterARN, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), channelARN)
+		resp.State.SetAttribute(ctx, path.Root("cluster_arn"), clusterARN)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelARN)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, outputGC, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ChannelARN = fwflex.StringToFramework(ctx, output.ChannelArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -569,7 +668,7 @@ func (r *channelResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	setTagsOut(ctx, out.Tags)
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -587,72 +686,66 @@ func (r *channelResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// data_freshness_in_seconds is the only configurable attribute that can be
-	// updated in place (via UpdateChannel). Tag-only changes are handled by the
-	// transparent tagging interceptor; every other attribute forces replacement.
-	channelARN := fwflex.StringValueFromFramework(ctx, plan.ChannelARN)
-	clusterARN := fwflex.StringValueFromFramework(ctx, plan.ClusterARN)
-	input := kafka.UpdateChannelInput{
-		ChannelArn: aws.String(channelARN),
-		ClusterArn: aws.String(clusterARN),
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	update := false
-	switch {
-	case !plan.S3DestinationConfiguration.IsNull():
-		planDst, d := plan.S3DestinationConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-		if resp.Diagnostics.HasError() {
-			return
+	if diff.HasChanges() {
+		// data_freshness_in_seconds is the only configurable attribute that can be
+		// updated in place (via UpdateChannel). Tag-only changes are handled by the
+		// transparent tagging interceptor; every other attribute forces replacement.
+		channelARN, clusterARN := fwflex.StringValueFromFramework(ctx, plan.ChannelARN), fwflex.StringValueFromFramework(ctx, plan.ClusterARN)
+		input := kafka.UpdateChannelInput{
+			ChannelArn: aws.String(channelARN),
+			ClusterArn: aws.String(clusterARN),
 		}
-		stateDst, d := state.S3DestinationConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if !planDst.DataFreshnessInSeconds.Equal(stateDst.DataFreshnessInSeconds) {
-			input.S3DestinationUpdate = &awstypes.S3DestinationUpdate{
-				DataFreshnessInSeconds: fwflex.Int32FromFramework(ctx, planDst.DataFreshnessInSeconds),
+
+		switch {
+		case slices.Equal(diff.ChangedFieldNames(), []string{"IcebergDestinationConfiguration"}) && !plan.IcebergDestinationConfiguration.IsNull():
+			model, d := plan.IcebergDestinationConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+			if resp.Diagnostics.HasError() {
+				return
 			}
-			update = true
-		}
-	case !plan.IcebergDestinationConfiguration.IsNull():
-		planDst, d := plan.IcebergDestinationConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		stateDst, d := state.IcebergDestinationConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if !planDst.DataFreshnessInSeconds.Equal(stateDst.DataFreshnessInSeconds) {
+
+			var destination awstypes.IcebergDestinationConfiguration
+			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, model, &destination))
+			if resp.Diagnostics.HasError() {
+				return
+			}
 			input.IcebergDestinationUpdate = &awstypes.IcebergDestinationUpdate{
-				DataFreshnessInSeconds: fwflex.Int32FromFramework(ctx, planDst.DataFreshnessInSeconds),
+				DataFreshnessInSeconds: destination.DataFreshnessInSeconds,
 			}
-			update = true
-		}
-	}
 
-	if update {
+		case slices.Equal(diff.ChangedFieldNames(), []string{"S3DestinationConfiguration"}) && !plan.S3DestinationConfiguration.IsNull():
+			model, d := plan.S3DestinationConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			var destination awstypes.S3DestinationConfiguration
+			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, model, &destination))
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			input.S3DestinationUpdate = &awstypes.S3DestinationUpdate{
+				DataFreshnessInSeconds: destination.DataFreshnessInSeconds,
+			}
+		}
+
 		_, err := conn.UpdateChannel(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelARN)
 			return
 		}
 
-		out, err := waitChannelUpdated(ctx, conn, channelARN, clusterARN, r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
+		if _, err := waitChannelUpdated(ctx, conn, channelARN, clusterARN, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelARN)
 			return
 		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		setTagsOut(ctx, out.Tags)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -687,6 +780,12 @@ func (r *channelResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
+func (r *channelResource) flatten(ctx context.Context, out *kafka.DescribeChannelOutput, data *channelResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	return diags
+}
+
 func waitChannelCreated(ctx context.Context, conn *kafka.Client, channelARN, clusterARN string, timeout time.Duration) (*kafka.DescribeChannelOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ChannelStatusCreating),
@@ -698,6 +797,9 @@ func waitChannelCreated(ctx context.Context, conn *kafka.Client, channelARN, clu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kafka.DescribeChannelOutput); ok {
+		if v := out.StateInfo; v != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Message)))
+		}
 		return out, err
 	}
 
@@ -715,6 +817,9 @@ func waitChannelUpdated(ctx context.Context, conn *kafka.Client, channelARN, clu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kafka.DescribeChannelOutput); ok {
+		if v := out.StateInfo; v != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Message)))
+		}
 		return out, err
 	}
 
@@ -731,6 +836,9 @@ func waitChannelDeleted(ctx context.Context, conn *kafka.Client, channelARN, clu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kafka.DescribeChannelOutput); ok {
+		if v := out.StateInfo; v != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Message)))
+		}
 		return out, err
 	}
 
@@ -757,8 +865,11 @@ func findChannelByTwoPartKey(ctx context.Context, conn *kafka.Client, channelARN
 		ChannelArn: aws.String(channelARN),
 		ClusterArn: aws.String(clusterARN),
 	}
+	return findChannel(ctx, conn, &input)
+}
 
-	output, err := conn.DescribeChannel(ctx, &input)
+func findChannel(ctx context.Context, conn *kafka.Client, input *kafka.DescribeChannelInput) (*kafka.DescribeChannelOutput, error) {
+	output, err := conn.DescribeChannel(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -779,38 +890,25 @@ func findChannelByTwoPartKey(ctx context.Context, conn *kafka.Client, channelARN
 
 type channelResourceModel struct {
 	framework.WithRegionModel
-	ChannelARN                      types.String                                             `tfsdk:"arn"`
-	ChannelName                     types.String                                             `tfsdk:"channel_name"`
-	ClusterARN                      fwtypes.ARN                                              `tfsdk:"cluster_arn"`
-	ClusterOperationARN             types.String                                             `tfsdk:"cluster_operation_arn"`
-	CreationTime                    timetypes.RFC3339                                        `tfsdk:"creation_time"`
-	DestinationType                 fwtypes.StringEnum[awstypes.ChannelDestinationType]      `tfsdk:"destination_type"`
-	EncryptionConfiguration         fwtypes.ListNestedObjectValueOf[encryptionConfigModel]   `tfsdk:"encryption_configuration"`
-	IcebergDestinationConfiguration fwtypes.ListNestedObjectValueOf[icebergDestinationModel] `tfsdk:"iceberg_destination"`
-	LoggingInfo                     fwtypes.ListNestedObjectValueOf[channelLoggingInfoModel] `tfsdk:"logging_info"`
-	S3DestinationConfiguration      fwtypes.ListNestedObjectValueOf[s3DestinationModel]      `tfsdk:"s3_destination"`
-	Status                          fwtypes.StringEnum[awstypes.ChannelStatus]               `tfsdk:"status"`
-	Tags                            tftags.Map                                               `tfsdk:"tags"`
-	TagsAll                         tftags.Map                                               `tfsdk:"tags_all"`
-	Timeouts                        timeouts.Value                                           `tfsdk:"timeouts"`
-	TopicConfigurationList          fwtypes.ListNestedObjectValueOf[topicConfigurationModel] `tfsdk:"topic_configuration"`
+	ChannelARN                      types.String                                                          `tfsdk:"arn"`
+	ChannelName                     types.String                                                          `tfsdk:"channel_name"`
+	ClusterARN                      fwtypes.ARN                                                           `tfsdk:"cluster_arn"`
+	DestinationType                 fwtypes.StringEnum[awstypes.ChannelDestinationType]                   `tfsdk:"destination_type"`
+	EncryptionConfiguration         fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel]         `tfsdk:"encryption_configuration"`
+	IcebergDestinationConfiguration fwtypes.ListNestedObjectValueOf[icebergDestinationConfigurationModel] `tfsdk:"iceberg_destination"`
+	LoggingInfo                     fwtypes.ListNestedObjectValueOf[channelLoggingInfoModel]              `tfsdk:"logging_info"`
+	S3DestinationConfiguration      fwtypes.ListNestedObjectValueOf[s3DestinationConfigurationModel]      `tfsdk:"s3_destination"`
+	Tags                            tftags.Map                                                            `tfsdk:"tags"`
+	TagsAll                         tftags.Map                                                            `tfsdk:"tags_all"`
+	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
+	TopicConfigurationList          fwtypes.ListNestedObjectValueOf[topicConfigurationModel]              `tfsdk:"topic_configuration"`
 }
 
-type topicConfigurationModel struct {
-	RecordConverter fwtypes.ListNestedObjectValueOf[recordConverterModel] `tfsdk:"record_converter"`
-	RecordSchema    fwtypes.ListNestedObjectValueOf[recordSchemaModel]    `tfsdk:"record_schema"`
-	TopicARN        fwtypes.ARN                                           `tfsdk:"topic_arn"`
+type encryptionConfigurationModel struct {
+	KMSKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
 }
 
-type recordConverterModel struct {
-	ValueConverter fwtypes.StringEnum[awstypes.ValueConverter] `tfsdk:"value_converter"`
-}
-
-type recordSchemaModel struct {
-	GSRARN fwtypes.ARN `tfsdk:"gsr_arn"`
-}
-
-type icebergDestinationModel struct {
+type icebergDestinationConfigurationModel struct {
 	AppendOnly              types.Bool                                              `tfsdk:"append_only"`
 	Catalog                 fwtypes.ListNestedObjectValueOf[catalogModel]           `tfsdk:"catalog"`
 	CompressionType         fwtypes.StringEnum[awstypes.IcebergCompressionType]     `tfsdk:"compression_type"`
@@ -820,6 +918,11 @@ type icebergDestinationModel struct {
 	SchemaEvolution         fwtypes.ListNestedObjectValueOf[schemaEvolutionModel]   `tfsdk:"schema_evolution"`
 	ServiceExecutionRoleARN fwtypes.ARN                                             `tfsdk:"service_execution_role_arn"`
 	TableCreation           fwtypes.ListNestedObjectValueOf[tableCreationModel]     `tfsdk:"table_creation"`
+}
+
+type catalogModel struct {
+	CatalogARN        fwtypes.ARN `tfsdk:"catalog_arn"`
+	WarehouseLocation fwtypes.ARN `tfsdk:"warehouse_location"`
 }
 
 type deadLetterQueueS3Model struct {
@@ -851,31 +954,6 @@ type tableCreationModel struct {
 	EnableTableCreation types.Bool `tfsdk:"enable_table_creation"`
 }
 
-type catalogModel struct {
-	CatalogARN        fwtypes.ARN `tfsdk:"catalog_arn"`
-	WarehouseLocation fwtypes.ARN `tfsdk:"warehouse_location"`
-}
-
-type s3DestinationModel struct {
-	DataFreshnessInSeconds  types.Int32                                             `tfsdk:"data_freshness_in_seconds"`
-	DeadLetterQueueS3       fwtypes.ListNestedObjectValueOf[deadLetterQueueS3Model] `tfsdk:"dead_letter_queue_s3"`
-	ServiceExecutionRoleARN fwtypes.ARN                                             `tfsdk:"service_execution_role_arn"`
-	Storage                 fwtypes.ListNestedObjectValueOf[s3StorageModel]         `tfsdk:"storage"`
-}
-
-type s3StorageModel struct {
-	BucketARN           fwtypes.ARN                                    `tfsdk:"bucket_arn"`
-	CompressionType     fwtypes.StringEnum[awstypes.S3CompressionType] `tfsdk:"compression_type"`
-	ExpectedBucketOwner types.String                                   `tfsdk:"expected_bucket_owner"`
-	OutputKeyTemplate   types.String                                   `tfsdk:"output_key_template"`
-	OutputPrefix        types.String                                   `tfsdk:"output_prefix"`
-	StorageClass        fwtypes.StringEnum[awstypes.S3StorageClass]    `tfsdk:"storage_class"`
-}
-
-type encryptionConfigModel struct {
-	KMSKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
-}
-
 type channelLoggingInfoModel struct {
 	CloudWatchLogs fwtypes.ListNestedObjectValueOf[cloudWatchLogsModel] `tfsdk:"cloudwatch_logs"`
 	Firehose       fwtypes.ListNestedObjectValueOf[firehoseModel]       `tfsdk:"firehose"`
@@ -896,6 +974,36 @@ type s3LogModel struct {
 	Bucket  types.String `tfsdk:"bucket"`
 	Enabled types.Bool   `tfsdk:"enabled"`
 	Prefix  types.String `tfsdk:"prefix"`
+}
+
+type s3DestinationConfigurationModel struct {
+	DataFreshnessInSeconds  types.Int32                                             `tfsdk:"data_freshness_in_seconds"`
+	DeadLetterQueueS3       fwtypes.ListNestedObjectValueOf[deadLetterQueueS3Model] `tfsdk:"dead_letter_queue_s3"`
+	ServiceExecutionRoleARN fwtypes.ARN                                             `tfsdk:"service_execution_role_arn"`
+	Storage                 fwtypes.ListNestedObjectValueOf[s3StorageModel]         `tfsdk:"storage"`
+}
+
+type s3StorageModel struct {
+	BucketARN           fwtypes.ARN                                    `tfsdk:"bucket_arn"`
+	CompressionType     fwtypes.StringEnum[awstypes.S3CompressionType] `tfsdk:"compression_type"`
+	ExpectedBucketOwner types.String                                   `tfsdk:"expected_bucket_owner"`
+	OutputKeyTemplate   types.String                                   `tfsdk:"output_key_template"`
+	OutputPrefix        types.String                                   `tfsdk:"output_prefix"`
+	StorageClass        fwtypes.StringEnum[awstypes.S3StorageClass]    `tfsdk:"storage_class"`
+}
+
+type topicConfigurationModel struct {
+	RecordConverter fwtypes.ListNestedObjectValueOf[recordConverterModel] `tfsdk:"record_converter"`
+	RecordSchema    fwtypes.ListNestedObjectValueOf[recordSchemaModel]    `tfsdk:"record_schema"`
+	TopicARN        fwtypes.ARN                                           `tfsdk:"topic_arn"`
+}
+
+type recordConverterModel struct {
+	ValueConverter fwtypes.StringEnum[awstypes.ValueConverter] `tfsdk:"value_converter"`
+}
+
+type recordSchemaModel struct {
+	GSRARN fwtypes.ARN `tfsdk:"gsr_arn"`
 }
 
 var _ inttypes.ImportIDParser = channelImportID{}

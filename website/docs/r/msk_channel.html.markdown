@@ -274,10 +274,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the channel.
-* `cluster_operation_arn` - ARN of the in-flight cluster operation.
-* `creation_time` - Time when the channel was created.
 * `destination_type` - Type of destination configured for the channel.
-* `status` - Current lifecycle state of the channel.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
