@@ -107,9 +107,6 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 		Blocks: map[string]schema.Block{
 			"authorized_token_issuer": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizedTokenIssuerModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"authorized_audiences_list": schema.ListAttribute{
