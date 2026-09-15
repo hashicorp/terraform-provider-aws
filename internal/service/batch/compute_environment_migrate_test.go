@@ -114,7 +114,7 @@ func TestComputeEnvironmentStateUpgradeV1(t *testing.T) {
 				names.AttrName: "test-environment",
 				"compute_resources": []any{
 					map[string]any{
-						"instance_type": []any{"m7i", "c7i", "r7i"},
+						names.AttrInstanceType: []any{"m7i", "c7i", "r7i"},
 					},
 				},
 			},
@@ -122,7 +122,7 @@ func TestComputeEnvironmentStateUpgradeV1(t *testing.T) {
 				names.AttrName: "test-environment",
 				"compute_resources": []any{
 					map[string]any{
-						"instance_type": []any{"m7i", "c7i", "r7i"},
+						names.AttrInstanceType: []any{"m7i", "c7i", "r7i"},
 					},
 				},
 			},
