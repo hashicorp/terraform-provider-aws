@@ -10,12 +10,14 @@ FEATURES:
 * **New List Resource:** `aws_api_gateway_deployment` ([#49820](https://github.com/hashicorp/terraform-provider-aws/issues/49820))
 * **New List Resource:** `aws_apigatewayv2_integration` ([#48425](https://github.com/hashicorp/terraform-provider-aws/issues/48425))
 * **New List Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
+* **New List Resource:** `aws_ec2_transit_gateway_policy_table_entry` ([#49256](https://github.com/hashicorp/terraform-provider-aws/issues/49256))
 * **New List Resource:** `aws_glue_catalog_table` ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
 * **New List Resource:** `aws_iam_group` ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
 * **New List Resource:** `aws_iam_user_policy` ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
 * **New List Resource:** `aws_network_acl_rule` ([#49916](https://github.com/hashicorp/terraform-provider-aws/issues/49916))
 * **New Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
+* **New Resource:** `aws_ec2_transit_gateway_policy_table_entry` ([#49256](https://github.com/hashicorp/terraform-provider-aws/issues/49256))
 * **New Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
 
 ENHANCEMENTS:
@@ -43,6 +45,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_amplify_app: Fix `BadRequestException: Environment variables cannot have an empty key` when clearing `auto_branch_creation_config.environment_variables` ([#49858](https://github.com/hashicorp/terraform-provider-aws/issues/49858))
+* resource/aws_amplify_branch: Fix `BadRequestException: Environment variables cannot have an empty key` when clearing `environment_variables` ([#49858](https://github.com/hashicorp/terraform-provider-aws/issues/49858))
 * resource/aws_bedrockagent_data_source: Change `data_source_configuration.managed_knowledge_base_connector_configuration.deletion_protection_configuration.deletion_protection_threshold` to Optional and Computed ([#49977](https://github.com/hashicorp/terraform-provider-aws/issues/49977))
 * resource/aws_mailmanager_traffic_policy: Make `policy_statement` optional ([#49509](https://github.com/hashicorp/terraform-provider-aws/issues/49509))
 * resource/aws_secretsmanager_secret: Fix removal of all `replica` blocks not being detected as a change ([#39235](https://github.com/hashicorp/terraform-provider-aws/issues/39235))
