@@ -264,7 +264,19 @@ func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeA
 }
 
 func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
-	return tfslices.CollectAndConcatWithError(listAccessPointPages(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listAccessPointPages(ctx, conn, input))
+
+	if errs.IsA[*awstypes.AccessPointNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.AccessPointDescription, error) {
