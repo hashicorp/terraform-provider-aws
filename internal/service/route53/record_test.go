@@ -2095,6 +2095,21 @@ func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_TXT_CharacterStringTooLong(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRecordConfig_txtCharacterStringTooLong(),
+				ExpectError: regexache.MustCompile(`individual TXT/SPF quoted string segment must be 255 characters or fewer`),
+			},
+		},
+	})
+}
+
 func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2 awstypes.ResourceRecordSet
@@ -3949,6 +3964,24 @@ resource "aws_route53_record" "long_txt" {
   ]
 }
 `
+
+func testAccRecordConfig_txtCharacterStringTooLong() string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test."
+}
+
+resource "aws_route53_record" "long_txt" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "too-long"
+  type    = "TXT"
+  ttl     = "30"
+  records = [
+    "%s"
+  ]
+}
+`, strings.Repeat("A", 256))
+}
 
 const testAccRecordConfig_underscoreInName = `
 resource "aws_route53_zone" "main" {
