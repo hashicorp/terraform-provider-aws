@@ -5422,6 +5422,10 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
 }
 
@@ -5506,6 +5510,10 @@ func findTransitGatewayMeteringPolicyEntries(ctx context.Context, conn *ec2.Clie
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
 }
 
@@ -5544,6 +5552,10 @@ func findTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client,
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
