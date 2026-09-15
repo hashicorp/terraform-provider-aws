@@ -606,10 +606,19 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 				"serverlessv2_scaling_configuration": {
-					Type:             schema.TypeList,
-					Optional:         true,
-					MaxItems:         1,
-					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Only suppress the block count so min_capacity changes from 1 to 0
+						// are preserved.
+						// https://github.com/hashicorp/terraform-provider-aws/issues/40685
+						if k != "serverlessv2_scaling_configuration.#" {
+							return false
+						}
+
+						return verify.SuppressMissingOptionalConfigurationBlock(k, old, new, d)
+					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrMaxCapacity: {
