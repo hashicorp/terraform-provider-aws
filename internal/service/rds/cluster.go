@@ -108,6 +108,7 @@ func resourceCluster() *schema.Resource {
 				},
 				names.AttrAvailabilityZones: {
 					Type:     schema.TypeSet,
+					MaxItems: 3,
 					Optional: true,
 					ForceNew: true,
 					Computed: true,
