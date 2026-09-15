@@ -296,11 +296,27 @@ func dataSourceInstanceType() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"additional_flexible_network_interfaces": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 							"baseline_bandwidth": {
 								Type:     schema.TypeFloat,
 								Computed: true,
 							},
+							"default_ena_queue_count_per_interface": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 							"index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"maximum_ena_queue_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"maximum_ena_queue_count_per_interface": {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
@@ -595,11 +611,15 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		tfList := make([]any, len(v.NetworkCards))
 		for i, v := range v.NetworkCards {
 			tfMap := map[string]any{
-				"baseline_bandwidth": aws.ToFloat64(v.BaselineBandwidthInGbps),
-				"index":              aws.ToInt32(v.NetworkCardIndex),
-				"maximum_interfaces": aws.ToInt32(v.MaximumNetworkInterfaces),
-				"peak_bandwidth":     aws.ToFloat64(v.PeakBandwidthInGbps),
-				"performance":        aws.ToString(v.NetworkPerformance),
+				"additional_flexible_network_interfaces": aws.ToInt32(v.AdditionalFlexibleNetworkInterfaces),
+				"baseline_bandwidth":                     aws.ToFloat64(v.BaselineBandwidthInGbps),
+				"default_ena_queue_count_per_interface":  aws.ToInt32(v.DefaultEnaQueueCountPerInterface),
+				"index":                                  aws.ToInt32(v.NetworkCardIndex),
+				"maximum_ena_queue_count":                aws.ToInt32(v.MaximumEnaQueueCount),
+				"maximum_ena_queue_count_per_interface":  aws.ToInt32(v.MaximumEnaQueueCountPerInterface),
+				"maximum_interfaces":                     aws.ToInt32(v.MaximumNetworkInterfaces),
+				"peak_bandwidth":                         aws.ToFloat64(v.PeakBandwidthInGbps),
+				"performance":                            aws.ToString(v.NetworkPerformance),
 			}
 			tfList[i] = tfMap
 		}
