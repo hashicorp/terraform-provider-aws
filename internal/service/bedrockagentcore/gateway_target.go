@@ -709,7 +709,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"private_endpoint": privateEndpointSchema(ctx),
+			"private_endpoint": privateEndpointBlock(ctx),
 			"target_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[targetConfigurationModel](ctx),
 				Validators: []validator.List{

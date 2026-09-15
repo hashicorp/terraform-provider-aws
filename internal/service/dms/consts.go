@@ -98,6 +98,24 @@ func engineName_Values() []string {
 	}
 }
 
+func dataProviderEngine_Values() []string {
+	return []string{
+		engineNameAurora,
+		engineNameAuroraPostgresql,
+		engineNameDB2,
+		engineNameDB2zOS,
+		engineNameDocDB,
+		engineNameMariadb,
+		engineNameMongodb,
+		engineNameMySQL,
+		engineNameOracle,
+		engineNamePostgres,
+		engineNameRedshift,
+		engineNameSQLServer,
+		engineNameSybase,
+	}
+}
+
 const (
 	kafkaDefaultTopic = "kafka-default-topic"
 )
