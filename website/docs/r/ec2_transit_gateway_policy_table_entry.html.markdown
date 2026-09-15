@@ -55,19 +55,19 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `policy_rule` - (Optional) Matching criteria for the policy table entry. [See below](#policy_rule).
+* `policy_rule` - (Optional) Matching criteria for the policy table entry. [See below](#policy_rule-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `policy_rule`
+### `policy_rule` Block
 
 * `destination_cidr_block` - (Optional) Destination CIDR block to match. If not specified, all destination CIDR blocks are matched.
 * `destination_port_range` - (Optional) Destination port or port range to match (e.g., `443` or `1024-65535`). Only valid when `protocol` is `6` (TCP) or `17` (UDP).
-* `metadata` - (Optional) Metadata key/value tag associated with the policy rule. [See below](#metadata).
+* `metadata` - (Optional) Metadata key/value tag associated with the policy rule. [See below](#metadata-block).
 * `protocol` - (Optional) Protocol number to match (e.g., `6` for TCP, `17` for UDP). If not specified, all protocols are matched.
 * `source_cidr_block` - (Optional) Source CIDR block to match. If not specified, all source CIDR blocks are matched.
 * `source_port_range` - (Optional) Source port or port range to match (e.g., `443` or `1024-65535`). Only valid when `protocol` is `6` (TCP) or `17` (UDP).
 
-### `metadata`
+### `metadata` Block
 
 * `key` - (Optional) Metadata key name for the policy rule.
 * `value` - (Optional) Metadata key value for the policy rule.

@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_transit_gateway_policy_table_entry
 
-Lists EC2 (Elastic Compute Cloud) Transit Gateway Policy Table Entry resources.
+Lists EC2 Transit Gateway Policy Table Entry resources.
 
 ## Example Usage
 
