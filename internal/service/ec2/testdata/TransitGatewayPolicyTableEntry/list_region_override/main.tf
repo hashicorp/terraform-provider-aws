@@ -5,7 +5,37 @@ resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
   count  = var.resource_count
   region = var.region
 
-  name = "${var.rName}-${count.index}"
+  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
+  policy_rule_number              = 100 + count.index
+  target_route_table_id           = aws_ec2_transit_gateway_route_table.test.id
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  region = var.region
+
+  tags = {
+    Name = var.rName
+  }
+}
+
+resource "aws_ec2_transit_gateway_policy_table" "test" {
+  region = var.region
+
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = var.rName
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table" "test" {
+  region = var.region
+
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = var.rName
+  }
 }
 
 variable "rName" {
