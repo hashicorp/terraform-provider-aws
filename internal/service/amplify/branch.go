@@ -370,7 +370,10 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			if v := d.Get("environment_variables").(map[string]any); len(v) > 0 {
 				input.EnvironmentVariables = flex.ExpandStringValueMap(v)
 			} else {
-				input.EnvironmentVariables = map[string]string{"": ""}
+				// To remove environment variables, set the key to a single space
+				// character and the value to an empty string.
+				// Ref: https://github.com/aws/aws-sdk-go-v2/issues/2788
+				input.EnvironmentVariables = map[string]string{" ": ""}
 			}
 		}
 
