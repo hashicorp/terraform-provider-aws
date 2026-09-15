@@ -79,7 +79,7 @@ resource "aws_efs_access_point" "example" {
 
 #### Required
 
-* `id` (String) Name of the CloudWatch log group.
+* `id` (String) ID of the access point.
 
 #### Optional
 
