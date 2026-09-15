@@ -36,6 +36,7 @@ import (
 // @IdentityAttribute("identifier")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;force_destroy")
+// @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="v6.64.0")
 // @Testing(tagsTest=false)
 func resourceClusterInstance() *schema.Resource {
