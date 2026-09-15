@@ -254,6 +254,25 @@ func resourceTargetGroup() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
+				"send_tcp_reset": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"on_deregistration": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"on_unhealthy": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"slow_start": {
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -549,6 +568,10 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	switch targetType {
 	case awstypes.TargetTypeEnumInstance, awstypes.TargetTypeEnumIp:
+		if v, ok := d.GetOk("send_tcp_reset"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandTargetGroupSendTCPResetAttributes(v.([]any)[0].(map[string]any), protocol)...)
+		}
+
 		if v, ok := d.GetOk("stickiness"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]any)[0].(map[string]any), protocol)...)
 		}
@@ -660,6 +683,10 @@ func resourceTargetGroupFlatten(ctx context.Context, awsClient *conns.AWSClient,
 		return fmt.Errorf("reading ELBv2 Target Group (%s) attributes: %w", d.Id(), err)
 	}
 
+	if err := d.Set("send_tcp_reset", []any{flattenTargetGroupSendTCPResetAttributes(attributes, protocol)}); err != nil {
+		return fmt.Errorf("setting send_tcp_reset: %w", err)
+	}
+
 	if err := d.Set("stickiness", []any{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return fmt.Errorf("setting stickiness: %w", err)
 	}
@@ -752,6 +779,12 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 					Key:   aws.String(targetGroupAttributeStickinessEnabled),
 					Value: flex.BoolValueToString(false),
 				})
+			}
+		}
+
+		if d.HasChange("send_tcp_reset") {
+			if v, ok := d.GetOk("send_tcp_reset"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				attributes = append(attributes, expandTargetGroupSendTCPResetAttributes(v.([]any)[0].(map[string]any), protocol)...)
 			}
 		}
 
@@ -1300,6 +1333,51 @@ func flattenTargetGroupStickinessAttributes(apiObjects []awstypes.TargetGroupAtt
 				tfMap["cookie_name"] = aws.ToString(v)
 			case k == targetGroupAttributeStickinessAppCookieDurationSeconds && stickinessType == stickinessTypeAppCookie:
 				tfMap["cookie_duration"] = flex.StringToIntValue(v)
+			}
+		}
+	}
+
+	return tfMap
+}
+
+func expandTargetGroupSendTCPResetAttributes(tfMap map[string]any, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObjects []awstypes.TargetGroupAttribute
+
+	switch protocol {
+	case awstypes.ProtocolEnumGeneve:
+		apiObjects = append(apiObjects,
+			awstypes.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeSendTCPResetOnDeregistrationEnabled),
+				Value: flex.BoolValueToString(tfMap["on_deregistration"].(bool)),
+			},
+			awstypes.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeSendTCPResetOnUnhealthyEnabled),
+				Value: flex.BoolValueToString(tfMap["on_unhealthy"].(bool)),
+			})
+	}
+
+	return apiObjects
+}
+
+func flattenTargetGroupSendTCPResetAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	switch protocol {
+	case awstypes.ProtocolEnumGeneve:
+		for _, apiObject := range apiObjects {
+			switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
+			case targetGroupAttributeSendTCPResetOnDeregistrationEnabled:
+				tfMap["on_deregistration"] = flex.StringToBoolValue(v)
+			case targetGroupAttributeSendTCPResetOnUnhealthyEnabled:
+				tfMap["on_unhealthy"] = flex.StringToBoolValue(v)
 			}
 		}
 	}
