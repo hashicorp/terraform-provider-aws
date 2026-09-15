@@ -145,7 +145,6 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtDisappears: testAccTransitGatewayPolicyTableEntry_disappears,
 			"fullRule":           testAccTransitGatewayPolicyTableEntry_fullRule,
 			"update":             testAccTransitGatewayPolicyTableEntry_update,
-			"protocolAny":        testAccTransitGatewayPolicyTableEntry_protocolAny,
 			"Identity":           testAccTransitGatewayPolicyTableEntry_identity,
 		},
 		"PrefixListReference": {

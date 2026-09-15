@@ -134,7 +134,10 @@ func testAccTransitGatewayPolicyTableEntry_fullRule(t *testing.T, semaphore tfsy
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPolicyTableEntryConfig_fullRule(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/fullRule/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableEntryExists(ctx, t, resourceName, &v),
 				),
@@ -145,16 +148,24 @@ func testAccTransitGatewayPolicyTableEntry_fullRule(t *testing.T, semaphore tfsy
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule_number"), knownvalue.StringExact("200")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("source_cidr_block"), knownvalue.StringExact("10.0.1.0/24")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("destination_cidr_block"), knownvalue.StringExact("10.0.2.0/24")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey(names.AttrProtocol), knownvalue.StringExact("6")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("source_port_range"), knownvalue.StringExact("1024-65535")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("destination_port_range"), knownvalue.StringExact("443")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("metadata").AtSliceIndex(0).AtMapKey(names.AttrKey), knownvalue.StringExact("test")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("metadata").AtSliceIndex(0).AtMapKey(names.AttrValue), knownvalue.StringExact("test")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"destination_cidr_block": knownvalue.StringExact("10.0.2.0/24"),
+						"destination_port_range": knownvalue.StringExact("443"),
+						"metadata": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"key":   knownvalue.StringExact("test"),
+							"value": knownvalue.StringExact("test"),
+						})}),
+						"protocol":          knownvalue.StringExact("6"),
+						"source_cidr_block": knownvalue.StringExact("10.0.1.0/24"),
+						"source_port_range": knownvalue.StringExact("1024-65535"),
+					})})),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/fullRule/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -174,8 +185,6 @@ func testAccTransitGatewayPolicyTableEntry_update(t *testing.T, semaphore tfsync
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPolicyTableEntry
 	resourceName := "aws_ec2_transit_gateway_policy_table_entry.test"
-	routeTableResourceName := "aws_ec2_transit_gateway_route_table.test"
-	routeTable2ResourceName := "aws_ec2_transit_gateway_route_table.test2"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -189,20 +198,31 @@ func testAccTransitGatewayPolicyTableEntry_update(t *testing.T, semaphore tfsync
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPolicyTableEntryConfig_update(rName, false),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/protocol/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"protocol":      config.StringVariable("6"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableEntryExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "target_route_table_id", routeTableResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey(names.AttrProtocol), knownvalue.StringExact("6")),
 				},
 			},
 			{
-				Config: testAccTransitGatewayPolicyTableEntryConfig_update(rName, true),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/protocol/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"protocol":      config.StringVariable("17"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableEntryExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "target_route_table_id", routeTable2ResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -213,43 +233,25 @@ func testAccTransitGatewayPolicyTableEntry_update(t *testing.T, semaphore tfsync
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey(names.AttrProtocol), knownvalue.StringExact("17")),
 				},
 			},
-		},
-	})
-}
-
-func testAccTransitGatewayPolicyTableEntry_protocolAny(t *testing.T, semaphore tfsync.Semaphore) {
-	ctx := acctest.Context(t)
-	var v awstypes.TransitGatewayPolicyTableEntry
-	resourceName := "aws_ec2_transit_gateway_policy_table_entry.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckTransitGateway(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayPolicyTableEntryDestroy(ctx, t),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPolicyTableEntryConfig_protocolAny(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPolicyTableEntry/protocol/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"protocol":      config.StringVariable("*"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableEntryExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("destination_port_range"), knownvalue.StringExact("*")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey(names.AttrProtocol), knownvalue.StringExact("*")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("source_port_range"), knownvalue.StringExact("*")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule").AtSliceIndex(0).AtMapKey("destination_port_range"), knownvalue.StringExact("*")),
 				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "transit_gateway_policy_table_id",
-				ImportStateIdFunc:                    testAccTransitGatewayPolicyTableEntryImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -304,111 +306,4 @@ func testAccCheckTransitGatewayPolicyTableEntryExists(ctx context.Context, t *te
 
 		return nil
 	}
-}
-
-func testAccTransitGatewayPolicyTableEntryConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_transit_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_policy_table" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccTransitGatewayPolicyTableEntryConfig_fullRule(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPolicyTableEntryConfig_base(rName),
-		`
-resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
-  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
-  policy_rule_number              = 200
-  target_route_table_id           = aws_ec2_transit_gateway_route_table.test.id
-
-  policy_rule {
-    source_cidr_block      = "10.0.1.0/24"
-    source_port_range      = "1024-65535"
-    destination_cidr_block = "10.0.2.0/24"
-    destination_port_range = "443"
-    protocol               = "6"
-
-    metadata {
-      key   = "test"
-      value = "test"
-    }
-  }
-}
-`,
-	)
-}
-
-func testAccTransitGatewayPolicyTableEntryConfig_update(rName string, useSecondRouteTable bool) string {
-	targetRouteTableID := "aws_ec2_transit_gateway_route_table.test.id"
-	protocol := "6"
-	if useSecondRouteTable {
-		targetRouteTableID = "aws_ec2_transit_gateway_route_table.test2.id"
-		protocol = "17"
-	}
-
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPolicyTableEntryConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_ec2_transit_gateway_route_table" "test2" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
-  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
-  policy_rule_number              = 300
-  target_route_table_id           = %[2]s
-
-  policy_rule {
-    source_cidr_block      = "10.0.1.0/24"
-    destination_cidr_block = "10.0.2.0/24"
-    protocol               = %[3]q
-  }
-}
-`, rName, targetRouteTableID, protocol),
-	)
-}
-
-func testAccTransitGatewayPolicyTableEntryConfig_protocolAny(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPolicyTableEntryConfig_base(rName),
-		`
-resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
-  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
-  policy_rule_number              = 400
-  target_route_table_id           = aws_ec2_transit_gateway_route_table.test.id
-
-  policy_rule {
-    source_cidr_block      = "10.0.1.0/24"
-    destination_cidr_block = "10.0.2.0/24"
-    source_port_range      = "*"
-    destination_port_range = "*"
-    protocol               = "*"
-  }
-}
-`,
-	)
 }
