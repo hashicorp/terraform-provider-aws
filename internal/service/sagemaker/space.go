@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -16,13 +18,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,368 +43,414 @@ func resourceSpace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"space_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"home_efs_file_system_uid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ownership_settings": {
-				Type:         schema.TypeList,
-				RequiredWith: []string{"space_sharing_settings"},
-				Optional:     true,
-				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"owner_user_profile_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"space_display_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			"space_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"app_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AppType](),
-						},
-						"code_editor_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"custom_file_system": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"efs_file_system": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrFileSystemID: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"jupyter_lab_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"code_repository": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"repository_url": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
-										},
-									},
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"jupyter_server_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"code_repository": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"repository_url": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
-										},
-									},
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-									"lifecycle_config_arns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
-										},
-									},
-								},
-							},
-						},
-						"kernel_gateway_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrInstanceType: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
-												},
-												"lifecycle_config_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_alias": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-									"lifecycle_config_arns": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
-										},
-									},
-									"custom_image": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 200,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"app_image_config_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_version_number": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"space_storage_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ebs_storage_settings": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ebs_volume_size_in_gb": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(5, 16384),
-												},
-											},
-										},
-									},
-								},
+				"space_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"domain_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"home_efs_file_system_uid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ownership_settings": {
+					Type:         schema.TypeList,
+					RequiredWith: []string{"space_sharing_settings"},
+					Optional:     true,
+					MaxItems:     1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"owner_user_profile_name": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"space_sharing_settings": {
-				Type:         schema.TypeList,
-				RequiredWith: []string{"ownership_settings"},
-				Optional:     true,
-				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sharing_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SharingType](),
+				"space_display_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"space_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"app_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AppType](),
+							},
+							"code_editor_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"app_lifecycle_management": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"idle_timeout_in_minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntBetween(60, 525600),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"custom_file_system": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"efs_file_system": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFileSystemID: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"jupyter_lab_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"app_lifecycle_management": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"idle_timeout_in_minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntBetween(60, 525600),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"code_repository": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"repository_url": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
+												},
+											},
+										},
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"jupyter_server_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"code_repository": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"repository_url": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
+												},
+											},
+										},
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+										"lifecycle_config_arns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
+											},
+										},
+									},
+								},
+							},
+							"kernel_gateway_app_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_resource_spec": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrInstanceType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+													},
+													"lifecycle_config_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"sagemaker_image_version_alias": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sagemaker_image_version_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+										"lifecycle_config_arns": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
+											},
+										},
+										"custom_image": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 200,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"app_image_config_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"image_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"image_version_number": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"space_storage_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ebs_storage_settings": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ebs_volume_size_in_gb": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(5, 16384),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"space_sharing_settings": {
+					Type:         schema.TypeList,
+					RequiredWith: []string{"ownership_settings"},
+					Optional:     true,
+					MaxItems:     1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sharing_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SharingType](),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -414,56 +462,56 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("ownership_settings"); ok && len(v.([]interface{})) > 0 {
-		input.OwnershipSettings = expandOwnershipSettings(v.([]interface{}))
+	if v, ok := d.GetOk("ownership_settings"); ok && len(v.([]any)) > 0 {
+		input.OwnershipSettings = expandOwnershipSettings(v.([]any))
 	}
 
-	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
-		input.SpaceSettings = expandSpaceSettings(v.([]interface{}))
+	if v, ok := d.GetOk("space_settings"); ok && len(v.([]any)) > 0 {
+		input.SpaceSettings = expandSpaceSettings(v.([]any))
 	}
 
-	if v, ok := d.GetOk("space_sharing_settings"); ok && len(v.([]interface{})) > 0 {
-		input.SpaceSharingSettings = expandSpaceSharingSettings(v.([]interface{}))
+	if v, ok := d.GetOk("space_sharing_settings"); ok && len(v.([]any)) > 0 {
+		input.SpaceSharingSettings = expandSpaceSharingSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk("space_display_name"); ok {
 		input.SpaceDisplayName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker AI Space create config: %#v", *input)
 	out, err := conn.CreateSpace(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Space: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Space: %s", err)
 	}
 
 	d.SetId(aws.ToString(out.SpaceArn))
 
 	if err := waitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
-func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	space, err := findSpaceByName(ctx, conn, domainID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Space (%s), removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Space (%s), removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, space.SpaceArn)
@@ -474,21 +522,21 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrURL, space.Url)
 
 	if err := d.Set("ownership_settings", flattenOwnershipSettings(space.OwnershipSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_settings", flattenSpaceSettings(space.SpaceSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_sharing_settings", flattenSpaceSharingSettings(space.SpaceSharingSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -502,28 +550,28 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChanges("space_settings") {
-			input.SpaceSettings = expandSpaceSettings(d.Get("space_settings").([]interface{}))
+			input.SpaceSettings = expandSpaceSettings(d.Get("space_settings").([]any))
 		}
 
 		if d.HasChange("space_display_name") {
 			input.SpaceDisplayName = aws.String(d.Get("space_display_name").(string))
 		}
 
-		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI Space update config: %#v", *input)
 		_, err := conn.UpdateSpace(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Space: %s", err)
 		}
 
 		if err := waitSpaceInService(ctx, conn, domainID, name); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
-func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -537,13 +585,13 @@ func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if _, err := conn.DeleteSpace(ctx, input); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Space (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Space (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitSpaceDeleted(ctx, conn, domainID, name); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to delete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
@@ -560,15 +608,13 @@ func findSpaceByName(ctx context.Context, conn *sagemaker.Client, domainId, name
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "RecordNotFound") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -577,7 +623,7 @@ func findSpaceByName(ctx context.Context, conn *sagemaker.Client, domainId, name
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -602,12 +648,12 @@ func decodeSpaceName(id string) (string, string, error) {
 	return domainID, spaceName, nil
 }
 
-func expandSpaceSettings(l []interface{}) *awstypes.SpaceSettings {
+func expandSpaceSettings(l []any) *awstypes.SpaceSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceSettings{}
 
@@ -615,39 +661,39 @@ func expandSpaceSettings(l []interface{}) *awstypes.SpaceSettings {
 		config.AppType = awstypes.AppType(v)
 	}
 
-	if v, ok := m["code_editor_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["code_editor_app_settings"].([]any); ok && len(v) > 0 {
 		config.CodeEditorAppSettings = expandSpaceCodeEditorAppSettings(v)
 	}
 
-	if v, ok := m["custom_file_system"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_file_system"].([]any); ok && len(v) > 0 {
 		config.CustomFileSystems = expandCustomFileSystems(v)
 	}
 
-	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_lab_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterLabAppSettings = expandSpaceJupyterLabAppSettings(v)
 	}
 
-	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_server_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
 	}
 
-	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_gateway_app_settings"].([]any); ok && len(v) > 0 {
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
-	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["space_storage_settings"].([]any); ok && len(v) > 0 {
 		config.SpaceStorageSettings = expandSpaceStorageSettings(v)
 	}
 
 	return config
 }
 
-func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]interface{} {
+func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"app_type": config.AppType,
 	}
 
@@ -675,65 +721,81 @@ func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]interface
 		m["space_storage_settings"] = flattenSpaceStorageSettings(config.SpaceStorageSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceCodeEditorAppSettings(l []interface{}) *awstypes.SpaceCodeEditorAppSettings {
+func expandSpaceCodeEditorAppSettings(l []any) *awstypes.SpaceCodeEditorAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceCodeEditorAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["app_lifecycle_management"].([]any); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettings) []map[string]interface{} {
+func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
+	}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceJupyterLabAppSettings(l []interface{}) *awstypes.SpaceJupyterLabAppSettings {
+func expandSpaceJupyterLabAppSettings(l []any) *awstypes.SpaceJupyterLabAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceJupyterLabAppSettings{}
+
+	if v, ok := m["app_lifecycle_management"].([]any); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
+	}
 
 	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettings) []map[string]interface{} {
+func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
+	}
 
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
@@ -743,45 +805,45 @@ func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettin
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceStorageSettings(l []interface{}) *awstypes.SpaceStorageSettings {
+func expandSpaceStorageSettings(l []any) *awstypes.SpaceStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceStorageSettings{}
 
-	if v, ok := m["ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ebs_storage_settings"].([]any); ok && len(v) > 0 {
 		config.EbsStorageSettings = expandEBSStorageSettings(v)
 	}
 
 	return config
 }
 
-func flattenSpaceStorageSettings(config *awstypes.SpaceStorageSettings) []map[string]interface{} {
+func flattenSpaceStorageSettings(config *awstypes.SpaceStorageSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EbsStorageSettings != nil {
 		m["ebs_storage_settings"] = flattenEBSStorageSettings(config.EbsStorageSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandEBSStorageSettings(l []interface{}) *awstypes.EbsStorageSettings {
+func expandEBSStorageSettings(l []any) *awstypes.EbsStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.EbsStorageSettings{}
 
@@ -792,35 +854,35 @@ func expandEBSStorageSettings(l []interface{}) *awstypes.EbsStorageSettings {
 	return config
 }
 
-func flattenEBSStorageSettings(config *awstypes.EbsStorageSettings) []map[string]interface{} {
+func flattenEBSStorageSettings(config *awstypes.EbsStorageSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EbsVolumeSizeInGb != nil {
 		m["ebs_volume_size_in_gb"] = aws.ToInt32(config.EbsVolumeSizeInGb)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandCustomFileSystem(tfMap map[string]interface{}) awstypes.CustomFileSystem {
+func expandCustomFileSystem(tfMap map[string]any) awstypes.CustomFileSystem {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomFileSystemMemberEFSFileSystem{}
 
-	if v, ok := tfMap["efs_file_system"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandEFSFileSystem(v[0].(map[string]interface{}))
+	if v, ok := tfMap["efs_file_system"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandEFSFileSystem(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCustomFileSystems(tfList []interface{}) []awstypes.CustomFileSystem {
+func expandCustomFileSystems(tfList []any) []awstypes.CustomFileSystem {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -828,7 +890,7 @@ func expandCustomFileSystems(tfList []interface{}) []awstypes.CustomFileSystem {
 	var apiObjects []awstypes.CustomFileSystem
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -846,7 +908,7 @@ func expandCustomFileSystems(tfList []interface{}) []awstypes.CustomFileSystem {
 	return apiObjects
 }
 
-func expandEFSFileSystem(tfMap map[string]interface{}) awstypes.EFSFileSystem {
+func expandEFSFileSystem(tfMap map[string]any) awstypes.EFSFileSystem {
 	apiObject := awstypes.EFSFileSystem{}
 
 	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
@@ -856,8 +918,8 @@ func expandEFSFileSystem(tfMap map[string]interface{}) awstypes.EFSFileSystem {
 	return apiObject
 }
 
-func flattenCustomFileSystem(apiObject awstypes.CustomFileSystem) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenCustomFileSystem(apiObject awstypes.CustomFileSystem) map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject, ok := apiObject.(*awstypes.CustomFileSystemMemberEFSFileSystem); ok {
 		tfMap["efs_file_system"] = flattenEFSFileSystem(apiObject)
@@ -866,12 +928,12 @@ func flattenCustomFileSystem(apiObject awstypes.CustomFileSystem) map[string]int
 	return tfMap
 }
 
-func flattenCustomFileSystems(apiObjects []awstypes.CustomFileSystem) []interface{} {
+func flattenCustomFileSystems(apiObjects []awstypes.CustomFileSystem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
@@ -884,22 +946,22 @@ func flattenCustomFileSystems(apiObjects []awstypes.CustomFileSystem) []interfac
 	return tfList
 }
 
-func flattenEFSFileSystem(apiObject *awstypes.CustomFileSystemMemberEFSFileSystem) []map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEFSFileSystem(apiObject *awstypes.CustomFileSystemMemberEFSFileSystem) []map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.Value.FileSystemId != nil {
 		tfMap[names.AttrFileSystemID] = aws.ToString(apiObject.Value.FileSystemId)
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func expandOwnershipSettings(l []interface{}) *awstypes.OwnershipSettings {
+func expandOwnershipSettings(l []any) *awstypes.OwnershipSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.OwnershipSettings{}
 
@@ -910,26 +972,26 @@ func expandOwnershipSettings(l []interface{}) *awstypes.OwnershipSettings {
 	return config
 }
 
-func flattenOwnershipSettings(config *awstypes.OwnershipSettings) []map[string]interface{} {
+func flattenOwnershipSettings(config *awstypes.OwnershipSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.OwnerUserProfileName != nil {
 		m["owner_user_profile_name"] = aws.ToString(config.OwnerUserProfileName)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceSharingSettings(l []interface{}) *awstypes.SpaceSharingSettings {
+func expandSpaceSharingSettings(l []any) *awstypes.SpaceSharingSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceSharingSettings{}
 
@@ -940,14 +1002,74 @@ func expandSpaceSharingSettings(l []interface{}) *awstypes.SpaceSharingSettings 
 	return config
 }
 
-func flattenSpaceSharingSettings(config *awstypes.SpaceSharingSettings) []map[string]interface{} {
+func flattenSpaceSharingSettings(config *awstypes.SpaceSharingSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"sharing_type": config.SharingType,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
+}
+
+func expandSpaceAppLifecycleManagement(l []any) *awstypes.SpaceAppLifecycleManagement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.SpaceAppLifecycleManagement{}
+
+	if v, ok := m["idle_settings"].([]any); ok && len(v) > 0 {
+		config.IdleSettings = expandSpaceIdleSettings(v)
+	}
+
+	return config
+}
+
+func expandSpaceIdleSettings(l []any) *awstypes.SpaceIdleSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.SpaceIdleSettings{}
+
+	if v, ok := m["idle_timeout_in_minutes"].(int); ok {
+		config.IdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	return config
+}
+
+func flattenSpaceAppLifecycleManagement(config *awstypes.SpaceAppLifecycleManagement) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{}
+
+	if config.IdleSettings != nil {
+		m["idle_settings"] = flattenSpaceIdleSettings(config.IdleSettings)
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenSpaceIdleSettings(config *awstypes.SpaceIdleSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{}
+
+	if config.IdleTimeoutInMinutes != nil {
+		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
+	}
+
+	return []map[string]any{m}
 }

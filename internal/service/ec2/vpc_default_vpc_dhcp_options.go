@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -13,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,8 +33,6 @@ func resourceDefaultVPCDHCPOptions() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		// Keep in sync with aws_vpc_dhcp_options' schema with the following changes:
 		//   - domain_name is Computed-only
 		//   - domain_name_servers is Computed-only and is TypeString
@@ -42,47 +41,49 @@ func resourceDefaultVPCDHCPOptions() *schema.Resource {
 		//   - netbios_node_type is Computed-only
 		//   - ntp_servers is Computed-only and is TypeString
 		//   - owner_id is Optional/Computed
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_name_servers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_address_preferred_lease_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"netbios_name_servers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"netbios_node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ntp_servers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_name_servers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_address_preferred_lease_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"netbios_name_servers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"netbios_node_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ntp_servers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

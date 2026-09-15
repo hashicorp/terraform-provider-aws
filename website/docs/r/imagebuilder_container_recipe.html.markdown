@@ -58,8 +58,9 @@ The following arguments are required:
 * `target_repository` (Required) The destination repository for the container image. Detailed below.
 * `version` (Required) Version of the container recipe.
 
-The following attributes are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the container recipe.
 * `dockerfile_template_data` - (Optional) The Dockerfile template used to build the image as an inline data blob.
 * `dockerfile_template_uri` - (Optional) The Amazon S3 URI for the Dockerfile that will be used to build the container image.
@@ -73,7 +74,7 @@ The following attributes are optional:
 
 The `component` block supports the following arguments:
 
-* `component_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Component to associate.
+* `component_arn` - (Required) ARN of the Image Builder Component to associate.
 * `parameter` - (Optional) Configuration block(s) for parameters to configure the component. Detailed below.
 
 ### parameter
@@ -94,6 +95,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the container recipe. Detailed below.
 * `image` - (Optional) The AMI ID to use as the base image for a container build and test instance. If not specified, Image Builder will use the appropriate ECS-optimized AMI as a base image.
 
@@ -101,6 +103,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_name` - (Optional) Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
 * `ebs` - (Optional) Configuration block with Elastic Block Storage (EBS) block device mapping settings. Detailed below.
 * `no_device` - (Optional) Set to `true` to remove a mapping from the parent image.
@@ -110,10 +113,11 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delete_on_termination` - (Optional) Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
 * `encrypted` - (Optional) Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
 * `iops` - (Optional) Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key for encryption.
+* `kms_key_id` - (Optional) ARN of the KMS Key for encryption.
 * `snapshot_id` - (Optional) Identifier of the EC2 Volume Snapshot.
 * `throughput` - (Optional) For GP3 volumes only. The throughput in MiB/s that the volume supports.
 * `volume_size` - (Optional) Size of the volume, in GiB.
@@ -123,7 +127,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
+* `id` - ARN of the container recipe.
+* `arn` - (Required) ARN of the container recipe.
 * `date_created` - Date the container recipe was created.
 * `encrypted` - A flag that indicates if the target container is encrypted.
 * `owner` - Owner of the container recipe.
@@ -132,7 +137,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_container_recipe` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_container_recipe.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0"
+  }
+}
+
+resource "aws_imagebuilder_container_recipe" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Image Builder container recipe.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_container_recipe` resources using the ARN. For example:
 
 ```terraform
 import {
@@ -141,7 +167,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_container_recipe` resources using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_container_recipe` resources using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0

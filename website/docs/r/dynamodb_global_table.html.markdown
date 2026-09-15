@@ -82,10 +82,9 @@ resource "aws_dynamodb_global_table" "myTable" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the global table. Must match underlying DynamoDB Table names in all regions.
 * `replica` - (Required) Underlying DynamoDB Table. At least 1 replica must be defined. See below.
-
-### Nested Fields
 
 #### `replica`
 
@@ -97,6 +96,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the DynamoDB Global Table
 * `arn` - The ARN of the DynamoDB Global Table
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `1m`)
 
 ## Import
 

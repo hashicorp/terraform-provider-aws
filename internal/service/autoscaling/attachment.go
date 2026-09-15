@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -7,16 +9,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -27,29 +30,31 @@ func resourceAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceAttachmentRead,
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"elb": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
-			},
-			"lb_target_group_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"autoscaling_group_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"elb": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
+				},
+				"lb_target_group_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
+				},
+			}
 		},
 	}
 }
 
-func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -62,7 +67,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancers(ctx, input)
 			},
 			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
@@ -79,7 +84,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -90,12 +95,12 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
 
 	return append(diags, resourceAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -108,7 +113,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 		err = findAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Group Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -121,7 +126,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -134,7 +139,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DetachLoadBalancers(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -154,7 +159,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DetachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -174,10 +179,8 @@ func findAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Cli
 		return err
 	}
 
-	for _, v := range asg.LoadBalancerNames {
-		if v == loadBalancerName {
-			return nil
-		}
+	if slices.Contains(asg.LoadBalancerNames, loadBalancerName) {
+		return nil
 	}
 
 	return &retry.NotFoundError{
@@ -192,10 +195,8 @@ func findAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.Clien
 		return err
 	}
 
-	for _, v := range asg.TargetGroupARNs {
-		if v == targetGroupARN {
-			return nil
-		}
+	if slices.Contains(asg.TargetGroupARNs, targetGroupARN) {
+		return nil
 	}
 
 	return &retry.NotFoundError{

@@ -47,10 +47,9 @@ resource "aws_db_instance" "dev" {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance
@@ -65,6 +64,8 @@ The default is `false`.
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired DB snapshot.
+
+~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
 ## Attribute Reference
 

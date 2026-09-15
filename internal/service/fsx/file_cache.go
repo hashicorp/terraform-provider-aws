@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -14,15 +16,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,260 +51,261 @@ func resourceFileCache() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"copy_tags_to_data_repository_associations": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"data_repository_association": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 8,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"data_repository_path": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(3, 4357),
-							),
-						},
-						"data_repository_subdirectories": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 500,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"copy_tags_to_data_repository_associations": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"data_repository_association": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 8,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"data_repository_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(3, 4357),
+								),
+							},
+							"data_repository_subdirectories": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 500,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.StringLenBetween(1, 4096),
+									),
+								},
+							},
+							"file_cache_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"file_cache_path": {
+								Type:     schema.TypeString,
+								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 4096),
 								),
 							},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"file_system_path": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"imported_file_chunk_size": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"nfs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dns_ips": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(7, 15),
+													validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+												),
+											},
+										},
+										names.AttrVersion: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
+										},
+									},
+								},
+							},
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
 						},
-						"file_cache_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"file_cache_path": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 4096),
-							),
-						},
-						names.AttrFileSystemID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"file_system_path": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"imported_file_chunk_size": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"nfs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dns_ips": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+					},
+				},
+				"data_repository_association_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_cache_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_cache_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FileCacheType](),
+				},
+				"file_cache_type_version": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 20),
+						validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
+					),
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"lustre_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FileCacheLustreDeploymentType](),
+							},
+							"log_configuration": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDestination: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"level": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"metadata_configuration": {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 8,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"storage_capacity": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringLenBetween(7, 15),
-												validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+												validation.IntBetween(0, 2147483647),
 											),
 										},
 									},
-									names.AttrVersion: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
-									},
 								},
 							},
-						},
-						names.AttrResourceARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
-					},
-				},
-			},
-			"data_repository_association_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_cache_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_cache_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FileCacheType](),
-			},
-			"file_cache_type_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
-				),
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"lustre_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"deployment_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FileCacheLustreDeploymentType](),
-						},
-						"log_configuration": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"level": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							"mount_name": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"metadata_configuration": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 8,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"storage_capacity": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.IntBetween(0, 2147483647),
-										),
-									},
-								},
+							"per_unit_storage_throughput": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.IntBetween(12, 1000),
+								),
 							},
-						},
-						"mount_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"per_unit_storage_throughput": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.IntBetween(12, 1000),
-							),
-						},
-						"weekly_maintenance_start_time": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(7, 7),
-								validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
-							),
+							"weekly_maintenance_start_time": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(7, 7),
+									validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
+								),
+							},
 						},
 					},
 				},
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"network_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"storage_capacity": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.IntBetween(0, 2147483647),
-				),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"storage_capacity": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.IntBetween(0, 2147483647),
+					),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateFileCacheInput{
-		ClientRequestToken:   aws.String(id.UniqueId()),
+		ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 		FileCacheType:        awstypes.FileCacheType(d.Get("file_cache_type").(string)),
 		FileCacheTypeVersion: aws.String(d.Get("file_cache_type_version").(string)),
 		StorageCapacity:      aws.Int32(int32(d.Get("storage_capacity").(int))),
-		SubnetIds:            flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		SubnetIds:            flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -341,13 +344,13 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceFileCacheRead(ctx, d, meta)...)
 }
 
-func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	filecache, err := findFileCacheByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx FileCache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -380,8 +383,8 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre  Data Repository Associations: %s", err)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(ctx, dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_repository_association: %s", err)
 	}
@@ -389,19 +392,19 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileCacheInput{
-			ClientRequestToken:  aws.String(id.UniqueId()),
+			ClientRequestToken:  aws.String(create.UniqueId(ctx)),
 			FileCacheId:         aws.String(d.Id()),
 			LustreConfiguration: &awstypes.UpdateFileCacheLustreConfiguration{},
 		}
 
 		if d.HasChanges("lustre_configuration") {
-			input.LustreConfiguration = expandUpdateFileCacheLustreConfiguration(d.Get("lustre_configuration").([]interface{}))
+			input.LustreConfiguration = expandUpdateFileCacheLustreConfiguration(d.Get("lustre_configuration").([]any))
 		}
 
 		_, err := conn.UpdateFileCache(ctx, input)
@@ -418,13 +421,13 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceFileCacheRead(ctx, d, meta)...)
 }
 
-func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	log.Printf("[INFO] Deleting FSx FileCache: %s", d.Id())
 	_, err := conn.DeleteFileCache(ctx, &fsx.DeleteFileCacheInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileCacheId:        aws.String(d.Id()),
 	})
 
@@ -470,8 +473,7 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 
 		if errs.IsA[*awstypes.FileCacheNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -489,11 +491,11 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 	return output, nil
 }
 
-func statusFileCache(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFileCache(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileCacheByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -509,7 +511,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
-		Refresh: statusFileCache(ctx, conn, id),
+		Refresh: statusFileCache(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -518,7 +520,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -530,7 +532,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
-		Refresh: statusFileCache(ctx, conn, id),
+		Refresh: statusFileCache(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -539,7 +541,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -552,7 +554,7 @@ func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleAvailable, awstypes.FileCacheLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusFileCache(ctx, conn, id),
+		Refresh: statusFileCache(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -561,7 +563,7 @@ func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -578,17 +580,17 @@ func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.Client, 
 	return findDataRepositoryAssociations(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DataRepositoryAssociation]())
 }
 
-func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssociations []awstypes.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssociations []awstypes.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []any {
 	if len(dataRepositoryAssociations) == 0 {
 		return nil
 	}
 
-	var flattenedDataRepositoryAssociations []interface{}
+	var flattenedDataRepositoryAssociations []any
 
 	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
-		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := keyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-		values := map[string]interface{}{
+		values := map[string]any{
 			names.AttrAssociationID:          dataRepositoryAssociation.AssociationId,
 			"data_repository_path":           dataRepositoryAssociation.DataRepositoryPath,
 			"data_repository_subdirectories": dataRepositoryAssociation.DataRepositorySubdirectories,
@@ -604,23 +606,23 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 	return flattenedDataRepositoryAssociations
 }
 
-func flattenNFSDataRepositoryConfiguration(nfsDataRepositoryConfiguration *awstypes.NFSDataRepositoryConfiguration) []map[string]interface{} {
+func flattenNFSDataRepositoryConfiguration(nfsDataRepositoryConfiguration *awstypes.NFSDataRepositoryConfiguration) []map[string]any {
 	if nfsDataRepositoryConfiguration == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"dns_ips":         nfsDataRepositoryConfiguration.DnsIps,
 		names.AttrVersion: string(nfsDataRepositoryConfiguration.Version),
 	}
-	return []map[string]interface{}{values}
+	return []map[string]any{values}
 }
 
-func flattenFileCacheLustreConfiguration(fileCacheLustreConfiguration *awstypes.FileCacheLustreConfiguration) []interface{} {
+func flattenFileCacheLustreConfiguration(fileCacheLustreConfiguration *awstypes.FileCacheLustreConfiguration) []any {
 	if fileCacheLustreConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	values := make(map[string]interface{})
+	values := make(map[string]any)
 
 	values["deployment_type"] = string(fileCacheLustreConfiguration.DeploymentType)
 
@@ -640,19 +642,19 @@ func flattenFileCacheLustreConfiguration(fileCacheLustreConfiguration *awstypes.
 		values["weekly_maintenance_start_time"] = aws.ToString(fileCacheLustreConfiguration.WeeklyMaintenanceStartTime)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenFileCacheLustreMetadataConfiguration(fileCacheLustreMetadataConfiguration *awstypes.FileCacheLustreMetadataConfiguration) []interface{} {
-	values := make(map[string]interface{})
+func flattenFileCacheLustreMetadataConfiguration(fileCacheLustreMetadataConfiguration *awstypes.FileCacheLustreMetadataConfiguration) []any {
+	values := make(map[string]any)
 	if fileCacheLustreMetadataConfiguration.StorageCapacity != nil {
 		values["storage_capacity"] = aws.ToInt32(fileCacheLustreMetadataConfiguration.StorageCapacity)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func expandDataRepositoryAssociations(l []interface{}) []awstypes.FileCacheDataRepositoryAssociation {
+func expandDataRepositoryAssociations(l []any) []awstypes.FileCacheDataRepositoryAssociation {
 	if len(l) == 0 {
 		return nil
 	}
@@ -660,7 +662,7 @@ func expandDataRepositoryAssociations(l []interface{}) []awstypes.FileCacheDataR
 	var dataRepositoryAssociations []awstypes.FileCacheDataRepositoryAssociation
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -685,11 +687,11 @@ func expandDataRepositoryAssociations(l []interface{}) []awstypes.FileCacheDataR
 	return dataRepositoryAssociations
 }
 
-func expandFileCacheNFSConfiguration(l []interface{}) *awstypes.FileCacheNFSConfiguration {
+func expandFileCacheNFSConfiguration(l []any) *awstypes.FileCacheNFSConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	data := l[0].(map[string]interface{})
+	data := l[0].(map[string]any)
 
 	req := &awstypes.FileCacheNFSConfiguration{}
 	if v, ok := data["dns_ips"]; ok {
@@ -702,12 +704,12 @@ func expandFileCacheNFSConfiguration(l []interface{}) *awstypes.FileCacheNFSConf
 	return req
 }
 
-func expandUpdateFileCacheLustreConfiguration(l []interface{}) *awstypes.UpdateFileCacheLustreConfiguration {
+func expandUpdateFileCacheLustreConfiguration(l []any) *awstypes.UpdateFileCacheLustreConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	data := l[0].(map[string]interface{})
+	data := l[0].(map[string]any)
 	req := &awstypes.UpdateFileCacheLustreConfiguration{}
 
 	if v, ok := data["weekly_maintenance_start_time"].(string); ok {
@@ -717,11 +719,11 @@ func expandUpdateFileCacheLustreConfiguration(l []interface{}) *awstypes.UpdateF
 	return req
 }
 
-func expandCreateFileCacheLustreConfiguration(l []interface{}) *awstypes.CreateFileCacheLustreConfiguration {
+func expandCreateFileCacheLustreConfiguration(l []any) *awstypes.CreateFileCacheLustreConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	data := l[0].(map[string]interface{})
+	data := l[0].(map[string]any)
 	req := &awstypes.CreateFileCacheLustreConfiguration{}
 
 	if v, ok := data["deployment_type"].(string); ok {
@@ -740,11 +742,11 @@ func expandCreateFileCacheLustreConfiguration(l []interface{}) *awstypes.CreateF
 	return req
 }
 
-func expandFileCacheLustreMetadataConfiguration(l []interface{}) *awstypes.FileCacheLustreMetadataConfiguration {
+func expandFileCacheLustreMetadataConfiguration(l []any) *awstypes.FileCacheLustreMetadataConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	data := l[0].(map[string]interface{})
+	data := l[0].(map[string]any)
 	req := &awstypes.FileCacheLustreMetadataConfiguration{}
 
 	if v, ok := data["storage_capacity"].(int); ok {

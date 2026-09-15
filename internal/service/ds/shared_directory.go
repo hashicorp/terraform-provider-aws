@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ds
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,55 +41,57 @@ func resourceSharedDirectory() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"method": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ShareMethodHandshake,
-				ValidateDiagFunc: enum.Validate[awstypes.ShareMethod](),
-			},
-			"notes": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"shared_directory_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTarget: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.TargetTypeAccount,
-							ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"method": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ShareMethodHandshake,
+					ValidateDiagFunc: enum.Validate[awstypes.ShareMethod](),
+				},
+				"notes": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"shared_directory_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTarget: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.TargetTypeAccount,
+								ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -95,7 +99,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &directoryservice.ShareDirectoryInput{
 		DirectoryId: aws.String(directoryID),
 		ShareMethod: awstypes.ShareMethod(d.Get("method").(string)),
-		ShareTarget: expandShareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
+		ShareTarget: expandShareTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
 	}
 
 	if v, ok := d.GetOk("notes"); ok {
@@ -113,7 +117,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceSharedDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -124,7 +128,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirID, sharedDirID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Shared Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -139,7 +143,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("notes", output.ShareNotes)
 	d.Set("shared_directory_id", output.SharedDirectoryId)
 	if output.SharedAccountId != nil {
-		if err := d.Set(names.AttrTarget, []interface{}{flattenShareTarget(output)}); err != nil {
+		if err := d.Set(names.AttrTarget, []any{flattenShareTarget(output)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 		}
 	} else {
@@ -149,7 +153,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -159,10 +163,11 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting Directory Service Shared Directory: %s", d.Id())
-	_, err = conn.UnshareDirectory(ctx, &directoryservice.UnshareDirectoryInput{
+	input := directoryservice.UnshareDirectoryInput{
 		DirectoryId:   aws.String(ownerDirID),
-		UnshareTarget: expandUnshareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
-	})
+		UnshareTarget: expandUnshareTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
+	}
+	_, err = conn.UnshareDirectory(ctx, &input)
 
 	if errs.IsA[*awstypes.DirectoryNotSharedException](err) {
 		return diags
@@ -217,8 +222,7 @@ func findSharedDirectories(ctx context.Context, conn *directoryservice.Client, i
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -246,19 +250,18 @@ func findSharedDirectoryByTwoPartKey(ctx context.Context, conn *directoryservice
 
 	if status := output.ShareStatus; status == awstypes.ShareStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSharedDirectory(conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -281,7 +284,7 @@ func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Clie
 			awstypes.ShareStatusRejecting,
 		),
 		Target:                    []string{},
-		Refresh:                   statusSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID),
+		Refresh:                   statusSharedDirectory(conn, ownerDirectoryID, sharedDirectoryID),
 		Timeout:                   timeout,
 		MinTimeout:                30 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -296,7 +299,7 @@ func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Clie
 	return nil, err
 }
 
-func expandShareTarget(tfMap map[string]interface{}) *awstypes.ShareTarget { // nosemgrep:ci.ds-in-func-name
+func expandShareTarget(tfMap map[string]any) *awstypes.ShareTarget { // nosemgrep:ci.ds-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -314,7 +317,7 @@ func expandShareTarget(tfMap map[string]interface{}) *awstypes.ShareTarget { // 
 	return apiObject
 }
 
-func expandUnshareTarget(tfMap map[string]interface{}) *awstypes.UnshareTarget {
+func expandUnshareTarget(tfMap map[string]any) *awstypes.UnshareTarget {
 	if tfMap == nil {
 		return nil
 	}
@@ -334,12 +337,12 @@ func expandUnshareTarget(tfMap map[string]interface{}) *awstypes.UnshareTarget {
 
 // flattenShareTarget is not a mirror of expandShareTarget because the API data structures are
 // different, with no ShareTarget returned.
-func flattenShareTarget(apiObject *awstypes.SharedDirectory) map[string]interface{} {
+func flattenShareTarget(apiObject *awstypes.SharedDirectory) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SharedAccountId != nil {
 		tfMap[names.AttrID] = aws.ToString(apiObject.SharedAccountId)

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidentity
 
@@ -25,70 +27,72 @@ func dataSourcePool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoolRead,
 
-		Schema: map[string]*schema.Schema{
-			"allow_classic_flow": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"allow_unauthenticated_identities": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cognito_identity_providers": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrProviderName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"server_side_token_check": {
-							Type:     schema.TypeBool,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_classic_flow": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"allow_unauthenticated_identities": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cognito_identity_providers": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrProviderName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"server_side_token_check": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"developer_provider_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_pool_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validIdentityPoolName,
-			},
-			"openid_connect_provider_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"developer_provider_name": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"saml_provider_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"identity_pool_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validIdentityPoolName,
 				},
-			},
-			"supported_login_providers": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"openid_connect_provider_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"saml_provider_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"supported_login_providers": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -98,7 +102,7 @@ const (
 	ListPoolMaxResults = 20
 )
 
-func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
@@ -112,10 +116,10 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.ToString(ip.IdentityPoolId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "cognito-identity",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -147,11 +151,11 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name string) (*cognitoidentity.DescribeIdentityPoolOutput, error) {
 	var poolID string
-	input := &cognitoidentity.ListIdentityPoolsInput{
+	listInout := cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int32(ListPoolMaxResults),
 	}
 
-	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, input)
+	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, &listInout)
 	for p.HasMorePages() {
 		pools, err := p.NextPage(ctx)
 		if err != nil {
@@ -169,9 +173,10 @@ func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name stri
 		return nil, fmt.Errorf("no identity pool found with name %q", name)
 	}
 
-	pool, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+	describeInput := cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(poolID),
-	})
+	}
+	pool, err := conn.DescribeIdentityPool(ctx, &describeInput)
 
 	if err != nil {
 		return nil, err

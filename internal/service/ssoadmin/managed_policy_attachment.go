@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssoadmin
 
@@ -14,18 +16,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ssoadmin_managed_policy_attachment")
-func ResourceManagedPolicyAttachment() *schema.Resource {
+// @SDKResource("aws_ssoadmin_managed_policy_attachment", name="Managed Policy Attachment")
+func resourceManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceManagedPolicyAttachmentRead,
@@ -40,34 +42,36 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"managed_policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"managed_policy_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permission_set_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"managed_policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"managed_policy_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permission_set_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
 
-func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -76,11 +80,11 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	permissionSetARN := d.Get("permission_set_arn").(string)
 
 	// Check for duplicates.
-	_, err := FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+	_, err := findManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): already attached", managedPolicyARN, permissionSetARN)
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading SSO Managed Policy (%s) Attachment (%s): %s", managedPolicyARN, permissionSetARN, err)
 	}
 
@@ -106,7 +110,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -115,9 +119,9 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+	policy, err := findManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +139,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -176,7 +180,7 @@ func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func FindManagedPolicy(ctx context.Context, conn *ssoadmin.Client, managedPolicyARN, permissionSetARN, instanceARN string) (*awstypes.AttachedManagedPolicy, error) {
+func findManagedPolicyByThreePartKey(ctx context.Context, conn *ssoadmin.Client, managedPolicyARN, permissionSetARN, instanceARN string) (*awstypes.AttachedManagedPolicy, error) {
 	input := &ssoadmin.ListManagedPoliciesInPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
@@ -216,8 +220,7 @@ func findAttachedManagedPolicies(
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -10,13 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,29 +24,29 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var customReaderEndpoint types.DBClusterEndpoint
 	var customEndpoint types.DBClusterEndpoint
 	readerResourceName := "aws_rds_cluster_endpoint.reader"
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, readerResourceName, &customReaderEndpoint),
-					testAccCheckClusterEndpointExists(ctx, defaultResourceName, &customEndpoint),
-					acctest.MatchResourceAttrRegionalARN(readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					testAccCheckClusterEndpointExists(ctx, t, readerResourceName, &customReaderEndpoint),
+					testAccCheckClusterEndpointExists(ctx, t, defaultResourceName, &customEndpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, names.AttrEndpoint),
-					acctest.MatchResourceAttrRegionalARN(defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(defaultResourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(readerResourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(defaultResourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(readerResourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -72,21 +70,21 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var customReaderEndpoint types.DBClusterEndpoint
 	resourceName := "aws_rds_cluster_endpoint.reader"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -98,8 +96,8 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccClusterEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -107,8 +105,8 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccClusterEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -116,9 +114,9 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_endpoint" {
@@ -127,7 +125,7 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfrds.FindDBClusterEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -142,14 +140,14 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *types.DBClusterEndpoint) resource.TestCheckFunc {
+func testAccCheckClusterEndpointExists(ctx context.Context, t *testing.T, n string, v *types.DBClusterEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterEndpointByID(ctx, conn, rs.Primary.ID)
 

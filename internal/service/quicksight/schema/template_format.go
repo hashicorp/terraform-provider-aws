@@ -1,19 +1,19 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func numericFormatConfigurationSchema() *schema.Schema {
+var numericFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -31,11 +31,11 @@ func numericFormatConfigurationSchema() *schema.Schema {
 							"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 							"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-							"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
-							names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+							"number_scale":                    sdkschema.StringEnumSchema[awstypes.NumberScale](sdkschema.AttrOptional),
+							names.AttrPrefix:                  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 							"separator_configuration":         separatorConfigurationSchema(),
-							"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
-							"symbol":                          stringSchema(false, validation.StringMatch(regexache.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
+							"suffix":                          sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
+							"symbol":                          sdkschema.StringMatchSchema(sdkschema.AttrOptional, `[A-Z]{3}`, "must be a 3 character currency symbol"),
 						},
 					},
 				},
@@ -44,9 +44,38 @@ func numericFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dateTimeFormatConfigurationSchema() *schema.Schema {
+var numericFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"currency_display_format_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CurrencyDisplayFormatConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"decimal_places_configuration":    decimalPlacesConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
+							"negative_value_configuration":    negativeValueConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
+							"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
+							"number_scale":                    sdkschema.StringEnumDataSourceSchema[awstypes.NumberScale](),
+							names.AttrPrefix:                  stringComputedOnly(),
+							"separator_configuration":         separatorConfigurationDataSourceSchema(),
+							"suffix":                          stringComputedOnly(),
+							"symbol":                          stringComputedOnly(),
+						},
+					},
+				},
+				"number_display_format_configuration":     numberDisplayFormatConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberDisplayFormatConfiguration.html
+				"percentage_display_format_configuration": percentageDisplayFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentageDisplayFormatConfiguration.html
+			},
+		},
+	}
+})
+
+var dateTimeFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -54,15 +83,29 @@ func dateTimeFormatConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"date_time_format":                stringSchema(false, validation.StringLenBetween(1, 128)),
+				"date_time_format":                sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 				"numeric_format_configuration":    numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
 			},
 		},
 	}
-}
+})
 
-func numberDisplayFormatConfigurationSchema() *schema.Schema {
+var dateTimeFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_format":                stringComputedOnly(),
+				"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
+				"numeric_format_configuration":    numericFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
+			},
+		},
+	}
+})
+
+var numberDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberDisplayFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -73,16 +116,34 @@ func numberDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
-				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+				"number_scale":                    sdkschema.StringEnumSchema[awstypes.NumberScale](sdkschema.AttrOptional),
+				names.AttrPrefix:                  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
-				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				"suffix":                          sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 			},
 		},
 	}
-}
+})
 
-func percentageDisplayFormatConfigurationSchema() *schema.Schema {
+var numberDisplayFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberDisplayFormatConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"decimal_places_configuration":    decimalPlacesConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
+				"negative_value_configuration":    negativeValueConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
+				"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
+				"number_scale":                    sdkschema.StringEnumDataSourceSchema[awstypes.NumberScale](),
+				names.AttrPrefix:                  stringComputedOnly(),
+				"separator_configuration":         separatorConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
+				"suffix":                          stringComputedOnly(),
+			},
+		},
+	}
+})
+
+var percentageDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentageDisplayFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -93,15 +154,32 @@ func percentageDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+				names.AttrPrefix:                  sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
-				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				"suffix":                          sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 			},
 		},
 	}
-}
+})
 
-func numberFormatConfigurationSchema() *schema.Schema {
+var percentageDisplayFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentageDisplayFormatConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"decimal_places_configuration":    decimalPlacesConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
+				"negative_value_configuration":    negativeValueConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
+				"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
+				names.AttrPrefix:                  stringComputedOnly(),
+				"separator_configuration":         separatorConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
+				"suffix":                          stringComputedOnly(),
+			},
+		},
+	}
+})
+
+var numberFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -113,9 +191,21 @@ func numberFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func stringFormatConfigurationSchema() *schema.Schema {
+var numberFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"numeric_format_configuration": numericFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
+			},
+		},
+	}
+})
+
+var stringFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -128,9 +218,22 @@ func stringFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func decimalPlacesConfigurationSchema() *schema.Schema {
+var stringFormatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"null_value_format_configuration": nullValueConfigurationDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
+				"numeric_format_configuration":    numericFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
+			},
+		},
+	}
+})
+
+var decimalPlacesConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -138,17 +241,25 @@ func decimalPlacesConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_places": {
-					Type:         schema.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IntBetween(0, 20),
-				},
+				"decimal_places": sdkschema.IntBetweenSchema(sdkschema.AttrRequired, 0, 20),
 			},
 		},
 	}
-}
+})
 
-func negativeValueConfigurationSchema() *schema.Schema {
+var decimalPlacesConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"decimal_places": intComputedOnly(),
+			},
+		},
+	}
+})
+
+var negativeValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -156,13 +267,25 @@ func negativeValueConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"display_mode": stringSchema(true, enum.Validate[awstypes.NegativeValueDisplayMode]()),
+				"display_mode": sdkschema.StringEnumSchema[awstypes.NegativeValueDisplayMode](sdkschema.AttrRequired),
 			},
 		},
 	}
-}
+})
 
-func nullValueConfigurationSchema() *schema.Schema {
+var negativeValueConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"display_mode": sdkschema.StringEnumDataSourceSchema[awstypes.NegativeValueDisplayMode](),
+			},
+		},
+	}
+})
+
+var nullValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -170,13 +293,25 @@ func nullValueConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"null_string": stringSchema(true, validation.StringLenBetween(1, 128)),
+				"null_string": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 128),
 			},
 		},
 	}
-}
+})
 
-func separatorConfigurationSchema() *schema.Schema {
+var nullValueConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"null_string": stringComputedOnly(),
+			},
+		},
+	}
+})
+
+var separatorConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -184,7 +319,7 @@ func separatorConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_separator": stringSchema(false, enum.Validate[awstypes.NumericSeparatorSymbol]()),
+				"decimal_separator": sdkschema.StringEnumSchema[awstypes.NumericSeparatorSymbol](sdkschema.AttrOptional),
 				"thousands_separator": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThousandSeparatorOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -192,17 +327,39 @@ func separatorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"symbol":     stringSchema(false, enum.Validate[awstypes.NumericSeparatorSymbol]()),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"symbol":       sdkschema.StringEnumSchema[awstypes.NumericSeparatorSymbol](sdkschema.AttrOptional),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func labelOptionsSchema() *schema.Schema {
+var separatorConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"decimal_separator": sdkschema.StringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
+				"thousands_separator": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThousandSeparatorOptions.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"symbol":       sdkschema.StringEnumDataSourceSchema[awstypes.NumericSeparatorSymbol](),
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var labelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -215,13 +372,27 @@ func labelOptionsSchema() *schema.Schema {
 					Optional: true,
 				},
 				"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"visibility":         stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				attrVisibility:       sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 			},
 		},
 	}
-}
+})
 
-func fontConfigurationSchema() *schema.Schema {
+var labelOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_label":       stringComputedOnly(),
+				"font_configuration": fontConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
+				attrVisibility:       sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+			},
+		},
+	}
+})
+
+var fontConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -229,35 +400,67 @@ func fontConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"font_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"font_decoration": stringSchema(false, enum.Validate[awstypes.FontDecoration]()),
+				"font_color":      hexColorSchema(sdkschema.AttrOptional),
+				"font_decoration": sdkschema.StringEnumSchema[awstypes.FontDecoration](sdkschema.AttrOptional),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"relative": stringSchema(false, enum.Validate[awstypes.RelativeFontSize]()),
+							"relative": sdkschema.StringEnumSchema[awstypes.RelativeFontSize](sdkschema.AttrOptional),
 						},
 					},
 				},
-				"font_style": stringSchema(false, enum.Validate[awstypes.FontStyle]()),
+				"font_style": sdkschema.StringEnumSchema[awstypes.FontStyle](sdkschema.AttrOptional),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(false, enum.Validate[awstypes.FontWeightName]()),
+							names.AttrName: sdkschema.StringEnumSchema[awstypes.FontWeightName](sdkschema.AttrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func formatConfigurationSchema() *schema.Schema {
+var fontConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"font_color":      stringComputedOnly(),
+				"font_decoration": sdkschema.StringEnumDataSourceSchema[awstypes.FontDecoration](),
+				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"relative": sdkschema.StringEnumDataSourceSchema[awstypes.RelativeFontSize](),
+						},
+					},
+				},
+				"font_style": sdkschema.StringEnumDataSourceSchema[awstypes.FontStyle](),
+				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: sdkschema.StringEnumDataSourceSchema[awstypes.FontWeightName](),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var formatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -271,39 +474,53 @@ func formatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func expandFormatConfiguration(tfList []interface{}) *awstypes.FormatConfiguration {
+var formatConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_format_configuration": dateTimeFormatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
+				"number_format_configuration":    numberFormatConfigurationDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
+				"string_format_configuration":    stringFormatConfigurationDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
+			},
+		},
+	}
+})
+
+func expandFormatConfiguration(tfList []any) *awstypes.FormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FormatConfiguration{}
 
-	if v, ok := tfMap["date_time_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["date_time_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DateTimeFormatConfiguration = expandDateTimeFormatConfiguration(v)
 	}
-	if v, ok := tfMap["number_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["number_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NumberFormatConfiguration = expandNumberFormatConfiguration(v)
 	}
-	if v, ok := tfMap["string_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["string_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.StringFormatConfiguration = expandStringFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandDateTimeFormatConfiguration(tfList []interface{}) *awstypes.DateTimeFormatConfiguration {
+func expandDateTimeFormatConfiguration(tfList []any) *awstypes.DateTimeFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -313,22 +530,22 @@ func expandDateTimeFormatConfiguration(tfList []interface{}) *awstypes.DateTimeF
 	if v, ok := tfMap["date_time_format"].(string); ok && v != "" {
 		apiObject.DateTimeFormat = aws.String(v)
 	}
-	if v, ok := tfMap["null_value_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["null_value_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NullValueFormatConfiguration = expandNullValueFormatConfiguration(v)
 	}
-	if v, ok := tfMap["numeric_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NumericFormatConfiguration = expandNumericFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandNullValueFormatConfiguration(tfList []interface{}) *awstypes.NullValueFormatConfiguration {
+func expandNullValueFormatConfiguration(tfList []any) *awstypes.NullValueFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -342,50 +559,50 @@ func expandNullValueFormatConfiguration(tfList []interface{}) *awstypes.NullValu
 	return apiObject
 }
 
-func expandNumericFormatConfiguration(tfList []interface{}) *awstypes.NumericFormatConfiguration {
+func expandNumericFormatConfiguration(tfList []any) *awstypes.NumericFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.NumericFormatConfiguration{}
 
-	if v, ok := tfMap["currency_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["currency_display_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.CurrencyDisplayFormatConfiguration = expandCurrencyDisplayFormatConfiguration(v)
 	}
-	if v, ok := tfMap["number_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["number_display_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NumberDisplayFormatConfiguration = expandNumberDisplayFormatConfiguration(v)
 	}
-	if v, ok := tfMap["percentage_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["percentage_display_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PercentageDisplayFormatConfiguration = expandPercentageDisplayFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandCurrencyDisplayFormatConfiguration(tfList []interface{}) *awstypes.CurrencyDisplayFormatConfiguration {
+func expandCurrencyDisplayFormatConfiguration(tfList []any) *awstypes.CurrencyDisplayFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CurrencyDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["decimal_places_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DecimalPlacesConfiguration = expandDecimalPlacesConfiguration(v)
 	}
-	if v, ok := tfMap["negative_value_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["negative_value_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NegativeValueConfiguration = expandNegativeValueConfiguration(v)
 	}
-	if v, ok := tfMap["null_value_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["null_value_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NullValueFormatConfiguration = expandNullValueFormatConfiguration(v)
 	}
 	if v, ok := tfMap["number_scale"].(string); ok && v != "" {
@@ -394,7 +611,7 @@ func expandCurrencyDisplayFormatConfiguration(tfList []interface{}) *awstypes.Cu
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["separator_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["separator_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SeparatorConfiguration = expandNumericSeparatorConfiguration(v)
 	}
 	if v, ok := tfMap["suffix"].(string); ok && v != "" {
@@ -407,12 +624,12 @@ func expandCurrencyDisplayFormatConfiguration(tfList []interface{}) *awstypes.Cu
 	return apiObject
 }
 
-func expandDecimalPlacesConfiguration(tfList []interface{}) *awstypes.DecimalPlacesConfiguration {
+func expandDecimalPlacesConfiguration(tfList []any) *awstypes.DecimalPlacesConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -426,12 +643,12 @@ func expandDecimalPlacesConfiguration(tfList []interface{}) *awstypes.DecimalPla
 	return apiObject
 }
 
-func expandNegativeValueConfiguration(tfList []interface{}) *awstypes.NegativeValueConfiguration {
+func expandNegativeValueConfiguration(tfList []any) *awstypes.NegativeValueConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -445,12 +662,12 @@ func expandNegativeValueConfiguration(tfList []interface{}) *awstypes.NegativeVa
 	return apiObject
 }
 
-func expandNumericSeparatorConfiguration(tfList []interface{}) *awstypes.NumericSeparatorConfiguration {
+func expandNumericSeparatorConfiguration(tfList []any) *awstypes.NumericSeparatorConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -460,19 +677,19 @@ func expandNumericSeparatorConfiguration(tfList []interface{}) *awstypes.Numeric
 	if v, ok := tfMap["decimal_separator"].(string); ok {
 		apiObject.DecimalSeparator = awstypes.NumericSeparatorSymbol(v)
 	}
-	if v, ok := tfMap["thousands_separator"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["thousands_separator"].([]any); ok && len(v) > 0 {
 		apiObject.ThousandsSeparator = expandThousandSeparatorOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandThousandSeparatorOptions(tfList []interface{}) *awstypes.ThousandSeparatorOptions {
+func expandThousandSeparatorOptions(tfList []any) *awstypes.ThousandSeparatorOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -482,60 +699,60 @@ func expandThousandSeparatorOptions(tfList []interface{}) *awstypes.ThousandSepa
 	if v, ok := tfMap["symbol"].(string); ok {
 		apiObject.Symbol = awstypes.NumericSeparatorSymbol(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok {
+	if v, ok := tfMap[attrVisibility].(string); ok {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
 	return apiObject
 }
 
-func expandNumberFormatConfiguration(tfList []interface{}) *awstypes.NumberFormatConfiguration {
+func expandNumberFormatConfiguration(tfList []any) *awstypes.NumberFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.NumberFormatConfiguration{}
 
-	if v, ok := tfMap["numeric_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandNumericFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandStringFormatConfiguration(tfList []interface{}) *awstypes.StringFormatConfiguration {
+func expandStringFormatConfiguration(tfList []any) *awstypes.StringFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.StringFormatConfiguration{}
 
-	if v, ok := tfMap["null_value_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["null_value_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NullValueFormatConfiguration = expandNullValueFormatConfiguration(v)
 	}
-	if v, ok := tfMap["numeric_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NumericFormatConfiguration = expandNumericFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandLabelOptions(tfList []interface{}) *awstypes.LabelOptions {
+func expandLabelOptions(tfList []any) *awstypes.LabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -545,22 +762,22 @@ func expandLabelOptions(tfList []interface{}) *awstypes.LabelOptions {
 	if v, ok := tfMap["custom_label"].(string); ok {
 		apiObject.CustomLabel = aws.String(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok {
+	if v, ok := tfMap[attrVisibility].(string); ok {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandFontConfiguration(tfList []interface{}) *awstypes.FontConfiguration {
+func expandFontConfiguration(tfList []any) *awstypes.FontConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -576,22 +793,22 @@ func expandFontConfiguration(tfList []interface{}) *awstypes.FontConfiguration {
 	if v, ok := tfMap["font_style"].(string); ok && v != "" {
 		apiObject.FontStyle = awstypes.FontStyle(v)
 	}
-	if v, ok := tfMap["font_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_size"].([]any); ok && len(v) > 0 {
 		apiObject.FontSize = expandFontSize(v)
 	}
-	if v, ok := tfMap["font_weight"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_weight"].([]any); ok && len(v) > 0 {
 		apiObject.FontWeight = expandFontWeight(v)
 	}
 
 	return apiObject
 }
 
-func expandFontSize(tfList []interface{}) *awstypes.FontSize {
+func expandFontSize(tfList []any) *awstypes.FontSize {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -605,12 +822,12 @@ func expandFontSize(tfList []interface{}) *awstypes.FontSize {
 	return apiObject
 }
 
-func expandFontWeight(tfList []interface{}) *awstypes.FontWeight {
+func expandFontWeight(tfList []any) *awstypes.FontWeight {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -624,34 +841,34 @@ func expandFontWeight(tfList []interface{}) *awstypes.FontWeight {
 	return apiObject
 }
 
-func expandComparisonFormatConfiguration(tfList []interface{}) *awstypes.ComparisonFormatConfiguration {
+func expandComparisonFormatConfiguration(tfList []any) *awstypes.ComparisonFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ComparisonFormatConfiguration{}
 
-	if v, ok := tfMap["number_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["number_display_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NumberDisplayFormatConfiguration = expandNumberDisplayFormatConfiguration(v)
 	}
-	if v, ok := tfMap["percentage_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["percentage_display_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PercentageDisplayFormatConfiguration = expandPercentageDisplayFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandNumberDisplayFormatConfiguration(tfList []interface{}) *awstypes.NumberDisplayFormatConfiguration {
+func expandNumberDisplayFormatConfiguration(tfList []any) *awstypes.NumberDisplayFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -667,28 +884,28 @@ func expandNumberDisplayFormatConfiguration(tfList []interface{}) *awstypes.Numb
 	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		apiObject.Suffix = aws.String(v)
 	}
-	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["decimal_places_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DecimalPlacesConfiguration = expandDecimalPlacesConfiguration(v)
 	}
-	if v, ok := tfMap["negative_value_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["negative_value_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NegativeValueConfiguration = expandNegativeValueConfiguration(v)
 	}
-	if v, ok := tfMap["null_value_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["null_value_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NullValueFormatConfiguration = expandNullValueFormatConfiguration(v)
 	}
-	if v, ok := tfMap["separator_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["separator_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SeparatorConfiguration = expandNumericSeparatorConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandPercentageDisplayFormatConfiguration(tfList []interface{}) *awstypes.PercentageDisplayFormatConfiguration {
+func expandPercentageDisplayFormatConfiguration(tfList []any) *awstypes.PercentageDisplayFormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -701,28 +918,28 @@ func expandPercentageDisplayFormatConfiguration(tfList []interface{}) *awstypes.
 	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		apiObject.Suffix = aws.String(v)
 	}
-	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["decimal_places_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DecimalPlacesConfiguration = expandDecimalPlacesConfiguration(v)
 	}
-	if v, ok := tfMap["negative_value_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["negative_value_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NegativeValueConfiguration = expandNegativeValueConfiguration(v)
 	}
-	if v, ok := tfMap["null_value_format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["null_value_format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.NullValueFormatConfiguration = expandNullValueFormatConfiguration(v)
 	}
-	if v, ok := tfMap["separator_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["separator_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SeparatorConfiguration = expandNumericSeparatorConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func flattenFormatConfiguration(apiObject *awstypes.FormatConfiguration) []interface{} {
+func flattenFormatConfiguration(apiObject *awstypes.FormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DateTimeFormatConfiguration != nil {
 		tfMap["date_time_format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.DateTimeFormatConfiguration)
@@ -734,15 +951,15 @@ func flattenFormatConfiguration(apiObject *awstypes.FormatConfiguration) []inter
 		tfMap["string_format_configuration"] = flattenStringFormatConfiguration(apiObject.StringFormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDateTimeFormatConfiguration(apiObject *awstypes.DateTimeFormatConfiguration) []interface{} {
+func flattenDateTimeFormatConfiguration(apiObject *awstypes.DateTimeFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DateTimeFormat != nil {
 		tfMap["date_time_format"] = aws.ToString(apiObject.DateTimeFormat)
@@ -754,29 +971,29 @@ func flattenDateTimeFormatConfiguration(apiObject *awstypes.DateTimeFormatConfig
 		tfMap["numeric_format_configuration"] = flattenNumericFormatConfiguration(apiObject.NumericFormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNullValueFormatConfiguration(apiObject *awstypes.NullValueFormatConfiguration) []interface{} {
+func flattenNullValueFormatConfiguration(apiObject *awstypes.NullValueFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.NullString != nil {
 		tfMap["null_string"] = aws.ToString(apiObject.NullString)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericFormatConfiguration(apiObject *awstypes.NumericFormatConfiguration) []interface{} {
+func flattenNumericFormatConfiguration(apiObject *awstypes.NumericFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CurrencyDisplayFormatConfiguration != nil {
 		tfMap["currency_display_format_configuration"] = flattenCurrencyDisplayFormatConfiguration(apiObject.CurrencyDisplayFormatConfiguration)
@@ -788,15 +1005,15 @@ func flattenNumericFormatConfiguration(apiObject *awstypes.NumericFormatConfigur
 		tfMap["percentage_display_format_configuration"] = flattenPercentageDisplayFormatConfiguration(apiObject.PercentageDisplayFormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCurrencyDisplayFormatConfiguration(apiObject *awstypes.CurrencyDisplayFormatConfiguration) []interface{} {
+func flattenCurrencyDisplayFormatConfiguration(apiObject *awstypes.CurrencyDisplayFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DecimalPlacesConfiguration != nil {
 		tfMap["decimal_places_configuration"] = flattenDecimalPlacesConfiguration(apiObject.DecimalPlacesConfiguration)
@@ -821,41 +1038,41 @@ func flattenCurrencyDisplayFormatConfiguration(apiObject *awstypes.CurrencyDispl
 		tfMap["symbol"] = aws.ToString(apiObject.Symbol)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDecimalPlacesConfiguration(apiObject *awstypes.DecimalPlacesConfiguration) []interface{} {
+func flattenDecimalPlacesConfiguration(apiObject *awstypes.DecimalPlacesConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DecimalPlaces != nil {
 		tfMap["decimal_places"] = aws.ToInt64(apiObject.DecimalPlaces)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNegativeValueConfiguration(apiObject *awstypes.NegativeValueConfiguration) []interface{} {
+func flattenNegativeValueConfiguration(apiObject *awstypes.NegativeValueConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"display_mode": apiObject.DisplayMode,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericSeparatorConfiguration(apiObject *awstypes.NumericSeparatorConfiguration) []interface{} {
+func flattenNumericSeparatorConfiguration(apiObject *awstypes.NumericSeparatorConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"decimal_separator": apiObject.DecimalSeparator,
 	}
 
@@ -863,27 +1080,27 @@ func flattenNumericSeparatorConfiguration(apiObject *awstypes.NumericSeparatorCo
 		tfMap["thousands_separator"] = flattenThousandSeparatorOptions(apiObject.ThousandsSeparator)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
-func flattenThousandSeparatorOptions(apiObject *awstypes.ThousandSeparatorOptions) []interface{} {
+func flattenThousandSeparatorOptions(apiObject *awstypes.ThousandSeparatorOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"symbol":     apiObject.Symbol,
-		"visibility": apiObject.Visibility,
+	tfMap := map[string]any{
+		"symbol":       apiObject.Symbol,
+		attrVisibility: apiObject.Visibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumberDisplayFormatConfiguration(apiObject *awstypes.NumberDisplayFormatConfiguration) []interface{} {
+func flattenNumberDisplayFormatConfiguration(apiObject *awstypes.NumberDisplayFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DecimalPlacesConfiguration != nil {
 		tfMap["decimal_places_configuration"] = flattenDecimalPlacesConfiguration(apiObject.DecimalPlacesConfiguration)
@@ -905,15 +1122,15 @@ func flattenNumberDisplayFormatConfiguration(apiObject *awstypes.NumberDisplayFo
 		tfMap["suffix"] = aws.ToString(apiObject.Suffix)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPercentageDisplayFormatConfiguration(apiObject *awstypes.PercentageDisplayFormatConfiguration) []interface{} {
+func flattenPercentageDisplayFormatConfiguration(apiObject *awstypes.PercentageDisplayFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DecimalPlacesConfiguration != nil {
 		tfMap["decimal_places_configuration"] = flattenDecimalPlacesConfiguration(apiObject.DecimalPlacesConfiguration)
@@ -934,29 +1151,29 @@ func flattenPercentageDisplayFormatConfiguration(apiObject *awstypes.PercentageD
 		tfMap["suffix"] = aws.ToString(apiObject.Suffix)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumberFormatConfiguration(apiObject *awstypes.NumberFormatConfiguration) []interface{} {
+func flattenNumberFormatConfiguration(apiObject *awstypes.NumberFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FormatConfiguration != nil {
 		tfMap["numeric_format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenStringFormatConfiguration(apiObject *awstypes.StringFormatConfiguration) []interface{} {
+func flattenStringFormatConfiguration(apiObject *awstypes.StringFormatConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.NullValueFormatConfiguration != nil {
 		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
@@ -965,5 +1182,5 @@ func flattenStringFormatConfiguration(apiObject *awstypes.StringFormatConfigurat
 		tfMap["numeric_format_configuration"] = flattenNumericFormatConfiguration(apiObject.NumericFormatConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

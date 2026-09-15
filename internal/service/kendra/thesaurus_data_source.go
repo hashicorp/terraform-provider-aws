@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kendra
 
@@ -20,100 +22,102 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_thesaurus")
+// @SDKDataSource("aws_kendra_thesaurus", name="Thesaurus")
 func DataSourceThesaurus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceThesaurusRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"error_message": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_size_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"index_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
-					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
-				),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_s3_path": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"error_message": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_size_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"index_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
+						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
+					),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_s3_path": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"synonym_rule_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"term_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"thesaurus_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"synonym_rule_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"term_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"thesaurus_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(
+							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
+							"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
+						),
 					),
-				),
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				},
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	thesaurusID := d.Get("thesaurus_id").(string)
 	indexID := d.Get("index_id").(string)
@@ -125,10 +129,10 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexID, thesaurusID),
 	}.String()
 	d.Set(names.AttrARN, arn)

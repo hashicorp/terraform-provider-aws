@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codeartifact
 
@@ -24,35 +26,37 @@ func dataSourceRepositoryEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryEndpointRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"domain_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrFormat: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.PackageFormat](),
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"repository_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"domain_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrFormat: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.PackageFormat](),
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"repository_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -61,7 +65,7 @@ func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk("domain_owner"); ok {
 		domainOwner = v.(string)
 	} else {
-		domainOwner = meta.(*conns.AWSClient).AccountID
+		domainOwner = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	format := types.PackageFormat(d.Get(names.AttrFormat).(string))
 	repositoryName := d.Get("repository").(string)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta_test
@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMetaServicePrincipal_basic(t *testing.T) {
+func TestAccMetaServicePrincipalDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service_principal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSPNDataSourceConfig_basic,
+				Config: testAccServicePrincipalDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, "s3."+acctest.Region()+".amazonaws.com"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
@@ -37,23 +37,23 @@ func TestAccMetaServicePrincipal_basic(t *testing.T) {
 	})
 }
 
-func TestAccMetaServicePrincipal_MissingService(t *testing.T) {
+func TestAccMetaServicePrincipalDataSource_MissingService(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSPNDataSourceConfig_empty,
+				Config:      testAccServicePrincipalDataSourceConfig_empty,
 				ExpectError: regexache.MustCompile(`The argument "service_name" is required, but no definition was found.`),
 			},
 		},
 	})
 }
 
-func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
+func TestAccMetaServicePrincipalDataSource_ByRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_service_principal.test"
@@ -62,17 +62,17 @@ func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 	for _, region := range regions {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
-			resource.Test(t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- subtests handle own parallelism via t.Parallel()
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: testAccSPNDataSourceConfig_withRegion("s3", region),
+						Config: testAccServicePrincipalDataSourceConfig_withRegion("autoscaling", region),
 						Check: resource.ComposeTestCheckFunc(
 							//lintignore:AWSR001
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("s3.%s.amazonaws.com", region)),
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("autoscaling.%s.amazonaws.com", region)),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "autoscaling.amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, "suffix", "amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
 						),
@@ -83,7 +83,7 @@ func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 	}
 }
 
-func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
+func TestAccMetaServicePrincipalDataSource_UniqueForServiceInRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service_principal.test"
 
@@ -115,7 +115,7 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 		{
 			Region:   "cn-north-1", //lintignore:AWSAT003
 			Suffix:   "amazonaws.com.cn",
-			Services: []string{"codedeploy", "elasticmapreduce", "logs"},
+			Services: []string{"codedeploy", "elasticmapreduce", "logs", "ec2", "s3"},
 		},
 	}
 
@@ -134,13 +134,13 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("%s/%s", testCase.Region, testCase.Service), func(t *testing.T) {
 			t.Parallel()
-			resource.Test(t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- subtests handle own parallelism via t.Parallel()
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: testAccSPNDataSourceConfig_withRegion(testCase.Service, testCase.Region),
+						Config: testAccServicePrincipalDataSourceConfig_withRegion(testCase.Service, testCase.Region),
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, testCase.ID),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, testCase.SPN),
@@ -154,16 +154,17 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 	}
 }
 
-const testAccSPNDataSourceConfig_empty = `
+const testAccServicePrincipalDataSourceConfig_empty = `
 data "aws_service_principal" "test" {}
 `
-const testAccSPNDataSourceConfig_basic = `
+
+const testAccServicePrincipalDataSourceConfig_basic = `
 data "aws_service_principal" "test" {
   service_name = "s3"
 }
 `
 
-func testAccSPNDataSourceConfig_withRegion(service string, region string) string {
+func testAccServicePrincipalDataSourceConfig_withRegion(service string, region string) string {
 	return fmt.Sprintf(`
 data "aws_service_principal" "test" {
   region       = %[1]q

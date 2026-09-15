@@ -22,8 +22,9 @@ data "aws_dms_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate_id` - (Required) A customer-assigned name for the certificate. Identifiers must begin with a letter and must contain only ASCII letters, digits, and hyphens. They can't end with a hyphen or contain two consecutive hyphens.
 
 ## Attribute Reference
@@ -33,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `certificate_creation_date` - The date that the certificate was created.
 * `certificate_pem` - The contents of a .pem file, which contains an X.509 certificate.
 * `certificate_owner` - The owner of the certificate.
-* `certificate_arn` - The Amazon Resource Name (ARN) for the certificate.
+* `certificate_arn` - ARN for the certificate.
 * `certificate_wallet` - The owner of the certificate.
 * `key_length` - The key length of the cryptographic algorithm being used.
 * `signing_algorithm` - The algorithm for the certificate.

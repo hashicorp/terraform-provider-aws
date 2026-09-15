@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs_test
@@ -19,7 +19,7 @@ func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ivs_stream_key.test"
 	channelResourceName := "aws_ivs_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,7 +30,7 @@ func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
 					testAccCheckStreamKeyDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "channel_arn", channelResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrValue),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "ivs", regexache.MustCompile(`stream-key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ivs", regexache.MustCompile(`stream-key/.+`)),
 				),
 			},
 		},

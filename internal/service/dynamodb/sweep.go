@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -37,7 +36,7 @@ func sweepTables(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DynamoDBClient(ctx)
 	input := &dynamodb.ListTablesInput{}
@@ -57,10 +56,11 @@ func sweepTables(region string) error {
 		}
 
 		for _, v := range page.TableNames {
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+			input := dynamodb.UpdateTableInput{
 				DeletionProtectionEnabled: aws.Bool(false),
 				TableName:                 aws.String(v),
-			})
+			}
+			_, err := conn.UpdateTable(ctx, &input)
 
 			if err != nil {
 				log.Printf("[WARN] DynamoDB Table (%s): %s", v, err)
@@ -95,7 +95,7 @@ func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DynamoDBClient(ctx)
 	input := &dynamodb.ListBackupsInput{
@@ -148,29 +148,29 @@ type backupSweeper struct {
 	arn  string
 }
 
-func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (bs backupSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	input := &dynamodb.DeleteBackupInput{
 		BackupArn: aws.String(bs.arn),
 	}
 
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	const (
+		timeout = 10 * time.Minute
+	)
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		log.Printf("[DEBUG] Deleting DynamoDB Backup: %s", bs.arn)
 		_, err := bs.conn.DeleteBackup(ctx, input)
 		if errs.IsA[*awstypes.BackupNotFoundException](err) {
 			return nil
 		}
 		if errs.IsA[*awstypes.BackupInUseException](err) || errs.IsA[*awstypes.LimitExceededException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	}, optFns...)
-	if tfresource.TimedOut(err) {
-		_, err = bs.conn.DeleteBackup(ctx, input)
-	}
 
 	return err
 }

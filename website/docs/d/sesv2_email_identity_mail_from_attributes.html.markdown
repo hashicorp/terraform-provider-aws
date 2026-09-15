@@ -26,13 +26,14 @@ data "aws_sesv2_email_identity_mail_from_attributes" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `email_identity` - (Required) The name of the email identity.
+* `email_identity` - (Required) Name of the email identity.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `behavior_on_mx_failure` - The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
-* `mail_from_domain` - The custom MAIL FROM domain that you want the verified identity to use.
+* `behavior_on_mx_failure` - Action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
+* `mail_from_domain` - Custom MAIL FROM domain that you want the verified identity to use.

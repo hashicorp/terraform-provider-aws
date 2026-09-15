@@ -91,6 +91,7 @@ resource "aws_redshift_scheduled_action" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.
 * `enable` - (Optional) Whether to enable the scheduled action. Default is `true` .
@@ -99,8 +100,6 @@ This resource supports the following arguments:
 * `schedule` - (Required) The schedule of action. The schedule is defined format of "at expression" or "cron expression", for example `at(2016-03-04T17:27:00)` or `cron(0 10 ? * MON *)`. See [Scheduled Action](https://docs.aws.amazon.com/redshift/latest/APIReference/API_ScheduledAction.html) for more information.
 * `iam_role` - (Required) The IAM role to assume to run the scheduled action.
 * `target_action` - (Required) Target action. Documented below.
-
-### Nested Blocks
 
 #### `target_action`
 

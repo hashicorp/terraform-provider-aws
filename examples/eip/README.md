@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Elastic IP Example
 
 The eip example launches a web server, installs nginx. It also creates security group.

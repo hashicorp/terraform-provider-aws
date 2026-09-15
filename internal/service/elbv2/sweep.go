@@ -1,17 +1,20 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func RegisterSweepers() {
@@ -20,8 +23,10 @@ func RegisterSweepers() {
 		F:    sweepLoadBalancers,
 		Dependencies: []string{
 			"aws_api_gateway_vpc_link",
+			"aws_ecs_express_gateway_service",
 			"aws_vpc_endpoint_service",
 			"aws_lb_listener",
+			"aws_arczonalshift_zonal_autoshift_configuration",
 		},
 	})
 
@@ -29,6 +34,7 @@ func RegisterSweepers() {
 		Name: "aws_lb_target_group",
 		F:    sweepTargetGroups,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_lb",
 		},
 	})
@@ -36,14 +42,19 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_lb_listener", &resource.Sweeper{
 		Name: "aws_lb_listener",
 		F:    sweepListeners,
+		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
+		},
 	})
+
+	awsv2.Register("aws_lb_trust_store", sweepTrustStore)
 }
 
 func sweepLoadBalancers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 	conn := client.ELBV2Client(ctx)
@@ -125,7 +136,7 @@ func sweepListeners(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 	conn := client.ELBV2Client(ctx)
@@ -175,4 +186,28 @@ func sweepListeners(region string) error {
 	}
 
 	return nil
+}
+
+func sweepTrustStore(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ELBV2Client(ctx)
+
+	var sweepResources []sweep.Sweepable
+	r := resourceTrustStore()
+
+	pages := elasticloadbalancingv2.NewDescribeTrustStoresPaginator(conn, &elasticloadbalancingv2.DescribeTrustStoresInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, trustStore := range page.TrustStores {
+			d := r.Data(nil)
+			d.SetId(aws.ToString(trustStore.TrustStoreArn))
+
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
 }

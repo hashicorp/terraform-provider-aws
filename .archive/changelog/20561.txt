@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_eks_identity_provider_config: Increase Create and Delete timeouts to 40 minutes
-```

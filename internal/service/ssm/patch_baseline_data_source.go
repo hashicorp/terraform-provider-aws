@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -26,144 +28,150 @@ func dataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataPatchBaselineRead,
 
-		Schema: map[string]*schema.Schema{
-			"approved_patches": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"approved_patches_compliance_level": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"approved_patches_enable_non_security": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"approval_rule": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"approve_after_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"approve_until_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"compliance_level": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"enable_non_security": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"patch_filter": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"approved_patches": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"approved_patches_compliance_level": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"approved_patches_enable_non_security": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"approval_rule": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"approve_after_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"approve_until_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"compliance_level": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"enable_non_security": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"patch_filter": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"default_baseline": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_filter": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"available_security_updates_compliance_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_baseline": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"global_filter": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNamePrefix: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"operating_system": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
-			},
-			names.AttrOwner: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"rejected_patches": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rejected_patches_action": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrConfiguration: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"products": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNamePrefix: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"operating_system": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				},
+				names.AttrOwner: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"rejected_patches": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"rejected_patches_action": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrConfiguration: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"products": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -240,6 +248,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
 	}
+	d.Set("available_security_updates_compliance_status", output.AvailableSecurityUpdatesComplianceStatus)
 	d.Set("default_baseline", baseline.DefaultBaseline)
 	d.Set(names.AttrDescription, baseline.BaselineDescription)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {

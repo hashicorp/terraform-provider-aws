@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -12,11 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkendra "github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +23,7 @@ import (
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).KendraClient(ctx)
 
 	input := &kendra.ListIndicesInput{}
 
@@ -43,33 +42,33 @@ func TestAccKendraIndex_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, acctest.CtBasic),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", acctest.Ct0),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "kendra", "index/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtBasic),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
 					resource.TestCheckResourceAttr(resourceName, "edition", string(types.IndexEditionEnterpriseEdition)),
-					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.faq_statistics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.faq_statistics.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.faq_statistics.0.indexed_question_answers_count"),
-					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.text_document_statistics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.text_document_statistics.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_bytes"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
@@ -77,8 +76,8 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.IndexStatusActive)),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "user_context_policy", "ATTRIBUTE_FILTER"),
-					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -95,22 +94,22 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_serverSideEncryption(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_configuration.0.kms_key_id", "data.aws_kms_key.this", names.AttrARN),
 				),
 			},
@@ -127,26 +126,26 @@ func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	originalQueryCapacityUnits := 2
 	updatedQueryCapacityUnits := 3
 	originalStorageCapacityUnits := 1
 	updatedStorageCapacityUnits := 2
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, originalQueryCapacityUnits, originalStorageCapacityUnits),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", strconv.Itoa(originalQueryCapacityUnits)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", strconv.Itoa(originalStorageCapacityUnits)),
 				),
@@ -159,8 +158,8 @@ func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
 			{
 				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, updatedQueryCapacityUnits, updatedStorageCapacityUnits),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", strconv.Itoa(updatedQueryCapacityUnits)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", strconv.Itoa(updatedStorageCapacityUnits)),
 				),
@@ -173,23 +172,23 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
@@ -201,7 +200,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
@@ -213,22 +212,22 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName4 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 				),
 			},
@@ -240,7 +239,7 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName4, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
 				),
 			},
@@ -252,26 +251,26 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	originalGroupAttributeField := "groups"
 	updatedGroupAttributeField := "groupings"
 	updatedUserNameAttributeField := "usernames"
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, originalGroupAttributeField, names.AttrUsername),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", originalGroupAttributeField),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", names.AttrUsername),
 				),
@@ -284,9 +283,9 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, names.AttrUsername),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", names.AttrUsername),
 				),
@@ -294,9 +293,9 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, updatedUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", updatedUserNameAttributeField),
 				),
@@ -309,22 +308,22 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -336,8 +335,8 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 			{
 				Config: testAccIndexConfig_tags(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -345,8 +344,8 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 			{
 				Config: testAccIndexConfig_tagsUpdated(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -360,21 +359,21 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.access_cw", names.AttrARN),
 				),
 			},
@@ -386,7 +385,7 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 			{
 				Config: testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.access_sm", names.AttrARN),
 				),
 			},
@@ -398,24 +397,24 @@ func TestAccKendraIndex_updateUserGroupResolutionConfigurationMode(t *testing.T)
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	originalUserGroupResolutionMode := types.UserGroupResolutionModeAwsSso
 	updatedUserGroupResolutionMode := types.UserGroupResolutionModeNone
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_userGroupResolutionMode(rName, rName2, rName3, string(originalUserGroupResolutionMode)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.0.user_group_resolution_mode", string(originalUserGroupResolutionMode)),
 				),
 			},
@@ -427,8 +426,8 @@ func TestAccKendraIndex_updateUserGroupResolutionConfigurationMode(t *testing.T)
 			{
 				Config: testAccIndexConfig_userGroupResolutionMode(rName, rName2, rName3, string(updatedUserGroupResolutionMode)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", acctest.Ct1),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.0.user_group_resolution_mode", string(updatedUserGroupResolutionMode)),
 				),
 			},
@@ -440,9 +439,9 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 	authorsFacetable := false
 	longValDisplayable := true
@@ -450,23 +449,23 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 	dateValSortable := false
 	stringValImportance := 1
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesBase(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_authors",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -475,10 +474,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_category",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -487,12 +486,12 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_created_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -501,10 +500,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_data_source_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -513,10 +512,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_document_title",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct2,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "2",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -525,10 +524,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_excerpt_page_number",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct2,
+						"relevance.#":            "1",
+						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -537,10 +536,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_faq_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -549,9 +548,9 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_file_type",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -560,10 +559,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_language_code",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -572,12 +571,12 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_last_updated_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -586,10 +585,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_source_uri",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -598,10 +597,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_tenant_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -610,10 +609,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_version",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -622,10 +621,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_view_count",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -641,14 +640,14 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, authorsFacetable, longValDisplayable, stringListValSearchable, dateValSortable, stringValImportance),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_authors",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     strconv.FormatBool(authorsFacetable),
 						"search.0.searchable":    acctest.CtFalse,
@@ -657,10 +656,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_category",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -669,12 +668,12 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_created_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -683,10 +682,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_data_source_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -695,10 +694,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_document_title",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct2,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "2",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -707,10 +706,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_excerpt_page_number",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct2,
+						"relevance.#":            "1",
+						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -719,10 +718,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_faq_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -731,9 +730,9 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_file_type",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -742,10 +741,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_language_code",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -754,12 +753,12 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_last_updated_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -768,10 +767,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_source_uri",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -780,10 +779,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_tenant_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -792,10 +791,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_version",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -804,10 +803,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_view_count",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -816,10 +815,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "example-string-value",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
+						"relevance.#":                         "1",
 						"relevance.0.importance":              strconv.Itoa(stringValImportance),
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtTrue,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -828,10 +827,10 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-long-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   strconv.FormatBool(longValDisplayable),
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    acctest.CtFalse,
@@ -840,9 +839,9 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-string-list-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtTrue,
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    strconv.FormatBool(stringListValSearchable),
@@ -851,12 +850,12 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-date-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtTrue,
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    acctest.CtFalse,
@@ -872,9 +871,9 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 	originalAuthorsFacetable := true
 	originalLongValDisplayable := true
@@ -888,23 +887,23 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 	updatedDateValSortable := true
 	updatedStringValImportance := 2
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, originalAuthorsFacetable, originalLongValDisplayable, originalStringListValSearchable, originalDateValSortable, originalStringValImportance),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_authors",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     strconv.FormatBool(originalAuthorsFacetable),
 						"search.0.searchable":    acctest.CtFalse,
@@ -913,10 +912,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_category",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -925,12 +924,12 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_created_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -939,10 +938,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_data_source_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -951,10 +950,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_document_title",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct2,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "2",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -963,10 +962,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_excerpt_page_number",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct2,
+						"relevance.#":            "1",
+						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -975,10 +974,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_faq_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -987,9 +986,9 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_file_type",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -998,10 +997,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_language_code",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1010,12 +1009,12 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_last_updated_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1024,10 +1023,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_source_uri",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1036,10 +1035,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_tenant_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1048,10 +1047,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_version",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1060,10 +1059,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_view_count",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1072,10 +1071,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "example-string-value",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
+						"relevance.#":                         "1",
 						"relevance.0.importance":              strconv.Itoa(originalStringValImportance),
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtTrue,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -1084,10 +1083,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-long-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   strconv.FormatBool(originalLongValDisplayable),
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1096,9 +1095,9 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-string-list-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtTrue,
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    strconv.FormatBool(originalStringListValSearchable),
@@ -1107,12 +1106,12 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-date-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtTrue,
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1128,14 +1127,14 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, updatedAuthorsFacetable, updatedLongValDisplayable, updatedStringListValSearchable, updatedDateValSortable, updatedStringValImportance),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_authors",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     strconv.FormatBool(updatedAuthorsFacetable),
 						"search.0.searchable":    acctest.CtFalse,
@@ -1144,10 +1143,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_category",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1156,12 +1155,12 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_created_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1170,10 +1169,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_data_source_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1182,10 +1181,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_document_title",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct2,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "2",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -1194,10 +1193,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_excerpt_page_number",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct2,
+						"relevance.#":            "1",
+						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1206,10 +1205,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_faq_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1218,9 +1217,9 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_file_type",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1229,10 +1228,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_language_code",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1241,12 +1240,12 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_last_updated_at",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1255,10 +1254,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_source_uri",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1267,10 +1266,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_tenant_id",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1279,10 +1278,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "_version",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
-						"relevance.0.importance":              acctest.Ct1,
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtFalse,
 						"search.0.facetable":                  acctest.CtFalse,
 						"search.0.searchable":                 acctest.CtFalse,
@@ -1291,10 +1290,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_view_count",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtFalse,
 						"search.0.facetable":     acctest.CtFalse,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1303,10 +1302,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:                        "example-string-value",
 						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
-						"relevance.#":                         acctest.Ct1,
+						"relevance.#":                         "1",
 						"relevance.0.importance":              strconv.Itoa(updatedStringValImportance),
-						"relevance.0.values_importance_map.%": acctest.Ct0,
-						"search.#":                            acctest.Ct1,
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
 						"search.0.displayable":                acctest.CtTrue,
 						"search.0.facetable":                  acctest.CtTrue,
 						"search.0.searchable":                 acctest.CtTrue,
@@ -1315,10 +1314,10 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-long-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   strconv.FormatBool(updatedLongValDisplayable),
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1327,9 +1326,9 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-string-list-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
-						"relevance.#":            acctest.Ct1,
-						"relevance.0.importance": acctest.Ct1,
-						"search.#":               acctest.Ct1,
+						"relevance.#":            "1",
+						"relevance.0.importance": "1",
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtTrue,
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    strconv.FormatBool(updatedStringListValSearchable),
@@ -1338,12 +1337,12 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "example-date-value",
 						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
-						"relevance.#":            acctest.Ct1,
+						"relevance.#":            "1",
 						"relevance.0.freshness":  acctest.CtFalse,
-						"relevance.0.importance": acctest.Ct1,
+						"relevance.0.importance": "1",
 						"relevance.0.duration":   "25920000s",
 						"relevance.0.rank_order": "ASCENDING",
-						"search.#":               acctest.Ct1,
+						"search.#":               "1",
 						"search.0.displayable":   acctest.CtTrue,
 						"search.0.facetable":     acctest.CtTrue,
 						"search.0.searchable":    acctest.CtFalse,
@@ -1359,32 +1358,40 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceIndex(), resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName, &index),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIndexDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KendraClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kendra_index" {
@@ -1408,7 +1415,7 @@ func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIndexExists(ctx context.Context, name string, index *kendra.DescribeIndexOutput) resource.TestCheckFunc {
+func testAccCheckIndexExists(ctx context.Context, t *testing.T, name string, index *kendra.DescribeIndexOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -1416,7 +1423,7 @@ func testAccCheckIndexExists(ctx context.Context, name string, index *kendra.Des
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KendraClient(ctx)
 		input := &kendra.DescribeIndexInput{
 			Id: aws.String(rs.Primary.ID),
 		}
@@ -1480,7 +1487,7 @@ resource "aws_iam_role" "access_cw" {
         {
           Action   = ["logs:CreateLogGroup"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
         },
         {
           Action = [
@@ -1489,7 +1496,7 @@ resource "aws_iam_role" "access_cw" {
             "logs:PutLogEvents"
           ]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
         },
       ]
     })
@@ -1524,7 +1531,7 @@ resource "aws_iam_role" "access_sm" {
         {
           Action   = ["logs:CreateLogGroup"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
         },
         {
           Action = [
@@ -1533,17 +1540,17 @@ resource "aws_iam_role" "access_sm" {
             "logs:PutLogEvents"
           ]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
         },
         {
           Action   = ["secretsmanager:GetSecretValue"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:example"
+          Resource = "arn:${data.aws_partition.current.partition}:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:example"
         },
         {
           Action   = ["kms:Decrypt"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/example"
+          Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:key/example"
           Condition = {
             StringLike = {
               "kms:ViaService" = ["secretsmanager.*.amazonaws.com"]

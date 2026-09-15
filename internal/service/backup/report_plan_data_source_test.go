@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,10 +17,10 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_backup_report_plan.test"
 	resourceName := "aws_backup_report_plan.test"
-	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	rName2 := randomReportPlanName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -56,10 +55,10 @@ func TestAccBackupReportPlanDataSource_reportSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_backup_report_plan.test"
 	resourceName := "aws_backup_report_plan.test"
-	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	rName2 := randomReportPlanName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,9 +75,9 @@ func TestAccBackupReportPlanDataSource_reportSettings(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.formats.0", resourceName, "report_delivery_channel.0.formats.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.s3_bucket_name", resourceName, "report_delivery_channel.0.s3_bucket_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_setting.#", resourceName, "report_setting.#"),
-					resource.TestCheckResourceAttr(resourceName, "report_setting.0.accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.accounts.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.accounts.0", "data.aws_caller_identity.current", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "report_setting.0.regions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.regions.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.regions.0", "data.aws_region.current", names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_setting.0.report_template", resourceName, "report_setting.0.report_template"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
@@ -97,7 +96,7 @@ data "aws_backup_report_plan" "test" {
 `
 
 func testAccReportPlanDataSourceConfig_basic(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReportPlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = "Test report plan data source"

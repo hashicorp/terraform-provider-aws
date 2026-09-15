@@ -1,13 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,9 +15,9 @@ import (
 
 func TestAccIAMGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
+	groupName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -28,7 +28,7 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
-					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, "data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
 				),
 			},
 		},
@@ -37,12 +37,12 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 
 func TestAccIAMGroupDataSource_users(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := fmt.Sprintf("test-datasource-group-%d", sdkacctest.RandInt())
-	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
-	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", sdkacctest.RandInt())
+	groupName := fmt.Sprintf("test-datasource-group-%d", acctest.RandInt(t))
+	userName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt(t))
+	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", acctest.RandInt(t))
 	userCount := 101
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,8 +53,8 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
-					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", fmt.Sprint(userCount)),
+					acctest.CheckResourceAttrGlobalARN(ctx, "data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", strconv.Itoa(userCount)),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_id"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_name"),

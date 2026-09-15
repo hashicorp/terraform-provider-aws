@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package amp
 
@@ -21,31 +23,33 @@ func dataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspacesRead,
 
-		Schema: map[string]*schema.Schema{
-			"alias_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"aliases": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARNs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"workspace_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alias_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"aliases": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARNs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"workspace_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
 
-func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
+func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -63,7 +67,7 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 		workspaceIDs = append(workspaceIDs, aws.ToString(w.WorkspaceId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("aliases", aliases)
 	d.Set(names.AttrARNs, arns)
 	d.Set("workspace_ids", workspaceIDs)
@@ -72,13 +76,13 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findWorkspaces(ctx context.Context, conn *amp.Client, alias string) ([]types.WorkspaceSummary, error) { // nosemgrep:ci.caps0-in-func-name
-	input := &amp.ListWorkspacesInput{}
+	input := amp.ListWorkspacesInput{}
 	if alias != "" {
 		input.Alias = aws.String(alias)
 	}
 
 	var output []types.WorkspaceSummary
-	pages := amp.NewListWorkspacesPaginator(conn, input)
+	pages := amp.NewListWorkspacesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

@@ -1,20 +1,26 @@
-name: "Repository/Meta"
-description: Choose this option when the issue has to do with the repository itself, including GitHub Actions, labels, workflows, etc.
-title: "[Repo]: "
-labels: ["repository"]
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Repository/Meta
+description: Choose this option when reporting an issue that has to do with the repository itself, e.g. GitHub Actions workflows, labels, local development tools, etc.
+labels:
+  - repository
 body:
   - type: markdown
     attributes:
       value: |
-        # Thank you for opening an issue!
+        ## Thank you for opening an issue!
 
-        This form is for issues pertaining to the repository itself. This might include changes to GitHub Actions, labels, procedures, etc. For issues with the contribution documentation, please use the "Report a Documentation Error" form.
+        This form is for issues pertaining to the repository itself. This might include issues or changes related to GitHub Actions, labels, local development tools, procedures for maintaining the provider, etc. For issues with the contribution documentation, please use the [Report a Documentation Error](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=01_documentation.yml) form instead.
+
+        Before submission, we ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=label%3Arepository) to see if someone else has made a similar report or has alreaady worked on a relevant change. This helps to keep all relevant discussions in one place.
 
   - type: textarea
     id: description
     attributes:
       label: Description
-      description: Please leave a brief description of the issue or proposed change.
+      description: |
+        Please provide a brief description of the issue or proposed change.
     validations:
       required: true
 
@@ -23,7 +29,7 @@ body:
     attributes:
       label: References
       description: |
-        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+        Where possible, please supply links to documentation and/or other GitHub issues or pull requests that give additional context.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
     validations:
@@ -32,11 +38,15 @@ body:
   - type: dropdown
     id: will_contribute
     attributes:
-      label: Would you like to implement a fix?
+      label: Would you like to implement the change?
       description: |
-        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+        Indicate to the maintainers and community as to whether you plan to implement the change or fix for this (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
+
+        If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"
         - "Yes"
+      multiple: false
+      default: 0
     validations:
       required: false

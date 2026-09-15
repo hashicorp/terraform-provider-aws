@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -7,6 +7,7 @@ package ecr
 var (
 	ResourceLifecyclePolicy               = resourceLifecyclePolicy
 	ResourcePullThroughCacheRule          = resourcePullThroughCacheRule
+	ResourcePullTimeUpdateExclusion       = newPullTimeUpdateExclusionResource
 	ResourceRegistryPolicy                = resourceRegistryPolicy
 	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
 	ResourceReplicationConfiguration      = resourceReplicationConfiguration
@@ -14,8 +15,10 @@ var (
 	ResourceRepositoryCreationTemplate    = resourceRepositoryCreationTemplate
 	ResourceRepositoryPolicy              = resourceRepositoryPolicy
 
+	FindAccountSettingByName                         = findAccountSettingByName
 	FindLifecyclePolicyByRepositoryName              = findLifecyclePolicyByRepositoryName
 	FindPullThroughCacheRuleByRepositoryPrefix       = findPullThroughCacheRuleByRepositoryPrefix
+	FindPullTimeUpdateExclusionByPrincipalARN        = findPullTimeUpdateExclusionByPrincipalARN
 	FindRegistryPolicy                               = findRegistryPolicy
 	FindRegistryScanningConfiguration                = findRegistryScanningConfiguration
 	FindReplicationConfiguration                     = findReplicationConfiguration

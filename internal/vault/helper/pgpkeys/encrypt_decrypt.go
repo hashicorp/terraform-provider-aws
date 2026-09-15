@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pgpkeys
@@ -6,6 +6,7 @@ package pgpkeys
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
@@ -63,7 +64,7 @@ func GetFingerprints(pgpKeys []string, entities []*openpgp.Entity) ([]string, er
 	}
 	ret := make([]string, 0, len(entities))
 	for _, entity := range entities {
-		ret = append(ret, fmt.Sprintf("%x", entity.PrimaryKey.Fingerprint))
+		ret = append(ret, hex.EncodeToString(entity.PrimaryKey.Fingerprint))
 	}
 	return ret, nil
 }

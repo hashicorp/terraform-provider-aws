@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
@@ -34,13 +37,15 @@ func RegisterSweepers() {
 		Name: "aws_workspaces_workspace",
 		F:    sweepWorkspace,
 	})
+
+	awsv2.Register("aws_workspaces_pool", sweepPools)
 }
 
 func sweepDirectories(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	conn := client.WorkSpacesClient(ctx)
@@ -60,7 +65,7 @@ func sweepDirectories(region string) error {
 		}
 
 		for _, v := range page.Directories {
-			r := ResourceDirectory()
+			r := resourceDirectory()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DirectoryId))
 
@@ -81,7 +86,7 @@ func sweepIPGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WorkSpacesClient(ctx)
 	input := &workspaces.DescribeIpGroupsInput{}
@@ -93,7 +98,7 @@ func sweepIPGroups(region string) error {
 		}
 
 		for _, v := range page.Result {
-			r := ResourceIPGroup()
+			r := resourceIPGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GroupId))
 
@@ -121,28 +126,11 @@ func sweepIPGroups(region string) error {
 	return nil
 }
 
-func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
-	for {
-		output, err := conn.DescribeIpGroups(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.ToString(output.NextToken) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-	return nil
-}
-
 func sweepWorkspace(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &workspaces.DescribeWorkspacesInput{}
 	conn := client.WorkSpacesClient(ctx)
@@ -162,7 +150,7 @@ func sweepWorkspace(region string) error {
 		}
 
 		for _, v := range page.Workspaces {
-			r := ResourceWorkspace()
+			r := resourceWorkspace()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.WorkspaceId))
 
@@ -177,4 +165,25 @@ func sweepWorkspace(region string) error {
 	}
 
 	return nil
+}
+
+func sweepPools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &workspaces.DescribeWorkspacesPoolsInput{}
+	conn := client.WorkSpacesClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	output, err := conn.DescribeWorkspacesPools(ctx, input)
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if output != nil && len(output.WorkspacesPools) > 0 {
+		for _, v := range output.WorkspacesPools {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePool, client,
+				sweepfw.NewAttribute("pool_id", aws.ToString(v.PoolId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,21 +24,21 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_key_signing_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeySigningKeyConfig_name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccKeySigningKeyExists(ctx, resourceName),
+					testAccKeySigningKeyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_mnemonic", "SHA-256"),
-					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_type", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_type", "2"),
 					resource.TestMatchResourceAttr(resourceName, "digest_value", regexache.MustCompile(`^[0-9A-F]+$`)),
 					resource.TestMatchResourceAttr(resourceName, "dnskey_record", regexache.MustCompile(`^257 [0-9]+ [0-9]+ [0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestMatchResourceAttr(resourceName, "ds_record", regexache.MustCompile(`^[0-9]+ [0-9]+ [0-9]+ [0-9A-F]+$`)),
@@ -65,22 +65,30 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_key_signing_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeySigningKeyConfig_name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccKeySigningKeyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
+					testAccKeySigningKeyExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceKeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,19 +97,19 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_key_signing_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccKeySigningKeyExists(ctx, resourceName),
+					testAccKeySigningKeyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusInactive),
 				),
 			},
@@ -113,14 +121,14 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 			{
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusActive),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccKeySigningKeyExists(ctx, resourceName),
+					testAccKeySigningKeyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusActive),
 				),
 			},
 			{
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccKeySigningKeyExists(ctx, resourceName),
+					testAccKeySigningKeyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusInactive),
 				),
 			},
@@ -128,9 +136,9 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	})
 }
 
-func testAccCheckKeySigningKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeySigningKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_key_signing_key" {
@@ -139,7 +147,7 @@ func testAccCheckKeySigningKeyDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfroute53.FindKeySigningKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrHostedZoneID], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -154,14 +162,14 @@ func testAccCheckKeySigningKeyDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccKeySigningKeyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccKeySigningKeyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		_, err := tfroute53.FindKeySigningKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrHostedZoneID], rs.Primary.Attributes[names.AttrName])
 
@@ -174,7 +182,9 @@ func testAccKeySigningKeyConfig_base(rName, domainName string) string {
 resource "aws_kms_key" "test" {
   customer_master_key_spec = "ECC_NIST_P256"
   deletion_window_in_days  = 7
+  enable_key_rotation      = true
   key_usage                = "SIGN_VERIFY"
+
   policy = jsonencode({
     Statement = [
       {

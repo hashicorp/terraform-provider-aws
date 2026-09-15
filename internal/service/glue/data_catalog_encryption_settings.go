@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -19,90 +21,93 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_data_catalog_encryption_settings")
-func ResourceDataCatalogEncryptionSettings() *schema.Resource {
+// @SDKResource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
+func resourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
 		ReadWithoutTimeout:   resourceDataCatalogEncryptionSettingsRead,
 		UpdateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
 		DeleteWithoutTimeout: resourceDataCatalogEncryptionSettingsDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			"data_catalog_encryption_settings": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_password_encryption": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"aws_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"return_connection_password_encrypted": {
-										Type:     schema.TypeBool,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				"data_catalog_encryption_settings": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"connection_password_encryption": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"aws_kms_key_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"return_connection_password_encrypted": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"encryption_at_rest": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"catalog_encryption_mode": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CatalogEncryptionMode](),
-									},
-									"catalog_encryption_service_role": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"sse_aws_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+							"encryption_at_rest": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"catalog_encryption_mode": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CatalogEncryptionMode](),
+										},
+										"catalog_encryption_service_role": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"sse_aws_kms_key_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	}
 
-	if v, ok := d.GetOk("data_catalog_encryption_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DataCatalogEncryptionSettings = expandDataCatalogEncryptionSettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("data_catalog_encryption_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DataCatalogEncryptionSettings = expandDataCatalogEncryptionSettings(v.([]any)[0].(map[string]any))
 	}
 
 	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %+v", input)
@@ -117,7 +122,7 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 	return append(diags, resourceDataCatalogEncryptionSettingsRead(ctx, d, meta)...)
 }
 
-func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -131,7 +136,7 @@ func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.Re
 
 	d.Set(names.AttrCatalogID, d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
-		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
+		if err := d.Set("data_catalog_encryption_settings", []any{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {
@@ -141,7 +146,7 @@ func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -160,25 +165,25 @@ func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.
 	return diags
 }
 
-func expandDataCatalogEncryptionSettings(tfMap map[string]interface{}) *awstypes.DataCatalogEncryptionSettings {
+func expandDataCatalogEncryptionSettings(tfMap map[string]any) *awstypes.DataCatalogEncryptionSettings {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.DataCatalogEncryptionSettings{}
 
-	if v, ok := tfMap["connection_password_encryption"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ConnectionPasswordEncryption = expandConnectionPasswordEncryption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["connection_password_encryption"].([]any); ok && len(v) > 0 {
+		apiObject.ConnectionPasswordEncryption = expandConnectionPasswordEncryption(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["encryption_at_rest"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EncryptionAtRest = expandEncryptionAtRest(v[0].(map[string]interface{}))
+	if v, ok := tfMap["encryption_at_rest"].([]any); ok && len(v) > 0 {
+		apiObject.EncryptionAtRest = expandEncryptionAtRest(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandConnectionPasswordEncryption(tfMap map[string]interface{}) *awstypes.ConnectionPasswordEncryption {
+func expandConnectionPasswordEncryption(tfMap map[string]any) *awstypes.ConnectionPasswordEncryption {
 	if tfMap == nil {
 		return nil
 	}
@@ -196,7 +201,7 @@ func expandConnectionPasswordEncryption(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func expandEncryptionAtRest(tfMap map[string]interface{}) *awstypes.EncryptionAtRest {
+func expandEncryptionAtRest(tfMap map[string]any) *awstypes.EncryptionAtRest {
 	if tfMap == nil {
 		return nil
 	}
@@ -218,30 +223,30 @@ func expandEncryptionAtRest(tfMap map[string]interface{}) *awstypes.EncryptionAt
 	return apiObject
 }
 
-func flattenDataCatalogEncryptionSettings(apiObject *awstypes.DataCatalogEncryptionSettings) map[string]interface{} {
+func flattenDataCatalogEncryptionSettings(apiObject *awstypes.DataCatalogEncryptionSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConnectionPasswordEncryption; v != nil {
-		tfMap["connection_password_encryption"] = []interface{}{flattenConnectionPasswordEncryption(v)}
+		tfMap["connection_password_encryption"] = []any{flattenConnectionPasswordEncryption(v)}
 	}
 
 	if v := apiObject.EncryptionAtRest; v != nil {
-		tfMap["encryption_at_rest"] = []interface{}{flattenEncryptionAtRest(v)}
+		tfMap["encryption_at_rest"] = []any{flattenEncryptionAtRest(v)}
 	}
 
 	return tfMap
 }
 
-func flattenConnectionPasswordEncryption(apiObject *awstypes.ConnectionPasswordEncryption) map[string]interface{} {
+func flattenConnectionPasswordEncryption(apiObject *awstypes.ConnectionPasswordEncryption) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AwsKmsKeyId; v != nil {
 		tfMap["aws_kms_key_id"] = aws.ToString(v)
@@ -252,12 +257,12 @@ func flattenConnectionPasswordEncryption(apiObject *awstypes.ConnectionPasswordE
 	return tfMap
 }
 
-func flattenEncryptionAtRest(apiObject *awstypes.EncryptionAtRest) map[string]interface{} {
+func flattenEncryptionAtRest(apiObject *awstypes.EncryptionAtRest) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["catalog_encryption_mode"] = string(apiObject.CatalogEncryptionMode)
 

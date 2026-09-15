@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -18,9 +17,9 @@ func testAccTransitGatewayMulticastDomainDataSource_Filter(t *testing.T, semapho
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_multicast_domain.test"
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -33,12 +32,12 @@ func testAccTransitGatewayMulticastDomainDataSource_Filter(t *testing.T, semapho
 				Config: testAccTransitGatewayMulticastDomainDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "associations.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "associations.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_accept_shared_associations", resourceName, "auto_accept_shared_associations"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "igmpv2_support", resourceName, "igmpv2_support"),
-					resource.TestCheckResourceAttr(dataSourceName, "members.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "members.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(dataSourceName, "sources.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "sources.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "static_sources_support", resourceName, "static_sources_support"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
@@ -53,9 +52,9 @@ func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T, semaphore t
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_multicast_domain.test"
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -68,12 +67,12 @@ func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T, semaphore t
 				Config: testAccTransitGatewayMulticastDomainDataSourceConfig_iD(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "associations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "associations.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_accept_shared_associations", resourceName, "auto_accept_shared_associations"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "igmpv2_support", resourceName, "igmpv2_support"),
-					resource.TestCheckResourceAttr(dataSourceName, "members.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "members.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(dataSourceName, "sources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "sources.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "static_sources_support", resourceName, "static_sources_support"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),

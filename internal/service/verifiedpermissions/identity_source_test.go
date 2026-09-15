@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -10,15 +10,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,31 +24,31 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "0"),
 				),
 			},
 			{
@@ -67,37 +65,37 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "MyCorp::User"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix"),
 					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.0", "https://myapp.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.principal_id_claim", "sub"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", "0"),
 				),
 			},
 			{
@@ -114,25 +112,33 @@ func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourceIdentitySource, resourceName),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourceIdentitySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -142,46 +148,46 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccIdentitySourceConfig_Cognito_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.0", "aws_cognito_user_pool_client.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -203,54 +209,54 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix"),
 					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.0", "https://myapp.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.principal_id_claim", "sub"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", "0"),
 				),
 			},
 			{
 				Config: testAccIdentitySourceConfig_updateOpenIDConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix", "MyOIDCProvider"),
 					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.0.group_claim", "groups"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.0.group_entity_type", "MyCorp::UserGroup"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.0", "https://myapp.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.principal_id_claim", "sub"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -267,19 +273,19 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_update(t *testing.T) {
 			{
 				Config: testAccIdentitySourceConfig_updateOpenIDConfigurationTokenSelection(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix", "MyOIDCProvider"),
 					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.0.group_claim", "groups"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.0.group_entity_type", "MyCorp::UserGroup"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.0.client_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.0.client_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.0.client_ids.0", "1example23456789"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.0.principal_id_claim", "sub"),
 				),
@@ -305,52 +311,52 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_convertToOpenID(t *testing
 	ctx := acctest.Context(t)
 
 	var identitySource1, identitySource2 verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource2),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "MyCorp::User"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix"),
 					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.0", "https://myapp.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.principal_id_claim", "sub"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -374,52 +380,52 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_convertToCognito(t *testing
 	ctx := acctest.Context(t)
 
 	var identitySource1, identitySource2 verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "MyCorp::User"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix"),
 					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.0", "https://myapp.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.principal_id_claim", "sub"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", "0"),
 				),
 			},
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource2),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "0"),
 				),
 			},
 			{
@@ -432,9 +438,9 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_convertToCognito(t *testing
 	})
 }
 
-func testAccCheckIdentitySourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIdentitySourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedpermissions_identity_source" {
@@ -443,7 +449,7 @@ func testAccCheckIdentitySourceDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfverifiedpermissions.FindIdentitySourceByIDAndPolicyStoreID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["policy_store_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -458,7 +464,7 @@ func testAccCheckIdentitySourceDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckIdentitySourceExists(ctx context.Context, name string, identitySource *verifiedpermissions.GetIdentitySourceOutput) resource.TestCheckFunc {
+func testAccCheckIdentitySourceExists(ctx context.Context, t *testing.T, name string, identitySource *verifiedpermissions.GetIdentitySourceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -469,7 +475,7 @@ func testAccCheckIdentitySourceExists(ctx context.Context, name string, identity
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNameIdentitySource, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 		resp, err := tfverifiedpermissions.FindIdentitySourceByIDAndPolicyStoreID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["policy_store_id"])
 
 		if err != nil {

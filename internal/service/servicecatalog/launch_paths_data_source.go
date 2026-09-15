@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -26,58 +28,60 @@ func dataSourceLaunchPaths() *schema.Resource {
 			Read: schema.DefaultTimeout(LaunchPathsReadyTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"summaries": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"constraint_summaries": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDescription: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"summaries": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"constraint_summaries": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDescription: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
+							"path_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
 						},
-						"path_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	summaries, err := waitLaunchPathsReady(ctx, conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
@@ -94,8 +98,8 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func flattenLaunchPathSummary(ctx context.Context, apiObject awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchPathSummary(ctx context.Context, apiObject awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]any {
+	tfMap := map[string]any{}
 
 	if len(apiObject.ConstraintSummaries) > 0 {
 		tfMap["constraint_summaries"] = flattenConstraintSummaries(apiObject.ConstraintSummaries)
@@ -109,19 +113,19 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject awstypes.LaunchPath
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
-	tags := KeyValueTags(ctx, apiObject.Tags)
+	tags := keyValueTags(ctx, apiObject.Tags)
 
 	tfMap[names.AttrTags] = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 
 	return tfMap
 }
 
-func flattenLaunchPathSummaries(ctx context.Context, apiObjects []awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenLaunchPathSummaries(ctx context.Context, apiObjects []awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchPathSummary(ctx, apiObject, ignoreTagsConfig))
@@ -130,8 +134,8 @@ func flattenLaunchPathSummaries(ctx context.Context, apiObjects []awstypes.Launc
 	return tfList
 }
 
-func flattenConstraintSummary(apiObject awstypes.ConstraintSummary) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenConstraintSummary(apiObject awstypes.ConstraintSummary) map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.Description != nil {
 		tfMap[names.AttrDescription] = aws.ToString(apiObject.Description)
@@ -144,12 +148,12 @@ func flattenConstraintSummary(apiObject awstypes.ConstraintSummary) map[string]i
 	return tfMap
 }
 
-func flattenConstraintSummaries(apiObjects []awstypes.ConstraintSummary) []interface{} {
+func flattenConstraintSummaries(apiObjects []awstypes.ConstraintSummary) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenConstraintSummary(apiObject))

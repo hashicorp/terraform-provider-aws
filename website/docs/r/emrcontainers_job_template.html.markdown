@@ -33,11 +33,12 @@ resource "aws_emrcontainers_job_template" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `job_template_data` - (Required) The job template data which holds values of StartJobRun API request.
 * `kms_key_arn` - (Optional) The KMS key ARN used to encrypt the job template.
-* `name` – (Required) The specified name of the job template.
+* `name` - (Required) The specified name of the job template.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### job_template_data Arguments
@@ -97,6 +98,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the job template.
 * `id` - The ID of the job template.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `90m`)
 
 ## Import
 

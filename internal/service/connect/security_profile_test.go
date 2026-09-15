@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -9,41 +9,40 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccSecurityProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SecurityProfile
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Created"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -54,15 +53,15 @@ func testAccSecurityProfile_basic(t *testing.T) {
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 		},
@@ -72,28 +71,28 @@ func testAccSecurityProfile_basic(t *testing.T) {
 func testAccSecurityProfile_updatePermissions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SecurityProfile
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TestPermissionsUpdate"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -105,15 +104,15 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				// Test updating permissions
 				Config: testAccSecurityProfileConfig_permissions(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/security-profile/{security_profile_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TestPermissionsUpdate"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 		},
@@ -123,22 +122,22 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 func testAccSecurityProfile_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SecurityProfile
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 
 	resourceName := "aws_connect_security_profile.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
 				),
 			},
@@ -150,8 +149,8 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 			{
 				Config: testAccSecurityProfileConfig_tags(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -159,8 +158,8 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 			{
 				Config: testAccSecurityProfileConfig_tagsUpdated(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -173,36 +172,44 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 func testAccSecurityProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SecurityProfile
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceSecurityProfile(), resourceName),
+					testAccCheckSecurityProfileExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceSecurityProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckSecurityProfileExists(ctx context.Context, n string, v *awstypes.SecurityProfile) resource.TestCheckFunc {
+func testAccCheckSecurityProfileExists(ctx context.Context, t *testing.T, n string, v *awstypes.SecurityProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 		output, err := tfconnect.FindSecurityProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["security_profile_id"])
 
@@ -216,18 +223,18 @@ func testAccCheckSecurityProfileExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccCheckSecurityProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSecurityProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_security_profile" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 			_, err := tfconnect.FindSecurityProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["security_profile_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

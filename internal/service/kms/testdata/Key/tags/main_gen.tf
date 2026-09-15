@@ -1,9 +1,10 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_kms_key" "test" {
   description             = var.rName
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   tags = var.resource_tags
 }

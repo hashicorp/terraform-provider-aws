@@ -40,6 +40,7 @@ resource "aws_efs_file_system" "foo_with_lifecyle_policy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone_name` - (Optional) the AWS Availability Zone in which to create the file system. Used to create a file system that uses One Zone storage classes. See [user guide](https://docs.aws.amazon.com/efs/latest/ug/availability-durability.html) for more information.
 * `creation_token` - (Optional) A unique name (a maximum of 64 characters are allowed)
 used as reference when creating the Elastic File System to ensure idempotent file
@@ -52,7 +53,7 @@ user guide for more information.
 * `performance_mode` - (Optional) The file system performance mode. Can be either `"generalPurpose"` or `"maxIO"` (Default: `"generalPurpose"`).
 * `provisioned_throughput_in_mibps` - (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with `throughput_mode` set to `provisioned`.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `throughput_mode` - (Optional) Throughput mode for the file system. Defaults to `bursting`. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
+* `throughput_mode` - (Optional) Throughput mode for the file system. Defaults to `bursting`, matching the [`CreateFileSystem`](https://docs.aws.amazon.com/efs/latest/ug/API_CreateFileSystem.html) API default. Note that AWS [recommends `elastic` for most use cases](https://docs.aws.amazon.com/efs/latest/ug/managing-throughput.html), and `elastic` is the default in the Amazon EFS console. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
 
 ### `lifecycle_policy` Block
 
@@ -76,7 +77,7 @@ The `protection` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `availability_zone_id` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).

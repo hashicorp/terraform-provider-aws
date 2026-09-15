@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,9 +15,9 @@ import (
 func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot_ids.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,9 +38,9 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	resource1Name := "aws_ebs_snapshot.a"
 	resource2Name := "aws_ebs_snapshot.b"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,7 +48,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_sorted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ids.1", resource1Name, names.AttrID),
 				),
@@ -60,7 +59,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 
 func TestAccEC2EBSSnapshotIDsDataSource_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,7 +67,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", "0"),
 				),
 			},
 		},

@@ -40,6 +40,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) Netmask length of the CIDR you would like to preview from the IPAM pool.

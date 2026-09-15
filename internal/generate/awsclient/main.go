@@ -1,25 +1,22 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
-	SDKVersion         string
-	GoV1Package        string
-	GoV1ClientTypeName string
-	GoV2Package        string
-	ProviderNameUpper  string
+	GoPackage         string
+	ProviderNameUpper string
 }
 
 type TemplateData struct {
@@ -35,7 +32,6 @@ func main() {
 	g.Infof("Generating internal/conns/%s", filename)
 
 	data, err := data.ReadAllServiceData()
-
 	if err != nil {
 		g.Fatalf("error reading service data: %s", err)
 	}
@@ -51,27 +47,25 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l.ProviderNameUpper(),
-			GoV1Package:       l.GoV1Package(),
-			GoV2Package:       l.GoV2Package(),
+		if l.IsClientSDKV1() {
+			continue
 		}
 
-		s.SDKVersion = l.SDKVersion()
-		if l.ClientSDKV1() {
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
+		s := ServiceDatum{
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoPackage:         l.GoPackageName(),
 		}
 
 		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("awsclient", tmpl, td); err != nil {
+	if err := d.BufferTemplate("awsclient", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -80,5 +74,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

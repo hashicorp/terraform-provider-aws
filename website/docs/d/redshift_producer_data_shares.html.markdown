@@ -24,10 +24,11 @@ data "aws_redshift_producer_data_shares" "example" {
 
 The following arguments are required:
 
-* `producer_arn` - (Required) Amazon Resource Name (ARN) of the producer namespace that returns in the list of datashares.
+* `producer_arn` - (Required) ARN of the producer namespace that returns in the list of datashares.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `status` - (Optional) Status of a datashare in the producer. Valid values are `ACTIVE`, `AUTHORIZED`, `PENDING_AUTHORIZATION`, `DEAUTHORIZED`, and `REJECTED`. Omit this argument to return all statuses.
 
 ## Attribute Reference
@@ -39,6 +40,6 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `data_shares` Attribute Reference
 
-* `data_share_arn` - ARN (Amazon Resource Name) of the data share.
+* `data_share_arn` - ARN of the data share.
 * `managed_by` - Identifier of a datashare to show its managing entity.
-* `producer_arn` - ARN (Amazon Resource Name) of the producer.
+* `producer_arn` - ARN of the producer.

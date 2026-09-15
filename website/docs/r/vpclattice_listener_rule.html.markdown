@@ -13,7 +13,7 @@ Terraform resource for managing an AWS VPC Lattice Listener Rule.
 ## Example Usage
 
 ```terraform
-resource "aws_vpclattice_listener_rule" "test" {
+resource "aws_vpclattice_listener_rule" "example" {
   name                = "example"
   listener_identifier = aws_vpclattice_listener.example.listener_id
   service_identifier  = aws_vpclattice_service.example.id
@@ -57,7 +57,7 @@ resource "aws_vpclattice_listener_rule" "test" {
 ### Basic Usage
 
 ```terraform
-resource "aws_vpclattice_listener_rule" "test" {
+resource "aws_vpclattice_listener_rule" "example" {
   name                = "example"
   listener_identifier = aws_vpclattice_listener.example.listener_id
   service_identifier  = aws_vpclattice_service.example.id
@@ -84,70 +84,101 @@ resource "aws_vpclattice_listener_rule" "test" {
 
 The following arguments are required:
 
-* `service_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service.
-* `listener_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the listener.
-* `action` - (Required) The action for the listener rule.
-* `match` - (Required) The rule match.
-* `name` - (Required) The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
-* `priority` - (Required) The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
+* `action` - (Required) Action for the listener rule. See [`action` Block](#action-block) for details.
+* `listener_identifier` - (Required) ID or ARN of the listener.
+* `match` - (Required) Rule match. See [`match` Block](#match-block) for details.
+* `name` - (Required) Name of the rule. Must be unique within the listener. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
+* `priority` - (Required) Priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
+* `service_identifier` - (Required) ID or ARN of the service.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-action (`action`) supports the following:
+### `action` Block
 
-* `fixed_response` - (Optional) Describes the rule action that returns a custom HTTP response.
-* `forward` - (Optional) The forward action. Traffic that matches the rule is forwarded to the specified target groups.
+The `action` block supports the following:
 
-fixed response (`fixed_response`) supports the following:
+Exactly one of `fixed_response` or `forward` is required.
 
-* `status_code` - (Optional) The HTTP response code.
+* `fixed_response` - (Optional) Rule action that returns a custom HTTP response. See [`fixed_response` Block](#fixed_response-block) for details.
+* `forward` - (Optional) Forward action. Traffic that matches the rule is forwarded to the specified target groups. See [`forward` Block](#forward-block) for details.
 
-forward (`forward`) supports the following:
+### `fixed_response` Block
 
-* `target_groups` - (Optional) The target groups. Traffic matching the rule is forwarded to the specified target groups. With forward actions, you can assign a weight that controls the prioritization and selection of each target group. This means that requests are distributed to individual target groups based on their weights. For example, if two target groups have the same weight, each target group receives half of the traffic.
+The `fixed_response` block supports the following:
 
-The default value is 1 with maximum number of 2. If only one target group is provided, there is no need to set the weight; 100% of traffic will go to that target group.
+* `status_code` - (Optional) HTTP response code.
 
-action (`match`) supports the following:
+### `forward` Block
 
-* `http_match` - (Optional) The HTTP criteria that a rule must match.
+The `forward` block supports the following:
 
-http match (`http_match`) supports the following:
+* `target_groups` - (Required) Target groups that traffic matching the rule is forwarded to. See [`target_groups` Block](#target_groups-block) for details.
 
-* `header_matches` - (Optional) The header matches. Matches incoming requests with rule based on request header value before applying rule action.
-* `method` - (Optional) The HTTP method type.
-* `path_match` - (Optional) The path match.
+### `target_groups` Block
 
-header matches (`header_matches`) supports the following:
+The `target_groups` block supports the following:
 
-* `case_sensitive` - (Optional) Indicates whether the match is case sensitive. Defaults to false.
-* `match` - (Optional) The header match type.
-* `name` - (Optional) The name of the header.
+* `target_group_identifier` - (Required) ID or ARN of the target group.
+* `weight` - (Optional) Weight assigned to the target group, controlling the prioritization and selection of each target group so that requests are distributed based on their weights. Default is `100`.
 
-header matches match (`match`) supports the following:
+### `match` Block
 
-* `contains` - (Optional) Specifies a contains type match.
-* `exact` - (Optional) Specifies an exact type match.
-* `prefix` - (Optional) Specifies a prefix type match. Matches the value with the prefix.
+The `match` block supports the following:
 
-path match (`path_match`) supports the following:
+* `http_match` - (Required) HTTP criteria that a rule must match. See [`http_match` Block](#http_match-block) for details.
 
-* `case_sensitive` - (Optional) Indicates whether the match is case sensitive. Defaults to false.
-* `match` - (Optional) The header match type.
+### `http_match` Block
 
-path match match (`match`) supports the following:
+The `http_match` block supports the following:
 
-* `exact` - (Optional) Specifies an exact type match.
-* `prefix` - (Optional) Specifies a prefix type match. Matches the value with the prefix.
+At least one of `header_matches`, `method`, or `path_match` is required.
+
+* `header_matches` - (Optional) Header matches that match incoming requests based on the request header value before applying the rule action. See [`header_matches` Block](#header_matches-block) for details.
+* `method` - (Optional) HTTP method type.
+* `path_match` - (Optional) Path match. See [`path_match` Block](#path_match-block) for details.
+
+### `header_matches` Block
+
+The `header_matches` block supports the following:
+
+* `case_sensitive` - (Optional) Whether the match is case sensitive. Default is `false`.
+* `match` - (Optional) Header match type. See [`match.http_match.header_matches.match` Block](#matchhttp_matchheader_matchesmatch-block) for details.
+* `name` - (Required) Name of the header.
+
+### `match.http_match.header_matches.match` Block
+
+The `match.http_match.header_matches.match` block supports the following:
+
+Exactly one of `contains`, `exact`, or `prefix` is required.
+
+* `contains` - (Optional) Value that the header must contain to match.
+* `exact` - (Optional) Exact type match.
+* `prefix` - (Optional) Prefix type match. Matches the value with the prefix.
+
+### `path_match` Block
+
+The `path_match` block supports the following:
+
+* `case_sensitive` - (Optional) Whether the match is case sensitive. Default is `false`.
+* `match` - (Optional) Path match type. See [`match.http_match.path_match.match` Block](#matchhttp_matchpath_matchmatch-block) for details.
+
+### `match.http_match.path_match.match` Block
+
+The `match.http_match.path_match.match` block supports the following:
+
+Exactly one of `exact` or `prefix` is required.
+
+* `exact` - (Optional) Exact type match.
+* `prefix` - (Optional) Prefix type match. Matches the value with the prefix.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN for the listener rule.
-* `id` - A forward slash-delimited string concatenating `service_identifier`, `listener_identifier`, and `rule_id`.
+* `arn` - ARN for the listener rule.
 * `rule_id` - Unique identifier for the listener rule.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

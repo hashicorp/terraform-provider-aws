@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package serverlessrepo
 
@@ -7,6 +9,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,15 +20,15 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,51 +59,52 @@ func ResourceCloudFormationStack() *schema.Resource {
 			Delete: schema.DefaultTimeout(cloudFormationStackDeletedDefaultTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"capabilities": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"outputs": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"semantic_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"capabilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"outputs": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"semantic_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	cfConn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -113,7 +117,7 @@ func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.ToString(changeSet.StackId))
 
-	requestToken := id.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	executeRequest := cloudformation.ExecuteChangeSetInput{
 		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
@@ -134,14 +138,14 @@ func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceCloudFormationStackRead(ctx, d, meta)...)
 }
 
-func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoClient(ctx)
 	cfConn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	stack, err := tfcloudformation.FindStackByName(ctx, cfConn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -170,7 +174,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagSemanticVersion)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set outputs: %s", err)
@@ -187,7 +191,8 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 
 	version := getApplicationOutput.Version
 
-	if err = d.Set(names.AttrParameters, flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions)); err != nil {
+	configuredParams := d.Get(names.AttrParameters).(map[string]any)
+	if err = d.Set(names.AttrParameters, flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions, configuredParams)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set parameters: %s", err)
 	}
 
@@ -198,13 +203,24 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func flattenNonDefaultCloudFormationParameters(cfParams []cloudformationtypes.Parameter, rawParameterDefinitions []awstypes.ParameterDefinition) map[string]interface{} {
+func flattenNonDefaultCloudFormationParameters(cfParams []cloudformationtypes.Parameter, rawParameterDefinitions []awstypes.ParameterDefinition, configuredParams map[string]any) map[string]any {
 	parameterDefinitions := flattenParameterDefinitions(rawParameterDefinitions)
-	params := make(map[string]interface{}, len(cfParams))
+	params := make(map[string]any, len(cfParams))
 	for _, p := range cfParams {
 		key := aws.ToString(p.ParameterKey)
 		value := aws.ToString(p.ParameterValue)
-		if value != aws.ToString(parameterDefinitions[key].DefaultValue) {
+
+		_, isConfigured := configuredParams[key]
+		def := parameterDefinitions[key]
+
+		if aws.ToBool(def.NoEcho) {
+			if isConfigured {
+				params[key] = configuredParams[key]
+			}
+			continue
+		}
+
+		if isConfigured || value != aws.ToString(def.DefaultValue) {
 			params[key] = value
 		}
 	}
@@ -219,7 +235,7 @@ func flattenParameterDefinitions(parameterDefinitions []awstypes.ParameterDefini
 	return result
 }
 
-func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	cfConn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -230,7 +246,7 @@ func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) change set created", d.Id())
 
-	requestToken := id.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	executeRequest := cloudformation.ExecuteChangeSetInput{
 		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
@@ -251,11 +267,11 @@ func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceCloudFormationStackRead(ctx, d, meta)...)
 }
 
-func resourceCloudFormationStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudFormationStackDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	cfConn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	requestToken := id.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	input := &cloudformation.DeleteStackInput{
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
@@ -276,7 +292,7 @@ func resourceCloudFormationStackDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceCloudFormationStackImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudFormationStackImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	stackID := d.Id()
 
 	// If this isn't an ARN, it's the stack name
@@ -312,7 +328,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 		changeSetRequest.SemanticVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		changeSetRequest.ParameterOverrides = expandCloudFormationChangeSetParameters(v.(map[string]interface{}))
+		changeSetRequest.ParameterOverrides = expandCloudFormationChangeSetParameters(v.(map[string]any))
 	}
 
 	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(ctx, &changeSetRequest)
@@ -323,7 +339,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 	return tfcloudformation.WaitChangeSetCreated(ctx, cfConn, aws.ToString(changeSetResponse.StackId), aws.ToString(changeSetResponse.ChangeSetId))
 }
 
-func expandCloudFormationChangeSetParameters(params map[string]interface{}) []awstypes.ParameterValue {
+func expandCloudFormationChangeSetParameters(params map[string]any) []awstypes.ParameterValue {
 	var appParams []awstypes.ParameterValue
 	for k, v := range params {
 		appParams = append(appParams, awstypes.ParameterValue{
@@ -338,11 +354,8 @@ func flattenStackCapabilities(stackCapabilities []cloudformationtypes.Capability
 	// We need to preserve "CAPABILITY_RESOURCE_POLICY" if it has been set. It is not
 	// returned by the CloudFormation APIs.
 	capabilities := flex.FlattenStringyValueSet(stackCapabilities)
-	for _, capability := range applicationRequiredCapabilities {
-		if capability == awstypes.CapabilityCapabilityResourcePolicy {
-			capabilities.Add(string(awstypes.CapabilityCapabilityResourcePolicy))
-			break
-		}
+	if slices.Contains(applicationRequiredCapabilities, awstypes.CapabilityCapabilityResourcePolicy) {
+		capabilities.Add(string(awstypes.CapabilityCapabilityResourcePolicy))
 	}
 	return capabilities
 }

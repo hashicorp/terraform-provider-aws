@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram_test
@@ -10,13 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,29 +34,29 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAccepterExists(ctx, resourceName),
+					testAccCheckResourceShareAccepterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexache.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexache.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceShareStatusActive)),
-					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 			{
@@ -73,24 +72,32 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_accepter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAccepterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
+					testAccCheckResourceShareAccepterExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -100,38 +107,38 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAccepterConfig_association(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAccepterExists(ctx, resourceName),
+					testAccCheckResourceShareAccepterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexache.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexache.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceShareStatusActive)),
-					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckResourceShareAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceShareAccepterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_share_accepter" {
@@ -140,7 +147,7 @@ func testAccCheckResourceShareAccepterDestroy(ctx context.Context) resource.Test
 
 			_, err := tfram.FindResourceShareOwnerOtherAccountsByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -155,14 +162,14 @@ func testAccCheckResourceShareAccepterDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckResourceShareAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckResourceShareAccepterExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 		_, err := tfram.FindResourceShareOwnerOtherAccountsByARN(ctx, conn, rs.Primary.ID)
 

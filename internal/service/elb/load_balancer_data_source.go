@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -24,188 +26,190 @@ import (
 func dataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
 
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"access_logs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrInterval: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrBucketPrefix: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"access_logs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrInterval: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrBucketPrefix: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
 
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
 
-			"connection_draining": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"connection_draining": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 
-			"connection_draining_timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"connection_draining_timeout": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 
-			"cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"cross_zone_load_balancing": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrHealthCheck: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"healthy_threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
+				names.AttrHealthCheck: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"healthy_threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 
-						"unhealthy_threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
+							"unhealthy_threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 
-						names.AttrTarget: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+							names.AttrTarget: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 
-						names.AttrInterval: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
+							names.AttrInterval: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 
-						names.AttrTimeout: {
-							Type:     schema.TypeInt,
-							Computed: true,
+							names.AttrTimeout: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
 
-			"idle_timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"idle_timeout": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 
-			"instances": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
+				"instances": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
 
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"internal": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 
-			"listener": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"instance_protocol": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"lb_port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"lb_protocol": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ssl_certificate_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"listener": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instance_port": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"instance_protocol": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"lb_port": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"lb_protocol": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ssl_certificate_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
 
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
 
-			"source_security_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"source_security_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"source_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"source_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrSubnets: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
+				names.AttrSubnets: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
 
-			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"desync_mitigation_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputed(),
 
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	lbName := d.Get(names.AttrName).(string)
 	lb, err := findLoadBalancerByName(ctx, conn, lbName)
@@ -229,10 +233,10 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	lbAttrs := output.LoadBalancerAttributes
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -291,7 +295,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		// See https://github.com/hashicorp/terraform/issues/10138
 		_, n := d.GetChange("access_logs")
 		elbal := lbAttrs.AccessLog
-		nl := n.([]interface{})
+		nl := n.([]any)
 		if len(nl) == 0 && !elbal.Enabled {
 			elbal = nil
 		}

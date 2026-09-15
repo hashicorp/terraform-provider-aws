@@ -45,6 +45,7 @@ resource "aws_lex_slot_type" "flower_types" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that
 the slot type can take. Each value can have a list of synonyms, which are additional values that help
 train the machine learning model about the values that it resolves for a slot. Attributes are
@@ -70,14 +71,6 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 * `synonyms` - (Optional) Additional values related to the slot type value. Each item must be less than or equal to 140 characters in length.
 * `value` - (Required) The value of the slot type. Must be less than or equal to 140 characters in length.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `1m`)
-* `update` - (Default `1m`)
-* `delete` - (Default `5m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -87,6 +80,14 @@ not included as an argument because the resource will add it automatically when 
 * `created_date` - The date when the slot type version was created.
 * `last_updated_date` - The date when the `$LATEST` version of this slot type was updated.
 * `version` - The version of the slot type.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,35 +14,35 @@ import (
 
 func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	lbName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	lbName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sharedTagVal := sdkacctest.RandString(32)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	lbName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	lbName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sharedTagVal := acctest.RandString(t, 32)
 
-	resourceLb1 := "aws_lb.test1"
-	resourceLb2 := "aws_lb.test2"
+	resource1 := "aws_lb.test1"
+	resource2 := "aws_lb.test2"
 
 	dataSourceNameMatchFirstTag := "data.aws_lbs.tag_match_first"
 	dataSourceNameMatchBothTag := "data.aws_lbs.tag_match_shared"
 	dataSourceNameMatchNoneTag := "data.aws_lbs.tag_match_none"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancersDataSourceConfig_basic(rName, lbName1, lbName2, sharedTagVal),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceNameMatchFirstTag, "arns.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchFirstTag, "arns.*", resourceLb1, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceNameMatchBothTag, "arns.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchBothTag, "arns.*", resourceLb1, names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchBothTag, "arns.*", resourceLb2, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceNameMatchNoneTag, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceNameMatchFirstTag, "arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchFirstTag, "arns.*", resource1, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceNameMatchBothTag, "arns.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchBothTag, "arns.*", resource1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchBothTag, "arns.*", resource2, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceNameMatchNoneTag, "arns.#", "0"),
 				),
 			},
 		},

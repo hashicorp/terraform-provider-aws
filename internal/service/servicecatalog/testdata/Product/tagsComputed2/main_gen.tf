@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -55,8 +55,6 @@ resource "aws_s3_object" "test" {
     }
   })
 }
-
-data "aws_partition" "current" {}
 
 resource "null_resource" "test" {}
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone ID for `ap-southeast-3` AWS Region
-```

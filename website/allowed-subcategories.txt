@@ -4,7 +4,11 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
+ARC (Application Recovery Controller) Region Switch
+ARC (Application Recovery Controller) Zonal Shift
+Account Access
 Account Management
+Agent Registry
 Amazon Q Business
 Amplify
 App Mesh
@@ -16,6 +20,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (Mgn)
 Application Signals
 Athena
 Audit Manager
@@ -25,7 +30,9 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
+Billing
 CE (Cost Explorer)
 Chatbot
 Chime
@@ -47,13 +54,16 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
 CodeBuild
 CodeCatalyst
 CodeCommit
+CodeConnections
 CodeDeploy
 CodeGuru Profiler
 CodeGuru Reviewer
@@ -74,15 +84,18 @@ Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
+DSQL
 Data Exchange
 Data Pipeline
 DataSync
 DataZone
 Detective
+DevOps Agent
 DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
+Directory Service Data
 DocumentDB
 DocumentDB Elastic
 DynamoDB
@@ -103,13 +116,17 @@ EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Transcoder
+Elastic VMware
 Elasticsearch
 Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging
+End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
@@ -131,9 +148,9 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
-IoT Analytics
+Interconnect
+Invoicing
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -145,36 +162,38 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda Core
+Lambda MicroVMs
 Launch Wizard
 Lex Model Building
 Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
-MemoryDB for Redis
+MemoryDB
 Meta Data Sources
+Multi-party Approval
 Neptune
 Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
-OpenSearch Ingestion
+OpenSearch Ingestion (OSIS)
 OpenSearch Serverless
-OpsWorks
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
 Parallel Computing Service
 Payment Cryptography Control Plane
-Pinpoint
 Polly
 Pricing Calculator
 Private CA Connector for Active Directory
@@ -182,12 +201,14 @@ QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resilience Hub V2
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
@@ -200,10 +221,13 @@ Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
+S3 Files
 S3 Glacier
+S3 Tables
+S3 Vectors
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
+SES Mail Manager
 SESv2 (Simple Email V2)
 SFN (Step Functions)
 SNS (Simple Notification)
@@ -211,11 +235,13 @@ SQS (Simple Queue)
 SSM (Systems Manager)
 SSM Contacts
 SSM Incident Manager Incidents
+SSM Quick Setup
 SSO Admin
 SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
-SageMaker
+SageMaker AI
+Savings Plans
 Secrets Manager
 Security Hub
 Security Lake
@@ -227,11 +253,16 @@ Shield
 Signer
 Storage Gateway
 Systems Manager for SAP
+Tax Settings
+Timestream Query
 Timestream Write
 Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Experience Customization
+User Notifications
+User Notifications Contacts
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPC Lattice
@@ -245,7 +276,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
-WorkLink
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appfabric
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -28,12 +29,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_appfabric_app_authorization_connection", name="App Authorization Connection")
 // @Testing(serialize=true)
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newAppAuthorizationConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationConnectionResource{}
 
@@ -43,14 +47,10 @@ func newAppAuthorizationConnectionResource(_ context.Context) (resource.Resource
 }
 
 type appAuthorizationConnectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appAuthorizationConnectionResourceModel]
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
-}
-
-func (*appAuthorizationConnectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_authorization_connection"
 }
 
 func (r *appAuthorizationConnectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -135,8 +135,12 @@ func (r *appAuthorizationConnectionResource) Create(ctx context.Context, request
 		return
 	}
 
-	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID AppFabric App Authorization (%s) Connection", data.AppAuthorizationARN.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	appAuthorization, err := waitConnectAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -167,7 +171,7 @@ func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
@@ -177,7 +181,7 @@ func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request r
 
 	output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -209,8 +213,7 @@ func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfa
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -219,17 +222,17 @@ func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfa
 	}
 
 	if output == nil || output.AppAuthorization == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppAuthorization, nil
 }
 
-func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConnectAppAuthorization(conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -245,7 +248,7 @@ func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppAuthorizationStatusPendingConnect),
 		Target:  enum.Slice(awstypes.AppAuthorizationStatusConnected),
-		Refresh: statusConnectAppAuthorization(ctx, conn, appAuthorizationARN, appBundleArn),
+		Refresh: statusConnectAppAuthorization(conn, appAuthorizationARN, appBundleArn),
 		Timeout: timeout,
 	}
 
@@ -259,6 +262,7 @@ func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Cli
 }
 
 type appAuthorizationConnectionResourceModel struct {
+	framework.WithRegionModel
 	App                 types.String                                      `tfsdk:"app"`
 	AppAuthorizationARN fwtypes.ARN                                       `tfsdk:"app_authorization_arn"`
 	AppBundleARN        fwtypes.ARN                                       `tfsdk:"app_bundle_arn"`
@@ -272,7 +276,7 @@ const (
 	appAuthorizationConnectionResourceIDPartCount = 2
 )
 
-func (m *appAuthorizationConnectionResourceModel) InitFromID() error {
+func (m *appAuthorizationConnectionResourceModel) initFromID() error {
 	parts, err := flex.ExpandResourceId(m.ID.ValueString(), appAuthorizationConnectionResourceIDPartCount, false)
 	if err != nil {
 		return err
@@ -284,8 +288,13 @@ func (m *appAuthorizationConnectionResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *appAuthorizationConnectionResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppAuthorizationARN.ValueString(), m.AppBundleARN.ValueString()}, appAuthorizationConnectionResourceIDPartCount, false)))
+func (m *appAuthorizationConnectionResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppAuthorizationARN.ValueString(),
+		m.AppBundleARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, appAuthorizationConnectionResourceIDPartCount, false)
 }
 
 type authRequestModel struct {

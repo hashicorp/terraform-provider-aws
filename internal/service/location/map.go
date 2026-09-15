@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package location
 
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,54 +34,55 @@ func ResourceMap() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"style": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"style": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1000),
-			},
-			"map_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"map_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1000),
+				},
+				"map_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"map_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -88,8 +90,8 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -115,7 +117,7 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceMapRead(ctx, d, meta)...)
 }
 
-func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -140,7 +142,7 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	if output.Configuration != nil {
-		d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(output.Configuration)})
+		d.Set(names.AttrConfiguration, []any{flattenConfiguration(output.Configuration)})
 	} else {
 		d.Set(names.AttrConfiguration, nil)
 	}
@@ -156,7 +158,7 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -179,7 +181,7 @@ func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceMapRead(ctx, d, meta)...)
 }
 
-func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -200,7 +202,7 @@ func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func expandConfiguration(tfMap map[string]interface{}) *awstypes.MapConfiguration {
+func expandConfiguration(tfMap map[string]any) *awstypes.MapConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -214,12 +216,12 @@ func expandConfiguration(tfMap map[string]interface{}) *awstypes.MapConfiguratio
 	return apiObject
 }
 
-func flattenConfiguration(apiObject *awstypes.MapConfiguration) map[string]interface{} {
+func flattenConfiguration(apiObject *awstypes.MapConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Style; v != nil {
 		tfMap["style"] = aws.ToString(v)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,10 +16,10 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,8 +28,8 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
 				),
 			},
 		},
@@ -41,10 +40,10 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,8 +52,8 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
 				),
 			},
 		},
@@ -66,10 +65,10 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	dataSource3Name := "data.aws_apigatewayv2_apis.test3"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,9 +77,9 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", "0"),
 				),
 			},
 		},

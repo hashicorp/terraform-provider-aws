@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ses_configuration_set: Fix ARN
-```

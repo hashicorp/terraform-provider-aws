@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,13 +14,13 @@ import (
 
 func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 	ctx := acctest.Context(t)
-	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	alias := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,7 +37,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSize, dataSourceName, names.AttrSize),
@@ -56,13 +55,13 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 
 func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 	ctx := acctest.Context(t)
-	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	alias := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -79,7 +78,7 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSize, dataSourceName, names.AttrSize),
@@ -99,10 +98,10 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
@@ -129,7 +128,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSize, dataSourceName, names.AttrSize),
@@ -146,10 +145,10 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)

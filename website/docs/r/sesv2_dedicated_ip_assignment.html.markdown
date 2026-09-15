@@ -25,16 +25,17 @@ resource "aws_sesv2_dedicated_ip_assignment" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `ip` - (Required) Dedicated IP address.
 * `destination_pool_name` - (Required) Dedicated IP address.
+* `ip` - (Required) Dedicated IP address.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A comma-separated string made up of `ip` and `destination_pool_name`.
+* `id` - Comma-separated string made up of `ip` and `destination_pool_name`.
 
 ## Timeouts
 

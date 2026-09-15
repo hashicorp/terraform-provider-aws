@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package awsv2
@@ -43,5 +43,6 @@ func Register(name string, f sweep.SweeperFn, dependencies ...string) {
 
 			return nil
 		},
+		Dependencies: dependencies,
 	})
 }

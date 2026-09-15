@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_organizations_account: Add `create_govcloud` argument and `govcloud_id` attribute
-```

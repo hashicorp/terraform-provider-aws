@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix bug preventing custom endpoints from being set
-```

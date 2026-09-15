@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -15,21 +17,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
-// @Tags(identifierAttribute="id", resourceType="SAMLProvider")
+// @Tags(identifierAttribute="arn", resourceType="SAMLProvider")
 // @Testing(tagsTest=false)
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
@@ -37,39 +40,39 @@ func resourceSAMLProvider() *schema.Resource {
 		UpdateWithoutTimeout: resourceSAMLProviderUpdate,
 		DeleteWithoutTimeout: resourceSAMLProviderDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"saml_metadata_document": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1000, 10000000),
+				},
+				"saml_provider_uuid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"valid_until": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"saml_metadata_document": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1000, 10000000),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"valid_until": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -84,7 +87,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateSAMLProvider(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -102,7 +105,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 		err := samlProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 		}
 
@@ -114,14 +117,14 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
-func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	output, err := findSAMLProviderByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM SAML Provider %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -140,6 +143,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
+	d.Set("saml_provider_uuid", output.SAMLProviderUUID)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
 	} else {
@@ -151,7 +155,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -172,7 +176,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
-func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -202,8 +206,7 @@ func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -212,7 +215,27 @@ func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func samlProviderTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListSAMLProviderTagsInput{
+		SAMLProviderArn: aws.String(identifier),
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListSAMLProviderTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
 	return output, nil

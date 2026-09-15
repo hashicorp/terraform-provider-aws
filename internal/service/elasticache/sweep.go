@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -90,7 +91,7 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticache.DescribeCacheClustersInput{
 		ShowCacheClustersNotInReplicationGroups: aws.Bool(true),
@@ -139,14 +140,14 @@ func sweepGlobalReplicationGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{
 		ShowMemberInfo: aws.Bool(true),
 	}
 	conn := client.ElastiCacheClient(ctx)
 
-	var grgGroup multierror.Group
+	var grgGroup tfsync.Group
 	var grgErrs *multierror.Error
 
 	pages := elasticache.NewDescribeGlobalReplicationGroupsPaginator(conn, input)
@@ -163,7 +164,7 @@ func sweepGlobalReplicationGroups(region string) error {
 		}
 
 		for _, globalReplicationGroup := range page.GlobalReplicationGroups {
-			grgGroup.Go(func() error {
+			grgGroup.Go(ctx, func(ctx context.Context) error {
 				id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
 				disassociationErrors := disassociateMembers(ctx, conn, globalReplicationGroup)
@@ -179,7 +180,7 @@ func sweepGlobalReplicationGroups(region string) error {
 		}
 	}
 
-	grgErrs = multierror.Append(grgErrs, grgGroup.Wait())
+	grgErrs = multierror.Append(grgErrs, grgGroup.Wait(ctx))
 
 	return grgErrs.ErrorOrNil()
 }
@@ -188,7 +189,7 @@ func sweepParameterGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticache.DescribeCacheParameterGroupsInput{}
 	conn := client.ElastiCacheClient(ctx)
@@ -236,7 +237,7 @@ func sweepReplicationGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticache.DescribeReplicationGroupsInput{}
 	conn := client.ElastiCacheClient(ctx)
@@ -280,7 +281,7 @@ func sweepServerlessCaches(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeServerlessCachesInput{}
@@ -319,7 +320,7 @@ func sweepSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeCacheSubnetGroupsInput{}
@@ -367,7 +368,7 @@ func sweepUsers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeUsersInput{}
@@ -415,7 +416,7 @@ func sweepUserGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeUserGroupsInput{}
@@ -453,7 +454,7 @@ func sweepUserGroups(region string) error {
 }
 
 func disassociateMembers(ctx context.Context, conn *elasticache.Client, globalReplicationGroup awstypes.GlobalReplicationGroup) error {
-	var membersGroup multierror.Group
+	var membersGroup tfsync.Group
 
 	for _, member := range globalReplicationGroup.Members {
 		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
@@ -462,7 +463,7 @@ func disassociateMembers(ctx context.Context, conn *elasticache.Client, globalRe
 
 		id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
-		membersGroup.Go(func() error {
+		membersGroup.Go(ctx, func(ctx context.Context) error {
 			if err := disassociateReplicationGroup(ctx, conn, id, aws.ToString(member.ReplicationGroupId), aws.ToString(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
 				log.Printf("[ERROR] %s", err)
 				return err
@@ -471,5 +472,5 @@ func disassociateMembers(ctx context.Context, conn *elasticache.Client, globalRe
 		})
 	}
 
-	return membersGroup.Wait().ErrorOrNil()
+	return membersGroup.Wait(ctx)
 }

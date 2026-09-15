@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lakeformation
 
@@ -27,7 +29,7 @@ import (
 // This value is defined by AWS API
 const lfTagsValuesMaxBatchSize = 50
 
-// @SDKResource("aws_lakeformation_lf_tag")
+// @SDKResource("aws_lakeformation_lf_tag", name="LF Tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLFTagCreate,
@@ -38,37 +40,39 @@ func ResourceLFTag() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			names.AttrValues: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				// Soft limit stated in AWS Doc
-				// https://docs.aws.amazon.com/lake-formation/latest/dg/TBAC-notes.html
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateLFTagValues(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
 				},
-				Set: schema.HashString,
-			},
+				names.AttrKey: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				names.AttrValues: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					// Soft limit stated in AWS Doc
+					// https://docs.aws.amazon.com/lake-formation/latest/dg/TBAC-notes.html
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validateLFTagValues(),
+					},
+					Set: schema.HashString,
+				},
+			}
 		},
 	}
 }
 
-func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -78,7 +82,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*conns.AWSClient).AccountID
+		catalogID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	id := lfTagCreateResourceID(catalogID, tagKey)
 
@@ -118,7 +122,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -152,7 +156,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -167,7 +171,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	toAdd := ns.Difference(os)
 	toDelete := os.Difference(ns)
 
-	var toAddChunks, toDeleteChunks [][]interface{}
+	var toAddChunks, toDeleteChunks [][]any
 	if len(toAdd.List()) > 0 {
 		toAddChunks = slices.Collect(slices.Chunk(toAdd.List(), lfTagsValuesMaxBatchSize))
 	}
@@ -209,7 +213,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 

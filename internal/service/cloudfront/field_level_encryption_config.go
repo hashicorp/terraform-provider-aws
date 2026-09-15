@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,44 +36,96 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_type_profile_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"content_type_profiles": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrContentType: {
-													Type:     schema.TypeString,
-													Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_type_profile_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"content_type_profiles": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrContentType: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrFormat: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.Format](),
+													},
+													"profile_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
-												names.AttrFormat: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.Format](),
-												},
-												"profile_id": {
-													Type:     schema.TypeString,
-													Optional: true,
+											},
+										},
+									},
+								},
+							},
+							"forward_when_content_type_is_unknown": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"query_arg_profile_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"forward_when_query_arg_profile_is_unknown": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"query_arg_profiles": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"profile_id": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"query_arg": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
@@ -79,77 +133,31 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 								},
 							},
 						},
-						"forward_when_content_type_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"query_arg_profile_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"forward_when_query_arg_profile_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"query_arg_profiles": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"profile_id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"query_arg": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			}
 		},
 	}
 }
 
-func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	apiObject := &awstypes.FieldLevelEncryptionConfig{
-		CallerReference: aws.String(id.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ContentTypeProfileConfig = expandContentTypeProfileConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("content_type_profile_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ContentTypeProfileConfig = expandContentTypeProfileConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("query_arg_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.QueryArgProfileConfig = expandQueryArgProfileConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("query_arg_profile_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.QueryArgProfileConfig = expandQueryArgProfileConfig(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.CreateFieldLevelEncryptionConfigInput{
@@ -167,13 +175,13 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceFieldLevelEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	output, err := findFieldLevelEncryptionConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Field-level Encryption Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -183,11 +191,12 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, fieldLevelEncryptionConfigARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.FieldLevelEncryptionConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.ContentTypeProfileConfig != nil {
-		if err := d.Set("content_type_profile_config", []interface{}{flattenContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)}); err != nil {
+		if err := d.Set("content_type_profile_config", []any{flattenContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting content_type_profile_config: %s", err)
 		}
 	} else {
@@ -195,7 +204,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 	}
 	d.Set("etag", output.ETag)
 	if apiObject.QueryArgProfileConfig != nil {
-		if err := d.Set("query_arg_profile_config", []interface{}{flattenQueryArgProfileConfig(apiObject.QueryArgProfileConfig)}); err != nil {
+		if err := d.Set("query_arg_profile_config", []any{flattenQueryArgProfileConfig(apiObject.QueryArgProfileConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_arg_profile_config: %s", err)
 		}
 	} else {
@@ -205,7 +214,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -217,12 +226,12 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ContentTypeProfileConfig = expandContentTypeProfileConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("content_type_profile_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ContentTypeProfileConfig = expandContentTypeProfileConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("query_arg_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.QueryArgProfileConfig = expandQueryArgProfileConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("query_arg_profile_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.QueryArgProfileConfig = expandQueryArgProfileConfig(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.UpdateFieldLevelEncryptionConfigInput{
@@ -240,15 +249,16 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 	return append(diags, resourceFieldLevelEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
-	_, err := conn.DeleteFieldLevelEncryptionConfig(ctx, &cloudfront.DeleteFieldLevelEncryptionConfigInput{
+	input := cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteFieldLevelEncryptionConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionConfig](err) {
 		return diags
@@ -270,8 +280,7 @@ func findFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.Cl
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionConfig](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -280,21 +289,21 @@ func findFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.Cl
 	}
 
 	if output == nil || output.FieldLevelEncryptionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandContentTypeProfileConfig(tfMap map[string]interface{}) *awstypes.ContentTypeProfileConfig {
+func expandContentTypeProfileConfig(tfMap map[string]any) *awstypes.ContentTypeProfileConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ContentTypeProfileConfig{}
 
-	if v, ok := tfMap["content_type_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ContentTypeProfiles = expandContentTypeProfiles(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_type_profiles"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ContentTypeProfiles = expandContentTypeProfiles(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["forward_when_content_type_is_unknown"].(bool); ok {
@@ -304,14 +313,14 @@ func expandContentTypeProfileConfig(tfMap map[string]interface{}) *awstypes.Cont
 	return apiObject
 }
 
-func expandContentTypeProfiles(tfMap map[string]interface{}) *awstypes.ContentTypeProfiles {
+func expandContentTypeProfiles(tfMap map[string]any) *awstypes.ContentTypeProfiles {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ContentTypeProfiles{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandContentTypeProfileItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -320,7 +329,7 @@ func expandContentTypeProfiles(tfMap map[string]interface{}) *awstypes.ContentTy
 	return apiObject
 }
 
-func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTypeProfile {
+func expandContentTypeProfile(tfMap map[string]any) *awstypes.ContentTypeProfile {
 	if tfMap == nil {
 		return nil
 	}
@@ -342,7 +351,7 @@ func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTyp
 	return apiObject
 }
 
-func expandContentTypeProfileItems(tfList []interface{}) []awstypes.ContentTypeProfile {
+func expandContentTypeProfileItems(tfList []any) []awstypes.ContentTypeProfile {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -350,7 +359,7 @@ func expandContentTypeProfileItems(tfList []interface{}) []awstypes.ContentTypeP
 	var apiObjects []awstypes.ContentTypeProfile
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -368,7 +377,7 @@ func expandContentTypeProfileItems(tfList []interface{}) []awstypes.ContentTypeP
 	return apiObjects
 }
 
-func expandQueryArgProfileConfig(tfMap map[string]interface{}) *awstypes.QueryArgProfileConfig {
+func expandQueryArgProfileConfig(tfMap map[string]any) *awstypes.QueryArgProfileConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -379,21 +388,21 @@ func expandQueryArgProfileConfig(tfMap map[string]interface{}) *awstypes.QueryAr
 		apiObject.ForwardWhenQueryArgProfileIsUnknown = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["query_arg_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.QueryArgProfiles = expandQueryArgProfiles(v[0].(map[string]interface{}))
+	if v, ok := tfMap["query_arg_profiles"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.QueryArgProfiles = expandQueryArgProfiles(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandQueryArgProfiles(tfMap map[string]interface{}) *awstypes.QueryArgProfiles {
+func expandQueryArgProfiles(tfMap map[string]any) *awstypes.QueryArgProfiles {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.QueryArgProfiles{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandQueryArgProfileItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -402,7 +411,7 @@ func expandQueryArgProfiles(tfMap map[string]interface{}) *awstypes.QueryArgProf
 	return apiObject
 }
 
-func expandQueryArgProfile(tfMap map[string]interface{}) *awstypes.QueryArgProfile {
+func expandQueryArgProfile(tfMap map[string]any) *awstypes.QueryArgProfile {
 	if tfMap == nil {
 		return nil
 	}
@@ -420,7 +429,7 @@ func expandQueryArgProfile(tfMap map[string]interface{}) *awstypes.QueryArgProfi
 	return apiObject
 }
 
-func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile {
+func expandQueryArgProfileItems(tfList []any) []awstypes.QueryArgProfile {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -428,7 +437,7 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 	var apiObjects []awstypes.QueryArgProfile
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -446,15 +455,15 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 	return apiObjects
 }
 
-func flattenContentTypeProfileConfig(apiObject *awstypes.ContentTypeProfileConfig) map[string]interface{} {
+func flattenContentTypeProfileConfig(apiObject *awstypes.ContentTypeProfileConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenContentTypeProfiles(apiObject.ContentTypeProfiles); len(v) > 0 {
-		tfMap["content_type_profiles"] = []interface{}{v}
+		tfMap["content_type_profiles"] = []any{v}
 	}
 
 	if v := apiObject.ForwardWhenContentTypeIsUnknown; v != nil {
@@ -464,26 +473,26 @@ func flattenContentTypeProfileConfig(apiObject *awstypes.ContentTypeProfileConfi
 	return tfMap
 }
 
-func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[string]interface{} {
+func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenContentTypeProfileItems(v)
+		tfMap[attrItems] = flattenContentTypeProfileItems(v)
 	}
 
 	return tfMap
 }
 
-func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[string]interface{} {
+func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrFormat: apiObject.Format,
 	}
 
@@ -498,12 +507,12 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	return tfMap
 }
 
-func flattenContentTypeProfileItems(apiObjects []awstypes.ContentTypeProfile) []interface{} {
+func flattenContentTypeProfileItems(apiObjects []awstypes.ContentTypeProfile) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if v := flattenContentTypeProfile(&apiObject); len(v) > 0 {
@@ -514,44 +523,44 @@ func flattenContentTypeProfileItems(apiObjects []awstypes.ContentTypeProfile) []
 	return tfList
 }
 
-func flattenQueryArgProfileConfig(apiObject *awstypes.QueryArgProfileConfig) map[string]interface{} {
+func flattenQueryArgProfileConfig(apiObject *awstypes.QueryArgProfileConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ForwardWhenQueryArgProfileIsUnknown; v != nil {
 		tfMap["forward_when_query_arg_profile_is_unknown"] = aws.ToBool(v)
 	}
 
 	if v := flattenQueryArgProfiles(apiObject.QueryArgProfiles); len(v) > 0 {
-		tfMap["query_arg_profiles"] = []interface{}{v}
+		tfMap["query_arg_profiles"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenQueryArgProfiles(apiObject *awstypes.QueryArgProfiles) map[string]interface{} {
+func flattenQueryArgProfiles(apiObject *awstypes.QueryArgProfiles) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenQueryArgProfileItems(v)
+		tfMap[attrItems] = flattenQueryArgProfileItems(v)
 	}
 
 	return tfMap
 }
 
-func flattenQueryArgProfile(apiObject *awstypes.QueryArgProfile) map[string]interface{} {
+func flattenQueryArgProfile(apiObject *awstypes.QueryArgProfile) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ProfileId; v != nil {
 		tfMap["profile_id"] = aws.ToString(v)
@@ -564,12 +573,12 @@ func flattenQueryArgProfile(apiObject *awstypes.QueryArgProfile) map[string]inte
 	return tfMap
 }
 
-func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interface{} {
+func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if v := flattenQueryArgProfile(&apiObject); len(v) > 0 {
@@ -578,4 +587,9 @@ func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interf
 	}
 
 	return tfList
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func fieldLevelEncryptionConfigARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "field-level-encryption-config/"+id)
 }

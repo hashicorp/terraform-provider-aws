@@ -1,43 +1,35 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagent
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_bedrockagent_agent_versions, name="Agent Versions")
+// @FrameworkDataSource("aws_bedrockagent_agent_versions", name="Agent Versions")
 func newDataSourceAgentVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAgentVersions{}, nil
+	return &agentVersionsDataSource{}, nil
 }
 
-const (
-	DSNameAgentVersions = "Agent Versions Data Source"
-)
-
-type dataSourceAgentVersions struct {
-	framework.DataSourceWithConfigure
+type agentVersionsDataSource struct {
+	framework.DataSourceWithModel[agentVersionsDataSourceModel]
 }
 
-func (d *dataSourceAgentVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_bedrockagent_agent_versions"
-}
-
-func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *agentVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_id": schema.StringAttribute{
@@ -89,27 +81,26 @@ func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.Sch
 	}
 }
 
-func (d *dataSourceAgentVersions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *agentVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().BedrockAgentClient(ctx)
 
-	var data dataSourceAgentVersionsData
+	var data agentVersionsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	paginator := bedrockagent.NewListAgentVersionsPaginator(conn, &bedrockagent.ListAgentVersionsInput{
-		AgentId: aws.String(data.AgentID.ValueString()),
+		AgentId: data.AgentID.ValueStringPointer(),
 	})
 
 	var out bedrockagent.ListAgentVersionsOutput
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionReading, DSNameAgentVersions, data.AgentID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError("reading Bedrock Agent Agent Versions", err.Error())
+
 			return
 		}
 
@@ -126,7 +117,8 @@ func (d *dataSourceAgentVersions) Read(ctx context.Context, req datasource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceAgentVersionsData struct {
+type agentVersionsDataSourceModel struct {
+	framework.WithRegionModel
 	AgentID               types.String                                             `tfsdk:"agent_id"`
 	AgentVersionSummaries fwtypes.ListNestedObjectValueOf[dsAgentVersionSummaries] `tfsdk:"agent_version_summaries"`
 }

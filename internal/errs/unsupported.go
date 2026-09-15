@@ -1,12 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package errs
 
 import (
-	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 )
 
 const (
@@ -34,7 +33,7 @@ const (
 // Be careful with a return value of `false`, which means either there is NO error
 // or there is an error but not one that suggests an unsupported feature in ISO.
 func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
-	if partition == names.StandardPartitionID {
+	if partition == endpoints.AwsPartitionID {
 		return false
 	}
 
@@ -42,73 +41,65 @@ func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 		return false
 	}
 
-	if errCodeContains(err, errCodeAccessDenied) {
+	if tfawserr.ErrCodeContains(err, errCodeAccessDenied) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeAuthorizationError) {
+	if tfawserr.ErrCodeContains(err, errCodeAuthorizationError) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeInternalException) {
+	if tfawserr.ErrCodeContains(err, errCodeInternalException) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeInternalServiceError) {
+	if tfawserr.ErrCodeContains(err, errCodeInternalServiceError) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeInvalidAction) {
+	if tfawserr.ErrCodeContains(err, errCodeInvalidAction) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeInvalidParameterException) {
+	if tfawserr.ErrCodeContains(err, errCodeInvalidParameterException) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeInvalidParameterValue) {
+	if tfawserr.ErrCodeContains(err, errCodeInvalidParameterValue) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeInvalidRequest) {
+	if tfawserr.ErrCodeContains(err, errCodeInvalidRequest) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeOperationDisabledException) {
+	if tfawserr.ErrCodeContains(err, errCodeOperationDisabledException) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeOperationNotPermitted) {
+	if tfawserr.ErrCodeContains(err, errCodeOperationNotPermitted) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeUnknownOperationException) {
+	if tfawserr.ErrCodeContains(err, errCodeUnknownOperationException) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeUnsupportedFeatureException) {
+	if tfawserr.ErrCodeContains(err, errCodeUnsupportedFeatureException) {
 		return true
 	}
 
-	if errCodeContains(err, errCodeUnsupportedOperation) {
+	if tfawserr.ErrCodeContains(err, errCodeUnsupportedOperation) {
 		return true
 	}
 
-	if errMessageContains(err, errCodeValidationError, "not support tagging") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not support tagging") {
 		return true
 	}
 
-	if errCodeContains(err, errCodeValidationException) {
+	if tfawserr.ErrCodeContains(err, errCodeValidationException) {
 		return true
 	}
 
 	return false
-}
-
-func errCodeContains(err error, code string) bool {
-	return tfawserr_sdkv1.ErrCodeContains(err, code) || tfawserr_sdkv2.ErrCodeContains(err, code)
-}
-
-func errMessageContains(err error, code, message string) bool {
-	return tfawserr_sdkv1.ErrMessageContains(err, code, message) || tfawserr_sdkv2.ErrMessageContains(err, code, message)
 }

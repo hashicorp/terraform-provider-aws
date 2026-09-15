@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -11,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,64 +41,64 @@ func resourceScript() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"storage_location": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				ExactlyOneOf: []string{"zip_file", "storage_location"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"object_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"storage_location": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					ExactlyOneOf: []string{"zip_file", "storage_location"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"object_version": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"zip_file": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"zip_file", "storage_location"},
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"zip_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"zip_file", "storage_location"},
+				},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -106,8 +108,8 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("storage_location"); ok && len(v.([]interface{})) > 0 {
-		input.StorageLocation = expandStorageLocation(v.([]interface{}))
+	if v, ok := d.GetOk("storage_location"); ok && len(v.([]any)) > 0 {
+		input.StorageLocation = expandStorageLocation(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
@@ -127,7 +129,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateScript(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -149,13 +151,13 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
-func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	script, err := findScriptByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GameLift Script (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -175,7 +177,7 @@ func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -187,7 +189,7 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("storage_location") {
 			if v, ok := d.GetOk("storage_location"); ok {
-				input.StorageLocation = expandStorageLocation(v.([]interface{}))
+				input.StorageLocation = expandStorageLocation(v.([]any))
 			}
 		}
 
@@ -221,7 +223,7 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
-func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -250,8 +252,7 @@ func findScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*aws
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -260,23 +261,23 @@ func findScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*aws
 	}
 
 	if output == nil || output.Script == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Script, nil
 }
 
-func flattenStorageLocation(apiObject *awstypes.S3Location) []interface{} {
+func flattenStorageLocation(apiObject *awstypes.S3Location) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrBucket:  aws.ToString(apiObject.Bucket),
 		names.AttrKey:     aws.ToString(apiObject.Key),
 		"object_version":  aws.ToString(apiObject.ObjectVersion),
 		names.AttrRoleARN: aws.ToString(apiObject.RoleArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

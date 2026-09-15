@@ -29,6 +29,7 @@ resource "aws_route53_resolver_firewall_rule_group_association" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name that lets you identify the rule group association, to manage and use it.
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group.
 * `mutation_protection` - (Optional) If enabled, this setting disallows modification or removal of the association, to help prevent against accidentally altering DNS firewall protections. Valid values: `ENABLED`, `DISABLED`.
@@ -40,7 +41,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN (Amazon Resource Name) of the firewall rule group association.
+* `arn` - ARN of the firewall rule group association.
 * `id` - The identifier for the association.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

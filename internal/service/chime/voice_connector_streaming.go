@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package chime
 
@@ -20,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_chime_voice_connector_streaming")
+// @SDKResource("aws_chime_voice_connector_streaming", name="Voice Connector Streaming")
 func ResourceVoiceConnectorStreaming() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorStreamingCreate,
@@ -32,56 +34,58 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"data_retention": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"media_insights_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"disabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"data_retention": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"disabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"media_insights_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configuration_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"disabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"streaming_notification_targets": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				MaxItems: 3,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.NotificationTarget](),
+				"streaming_notification_targets": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					MaxItems: 3,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.NotificationTarget](),
+					},
 				},
-			},
-			"voice_connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"voice_connector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -100,8 +104,8 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 		config.StreamingNotificationTargets = expandStreamingNotificationTargets(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]interface{})) > 0 {
-		config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]any)) > 0 {
+		config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]any))
 	}
 
 	input.StreamingConfiguration = config
@@ -115,7 +119,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceVoiceConnectorStreamingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -154,7 +158,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -175,8 +179,8 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 			config.StreamingNotificationTargets = expandStreamingNotificationTargets(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]interface{})) > 0 {
-			config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]interface{}))
+		if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]any)) > 0 {
+			config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]any))
 		}
 
 		input.StreamingConfiguration = config
@@ -189,7 +193,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceVoiceConnectorStreamingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -211,7 +215,7 @@ func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func expandStreamingNotificationTargets(data []interface{}) []awstypes.StreamingNotificationTarget {
+func expandStreamingNotificationTargets(data []any) []awstypes.StreamingNotificationTarget {
 	var streamingTargets []awstypes.StreamingNotificationTarget
 
 	for _, item := range data {
@@ -223,11 +227,11 @@ func expandStreamingNotificationTargets(data []interface{}) []awstypes.Streaming
 	return streamingTargets
 }
 
-func expandMediaInsightsConfiguration(tfList []interface{}) *awstypes.MediaInsightsConfiguration {
+func expandMediaInsightsConfiguration(tfList []any) *awstypes.MediaInsightsConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	mediaInsightsConfiguration := &awstypes.MediaInsightsConfiguration{}
 	if v, ok := tfMap["disabled"]; ok {
@@ -249,15 +253,15 @@ func flattenStreamingNotificationTargets(targets []awstypes.StreamingNotificatio
 	return rawTargets
 }
 
-func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *awstypes.MediaInsightsConfiguration) []interface{} {
+func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *awstypes.MediaInsightsConfiguration) []any {
 	if mediaInsightsConfiguration == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"disabled":          mediaInsightsConfiguration.Disabled,
 		"configuration_arn": mediaInsightsConfiguration.ConfigurationArn,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

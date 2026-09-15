@@ -11,8 +11,8 @@ description: |-
 Creates an Amazon CloudHSM v2 cluster.
 
 For information about CloudHSM v2, see the
-[AWS CloudHSM User Guide][1] and the [Amazon
-CloudHSM API Reference][2].
+[AWS CloudHSM User Guide](https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html) and the [Amazon
+CloudHSM API Reference](https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html).
 
 ~> **NOTE:** A CloudHSM Cluster can take several minutes to set up.
 Practically no single attribute can be updated, except for `tags`.
@@ -64,9 +64,11 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
-* `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
+* `hsm_type` - (Required) The type of HSM module in the cluster. Currently, `hsm1.medium` and `hsm2m.medium` are supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.
+* `mode` - (Optional) The mode to use in the cluster. The allowed values are `FIPS` and `NON_FIPS`. This field is required if `hsm_type` is `hsm2m.medium`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -85,8 +87,13 @@ This resource exports the following attributes in addition to the arguments abov
     * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-[1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
-[2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `120m`)
+* `update` - (Default `120m`)
+* `delete` - (Default `120m`)
 
 ## Import
 

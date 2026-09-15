@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -7,10 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,9 +33,9 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							attrColumn:             columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, enum.Validate[awstypes.ColumnRole]()),
+							names.AttrRole:         sdkschema.StringEnumSchema[awstypes.ColumnRole](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -49,11 +46,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, enum.Validate[awstypes.CrossDatasetTypes]()),
+							"cross_dataset":       sdkschema.StringEnumSchema[awstypes.CrossDatasetTypes](sdkschema.AttrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, enum.Validate[awstypes.Status]()),
+							names.AttrStatus:      sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -78,17 +75,12 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							names.AttrContentType: {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Computed:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
-							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   sdkschema.StringEnumSchema[awstypes.SheetContentType](sdkschema.AttrOptionalComputed),
+							names.AttrDescription:   sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -99,11 +91,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							attrTitle: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -114,7 +106,81 @@ func AnalysisDefinitionSchema() *schema.Schema {
 }
 
 func AnalysisDefinitionDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(AnalysisDefinitionSchema())
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefinition.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifiers_declarations": dataSetIdentifierDeclarationsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
+				"analysis_defaults":                 analysisDefaultDataSourceSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
+				"calculated_fields":                 calculatedFieldsDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
+				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrColumn:             columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"format_configuration": formatConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
+							names.AttrRole:         sdkschema.StringEnumDataSourceSchema[awstypes.ColumnRole](),
+						},
+					},
+				},
+				"filter_groups": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterGroup.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cross_dataset":       sdkschema.StringEnumDataSourceSchema[awstypes.CrossDatasetTypes](),
+							"filter_group_id":     idDataSourceSchema(),
+							"filters":             filtersDataSourceSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
+							"scope_configuration": filterScopeConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
+							names.AttrStatus:      sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
+						},
+					},
+				},
+				"parameter_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"date_time_parameter_declaration": dateTimeParameterDeclarationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameterDeclaration.html
+							"decimal_parameter_declaration":   decimalParameterDeclarationDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameterDeclaration.html
+							"integer_parameter_declaration":   integerParameterDeclarationDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameterDeclaration.html
+							"string_parameter_declaration":    stringParameterDeclarationDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameterDeclaration.html
+						},
+					},
+				},
+				"sheets": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sheet_id":              idDataSourceSchema(),
+							names.AttrContentType:   sdkschema.StringEnumDataSourceSchema[awstypes.SheetContentType](),
+							names.AttrDescription:   stringComputedOnly(),
+							"filter_controls":       filterControlsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
+							"layouts":               layoutDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
+							names.AttrName:          stringComputedOnly(),
+							"parameter_controls":    parameterControlsDataSourceSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
+							"sheet_control_layouts": sheetControlLayoutsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
+							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sheet_text_box_id": idDataSourceSchema(),
+										names.AttrContent:   stringComputedOnly(),
+									},
+								},
+							},
+							attrTitle: stringComputedOnly(),
+							"visuals": visualsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func AnalysisSourceEntitySchema() *schema.Schema {
@@ -134,11 +200,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN:         sdkschema.ARNStringSchema(sdkschema.AttrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -148,26 +210,26 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandAnalysisSourceEntity(tfList []interface{}) *awstypes.AnalysisSourceEntity {
+func ExpandAnalysisSourceEntity(tfList []any) *awstypes.AnalysisSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AnalysisSourceEntity{}
 
-	if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SourceTemplate = expandAnalysisSourceTemplate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["source_template"].([]any); ok && len(v) > 0 {
+		apiObject.SourceTemplate = expandAnalysisSourceTemplate(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *awstypes.AnalysisSourceTemplate {
+func expandAnalysisSourceTemplate(tfMap map[string]any) *awstypes.AnalysisSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -177,56 +239,56 @@ func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *awstypes.Analys
 	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
-	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_set_references"].([]any); ok && len(v) > 0 {
 		apiObject.DataSetReferences = expandDataSetReferences(v)
 	}
 
 	return apiObject
 }
 
-func ExpandAnalysisDefinition(tfList []interface{}) *awstypes.AnalysisDefinition {
+func ExpandAnalysisDefinition(tfList []any) *awstypes.AnalysisDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AnalysisDefinition{}
 
-	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["analysis_defaults"].([]any); ok && len(v) > 0 {
 		apiObject.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
 	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.CalculatedFields = expandCalculatedFields(v.List())
 	}
-	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_configurations"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnConfigurations = expandColumnConfigurations(v)
 	}
-	if v, ok := tfMap["data_set_identifiers_declarations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_set_identifiers_declarations"].([]any); ok && len(v) > 0 {
 		apiObject.DataSetIdentifierDeclarations = expandDataSetIdentifierDeclarations(v)
 	}
-	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_groups"].([]any); ok && len(v) > 0 {
 		apiObject.FilterGroups = expandFilterGroups(v)
 	}
 	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
-	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sheets"].([]any); ok && len(v) > 0 {
 		apiObject.Sheets = expandSheetDefinitions(v)
 	}
 
 	return apiObject
 }
 
-func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []interface{} {
+func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AnalysisDefaults != nil {
 		tfMap["analysis_defaults"] = flattenAnalysisDefaults(apiObject.AnalysisDefaults)
@@ -250,5 +312,5 @@ func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []interfa
 		tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

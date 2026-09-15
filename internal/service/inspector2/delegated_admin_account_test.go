@@ -1,21 +1,19 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +22,7 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_delegated_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -33,12 +31,12 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
+					testAccCheckDelegatedAdminAccountExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "relationship_status"),
 				),
@@ -75,7 +73,7 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_delegated_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -84,66 +82,66 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
+					testAccCheckDelegatedAdminAccountExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func testAccCheckDelegatedAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDelegatedAdminAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_delegated_admin_account" {
 				continue
 			}
 
-			st, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
+			_, err := tfinspector2.FindDelegatedAdminAccountByID(ctx, conn, rs.Primary.ID)
 
-			if st == "" && errs.Contains(err, "admin account not found") {
-				return nil
+			if retry.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
 				return err
 			}
 
-			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameDelegatedAdminAccount, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Inspector2 Delegated Admin Account %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDelegatedAdminAccountExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckDelegatedAdminAccountExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameDelegatedAdminAccount, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameDelegatedAdminAccount, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		_, err := tfinspector2.FindDelegatedAdminAccountByID(ctx, conn, rs.Primary.ID)
 
-		_, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameDelegatedAdminAccount, rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 

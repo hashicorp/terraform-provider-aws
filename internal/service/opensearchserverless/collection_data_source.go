@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearchserverless
 
@@ -15,49 +17,56 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Collection")
-func newDataSourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCollection{}, nil
+// @FrameworkDataSource("aws_opensearchserverless_collection", name="Collection")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+func newCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &collectionDataSource{}, nil
 }
 
-const (
-	DSNameCollection = "Collection Data Source"
-)
-
-type dataSourceCollection struct {
-	framework.DataSourceWithConfigure
+type collectionDataSource struct {
+	framework.DataSourceWithModel[collectionDataSourceModel]
 }
 
-func (d *dataSourceCollection) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_collection"
-}
-
-func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *collectionDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.",
+				Computed:    true,
 			},
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was created.",
+				Computed:    true,
 			},
 			"dashboard_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "Description of the collection.",
+				Computed:    true,
+			},
+			"failure_message": schema.StringAttribute{
+				Description: "A failure reason associated with the collection.",
+				Computed:    true,
+			},
+			"failure_code": schema.StringAttribute{
+				Description: "A failure code associated with the collection.",
+				Computed:    true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "ID of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName(names.AttrName),
@@ -68,14 +77,17 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Computed: true,
+				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
+				Computed:    true,
 			},
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was last modified.",
+				Computed:    true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Name of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName(names.AttrID),
@@ -83,20 +95,22 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			"standby_replicas": schema.StringAttribute{
-				Computed: true,
+				Description: "Indicates whether standby replicas should be used for a collection.",
+				Computed:    true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
-				Computed: true,
+				Description: "Type of collection.",
+				Computed:    true,
 			},
 		},
 	}
 }
-func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceCollectionData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	var data collectionDataSourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -106,10 +120,7 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	if !data.ID.IsNull() && !data.ID.IsUnknown() {
 		output, err := findCollectionByID(ctx, conn, data.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 			return
 		}
 
@@ -119,47 +130,32 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		output, err := findCollectionByName(ctx, conn, data.Name.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 			return
 		}
 
 		out = output
 	}
 
-	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
-	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
-
-	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
-	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
-
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
-	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	tags = tags.IgnoreConfig(ignoreTagsConfig)
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Special handling for Unix time conversion
+	data.CreatedDate = flex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
+	data.LastModifiedDate = flex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-type dataSourceCollectionData struct {
+type collectionDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String `tfsdk:"arn"`
 	CollectionEndpoint types.String `tfsdk:"collection_endpoint"`
 	CreatedDate        types.String `tfsdk:"created_date"`
+	FailureMessage     types.String `tfsdk:"failure_message"`
+	FailureCode        types.String `tfsdk:"failure_code"`
 	DashboardEndpoint  types.String `tfsdk:"dashboard_endpoint"`
 	Description        types.String `tfsdk:"description"`
 	ID                 types.String `tfsdk:"id"`

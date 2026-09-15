@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Retries and Waiters
 
@@ -15,9 +18,9 @@ This guide describes the behavior of the Terraform AWS Provider and provides cod
 
 ## Terraform Plugin SDK Functionality
 
-The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `retry.StateChangeConf{}` struct, and the retry function `retry.RetryContext()`.
-We will discuss these throughout the rest of this guide.
-Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
+The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides the `retry.StateChangeConf{}` struct, used for handling resource state consistency.
+We will discuss it throughout the rest of this guide.
+Since it helps keep the AWS Provider code consistent, we heavily prefer it over custom implementations.
 
 This guide goes beyond the [Terraform Plugin SDK v2 documentation](https://www.terraform.io/plugin/sdkv2/resources/retries-and-customizable-timeouts) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
 
@@ -29,9 +32,9 @@ The [`retry.StateChangeConf` type](https://pkg.go.dev/github.com/hashicorp/terra
 - Expecting the target value(s) to be returned multiple times in succession.
 - Allowing various polling configurations such as delaying the initial request and setting the time between polls.
 
-### Retry Functions
+## Retry Functions
 
-The [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext) function provides a simplified retry implementation around `retry.StateChangeConf`.
+The `tfresource.Retry()` function provides a simplified retry implementation.
 The most common use is for simple error-based retries.
 
 ## AWS Request Handling
@@ -77,46 +80,29 @@ For example, in cases where the AWS service API does not mark an error code as a
 The AWS Provider includes other retry-changing behaviors using this method.
 When custom service client configurations are applied, these will be defined in `internal/service/{service-name}/service_package.go`.
 
-=== "AWS Go SDK V2 (Preferred)"
-    With V2 of the AWS Go SDK, the retrier is extended directly in client construction.
+With V2 of the AWS Go SDK, the retrier is extended directly in client construction.
 
-    ```go
-    // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3_sdkv2.Client, error) {
-    	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-    
-    	return s3_sdkv2.NewFromConfig(cfg,
-			s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),
-			withBaseEndpoint(config[names.AttrEndpoint].(string)),
-			func(o *s3_sdkv2.Options) {
-				// ..other configuration..
-		
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-					if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
-						return aws_sdkv2.TrueTernary
-					}
-					return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
-				}))
-			},
-		), nil
-    }
-    ```
+```go
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-=== "AWS Go SDK V1"
-    With V1 of the AWS Go SDK, a `CustomizeConn` helper is used to augment retry logic on an existing client after construction.
-
-    ```go
-    // CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) CustomizeConn(ctx context.Context, conn *kafka_sdkv1.Kafka) (*kafka_sdkv1.Kafka, error) {
-    	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-    		if tfawserr.ErrMessageContains(r.Error, kafka_sdkv1.ErrCodeTooManyRequestsException, "Too Many Requests") {
-    			r.Retryable = aws_sdkv1.Bool(true)
-    		}
-    	})
-    
-    	return conn, nil
-    }
-    ```
+	return s3_sdkv2.NewFromConfig(cfg,
+		s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *s3_sdkv2.Options) {
+			// ..other configuration..
+	
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+					return aws_sdkv2.TrueTernary
+				}
+				return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
+}
+```
 
 ## Eventual Consistency
 
@@ -134,7 +120,7 @@ These issues are _not_ reliably reproducible, especially in the case of writing 
 
 Even given a properly ordered Terraform configuration, eventual consistency can unexpectedly prevent downstream operations from succeeding.
 A simple retry after a few seconds resolves many of these issues.
-To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the `retry.RetryContext()` function.
+To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the `tfresource.Retry()` function.
 These retries should have a reasonably low timeout (typically two minutes but up to five minutes).
 Save them in a constant for reusability.
 These functions are preferably in line with the associated resource logic to remove any indirection with the code.
@@ -149,73 +135,30 @@ const (
 )
 ```
 
-=== "AWS Go SDK V2 (Preferred)"
-    ```go
-    // internal/service/{service}/{thing}.go
+```go
+// internal/service/{service}/{thing}.go
 
-    // ... Create, Read, Update, or Delete function ...
-    	err := retry.RetryContext(ctx, ThingOperationTimeout, func() *retry.RetryError {
-    		_, err := conn./* ... AWS Go SDK operation with eventual consistency errors ... */
+// ... Create, Read, Update, or Delete function ...
+	err := tfresource.Retry(ctx, ThingOperationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn./* ... AWS Go SDK operation with eventual consistency errors ... */
 
-    		// Retryable conditions which can be checked.
-    		// These must be updated to match the AWS service API error code and message.
-            if errs.IsAErrorMessageContains[/* error type */](err, /* error message */) {
-    			return retry.RetryableError(err)
-    		}
-    
-    		if err != nil {
-    			return retry.NonRetryableError(err)
-    		}
+		// Retryable conditions which can be checked.
+		// These must be updated to match the AWS service API error code and message.
+		if errs.IsAErrorMessageContains[/* error type */](err, /* error message */) {
+			return tfresource.RetryableError(err)
+		}
 
-    		return nil
-    	})
-    
-    	// This check is important - it handles when the AWS Go SDK operation retries without returning.
-    	// e.g., any automatic retries due to network or throttling errors.
-    	if tfresource.TimedOut(err) {
-    		// The use of equals assignment (over colon equals) is also important here.
-    		// This overwrites the error variable to simplify logic.
-    		_, err = conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
-    	}
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
 
-    	if err != nil {
-    		return fmt.Errorf("... error message context ... : %w", err)
-    	}
-    ```
+		return nil
+	})
 
-=== "AWS Go SDK V1"
-    ```go
-    // internal/service/{service}/{thing}.go
-
-    // ... Create, Read, Update, or Delete function ...
-    	err := retry.RetryContext(ctx, ThingOperationTimeout, func() *retry.RetryError {
-    		_, err := conn./* ... AWS Go SDK operation with eventual consistency errors ... */
-
-    		// Retryable conditions which can be checked.
-    		// These must be updated to match the AWS service API error code and message.
-    		if tfawserr.ErrMessageContains(err, /* error code */, /* error message */) {
-    			return retry.RetryableError(err)
-    		}
-
-    		if err != nil {
-    			return retry.NonRetryableError(err)
-    		}
-
-    		return nil
-    	})
-
-    	// This check is important - it handles when the AWS Go SDK operation retries without returning.
-    	// e.g., any automatic retries due to network or throttling errors.
-    	if tfresource.TimedOut(err) {
-    		// The use of equals assignment (over colon equals) is also important here.
-    		// This overwrites the error variable to simplify logic.
-    		_, err = conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
-    	}
-
-    	if err != nil {
-    		return fmt.Errorf("... error message context ... : %w", err)
-    	}
-    ```
+	if err != nil {
+		return fmt.Errorf("... error message context ... : %w", err)
+	}
+```
 
 #### IAM Error Retries
 
@@ -233,75 +176,35 @@ The last operation can receive varied API errors ranging from:
 
 Each AWS service API (and sometimes even operations within the same API) varies in the implementation of these errors. To handle them, it is recommended to use the [Operation Specific Error Retries](#operation-specific-error-retries) pattern. The Terraform AWS Provider implements a standard timeout constant of two minutes in the `internal/service/iam` package which should be used for all retry timeouts associated with IAM errors. This timeout was derived from years of Terraform operational experience with all AWS APIs.
 
-=== "AWS Go SDK V2 (Preferred)"
-    ```go
-    // internal/service/{service}/{thing}.go
+```go
+// internal/service/{service}/{thing}.go
 
-    import (
-    	// ... other imports ...
-    	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-    )
+import (
+	// ... other imports ...
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+)
 
-    // ... Create and typically Update function ...
-    	err := retry.RetryContext(ctx, iamwaiter.PropagationTimeout, func() *retry.RetryError {
-    		_, err := conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
+// ... Create and typically Update function ...
+	err := tfresource.Retry(ctx, iamwaiter.PropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
 
-    		// Example retryable condition
-    		// This must be updated to match the AWS service API error code and message.
-    		if errs.IsAErrorMessageContains[/* error type */](err, /* error message */) {
-    			return retry.RetryableError(err)
-    		}
+		// Example retryable condition
+		// This must be updated to match the AWS service API error code and message.
+		if errs.IsAErrorMessageContains[/* error type */](err, /* error message */) {
+			return tfresource.RetryableError(err)
+		}
 
-    		if err != nil {
-    			return retry.NonRetryableError(err)
-    		}
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
 
-    		return nil
-    	})
+		return nil
+	})
 
-    	if tfresource.TimedOut(err) {
-    		_, err = conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
-    	}
-
-    	if err != nil {
-    		return fmt.Errorf("... error message context ... : %w", err)
-    	}
-    ```
-
-=== "AWS Go SDK V1"
-    ```go
-    // internal/service/{service}/{thing}.go
-
-    import (
-    	// ... other imports ...
-    	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-    )
-
-    // ... Create and typically Update function ...
-    	err := retry.RetryContext(ctx, iamwaiter.PropagationTimeout, func() *retry.RetryError {
-    		_, err := conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
-
-    		// Example retryable condition
-    		// This must be updated to match the AWS service API error code and message.
-    		if tfawserr.ErrMessageContains(err, /* error code */, /* error message */) {
-    			return retry.RetryableError(err)
-    		}
-
-    		if err != nil {
-    			return retry.NonRetryableError(err)
-    		}
-
-    		return nil
-    	})
-
-    	if tfresource.TimedOut(err) {
-    		_, err = conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
-    	}
-
-    	if err != nil {
-    		return fmt.Errorf("... error message context ... : %w", err)
-    	}
-    ```
+	if err != nil {
+		return fmt.Errorf("... error message context ... : %w", err)
+	}
+```
 
 #### Asynchronous Operation Error Retries
 
@@ -326,42 +229,28 @@ import (
 	iamwaiterStopTime := time.Now().Add(tfiam.PropagationTimeout)
 
 	// Ensure to add IAM eventual consistency timeout in case of retries
-	err = retry.RetryContext(ctx, tfiam.PropagationTimeout+ThingOperationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, tfiam.PropagationTimeout+ThingOperationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		// Only retry IAM eventual consistency errors up to that timeout
 		iamwaiterRetry := time.Now().Before(iamwaiterStopTime)
 
 		_, err := conn./* ... AWS Go SDK operation without eventual consistency errors ... */
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		_, err = ThingOperation(conn, d.Id())
 
 		if err != nil {
 			if iamwaiterRetry && /* eventual consistency error checking */ {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn./* ... AWS Go SDK operation without eventual consistency errors ... */
-
-		if err != nil {
-			return err
-		}
-
-		_, err = ThingOperation(conn, d.Id())
-
-		if err != nil {
-			return err
-		}
-	}
 ```
 
 ### Resource Lifecycle Retries
@@ -394,29 +283,24 @@ const (
 
     	// ...Creation steps...
 
-    	input := &example.OperationInput{/* ... */}
+    	input := example.OperationInput{/* ... */}
 
     	var output *example.OperationOutput
         createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-    	err := retry.RetryContext(ctx, createTimeout, func() *retry.RetryError {
+    	err := tfresource.Retry(ctx, createTimeout, func(ctx context.Context) *tfresource.RetryError {
     		var err error
-    		output, err = conn.Operation(input)
+    		output, err = conn.Operation(ctx, &input)
 
     		if errs.IsA[*types.ResourceNotFoundException(err) {
-    			return retry.RetryableError(err)
+    			return tfresource.RetryableError(err)
     		}
 
     		if err != nil {
-    			return retry.NonRetryableError(err)
+    			return tfresource.NonRetryableError(err)
     		}
 
     		return nil
     	})
-
-    	// Retry AWS Go SDK operation if no response from automatic retries.
-    	if tfresource.TimedOut(err) {
-    		output, err = exampleconn.Operation(input)
-    	}
 
     	if err != nil {
             resp.Diagnostics.AddError(
@@ -443,40 +327,35 @@ const (
     ```go
     // internal/service/{service}/{thing}.go
 
-    function ExampleThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func ExampleThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
     	// ...
     	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
-    function ExampleThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func ExampleThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 
     	conn := meta.(*AWSClient).ExampleConn()
 
-    	input := &example.OperationInput{/* ... */}
+    	input := example.OperationInput{/* ... */}
 
     	var output *example.OperationOutput
-    	err := retry.RetryContext(ctx, ThingCreationTimeout, func() *retry.RetryError {
+    	err := tfresource.Retry(ctx, ThingCreationTimeout, func(ctx context.Context) *tfresource.RetryError {
     		var err error
-    		output, err = conn.Operation(input)
+    		output, err = conn.Operation(ctx, &input)
 
     		// Retry on any API "not found" errors, but only on new resources.
     		if d.IsNewResource() && tfawserr.ErrorCodeEquals(err, example.ErrCodeResourceNotFoundException) {
-    			return retry.RetryableError(err)
+    			return tfresource.RetryableError(err)
     		}
 
     		if err != nil {
-    			return retry.NonRetryableError(err)
+    			return tfresource.NonRetryableError(err)
     		}
 
     		return nil
     	})
-
-    	// Retry AWS Go SDK operation if no response from automatic retries.
-    	if tfresource.TimedOut(err) {
-    		output, err = exampleconn.Operation(input)
-    	}
 
     	// Prevent confusing Terraform error messaging to operators by
     	// Only ignoring API "not found" errors if not a new resource.
@@ -503,7 +382,7 @@ const (
     Some other general guidelines are:
     
     - If the `Create` function uses `retry.StateChangeConf`, the underlying `resource.RefreshStateFunc` should `return nil, "", nil` instead of the API "not found" error. This way the `StateChangeConf` logic will automatically retry.
-    - If the `Create` function uses `retry.RetryContext()`, the API "not found" error should be caught and `return retry.RetryableError(err)` to automatically retry.
+    - If the `Create` function uses `tfresource.Retry()`, the API "not found" error should be caught and `return tfresource.RetryableError(err)` to automatically retry.
     
     In rare cases, it may be easier to duplicate all `Read` function logic in the `Create` function to handle all retries in one place.
 
@@ -511,87 +390,45 @@ const (
 
 An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `retry.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example, the waiting logic can be implemented as:
 
-=== "AWS SDK Go V2 (Preferred)"
-    ```go
-    // ThingAttribute fetches the Thing and its Attribute
-    func ThingAttribute(ctx context.Context, conn *example.Client, id string) retry.StateRefreshFunc {
-        return func() (interface{}, string, error) {
-            output, err := /* ... AWS Go SDK operation to fetch resource/value ... */
+```go
+// ThingAttribute fetches the Thing and its Attribute
+func ThingAttribute(ctx context.Context, conn *example.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := /* ... AWS Go SDK operation to fetch resource/value ... */
 
-    		if errs.IsA[*types.ResourceNotFoundException](err) {
-    			return nil, "", nil
-    		}
-    
-    		if err != nil {
-    			return nil, "", err
-    		}
-    
-    		if output == nil {
-    			return nil, "", nil
-    		}
-    
-    		return output, aws.ToString(output.Attribute), nil
-    	}
-    }
-    
-    // waitThingAttributeUpdated is an attribute waiter for Thing.Attribute
-    func waitThingAttributeUpdated(ctx context.Context, conn *example.Example, id string, expectedValue string, timeout time.Duration) (*example.Thing, error) {
-    	stateConf := &retry.StateChangeConf{
-    		Target:  []string{expectedValue},
-    		Refresh: ThingAttribute(ctx, conn, id),
-    		Timeout: timeout,
-    	}
-    
-    	outputRaw, err := stateConf.WaitForState()
-    
-    	if output, ok := outputRaw.(*example.Thing); ok {
-    		return output, err
-    	}
-    
-    	return nil, err
-    }
-    ```
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, "", nil
+		}
 
-=== "AWS SDK Go V1"
-    ```go
-    // ThingAttribute fetches the Thing and its Attribute
-    func ThingAttribute(ctx context.Context, conn *example.Example, id string) retry.StateRefreshFunc {
-        return func() (interface{}, string, error) {
-            output, err := /* ... AWS Go SDK operation to fetch resource/value ... */
+		if err != nil {
+			return nil, "", err
+		}
 
-    		if tfawserr.ErrCodeEquals(err, example.ErrCodeResourceNotFoundException) {
-    			return nil, "", nil
-    		}
+		if output == nil {
+			return nil, "", nil
+		}
 
-    		if err != nil {
-    			return nil, "", err
-    		}
+		return output, aws.ToString(output.Attribute), nil
+	}
+}
 
-    		if output == nil {
-    			return nil, "", nil
-    		}
+// waitThingAttributeUpdated is an attribute waiter for Thing.Attribute
+func waitThingAttributeUpdated(ctx context.Context, conn *example.Example, id string, expectedValue string, timeout time.Duration) (*example.Thing, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{expectedValue},
+		Refresh: ThingAttribute(ctx, conn, id),
+		Timeout: timeout,
+	}
 
-    		return output, aws.StringValue(output.Attribute), nil
-    	}
-    }
-    
-    // waitThingAttributeUpdated is an attribute waiter for Thing.Attribute
-    func waitThingAttributeUpdated(ctx context.Context, conn *example.Example, id string, expectedValue string, timeout time.Duration) (*example.Thing, error) {
-    	stateConf := &retry.StateChangeConf{
-    		Target:  []string{expectedValue},
-    		Refresh: ThingAttribute(ctx, conn, id),
-    		Timeout: timeout,
-    	}
+	outputRaw, err := stateConf.WaitForState()
 
-    	outputRaw, err := stateConf.WaitForState()
+	if output, ok := outputRaw.(*example.Thing); ok {
+		return output, err
+	}
 
-    	if output, ok := outputRaw.(*example.Thing); ok {
-    		return output, err
-    	}
-
-    	return nil, err
-    }
-    ```
+	return nil, err
+}
+```
 
 And consumed within the resource update workflow as follows:
 
@@ -619,7 +456,7 @@ And consumed within the resource update workflow as follows:
 
 === "Terraform Plugin SDK V2"
     ```go
-    function resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diags.Diagnostics {
+    func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diags.Diagnostics {
         // ...
 
     	d.HasChange("attribute") {
@@ -642,68 +479,35 @@ Terraform resources should wait for these background operations to complete. Fai
 
 ### AWS Go SDK Waiters
 
-In limited cases, the AWS service API model includes the information to automatically generate a waiter function in the AWS Go SDK for an operation. These are typically named with the prefix `WaitUntil...`. If available, these functions can be used for an initial resource implementation. For example:
-
-```go
-if err := conn.WaitUntilEndpointInService(input); err != nil {
-	return fmt.Errorf("waiting for Example Thing (%s) ...: %w", d.Id(), err)
-}
-```
-
-If it is necessary to customize the timeouts and polling, we generally prefer using [Resource Lifecycle Waiters](#resource-lifecycle-waiters) instead since they are more commonly used throughout the codebase.
+The AWS SDK for Go provides [waiters](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/using.html#using-waiters) for some asynchronous operations. We required using [Resource Lifecycle Waiters](#resource-lifecycle-waiters) instead since they are more commonly used throughout the codebase and provide more options for customization.
 
 ### Resource Lifecycle Waiters
 
 Most of the codebase uses `retry.StateChangeConf` and `retry.StateRefreshFunc` handlers for tracking either component-level status fields or explicit tracking identifiers.
 These should be placed in the `internal/service/{SERVICE}` package and split into separate functions. For example:
 
-=== "AWS SDK Go V2 (Preferred)"
-    ```go
-    // ThingStatus fetches the Thing and its Status
-    func ThingStatus(ctx context.Context, conn *example.Client, id string) retry.StateRefreshFunc {
-        return func() (interface{}, string, error) {
-            output, err := /* ... AWS Go SDK operation to fetch resource/status ... */
+```go
+// ThingStatus fetches the Thing and its Status
+func ThingStatus(ctx context.Context, conn *example.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := /* ... AWS Go SDK operation to fetch resource/status ... */
 
-            if errs.IsA[*types.ResourceNotFoundException](err) {
-    			return nil, "", nil
-    		}
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, "", nil
+		}
 
-    		if err != nil {
-    			return nil, "", err
-    		}
+		if err != nil {
+			return nil, "", err
+		}
 
-    		if output == nil {
-    			return nil, "", nil
-    		}
+		if output == nil {
+			return nil, "", nil
+		}
 
-    		return output, aws.ToString(output.Status), nil
-    	}
-    }
-    ```
-
-=== "AWS SDK Go V1"
-    ```go
-    // ThingStatus fetches the Thing and its Status
-    func ThingStatus(ctx context.Context, conn *example.Example, id string) retry.StateRefreshFunc {
-        return func() (interface{}, string, error) {
-            output, err := /* ... AWS Go SDK operation to fetch resource/status ... */
-
-    		if tfawserr.ErrCodeEquals(err, example.ErrCodeResourceNotFoundException) {
-    			return nil, "", nil
-    		}
-
-    		if err != nil {
-    			return nil, "", err
-    		}
-
-    		if output == nil {
-    			return nil, "", nil
-    		}
-
-    		return output, aws.StringValue(output.Status), nil
-    	}
-    }
-    ```
+		return output, aws.ToString(output.Status), nil
+	}
+}
+```
 
 ```go
 // waitThingCreated is a resource waiter for Thing creation
@@ -776,7 +580,7 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
 
 === "Terraform Plugin SDK V2"
     ```go
-    func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
         var diags diag.Diagnostics
 
         // ... AWS Go SDK logic to create resource ...
@@ -788,7 +592,7 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
     	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
-    func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
         // ... AWS Go SDK logic to delete resource ...
 
     	if _, err := waitThingDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {

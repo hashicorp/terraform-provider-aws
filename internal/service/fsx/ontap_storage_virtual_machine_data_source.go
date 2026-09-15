@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -24,179 +26,181 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachineRead,
 
-		Schema: map[string]*schema.Schema{
-			"active_directory_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"netbios_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"self_managed_active_directory_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dns_ips": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrDomainName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"file_system_administrators_group": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"organizational_unit_distinguished_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrUsername: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_directory_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"netbios_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"self_managed_active_directory_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dns_ips": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrDomainName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"file_system_administrators_group": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"organizational_unit_distinguished_name": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrUsername: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iscsi": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"management": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoints: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"iscsi": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"nfs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+							"management": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"smb": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"nfs": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+								},
+							},
+							"smb": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: storageVirtualMachineFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"lifecycle_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"lifecycle_transition_reason": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: storageVirtualMachineFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"lifecycle_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"lifecycle_transition_reason": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subtype": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"uuid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subtype": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"uuid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
@@ -253,16 +257,16 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func flattenLifecycleTransitionReason(rs *awstypes.LifecycleTransitionReason) []interface{} {
+func flattenLifecycleTransitionReason(rs *awstypes.LifecycleTransitionReason) []any {
 	if rs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if rs.Message != nil {
 		m[names.AttrMessage] = aws.ToString(rs.Message)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

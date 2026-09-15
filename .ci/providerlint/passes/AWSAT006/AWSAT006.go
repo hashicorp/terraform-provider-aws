@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AWSAT006 defines an Analyzer that checks for
 // hardcoded AWS partition DNS suffixes
 package AWSAT006
@@ -8,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -34,7 +37,7 @@ var Analyzer = &analysis.Analyzer{
 	Run: run,
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 

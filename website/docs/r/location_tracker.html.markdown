@@ -26,6 +26,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The optional description for the tracker resource.
 * `kms_key_id` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `position_filtering` - (Optional) The position filtering method of the tracker resource. Valid values: `TimeBased`, `DistanceBased`, `AccuracyBased`. Default: `TimeBased`.
@@ -37,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create_time` - The timestamp for when the tracker resource was created in ISO 8601 format.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `tracker_arn` - The Amazon Resource Name (ARN) for the tracker resource. Used when you need to specify a resource across all AWS.
+* `tracker_arn` - ARN for the tracker resource. Used when you need to specify a resource across all AWS.
 * `update_time` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
 
 ## Import

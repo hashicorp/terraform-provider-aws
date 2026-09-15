@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
@@ -13,17 +15,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,52 +42,52 @@ func resourceClusterEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_endpoint_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			names.AttrClusterIdentifier: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpointType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(clusterEndpointType_Values(), false),
-			},
-			"excluded_members": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"static_members": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_endpoint_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				names.AttrClusterIdentifier: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpointType: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(clusterEndpointType_Values(), false),
+				},
+				"excluded_members": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"static_members": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -105,7 +107,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if meta.(*conns.AWSClient).Partition != names.StandardPartitionID {
+	if meta.(*conns.AWSClient).Partition(ctx) != endpoints.AwsPartitionID {
 		input.Tags = nil
 	}
 
@@ -125,7 +127,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -136,7 +138,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 
 	ep, err := findClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,7 +159,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -197,7 +199,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -272,8 +274,7 @@ func findClusterEndpoints(ctx context.Context, conn *neptune.Client, input *nept
 
 		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) || errs.IsA[*awstypes.DBClusterEndpointNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -287,11 +288,11 @@ func findClusterEndpoints(ctx context.Context, conn *neptune.Client, input *nept
 	return output, nil
 }
 
-func statusClusterEndpoint(ctx context.Context, conn *neptune.Client, clusterID, clusterEndpointID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClusterEndpoint(conn *neptune.Client, clusterID, clusterEndpointID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -310,7 +311,7 @@ func waitClusterEndpointAvailable(ctx context.Context, conn *neptune.Client, clu
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterEndpointStatusCreating, clusterEndpointStatusModifying},
 		Target:  []string{clusterEndpointStatusAvailable},
-		Refresh: statusClusterEndpoint(ctx, conn, clusterID, clusterEndpointID),
+		Refresh: statusClusterEndpoint(conn, clusterID, clusterEndpointID),
 		Timeout: timeout,
 	}
 
@@ -330,7 +331,7 @@ func waitClusterEndpointDeleted(ctx context.Context, conn *neptune.Client, clust
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterEndpointStatusDeleting},
 		Target:  []string{},
-		Refresh: statusClusterEndpoint(ctx, conn, clusterID, clusterEndpointID),
+		Refresh: statusClusterEndpoint(conn, clusterID, clusterEndpointID),
 		Timeout: timeout,
 	}
 

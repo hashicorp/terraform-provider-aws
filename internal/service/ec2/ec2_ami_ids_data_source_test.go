@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -17,7 +17,7 @@ func TestAccEC2AMIIDsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami_ids.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,7 +39,7 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 	date := time.Now().UTC().AddDate(0, -2, 0)
 	creationDate := fmt.Sprintf("%d-%02d-*", date.Year(), date.Month())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +47,7 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccAMIIDsDataSourceConfig_sorted(false, creationDate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test1", names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test2", names.AttrID),
 				),
@@ -55,7 +55,7 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccAMIIDsDataSourceConfig_sorted(true, creationDate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test2", names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test1", names.AttrID),
 				),
@@ -68,7 +68,7 @@ func TestAccEC2AMIIDsDataSource_includeDeprecated(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami_ids.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

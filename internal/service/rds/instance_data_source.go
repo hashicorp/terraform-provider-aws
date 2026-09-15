@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -21,202 +23,213 @@ import (
 
 // @SDKDataSource("aws_db_instance", name="DB Instance")
 // @Tags
+// @Testing(tagsIdentifierAttribute="db_instance_arn")
 func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"backup_retention_period": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"db_instance_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"db_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_parameter_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"db_subnet_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_user_secret": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secret_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secret_status": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"backup_retention_period": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"ca_cert_identifier": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database_insights_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_cluster_identifier": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"db_instance_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"db_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_parameter_groups": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"db_subnet_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enabled_cloudwatch_logs_exports": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_username": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_user_secret": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"secret_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"secret_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"max_allocated_storage": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"network_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"option_group_memberships": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preferred_backup_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"storage_throughput": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"timezone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"max_allocated_storage": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"monitoring_interval": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"monitoring_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"option_group_memberships": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preferred_backup_window": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"replicate_source_db": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"storage_throughput": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"upgrade_rollout_order": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"timezone": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vpc_security_groups": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
 
-func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -225,7 +238,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	filter := tfslices.PredicateTrue[*types.DBInstance]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		filter = func(v *types.DBInstance) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 
@@ -259,6 +272,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
 	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
+	d.Set("database_insights_mode", instance.DatabaseInsightsMode)
 	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)
 	d.Set("db_instance_arn", instance.DBInstanceArn)
 	d.Set("db_instance_class", instance.DBInstanceClass)
@@ -280,7 +294,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("license_model", instance.LicenseModel)
 	d.Set("master_username", instance.MasterUsername)
 	if instance.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}
@@ -301,6 +315,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("storage_throughput", instance.StorageThroughput)
 	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
+	d.Set("upgrade_rollout_order", instance.UpgradeRolloutOrder)
 	d.Set("vpc_security_groups", tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))

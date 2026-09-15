@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <project>
     <modelVersion>4.0.0</modelVersion>
     <name>Terraform-Provider-AWS Config DSL Script</name>

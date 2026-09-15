@@ -16,7 +16,7 @@ Every VPC has a default network ACL that can be managed but not destroyed. When 
 
 This resource treats its inline rules as absolute; only the rules defined inline are created, and any additions/removals external to this resource will result in diffs being shown. For these reasons, this resource is incompatible with the `aws_network_acl_rule` resource.
 
-For more information about Network ACLs, see the AWS Documentation on [Network ACLs][aws-network-acls].
+For more information about Network ACLs, see the AWS Documentation on [Network ACLs](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html).
 
 ## Example Usage
 
@@ -123,6 +123,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `egress` - (Optional) Configuration block for an egress rule. Detailed below.
 * `ingress` - (Optional) Configuration block for an ingress rule. Detailed below.
 * `subnet_ids` - (Optional) List of Subnet IDs to apply the ACL to. See the notes above on Managing Subnets in the Default Network ACL
@@ -142,6 +143,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) The CIDR block to match. This must be a valid network mask.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
@@ -158,8 +160,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - ID of the AWS account that owns the Default Network ACL
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` -  ID of the associated VPC
-
-[aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html
 
 ## Import
 

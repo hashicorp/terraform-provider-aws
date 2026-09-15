@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validReplicationGroupAuthToken(v interface{}, k string) (ws []string, errors []error) {
+func validReplicationGroupAuthToken(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) < 16) || (len(value) > 128) {
 		errors = append(errors, fmt.Errorf(

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -26,58 +28,60 @@ func dataSourceProvisioningArtifacts() *schema.Resource {
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Default:      acceptLanguageEnglish,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provisioning_artifact_details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrCreatedTime: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"guidance": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Default:      acceptLanguageEnglish,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provisioning_artifact_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrCreatedTime: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"guidance": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -101,12 +105,12 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifactDetail) []interface{} {
+func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifactDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenProvisioningArtifactDetail(apiObject))
@@ -115,8 +119,8 @@ func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifa
 	return tfList
 }
 
-func flattenProvisioningArtifactDetail(apiObject awstypes.ProvisioningArtifactDetail) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenProvisioningArtifactDetail(apiObject awstypes.ProvisioningArtifactDetail) map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.Active != nil {
 		tfMap["active"] = aws.ToBool(apiObject.Active)

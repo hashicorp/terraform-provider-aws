@@ -1,9 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package semver
 
 import (
+	"strconv"
+
 	gversion "github.com/hashicorp/go-version"
 )
 
@@ -29,6 +31,17 @@ func GreaterThanOrEqual(s1, s2 string) bool {
 	}
 
 	return v1.GreaterThanOrEqual(v2)
+}
+
+// MajorMinor returns the major and minor version string.
+func MajorMinor(s string) (string, error) {
+	v, err := gversion.NewVersion(s)
+
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatInt(v.Segments64()[0], 10) + `.` + strconv.FormatInt(v.Segments64()[1], 10), nil
 }
 
 func parseVersions(s1, s2 string) (*gversion.Version, *gversion.Version, error) {

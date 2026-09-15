@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -9,43 +9,40 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 	appResourceName := "aws_appconfig_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, appResourceName, names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}`)),
 					resource.TestMatchResourceAttr(resourceName, "configuration_profile_id", regexache.MustCompile(`[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS.Freeform"),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 			{
@@ -59,22 +56,30 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceConfigurationProfile(), resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceConfigurationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -82,19 +87,19 @@ func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", "alias/"+rName),
 				),
 			},
@@ -104,20 +109,20 @@ func TestAccAppConfigConfigurationProfile_kmsKey(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_validatorJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct1),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
 					}),
@@ -131,8 +136,8 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 			{
 				Config: testAccConfigurationProfileConfig_validatorNoJSONContent(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct1),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrContent: "",
 						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
@@ -148,8 +153,8 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				// Test Validator Removal
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct0),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 		},
@@ -158,20 +163,20 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_validatorLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct1),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrType: string(awstypes.ValidatorTypeLambda),
@@ -187,8 +192,8 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 				// Test Validator Removal
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct0),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 		},
@@ -197,20 +202,20 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_validatorMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct2),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrContent: "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
 						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
@@ -232,27 +237,27 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, "tf-acc-test-update")
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccConfigurationProfileConfig_name(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
@@ -267,20 +272,20 @@ func TestAccAppConfigConfigurationProfile_updateName(t *testing.T) {
 
 func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	description := acctest.RandomWithPrefix(t, "tf-acc-test-update")
 	resourceName := "aws_appconfig_configuration_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
@@ -292,7 +297,7 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 			{
 				Config: testAccConfigurationProfileConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
@@ -305,78 +310,44 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appconfig_configuration_profile" {
 				continue
 			}
 
-			confProfID, appID, err := tfappconfig.ConfigurationProfileParseID(rs.Primary.ID)
+			_, err := tfappconfig.FindConfigurationProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["configuration_profile_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			input := &appconfig.GetConfigurationProfileInput{
-				ApplicationId:          aws.String(appID),
-				ConfigurationProfileId: aws.String(confProfID),
-			}
-
-			output, err := conn.GetConfigurationProfile(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
-			}
-
-			if output != nil {
-				return fmt.Errorf("AppConfig Configuration Profile (%s) for Application (%s) still exists", confProfID, appID)
-			}
+			return fmt.Errorf("AppConfig Configuration Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConfigurationProfileExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckConfigurationProfileExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
+		conn := acctest.ProviderMeta(ctx, t).AppConfigClient(ctx)
 
-		confProfID, appID, err := tfappconfig.ConfigurationProfileParseID(rs.Primary.ID)
+		_, err := tfappconfig.FindConfigurationProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["configuration_profile_id"])
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
-
-		output, err := conn.GetConfigurationProfile(ctx, &appconfig.GetConfigurationProfileInput{
-			ApplicationId:          aws.String(appID),
-			ConfigurationProfileId: aws.String(confProfID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Configuration Profile (%s) for Application (%s) not found", confProfID, appID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -387,6 +358,7 @@ func testAccConfigurationProfileConfig_kms(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -503,7 +475,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs24.x"
 }
 `, rName)
 }

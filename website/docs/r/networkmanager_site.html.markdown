@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_site"
 description: |-
-  Creates a site in a global network.
+  Manages a Network Manager site.
 ---
 
 # Resource: aws_networkmanager_site
 
-Creates a site in a global network.
+Manages a Network Manager site. Use this resource to create a site in a global network.
 
 ## Example Usage
 
@@ -23,14 +23,17 @@ resource "aws_networkmanager_site" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `global_network_id` - (Required) The ID of the Global Network to create the site in.
+* `global_network_id` - (Required) ID of the Global Network to create the site in.
+
+The following arguments are optional:
+
 * `description` - (Optional) Description of the Site.
-* `location` - (Optional) The site location as documented below.
+* `location` - (Optional) Site location. [See below](#location).
 * `tags` - (Optional) Key-value tags for the Site. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `location` object supports the following:
+### location
 
 * `address` - (Optional) Address of the location.
 * `latitude` - (Optional) Latitude of the location.
@@ -40,8 +43,16 @@ The `location` object supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Site Amazon Resource Name (ARN)
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - Site ARN.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 

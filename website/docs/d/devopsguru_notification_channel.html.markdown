@@ -22,8 +22,9 @@ data "aws_devopsguru_notification_channel" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier for the notification channel.
 
 ## Attribute Reference
@@ -35,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `sns` Attribute Reference
 
-* `topic_arn` - Amazon Resource Name (ARN) of an Amazon Simple Notification Service topic.
+* `topic_arn` - ARN of an Amazon Simple Notification Service topic.
 
 ### `filters` Attribute Reference
 

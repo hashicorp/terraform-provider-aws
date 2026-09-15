@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package mq
 
@@ -9,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -18,10 +22,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,7 +35,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -57,330 +64,360 @@ func resourceBroker() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"broker_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidateBrokerName,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"revision": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"broker_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validateBrokerName,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"revision": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"data_replication_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.DataReplicationMode](),
-				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-					// Suppress differences when the configured data replication mode
-					// matches a non-empty, pending replication mode. This scenario
-					// can exist when the mode has been set, but the broker has not
-					// yet been rebooted.
-					if n != "" && n == d.Get("pending_data_replication_mode").(string) {
-						return true
-					}
-					return false
-				},
-			},
-			"data_replication_primary_broker_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true, // Can only be set on Create
-				ValidateFunc: verify.ValidARN,
-			},
-			"deployment_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.DeploymentModeSingleInstance,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.DeploymentMode](),
-			},
-			"encryption_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_aws_owned_key": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  true,
-						},
+				"data_replication_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.DataReplicationMode](),
+					DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+						// Suppress differences when the configured data replication mode
+						// matches a non-empty, pending replication mode. This scenario
+						// can exist when the mode has been set, but the broker has not
+						// yet been rebooted.
+						if n != "" && n == d.Get("pending_data_replication_mode").(string) {
+							return true
+						}
+						return false
 					},
 				},
-			},
-			"engine_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"host_instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEndpoints: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrIPAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"data_replication_primary_broker_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true, // Can only be set on Create
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"ldap_server_metadata": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hosts": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"role_base": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_search_matching": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_search_subtree": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"service_account_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"service_account_username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_base": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_role_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_search_matching": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_search_subtree": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
+				"deployment_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.DeploymentModeSingleInstance,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.DeploymentMode](),
 				},
-			},
-			"logs": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"audit": {
-							Type:             nullable.TypeNullableBool,
-							Optional:         true,
-							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
-						},
-						"general": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"maintenance_window_start_time": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"day_of_week": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[types.DayOfWeek](),
-						},
-						"time_of_day": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"time_zone": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"pending_data_replication_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrStorageType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Set:      resourceUserHash,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
-					// User list is not returned back after creation.
-					// Updates to users can only be in the RabbitMQ UI.
-					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get(names.AttrARN).(string) != "" {
-						return true
-					}
-
-					return false
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 20,
-							Elem: &schema.Schema{
+				"encryption_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
 								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"use_aws_owned_key": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  true,
+							},
+						},
+					},
+				},
+				"engine_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"host_instance_type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"instances": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"console_url": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEndpoints: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrIPAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"ldap_server_metadata": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hosts": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"role_base": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"role_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"role_search_matching": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"role_search_subtree": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"service_account_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"service_account_username": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_base": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_role_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_search_matching": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_search_subtree": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"logs": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audit": {
+								Type:             nullable.TypeNullableBool,
+								Optional:         true,
+								ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+								DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
+							},
+							"general": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"maintenance_window_start_time": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"day_of_week": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[types.DayOfWeek](),
+							},
+							"time_of_day": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"time_zone": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"pending_data_replication_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"resource_share_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"shared_resources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_names": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrStorageType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Set:      resourceUserHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"console_access": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"groups": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 20,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(2, 100),
+								},
+							},
+							names.AttrPassword: {
+								Type:         schema.TypeString,
+								Required:     true,
+								Sensitive:    true,
+								ValidateFunc: validBrokerPassword,
+							},
+							"replication_user": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrUsername: {
+								Type:         schema.TypeString,
+								Required:     true,
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
 						},
-						names.AttrPassword: {
-							Type:         schema.TypeString,
-							Required:     true,
-							Sensitive:    true,
-							ValidateFunc: ValidBrokerPassword,
-						},
-						"replication_user": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrUsername: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(2, 100),
-						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
 						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
 							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
 						}
+					}
+				}
+
+				if !strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
+					if v, ok := diff.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
+						return errors.New("resource_share_arns: Can only be configured when engine is RabbitMQ")
 					}
 				}
 
@@ -390,17 +427,16 @@ func resourceBroker() *schema.Resource {
 	}
 }
 
-func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
-	input := &mq.CreateBrokerInput{
+	input := mq.CreateBrokerInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
+		CreatorRequestId:        aws.String(sdkid.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
 		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -412,8 +448,8 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = types.AuthenticationStrategy(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandConfigurationId(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandConfigurationId(v.([]any))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = types.DeploymentMode(v.(string))
@@ -424,17 +460,17 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("data_replication_primary_broker_arn"); ok {
 		input.DataReplicationPrimaryBrokerArn = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]interface{}))
+	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]any))
 	}
-	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]interface{}))
+	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]any))
 	}
-	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Logs = expandLogs(engineType, v.([]interface{}))
+	if v, ok := d.GetOk("logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Logs = expandLogs(engineType, v.([]any))
 	}
-	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
+	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]any))
 	}
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
@@ -446,7 +482,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateBroker(ctx, input)
+	output, err := conn.CreateBroker(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MQ Broker (%s): %s", name, err)
@@ -459,17 +495,41 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
 	}
 
+	// Resource shares can only be set via UpdateBroker, so they are applied
+	// after the broker reaches a running state.
+	if v, ok := d.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
+		err := updateBrokerResourceShares(ctx, conn, d.Id(), flex.ExpandStringValueSet(v.(*schema.Set)), d.Timeout(schema.TimeoutCreate))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
+		}
+
+		if d.Get(names.AttrApplyImmediately).(bool) {
+			input := mq.RebootBrokerInput{
+				BrokerId: aws.String(d.Id()),
+			}
+			_, err := conn.RebootBroker(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "rebooting MQ Broker (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitBrokerRebooted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
+			}
+		}
+	}
+
 	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
-func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
 	output, err := findBrokerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && (tfresource.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
+	if !d.IsNewResource() && (retry.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
 		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -483,51 +543,71 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
 	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
 	d.Set("broker_name", output.BrokerName)
-	d.Set("data_replication_mode", output.DataReplicationMode)
-	d.Set("deployment_mode", output.DeploymentMode)
-	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, output.EngineVersion)
-	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
-	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
-	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
-	d.Set(names.AttrStorageType, output.StorageType)
-	d.Set(names.AttrSubnetIDs, output.SubnetIds)
-
 	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
-
+	d.Set("data_replication_mode", output.DataReplicationMode)
+	d.Set("deployment_mode", output.DeploymentMode)
 	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
 	}
-
+	d.Set("engine_type", output.EngineType)
+	d.Set(names.AttrEngineVersion, normalizeEngineVersion(string(output.EngineType), aws.ToString(output.EngineVersion), aws.ToBool(output.AutoMinorVersionUpgrade)))
+	d.Set("host_instance_type", output.HostInstanceType)
+	if err := d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
+	}
 	var password string
 	if v, ok := d.GetOk("ldap_server_metadata.0.service_account_password"); ok {
 		password = v.(string)
 	}
-
 	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
 	}
-
 	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
 	}
-
 	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
+	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
+	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
+	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
+	// Shared resources are only supported for RabbitMQ brokers and are read
+	// via a separate API not exposed by DescribeBroker.
+	if strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) {
+		sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, d.Id())
 
-	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
+		switch {
+		case sharedResourcesUnavailableInPartition(meta.(*conns.AWSClient).Partition(ctx), err):
+			d.Set("resource_share_arns", nil)
+			d.Set("shared_resources", nil)
+		case err != nil:
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) shared resources: %s", d.Id(), err)
+		default:
+			d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
+			if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+			}
+		}
+	} else {
+		d.Set("shared_resources", nil)
 	}
+	d.Set(names.AttrStorageType, output.StorageType)
+	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+	// AWS does not return user information for RabbitMQ brokers after creation.
+	// Skip setting user state to prevent non-idempotent behavior.
+	if !strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) || d.IsNewResource() {
+		rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
-	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
+		}
+
+		if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		}
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -535,20 +615,19 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
 	requiresReboot := false
 
 	if d.HasChange(names.AttrSecurityGroups) {
-		input := &mq.UpdateBrokerInput{
+		input := mq.UpdateBrokerInput{
 			BrokerId:       aws.String(d.Id()),
 			SecurityGroups: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
-		_, err := conn.UpdateBroker(ctx, input)
+		_, err := conn.UpdateBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) security groups: %s", d.Id(), err)
@@ -556,14 +635,18 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
-		input := &mq.UpdateBrokerInput{
+		engineType := d.Get("engine_type").(string)
+		engineVersion := d.Get(names.AttrEngineVersion).(string)
+		autoMinorVersionUpgrade := d.Get(names.AttrAutoMinorVersionUpgrade).(bool)
+
+		input := mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
-			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
-			EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
-			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
+			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]any)),
+			EngineVersion: aws.String(normalizeEngineVersion(engineType, engineVersion, autoMinorVersionUpgrade)),
+			Logs:          expandLogs(engineType, d.Get("logs").([]any)),
 		}
 
-		_, err := conn.UpdateBroker(ctx, input)
+		_, err := conn.UpdateBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) configuration: %s", d.Id(), err)
@@ -590,12 +673,12 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("host_instance_type") {
-		input := &mq.UpdateBrokerInput{
+		input := mq.UpdateBrokerInput{
 			BrokerId:         aws.String(d.Id()),
 			HostInstanceType: aws.String(d.Get("host_instance_type").(string)),
 		}
 
-		_, err := conn.UpdateBroker(ctx, input)
+		_, err := conn.UpdateBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) host instance type: %s", d.Id(), err)
@@ -605,12 +688,12 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
-		input := &mq.UpdateBrokerInput{
+		input := mq.UpdateBrokerInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BrokerId:                aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateBroker(ctx, input)
+		_, err := conn.UpdateBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
@@ -618,12 +701,12 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("maintenance_window_start_time") {
-		input := &mq.UpdateBrokerInput{
+		input := mq.UpdateBrokerInput{
 			BrokerId:                   aws.String(d.Id()),
-			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]interface{})),
+			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]any)),
 		}
 
-		_, err := conn.UpdateBroker(ctx, input)
+		_, err := conn.UpdateBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
@@ -631,12 +714,12 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("data_replication_mode") {
-		input := &mq.UpdateBrokerInput{
+		input := mq.UpdateBrokerInput{
 			BrokerId:            aws.String(d.Id()),
 			DataReplicationMode: types.DataReplicationMode(d.Get("data_replication_mode").(string)),
 		}
 
-		_, err := conn.UpdateBroker(ctx, input)
+		_, err := conn.UpdateBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) data replication mode: %s", d.Id(), err)
@@ -645,10 +728,21 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
+	if d.HasChange("resource_share_arns") {
+		err := updateBrokerResourceShares(ctx, conn, d.Id(), flex.ExpandStringValueSet(d.Get("resource_share_arns").(*schema.Set)), d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
 	if d.Get(names.AttrApplyImmediately).(bool) && requiresReboot {
-		_, err := conn.RebootBroker(ctx, &mq.RebootBrokerInput{
+		input := mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
-		})
+		}
+		_, err := conn.RebootBroker(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rebooting MQ Broker (%s): %s", d.Id(), err)
@@ -662,15 +756,16 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
-	_, err := conn.DeleteBroker(ctx, &mq.DeleteBrokerInput{
+	input := mq.DeleteBrokerInput{
 		BrokerId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBroker(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -688,16 +783,19 @@ func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.DescribeBrokerOutput, error) {
-	input := &mq.DescribeBrokerInput{
+	input := mq.DescribeBrokerInput{
 		BrokerId: aws.String(id),
 	}
 
+	return findBroker(ctx, conn, &input)
+}
+
+func findBroker(ctx context.Context, conn *mq.Client, input *mq.DescribeBrokerInput) (*mq.DescribeBrokerOutput, error) {
 	output, err := conn.DescribeBroker(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -706,17 +804,116 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func findSharedResourcesByBrokerID(ctx context.Context, conn *mq.Client, id string) ([]types.SharedResource, error) {
+	input := mq.DescribeSharedResourcesInput{
+		BrokerId: aws.String(id),
+	}
+
+	return findSharedResources(ctx, conn, &input)
+}
+
+// errCodeMissingAuthenticationToken is returned by API Gateway when an operation is
+// not routed in a partition.
+const errCodeMissingAuthenticationToken = "MissingAuthenticationTokenException"
+
+// sharedResourcesUnavailableInPartition reports whether an error from
+// DescribeSharedResources indicates the operation is unavailable in the partition.
+func sharedResourcesUnavailableInPartition(partition string, err error) bool {
+	return errs.IsUnsupportedOperationInPartitionError(partition, err) ||
+		(partition != endpoints.AwsPartitionID && tfawserr.ErrCodeEquals(err, errCodeMissingAuthenticationToken))
+}
+
+func findSharedResources(ctx context.Context, conn *mq.Client, input *mq.DescribeSharedResourcesInput) ([]types.SharedResource, error) {
+	var output []types.SharedResource
+
+	pages := mq.NewDescribeSharedResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SharedResources...)
+	}
+
+	return output, nil
+}
+
+// updateBrokerResourceShares sets the broker's resource shares and waits for them
+// to register. A broker can briefly reject the update with a ConflictException
+// immediately after reaching a running state, so the update is retried, and the
+// subsequent wait ensures the shares are attached before the broker is rebooted
+// to apply them.
+func updateBrokerResourceShares(ctx context.Context, conn *mq.Client, id string, resourceShareARNs []string, timeout time.Duration) error {
+	input := mq.UpdateBrokerInput{
+		BrokerId:          aws.String(id),
+		ResourceShareArns: resourceShareARNs,
+	}
+	_, err := tfresource.RetryWhenIsA[*mq.UpdateBrokerOutput, *types.ConflictException](ctx, timeout, func(ctx context.Context) (*mq.UpdateBrokerOutput, error) {
+		return conn.UpdateBroker(ctx, &input)
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return waitBrokerResourceSharesAttached(ctx, conn, id, resourceShareARNs, timeout)
+}
+
+func waitBrokerResourceSharesAttached(ctx context.Context, conn *mq.Client, id string, resourceShareARNs []string, timeout time.Duration) error {
+	const (
+		attachPending  = "pending"
+		attachComplete = "attached"
+	)
+
+	stateConf := retry.StateChangeConf{
+		Pending: []string{attachPending},
+		Target:  []string{attachComplete},
+		Timeout: timeout,
+		Refresh: func(ctx context.Context) (any, string, error) {
+			sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, id)
+
+			if err != nil {
+				return nil, "", err
+			}
+
+			// A resource share is fully attached only once its RESOURCE_SHARE
+			// entry is AVAILABLE. This is reached without a reboot; the shared
+			// resources themselves become AVAILABLE only after the reboot.
+			available := make(map[string]struct{})
+			for _, sharedResource := range sharedResources {
+				if sharedResource.Type == types.SharedResourceTypeResourceShare && sharedResource.Status == types.SharedResourceStatusAvailable {
+					available[aws.ToString(sharedResource.ResourceArn)] = struct{}{}
+				}
+			}
+
+			for _, arn := range resourceShareARNs {
+				if _, ok := available[arn]; !ok {
+					return sharedResources, attachPending, nil
+				}
+			}
+
+			return sharedResources, attachComplete, nil
+		},
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func statusBroker(conn *mq.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -733,7 +930,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout 
 		Pending: enum.Slice(types.BrokerStateCreationInProgress, types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -754,7 +951,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 		),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -770,7 +967,7 @@ func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout
 		Pending: enum.Slice(types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -781,31 +978,31 @@ func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout
 	return nil, err
 }
 
-func resourceUserHash(v interface{}) int {
+func resourceUserHash(v any) int {
 	var buf bytes.Buffer
 
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	if ca, ok := m["console_access"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", ca.(bool)))
+		fmt.Fprintf(&buf, "%t-", ca.(bool))
 	} else {
 		buf.WriteString("false-")
 	}
 	if g, ok := m["groups"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
+		fmt.Fprintf(&buf, "%v-", g.(*schema.Set).List())
 	}
 	if p, ok := m[names.AttrPassword]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
+		fmt.Fprintf(&buf, "%s-", p.(string))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrUsername].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrUsername].(string))
 
 	return create.StringHashcode(buf.String())
 }
 
-func updateBrokerUsers(ctx context.Context, conn *mq.Client, id string, oldUsers, newUsers []interface{}) (bool, error) {
+func updateBrokerUsers(ctx context.Context, conn *mq.Client, id string, oldUsers, newUsers []any) (bool, error) {
 	// If there are any user creates/deletes/updates, updatedUsers will be set to true
 	updatedUsers := false
 
-	createL, deleteL, updateL, err := DiffBrokerUsers(id, oldUsers, newUsers)
+	createL, deleteL, updateL, err := diffBrokerUsers(id, oldUsers, newUsers)
 	if err != nil {
 		return updatedUsers, err
 	}
@@ -835,10 +1032,10 @@ func updateBrokerUsers(ctx context.Context, conn *mq.Client, id string, oldUsers
 	return updatedUsers, nil
 }
 
-func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.CreateUserInput, di []*mq.DeleteUserInput, ur []*mq.UpdateUserInput, e error) {
-	existingUsers := make(map[string]interface{})
+func diffBrokerUsers(bId string, oldUsers, newUsers []any) (cr []*mq.CreateUserInput, di []*mq.DeleteUserInput, ur []*mq.UpdateUserInput, e error) {
+	existingUsers := make(map[string]any)
 	for _, ou := range oldUsers {
-		u := ou.(map[string]interface{})
+		u := ou.(map[string]any)
 		username := u[names.AttrUsername].(string)
 		// Convert Set to slice to allow easier comparison
 		if g, ok := u["groups"]; ok {
@@ -853,7 +1050,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 		// Still need access to the original map
 		// because Set contents doesn't get copied
 		// Likely related to https://github.com/mitchellh/copystructure/issues/17
-		nuOriginal := nu.(map[string]interface{})
+		nuOriginal := nu.(map[string]any)
 
 		// Create a mutable copy
 		newUser, err := copystructure.Copy(nu)
@@ -861,18 +1058,18 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 			return cr, di, ur, err
 		}
 
-		newUserMap := newUser.(map[string]interface{})
+		newUserMap := newUser.(map[string]any)
 		username := newUserMap[names.AttrUsername].(string)
 
 		// Convert Set to slice to allow easier comparison
-		var ng []interface{}
+		var ng []any
 		if g, ok := nuOriginal["groups"]; ok {
 			ng = g.(*schema.Set).List()
 			newUserMap["groups"] = ng
 		}
 
 		if eu, ok := existingUsers[username]; ok {
-			existingUserMap := eu.(map[string]interface{})
+			existingUserMap := eu.(map[string]any)
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {
 				ur = append(ur, &mq.UpdateUserInput{
@@ -912,12 +1109,45 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 	return cr, di, ur, nil
 }
 
-func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {
+// normalizeEngineVersion normalizes the engine version depending on whether auto
+// minor version upgrades are enabled
+//
+// Beginning with RabbitMQ 3.13 and ActiveMQ 5.18, brokers with `auto_minor_version_upgrade`
+// set to `true` will automatically receive patch updates during scheduled maintenance
+// windows. To account for automated changes to patch versions, the returned engine
+// value is normalized to only major/minor when these conditions are met.
+//
+// If `auto_minor_version_upgrade` is not enabled, or the engine version is less than
+// the version in which AWS began automatically applying patch upgrades, the engine
+// version is returned unmodified.
+//
+// Ref: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/upgrading-brokers.html
+func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVersionUpgrade bool) string {
+	majorMinor, _ := semver.MajorMinor(engineVersion)
+
+	// initial versions where `auto_minor_version_upgrade` triggers automatic
+	// patch updates, and only the major/minor should be supplied to the update API
+	minRabbit := "v3.13"
+	minActive := "v5.18"
+
+	if !autoMinorVersionUpgrade {
+		return engineVersion
+	}
+
+	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.GreaterThanOrEqual(majorMinor, minRabbit)) ||
+		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.GreaterThanOrEqual(majorMinor, minActive)) {
+		return majorMinor
+	}
+
+	return engineVersion
+}
+
+func expandEncryptionOptions(l []any) *types.EncryptionOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	encryptionOptions := &types.EncryptionOptions{
 		UseAwsOwnedKey: aws.Bool(m["use_aws_owned_key"].(bool)),
@@ -930,20 +1160,20 @@ func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {
 	return encryptionOptions
 }
 
-func flattenEncryptionOptions(encryptionOptions *types.EncryptionOptions) []interface{} {
+func flattenEncryptionOptions(encryptionOptions *types.EncryptionOptions) []any {
 	if encryptionOptions == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrKMSKeyID:  aws.ToString(encryptionOptions.KmsKeyId),
 		"use_aws_owned_key": aws.ToBool(encryptionOptions.UseAwsOwnedKey),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func ValidBrokerPassword(v interface{}, k string) (ws []string, errors []error) {
+func validBrokerPassword(v any, k string) (ws []string, errors []error) {
 	min := 12
 	max := 250
 	value := v.(string)
@@ -968,10 +1198,10 @@ func ValidBrokerPassword(v interface{}, k string) (ws []string, errors []error) 
 	return
 }
 
-func expandUsers(cfg []interface{}) []types.User {
+func expandUsers(cfg []any) []types.User {
 	users := make([]types.User, len(cfg))
 	for i, m := range cfg {
-		u := m.(map[string]interface{})
+		u := m.(map[string]any)
 		user := types.User{
 			Username: aws.String(u[names.AttrUsername].(string)),
 			Password: aws.String(u[names.AttrPassword].(string)),
@@ -1017,17 +1247,17 @@ func expandUsersForBroker(ctx context.Context, conn *mq.Client, brokerId string,
 }
 
 // We use cfgdUsers to get & set the password
-func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
+func flattenUsers(users []*types.User, cfgUsers []any) *schema.Set {
 	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
-		user := u.(map[string]interface{})
+		user := u.(map[string]any)
 		username := user[names.AttrUsername].(string)
 		existingPairs[username] = user[names.AttrPassword].(string)
 	}
 
-	out := make([]interface{}, 0)
+	out := make([]any, 0)
 	for _, u := range users {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrUsername: aws.ToString(u.Username),
 		}
 		password := ""
@@ -1051,12 +1281,12 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 	return schema.NewSet(resourceUserHash, out)
 }
 
-func expandWeeklyStartTime(cfg []interface{}) *types.WeeklyStartTime {
+func expandWeeklyStartTime(cfg []any) *types.WeeklyStartTime {
 	if len(cfg) < 1 {
 		return nil
 	}
 
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	return &types.WeeklyStartTime{
 		DayOfWeek: types.DayOfWeek(m["day_of_week"].(string)),
 		TimeOfDay: aws.String(m["time_of_day"].(string)),
@@ -1064,11 +1294,11 @@ func expandWeeklyStartTime(cfg []interface{}) *types.WeeklyStartTime {
 	}
 }
 
-func flattenWeeklyStartTime(wst *types.WeeklyStartTime) []interface{} {
+func flattenWeeklyStartTime(wst *types.WeeklyStartTime) []any {
 	if wst == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	if wst.DayOfWeek != "" {
 		m["day_of_week"] = wst.DayOfWeek
 	}
@@ -1078,15 +1308,15 @@ func flattenWeeklyStartTime(wst *types.WeeklyStartTime) []interface{} {
 	if wst.TimeZone != nil {
 		m["time_zone"] = aws.ToString(wst.TimeZone)
 	}
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandConfigurationId(cfg []interface{}) *types.ConfigurationId {
+func expandConfigurationId(cfg []any) *types.ConfigurationId {
 	if len(cfg) < 1 {
 		return nil
 	}
 
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	out := types.ConfigurationId{
 		Id: aws.String(m[names.AttrID].(string)),
 	}
@@ -1097,31 +1327,125 @@ func expandConfigurationId(cfg []interface{}) *types.ConfigurationId {
 	return &out
 }
 
-func flattenConfiguration(config *types.Configurations) []interface{} {
+func flattenConfiguration(config *types.Configurations) []any {
 	if config == nil || config.Current == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrID: aws.ToString(config.Current.Id),
 		"revision":   aws.ToInt32(config.Current.Revision),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
-	if len(instances) == 0 {
-		return []interface{}{}
+// flattenResourceShareARNs returns the RAM resource share ARNs associated with a
+// broker. DescribeSharedResources represents each share as a RESOURCE_SHARE entry
+// whose resource ARN is the share ARN.
+func flattenResourceShareARNs(sharedResources []types.SharedResource) []string {
+	var arns []string
+
+	for _, sharedResource := range sharedResources {
+		if sharedResource.Type == types.SharedResourceTypeResourceShare {
+			arns = append(arns, aws.ToString(sharedResource.ResourceArn))
+		}
 	}
-	l := make([]interface{}, len(instances))
+
+	return arns
+}
+
+func flattenSharedResources(sharedResources []types.SharedResource) []any {
+	if len(sharedResources) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, len(sharedResources))
+	for i, sharedResource := range sharedResources {
+		m := map[string]any{
+			names.AttrResourceARN: aws.ToString(sharedResource.ResourceArn),
+			names.AttrStatus:      string(sharedResource.Status),
+			names.AttrType:        string(sharedResource.Type),
+		}
+		if len(sharedResource.DnsNames) > 0 {
+			m["dns_names"] = sharedResource.DnsNames
+		}
+		l[i] = m
+	}
+
+	return l
+}
+
+// brokerEndpointOrder defines the canonical sort priority for known MQ broker endpoints,
+// keyed by "engine:scheme:port" (engine lowercased). The engine prefix scopes the key
+// to a single engine so ports shared across engines (e.g., 5671 for ActiveMQ amqp+ssl
+// and RabbitMQ amqps) cannot collide. Lower values sort earlier; entries not present
+// receive math.MaxInt priority and sort to the end of the list.
+//
+// In RabbitMQ 4.2 and later, the Prometheus metrics endpoint is placed after amqps so
+// that instances.0.endpoints.0 continues to point at the AMQP endpoint across versions.
+var brokerEndpointOrder = map[string]int{
+	"activemq:ssl:61617":       0, // ActiveMQ OpenWire
+	"activemq:amqp+ssl:5671":   1, // ActiveMQ AMQP Secure
+	"activemq:stomp+ssl:61614": 2, // ActiveMQ STOMP Secure
+	"activemq:mqtt+ssl:8883":   3, // ActiveMQ MQTT Secure
+	"activemq:wss:61619":       4, // ActiveMQ WebSocket Secure
+	"rabbitmq:amqps:5671":      0, // RabbitMQ AMQP Secure
+	"rabbitmq:https:16001":     1, // RabbitMQ Prometheus metrics (4.2+)
+}
+
+func brokerEndpointPriority(endpoint string, engineType types.EngineType) int {
+	scheme, rest, found := strings.Cut(endpoint, "://")
+	if !found {
+		return math.MaxInt
+	}
+	if idx := strings.IndexAny(rest, "/?#"); idx >= 0 {
+		rest = rest[:idx]
+	}
+	portIdx := strings.LastIndex(rest, ":")
+	if portIdx < 0 {
+		return math.MaxInt
+	}
+	key := strings.ToLower(string(engineType)) + ":" + strings.ToLower(scheme) + ":" + rest[portIdx+1:]
+	if p, ok := brokerEndpointOrder[key]; ok {
+		return p
+	}
+	return math.MaxInt
+}
+
+// sortBrokerInstanceEndpoints returns a copy of endpoints sorted in the canonical order
+// defined for the given engine type. Endpoints whose "engine:scheme:port" is not in
+// brokerEndpointOrder (including any endpoint when the engine type is unrecognized)
+// receive math.MaxInt priority and sort to the end while preserving their original
+// relative order.
+func sortBrokerInstanceEndpoints(endpoints []string, engineType types.EngineType) []string {
+	sorted := make([]string, len(endpoints))
+	copy(sorted, endpoints)
+	slices.SortStableFunc(sorted, func(a, b string) int {
+		pa, pb := brokerEndpointPriority(a, engineType), brokerEndpointPriority(b, engineType)
+		if pa < pb {
+			return -1
+		}
+		if pa > pb {
+			return 1
+		}
+		return 0
+	})
+	return sorted
+}
+
+func flattenBrokerInstances(instances []types.BrokerInstance, engineType types.EngineType) []any {
+	if len(instances) == 0 {
+		return []any{}
+	}
+	l := make([]any, len(instances))
 	for i, instance := range instances {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		if instance.ConsoleURL != nil {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m[names.AttrEndpoints] = instance.Endpoints
+			m[names.AttrEndpoints] = sortBrokerInstanceEndpoints(instance.Endpoints, engineType)
 		}
 		if instance.IpAddress != nil {
 			m[names.AttrIPAddress] = aws.ToString(instance.IpAddress)
@@ -1132,12 +1456,12 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
 	return l
 }
 
-func flattenLogs(logs *types.LogsSummary) []interface{} {
+func flattenLogs(logs *types.LogsSummary) []any {
 	if logs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if logs.General != nil {
 		m["general"] = aws.ToBool(logs.General)
@@ -1147,15 +1471,15 @@ func flattenLogs(logs *types.LogsSummary) []interface{} {
 		m["audit"] = strconv.FormatBool(aws.ToBool(logs.Audit))
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandLogs(engineType string, l []interface{}) *types.Logs {
+func expandLogs(engineType string, l []any) *types.Logs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	logs := &types.Logs{}
 
@@ -1175,12 +1499,12 @@ func expandLogs(engineType string, l []interface{}) *types.Logs {
 	return logs
 }
 
-func flattenLDAPServerMetadata(apiObject *types.LdapServerMetadataOutput, password string) []interface{} {
+func flattenLDAPServerMetadata(apiObject *types.LdapServerMetadataOutput, password string) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Hosts; v != nil {
 		tfMap["hosts"] = v
@@ -1216,20 +1540,20 @@ func flattenLDAPServerMetadata(apiObject *types.LdapServerMetadataOutput, passwo
 		tfMap["user_search_subtree"] = aws.ToBool(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandLDAPServerMetadata(tfList []interface{}) *types.LdapServerMetadataInput {
+func expandLDAPServerMetadata(tfList []any) *types.LdapServerMetadataInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &types.LdapServerMetadataInput{}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["hosts"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Hosts = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := tfMap["hosts"]; ok && len(v.([]any)) > 0 {
+		apiObject.Hosts = flex.ExpandStringValueList(v.([]any))
 	}
 	if v, ok := tfMap["role_base"].(string); ok && v != "" {
 		apiObject.RoleBase = aws.String(v)
@@ -1265,7 +1589,7 @@ func expandLDAPServerMetadata(tfList []interface{}) *types.LdapServerMetadataInp
 	return apiObject
 }
 
-var ValidateBrokerName = validation.All(
+var validateBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
 	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 )

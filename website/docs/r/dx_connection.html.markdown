@@ -51,7 +51,8 @@ resource "aws_dx_connection" "example" {
 
 This resource supports the following arguments:
 
-* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps, 100Gbps, and 400Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, and 25Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Dedicated Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/dedicated_connection.html) and [Hosted Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/hosted_connection.html).
 * `encryption_mode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `no_encrypt`, `should_encrypt`, and `must_encrypt`.
 * `location` - (Required) The AWS Direct Connect location where the connection is located. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `name` - (Required) The name of the connection.
@@ -76,8 +77,23 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_account_id` - The ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `port_encryption_status` - The MAC Security (MACsec) port link status of the connection.
+* `prefix_pool_size_ipv4` - The total number of inbound IPv4 route prefixes that can be allocated across the virtual interfaces on the connection.
+* `prefix_pool_size_ipv6` - The total number of inbound IPv6 route prefixes that can be allocated across the virtual interfaces on the connection.
+* `prefix_pool_unallocated_count_ipv4` - The number of inbound IPv4 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
+* `prefix_pool_unallocated_count_ipv6` - The number of inbound IPv6 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
+* `rate_limiter_status` - Rate limiter status for the connection. See [`rate_limiter_status` Block](#rate_limiter_status-block) below.
+* `state` - State of the connection. See [CreateConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_CreateConnection.html#API_CreateConnection_ResponseSyntax) for list of possible state values.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vlan_id` - The VLAN ID.
+
+### `rate_limiter_status` Block
+
+`rate_limiter_status` exports the following attributes:
+
+* `max_allowed` - Maximum number of rate limiters allowed on the connection.
+* `in_use` - Number of rate limiters currently in use.
+* `remaining` - Number of rate limiters remaining (available).
+* `total_bandwidth` - Total bandwidth allocated across all rate limiters.
 
 ## Import
 

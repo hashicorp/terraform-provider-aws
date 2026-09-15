@@ -20,6 +20,9 @@ data "aws_imagebuilder_distribution_configuration" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the distribution configuration.
 
 ## Attribute Reference
@@ -33,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
     * `ami_distribution_configuration` - Nested list of AMI distribution configuration.
         * `ami_tags` - Key-value map of tags to apply to distributed AMI.
         * `description` - Description to apply to distributed AMI.
-        * `kms_key_id` - ARN of Key Management Service (KMS) Key to encrypt AMI.
+        * `kms_key_id` - ARN of KMS Key to encrypt AMI.
         * `launch_permission` - Nested list of EC2 launch permissions.
             * `organization_arns` - Set of AWS Organization ARNs.
             * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.
@@ -60,7 +63,16 @@ This data source exports the following attributes in addition to the arguments a
         * `default` - Whether the specified Amazon EC2 launch template is set as the default launch template.
         * `launch_template_id` - ID of the Amazon EC2 launch template.
         * `account_id` - The account ID that this configuration applies to.
-    * `license_configuration_arns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
+    * `license_configuration_arns` - Set of ARNs of License Manager License Configurations.
     * `region` - AWS Region of distribution.
+    * `s3_export_configuration` - Nested list of S3 export configuration.
+        * `disk_image_format` - The disk image format of the exported image (`RAW`, `VHD`, or `VMDK`)
+        * `role_name` - The name of the IAM role to use for exporting.
+        * `s3_bucket` - The name of the S3 bucket to store the exported image in.
+        * `s3_prefix` - The prefix for the exported image.
+    * `ssm_parameter_configuration` - Nested list of SSM parameter configuration.
+        * `parameter_name` - Name of the SSM parameter used to store the AMI ID after distribution.
+        * `ami_account_id` - The AWS account ID that own the parameter in the given region.
+        * `data_type` - The data type of the SSM parameter.
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.

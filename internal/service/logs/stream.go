@@ -1,71 +1,79 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_log_stream")
+// @SDKResource("aws_cloudwatch_log_stream", name="Stream")
+// @IdentityAttribute("log_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("streamImportID")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogStream")
+// @Testing(importStateIdFunc=testAccStreamImportStateIDFunc)
+// @Testing(importStateIdAttribute="name")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
 		ReadWithoutTimeout:   resourceStreamRead,
 		DeleteWithoutTimeout: resourceStreamDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: resourceStreamImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLogGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validStreamName,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLogGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogStreamName,
+				},
+			}
 		},
 	}
 }
 
-func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.CreateLogStreamInput{
+	input := cloudwatchlogs.CreateLogStreamInput{
 		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(name),
 	}
 
-	_, err := conn.CreateLogStream(ctx, input)
+	_, err := conn.CreateLogStream(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Log Stream (%s): %s", name, err)
@@ -73,7 +81,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findLogStreamByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Id())
 	})
 
@@ -84,14 +92,13 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	ls, err := findLogStreamByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -101,24 +108,23 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ls.Arn)
-	d.Set(names.AttrName, ls.LogStreamName)
+	resourceStreamFlatten(ctx, d, *ls)
 
 	return diags
 }
 
-func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
-	_, err := conn.DeleteLogStream(ctx, &cloudwatchlogs.DeleteLogStreamInput{
+	input := cloudwatchlogs.DeleteLogStreamInput{
 		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLogStream(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -129,62 +135,97 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), ":")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'log-group-name:log-stream-name'", d.Id())
-	}
-
-	logGroupName := parts[0]
-	logStreamName := parts[1]
-
-	d.SetId(logStreamName)
-	d.Set(names.AttrLogGroupName, logGroupName)
-
-	return []*schema.ResourceData{d}, nil
+func resourceStreamFlatten(_ context.Context, d *schema.ResourceData, ls awstypes.LogStream) {
+	d.Set(names.AttrARN, ls.Arn)
+	d.Set(names.AttrName, ls.LogStreamName)
 }
 
-func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	input := &cloudwatchlogs.DescribeLogStreamsInput{
+func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+	input := cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(name),
 	}
 
-	pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.LogStreams {
-			if aws.ToString(v.LogStreamName) == name {
-				return &v, nil
-			}
-		}
-	}
-
-	return nil, tfresource.NewEmptyResultError(input)
+	return findLogStream(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.LogStream) bool {
+		return aws.ToString(v.LogStreamName) == name
+	}), tfslices.WithReturnFirstMatch[awstypes.LogStream]())
 }
 
-func validStreamName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if regexache.MustCompile(`:`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"colons not allowed in %q:", k))
-	}
-	if len(value) < 1 || len(value) > 512 {
-		errors = append(errors, fmt.Errorf(
-			"%q must be between 1 and 512 characters: %q", k, value))
+func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogStream]) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+	output, err := findLogStreams(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogStream]) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+	output, err := tfslices.CollectAndConcatWithError(listLogStreamPages(ctx, conn, input), optFns...)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func listLogStreamPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogStream, error] { // nosemgrep:ci.logs-in-func-name
+	return func(yield func([]awstypes.LogStream, error) bool) {
+		pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Log Streams: %w", err))
+				return
+			}
+
+			if !yield(page.LogStreams, nil) {
+				return
+			}
+		}
+	}
+}
+
+const streamImportIDSeparator = ":"
+
+func streamParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, streamImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <log-group-name>%[2]s<log-stream-name>", id, streamImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = streamImportID{}
+)
+
+type streamImportID struct{}
+
+func (streamImportID) Parse(id string) (string, map[string]any, error) {
+	logGroupName, logStreamName, err := streamParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrLogGroupName: logGroupName,
+		names.AttrName:         logStreamName,
+	}
+
+	return logStreamName, result, nil
+}
+
+func (streamImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }

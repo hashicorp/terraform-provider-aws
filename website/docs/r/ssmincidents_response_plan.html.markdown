@@ -10,6 +10,8 @@ description: |-
 
 Provides a Terraform resource to manage response plans in AWS Systems Manager Incident Manager.
 
+~> NOTE: A response plan implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform ResponsePlan Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -101,38 +103,31 @@ resource "aws_ssmincidents_response_plan" "example" {
 
 ## Argument Reference
 
-~> NOTE: A response plan implicitly depends on a replication set. If you configured your replication set in Terraform,
-we recommend you add it to the `depends_on` argument for the Terraform ResponsePlan Resource.
+This resource supports the following arguments:
 
-The following arguments are required:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the response plan.
-
-The `incident_template` configuration block is required and supports the following arguments:
-
-* `title` - (Required) The title of a generated incident.
-* `impact` - (Required) The impact value of a generated incident. The following values are supported:
-    * `1` - Severe Impact
-    * `2` - High Impact
-    * `3` - Medium Impact
-    * `4` - Low Impact
-    * `5` - No Impact
-* `dedupe_string` - (Optional) A string used to stop Incident Manager from creating multiple incident records for the same incident.
-* `incident_tags` - (Optional) The tags assigned to an incident template. When an incident starts, Incident Manager assigns the tags specified in the template to the incident.
-* `summary` - (Optional) The summary of an incident.
-* `notification_target` - (Optional) The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notification_target` configuration block supports the following argument:
-    * `sns_topic_arn` - (Required) The ARN of the Amazon SNS topic.
-
-The following arguments are optional:
-
+* `incident_template` - (Required) The `incident_template` configuration block is required and supports the following arguments:
+    * `title` - (Required) The title of a generated incident.
+    * `impact` - (Required) The impact value of a generated incident. The following values are supported:
+        * `1` - Severe Impact
+        * `2` - High Impact
+        * `3` - Medium Impact
+        * `4` - Low Impact
+        * `5` - No Impact
+    * `dedupe_string` - (Optional) A string used to stop Incident Manager from creating multiple incident records for the same incident.
+    * `incident_tags` - (Optional) The tags assigned to an incident template. When an incident starts, Incident Manager assigns the tags specified in the template to the incident.
+    * `summary` - (Optional) The summary of an incident.
+    * `notification_target` - (Optional) The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notification_target` configuration block supports the following argument:
+        * `sns_topic_arn` - (Required) The ARN of the Amazon SNS topic.
 * `tags` - (Optional) The tags applied to the response plan.
 * `display_name` - (Optional) The long format of the response plan name. This field can contain spaces.
 * `chat_channel` - (Optional) The Chatbot chat channel used for collaboration during an incident.
-* `engagements` - (Optional) The Amazon Resource Name (ARN) for the contacts and escalation plans that the response plan engages during an incident.
+* `engagements` - (Optional) ARN for the contacts and escalation plans that the response plan engages during an incident.
 * `action` - (Optional) The actions that the response plan starts at the beginning of an incident.
     * `ssm_automation` - (Optional) The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
         * `document_name` - (Required) The automation document's name.
-        * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs commands.
+        * `role_arn` - (Required) The ARN of the role that the automation document assumes when it runs commands.
         * `document_version` - (Optional) The version of the automation document to use at runtime.
         * `target_account` -  (Optional) The account that the automation document runs in. This can be in either the management account or an application account.
         * `parameter` - (Optional) The key-value pair parameters to use when the automation document runs. The following values are supported:

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_instances.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -27,9 +26,9 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
@@ -39,11 +38,11 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 
 func TestAccRDSInstancesDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_instances.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -51,9 +50,9 @@ func TestAccRDSInstancesDataSource_matchTags(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},

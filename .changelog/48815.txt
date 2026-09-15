@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix `Provider produced inconsistent result after apply` error for `environment`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Adds attribute `environment_actual`
+```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -16,14 +18,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,6 +46,11 @@ var (
 )
 
 // @SDKResource("aws_connect_instance", name="Instance")
+// @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="6.14.1")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -50,108 +58,109 @@ func resourceInstance() *schema.Resource {
 		UpdateWithoutTimeout: resourceInstanceUpdate,
 		DeleteWithoutTimeout: resourceInstanceDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_resolve_best_voices_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true, //verified default result from ListInstanceAttributes()
-			},
-			"contact_flow_logs_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false, //verified default result from ListInstanceAttributes()
-			},
-			"contact_lens_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true, //verified default result from ListInstanceAttributes()
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(12, 12),
-				AtLeastOneOf: []string{"directory_id", "instance_alias"},
-			},
-			"early_media_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true, //verified default result from ListInstanceAttributes()
-			},
-			"identity_management_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
-			},
-			"inbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"instance_alias": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{"directory_id", "instance_alias"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
-				),
-			},
-			"multi_party_conference_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false, //verified default result from ListInstanceAttributes()
-			},
-			"outbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			names.AttrServiceRole: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
-			// "use_custom_tts_voices_enabled": {
-			// 	Type:     schema.TypeBool,
-			// 	Optional: true,
-			// 	Default:  false, //verified default result from ListInstanceAttributes()
-			// },
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_resolve_best_voices_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true, //verified default result from ListInstanceAttributes()
+				},
+				"contact_flow_logs_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false, //verified default result from ListInstanceAttributes()
+				},
+				"contact_lens_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true, //verified default result from ListInstanceAttributes()
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(12, 12),
+					AtLeastOneOf: []string{"directory_id", "instance_alias"},
+				},
+				"early_media_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true, //verified default result from ListInstanceAttributes()
+				},
+				"identity_management_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
+				},
+				"inbound_calls_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"instance_alias": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{"directory_id", "instance_alias"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
+					),
+				},
+				"multi_party_conference_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false, //verified default result from ListInstanceAttributes()
+				},
+				"outbound_calls_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				names.AttrServiceRole: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
+				// "use_custom_tts_voices_enabled": {
+				// 	Type:     schema.TypeBool,
+				// 	Optional: true,
+				// 	Default:  false, //verified default result from ListInstanceAttributes()
+				// },
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	input := &connect.CreateInstanceInput{
-		ClientToken:            aws.String(id.UniqueId()),
+		ClientToken:            aws.String(create.UniqueId(ctx)),
 		IdentityManagementType: awstypes.DirectoryType(d.Get("identity_management_type").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("directory_id"); ok {
@@ -181,13 +190,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -212,10 +221,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	setTagsOut(ctx, instance.Tags)
+
 	return diags
 }
 
-func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -223,17 +234,18 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return diags
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
-	_, err := conn.DeleteInstance(ctx, &connect.DeleteInstanceInput{
+	input := connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -326,8 +338,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -336,7 +347,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	}
 
 	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Instance, nil
@@ -356,8 +367,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -366,17 +376,17 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	}
 
 	if output == nil || output.Attribute == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attribute, nil
 }
 
-func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstance(conn *connect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -392,7 +402,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.InstanceStatusActive),
-		Refresh: statusInstance(ctx, conn, id),
+		Refresh: statusInstance(conn, id),
 		Timeout: timeout,
 	}
 
@@ -400,7 +410,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err
@@ -413,7 +423,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusActive),
 		Target:  []string{},
-		Refresh: statusInstance(ctx, conn, id),
+		Refresh: statusInstance(conn, id),
 		Timeout: timeout,
 	}
 
@@ -421,7 +431,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err

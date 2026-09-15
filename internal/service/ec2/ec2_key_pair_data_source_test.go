@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -16,7 +16,7 @@ import (
 
 func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_key_pair.by_id"
 	dataSource2Name := "data.aws_key_pair.by_name"
 	dataSource3Name := "data.aws_key_pair.by_filter"
@@ -27,7 +27,7 @@ func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,7 +60,7 @@ func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 
 func TestAccEC2KeyPairDataSource_includePublicKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_key_pair.by_name"
 	resourceName := "aws_key_pair.test"
 
@@ -69,7 +69,7 @@ func TestAccEC2KeyPairDataSource_includePublicKey(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -11,9 +11,9 @@ description: |-
 Creates an Amazon CloudFront origin access identity.
 
 For information about CloudFront distributions, see the
-[Amazon CloudFront Developer Guide][1]. For more information on generating
+[Amazon CloudFront Developer Guide](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html). For more information on generating
 origin access identities, see
-[Using an Origin Access Identity to Restrict Access to Your Amazon S3 Content][2].
+[Using an Origin Access Identity to Restrict Access to Your Amazon S3 Content](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html).
 
 ## Example Usage
 
@@ -25,35 +25,13 @@ resource "aws_cloudfront_origin_access_identity" "example" {
 }
 ```
 
-## Argument Reference
-
-* `comment` (Optional) - An optional comment for the origin access identity.
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
-* `caller_reference` - Internal value used by CloudFront to allow future
-   updates to the origin access identity.
-* `cloudfront_access_identity_path` - A shortcut to the full path for the
-   origin access identity to use in CloudFront, see below.
-* `etag` - The current version of the origin access identity's information.
-   For example: `E2QWRUHAPOMQZL`.
-* `iam_arn` - A pre-generated ARN for use in S3 bucket policies (see below).
-   Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
-   E2QWRUHAPOMQZL`.
-* `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
-   access identity, which you use when giving the origin access identity read
-   permission to an object in Amazon S3.
-
-## Using With CloudFront
+### Using With CloudFront
 
 Normally, when referencing an origin access identity in CloudFront, you need to
 prefix the ID with the `origin-access-identity/cloudfront/` special path.
 The `cloudfront_access_identity_path` allows this to be circumvented.
 The below snippet demonstrates use with the `s3_origin_config` structure for the
-[`aws_cloudfront_distribution`][3] resource:
+[`aws_cloudfront_distribution`](/docs/providers/aws/r/cloudfront_distribution.html) resource:
 
 ```terraform
 resource "aws_cloudfront_distribution" "example" {
@@ -67,11 +45,11 @@ resource "aws_cloudfront_distribution" "example" {
 }
 ```
 
-### Updating your bucket policy
+#### Updating your bucket policy
 
 Note that the AWS API may translate the `s3_canonical_user_id` `CanonicalUser`
 principal into an `AWS` IAM ARN principal when supplied in an
-[`aws_s3_bucket`][4] bucket policy, causing spurious diffs in Terraform. If
+[`aws_s3_bucket`](/docs/providers/aws/r/s3_bucket.html) bucket policy, causing spurious diffs in Terraform. If
 you see this behavior, use the `iam_arn` instead:
 
 ```terraform
@@ -93,10 +71,30 @@ resource "aws_s3_bucket_policy" "example" {
 }
 ```
 
-[1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
-[3]: /docs/providers/aws/r/cloudfront_distribution.html
-[4]: /docs/providers/aws/r/s3_bucket.html
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `comment` (Optional) - An optional comment for the origin access identity.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The origin access identity ARN.
+* `caller_reference` - Internal value used by CloudFront to allow future
+   updates to the origin access identity.
+* `cloudfront_access_identity_path` - A shortcut to the full path for the
+   origin access identity to use in CloudFront, see below.
+* `etag` - The current version of the origin access identity's information.
+   For example: `E2QWRUHAPOMQZL`.
+* `iam_arn` - A pre-generated ARN for use in S3 bucket policies (see below).
+   Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
+   E2QWRUHAPOMQZL`.
+* `id` - The identifier for the origin access identity.
+* `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
+   access identity, which you use when giving the origin access identity read
+   permission to an object in Amazon S3.
 
 ## Import
 

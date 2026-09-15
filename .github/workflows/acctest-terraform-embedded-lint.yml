@@ -1,0 +1,79 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Acceptance Test Embedded Configuration Linting
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - .github/workflows/acctest-terraform-embedded-lint.yml
+      - .ci/.tflint.hcl
+      - .ci/.tflint_opa.hcl
+      - .ci/opa-policies/**
+      - .ci/scripts/validate-terraform.sh
+      - .ci/tools/go.mod
+      - go.sum
+      - 'internal/service/**/*_test.go'
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+permissions:
+  contents: read # required for checkout
+
+jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
+  terrafmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: github.com/katbyte/terrafmt
+
+      - run: |
+          find ./internal/service -type f -name '*_test.go' \
+            | sort -u \
+            | xargs -I {} terrafmt diff --check --fmtcompat {}
+
+  tflint:
+    name: Validate Acceptance Test Terraform
+    needs: tflint-opa-policy-tests
+    runs-on: custom-ubuntu-22.04-xl
+    strategy:
+      matrix:
+        path: ['[a-f]', '[g-z]']
+    env:
+      TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: |
+            github.com/katbyte/terrafmt
+            github.com/terraform-linters/tflint
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        name: Cache plugin dir
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} | wc -l | xargs )"
+      - run: |
+          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
+            | .ci/scripts/validate-terraform.sh
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies

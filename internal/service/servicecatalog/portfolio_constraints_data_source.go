@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -25,58 +27,60 @@ func dataSourcePortfolioConstraints() *schema.Resource {
 			Read: schema.DefaultTimeout(PortfolioConstraintsReadyTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"constraint_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrOwner: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"portfolio_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				"details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"constraint_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrOwner: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"portfolio_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"product_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"portfolio_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"portfolio_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -109,8 +113,8 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConstraintId; v != nil {
 		tfMap["constraint_id"] = aws.ToString(v)
@@ -139,12 +143,12 @@ func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]int
 	return tfMap
 }
 
-func flattenConstraintDetails(apiObjects []awstypes.ConstraintDetail) []interface{} {
+func flattenConstraintDetails(apiObjects []awstypes.ConstraintDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenConstraintDetail(apiObject))

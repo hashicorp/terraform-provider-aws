@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,9 +17,9 @@ func TestAccRedshiftServerlessNamespaceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_redshiftserverless_namespace.test"
 	resourceName := "aws_redshiftserverless_namespace.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,9 +31,9 @@ func TestAccRedshiftServerlessNamespaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_iam_role_arn", resourceName, "default_iam_role_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "iam_roles.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "iam_roles.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
-					resource.TestCheckResourceAttr(dataSourceName, "log_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "log_exports.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_name", resourceName, "namespace_name"),
 				),
@@ -48,9 +47,9 @@ func TestAccRedshiftServerlessNamespaceDataSource_iamRole(t *testing.T) {
 	dataSourceName := "data.aws_redshiftserverless_namespace.test"
 	resourceName := "aws_redshiftserverless_namespace.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,7 +59,7 @@ func TestAccRedshiftServerlessNamespaceDataSource_iamRole(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_name", resourceName, "namespace_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_iam_role_arn", resourceName, "default_iam_role_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "iam_roles.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "iam_roles.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "iam_roles.*", "aws_iam_role.test", names.AttrARN),
 				),
 			},
@@ -73,10 +72,10 @@ func TestAccRedshiftServerlessNamespaceDataSource_user(t *testing.T) {
 	dataSourceName := "data.aws_redshiftserverless_namespace.test"
 	resourceName := "aws_redshiftserverless_namespace.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	username := "admin_user"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,10 +96,10 @@ func TestAccRedshiftServerlessNamespaceDataSource_logExports(t *testing.T) {
 	dataSourceName := "data.aws_redshiftserverless_namespace.test"
 	resourceName := "aws_redshiftserverless_namespace.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	logExport := "userlog"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -109,7 +108,7 @@ func TestAccRedshiftServerlessNamespaceDataSource_logExports(t *testing.T) {
 				Config: testAccNamespaceDataSourceConfig_logExports(rName, logExport),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_name", resourceName, "namespace_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "log_exports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "log_exports.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "log_exports.0", logExport),
 				),
 			},

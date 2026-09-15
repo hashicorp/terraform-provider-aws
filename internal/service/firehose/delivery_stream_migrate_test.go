@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package firehose_test
@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,7 +18,7 @@ func TestMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0.6.16 and earlier": {
 			StateVersion: 0,
@@ -28,14 +27,14 @@ func TestMigrateState(t *testing.T) {
 				names.AttrRoleARN:     "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
 				"s3_bucket_arn":       "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 				"s3_buffer_interval":  "400",
-				"s3_buffer_size":      acctest.Ct10,
+				"s3_buffer_size":      "10",
 				"s3_data_compression": "GZIP",
 			},
 			Expected: map[string]string{
-				"s3_configuration.#":                    acctest.Ct1,
+				"s3_configuration.#":                    "1",
 				"s3_configuration.0.bucket_arn":         "arn:aws:s3:::tf-test-bucket", //lintignore:AWSAT005
 				"s3_configuration.0.buffer_interval":    "400",
-				"s3_configuration.0.buffer_size":        acctest.Ct10,
+				"s3_configuration.0.buffer_size":        "10",
 				"s3_configuration.0.compression_format": "GZIP",
 				"s3_configuration.0.role_arn":           "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
 			},
@@ -48,7 +47,7 @@ func TestMigrateState(t *testing.T) {
 				"s3_bucket_arn":   "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 			},
 			Expected: map[string]string{
-				"s3_configuration.#":            acctest.Ct1,
+				"s3_configuration.#":            "1",
 				"s3_configuration.0.bucket_arn": "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 				"s3_configuration.0.role_arn":   "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
 			},

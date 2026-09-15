@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package docdb
 
@@ -19,60 +21,62 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_docdb_engine_version")
-func DataSourceEngineVersion() *schema.Resource {
+// @SDKDataSource("aws_docdb_engine_version", name="Engine Version")
+func dataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  engineDocDB,
-			},
-			"engine_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"exportable_log_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"parameter_group_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"preferred_versions": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrVersion},
-			},
-			"supports_log_exports_to_cloudwatch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"valid_upgrade_targets": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrVersion: {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"preferred_versions"},
-			},
-			"version_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  engineDocDB,
+				},
+				"engine_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"exportable_log_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"parameter_group_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"preferred_versions": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{names.AttrVersion},
+				},
+				"supports_log_exports_to_cloudwatch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"valid_upgrade_targets": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrVersion: {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"preferred_versions"},
+				},
+				"version_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -96,7 +100,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	var engineVersion *awstypes.DBEngineVersion
 	var err error
-	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]interface{})); len(preferredVersions) > 0 {
+	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]any)); len(preferredVersions) > 0 {
 		var engineVersions []awstypes.DBEngineVersion
 
 		engineVersions, err = findEngineVersions(ctx, conn, input)
@@ -115,7 +119,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			if engineVersion == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {

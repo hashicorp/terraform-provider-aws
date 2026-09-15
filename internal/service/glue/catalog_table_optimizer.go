@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -10,15 +12,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -26,13 +29,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_glue_catalog_table_optimizer",name="Catalog Table Optimizer")
-func newResourceCatalogTableOptimizer(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCatalogTableOptimizer{}
+func newCatalogTableOptimizerResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &catalogTableOptimizerResource{}
 
 	return r, nil
 }
@@ -43,15 +47,11 @@ const (
 	idParts = 4
 )
 
-type resourceCatalogTableOptimizer struct {
-	framework.ResourceWithConfigure
+type catalogTableOptimizerResource struct {
+	framework.ResourceWithModel[catalogTableOptimizerResourceModel]
 }
 
-func (r *resourceCatalogTableOptimizer) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_glue_catalog_table_optimizer"
-}
-
-func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCatalogID: schema.StringAttribute{
@@ -97,6 +97,111 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 							Required:   true,
 						},
 					},
+					Blocks: map[string]schema.Block{
+						"retention_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[retentionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergRetentionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"clean_expired_files": schema.BoolAttribute{
+													Optional: true,
+												},
+												"number_of_snapshots_to_retain": schema.Int32Attribute{
+													Optional: true,
+												},
+												"run_rate_in_hours": schema.Int32Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
+													},
+												},
+												"snapshot_retention_period_in_days": schema.Int32Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"orphan_file_deletion_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[orphanFileDeletionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergOrphanFileDeletionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrLocation: schema.StringAttribute{
+													Optional: true,
+												},
+												"orphan_file_retention_period_in_days": schema.Int32Attribute{
+													Optional: true,
+												},
+												"run_rate_in_hours": schema.Int32Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"compaction_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[compactionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergCompactionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"strategy": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.CompactionStrategy](),
+													Optional:   true,
+													Computed:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
+												},
+												"min_input_files": schema.Int32Attribute{
+													Optional: true,
+												},
+												"delete_file_threshold": schema.Int32Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -105,9 +210,9 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 	response.Schema = s
 }
 
-func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *catalogTableOptimizerResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var plan resourceCatalogTableOptimizerData
+	var plan catalogTableOptimizerResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -122,28 +227,24 @@ func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request reso
 		return
 	}
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.CreateTableOptimizer(ctx, &input)
 		if err != nil {
 			// Retry IAM propagation errors
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "does not have the correct trust policies and is unable to be assumed by our service") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "does not have the proper IAM permissions to call Glue APIs") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateTableOptimizer(ctx, &input)
-	}
 
 	if err != nil {
 		id, _ := flex.FlattenResourceId([]string{
@@ -160,12 +261,33 @@ func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request reso
 		return
 	}
 
+	output, err := findCatalogTableOptimizer(ctx, conn, plan.CatalogID.ValueString(), plan.DatabaseName.ValueString(), plan.TableName.ValueString(), plan.Type.ValueString())
+	if err != nil {
+		id, _ := flex.FlattenResourceId([]string{
+			plan.CatalogID.ValueString(),
+			plan.DatabaseName.ValueString(),
+			plan.TableName.ValueString(),
+			plan.Type.ValueString(),
+		}, idParts, false)
+
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, ResNameCatalogTableOptimizer, id, err),
+			err.Error(),
+		)
+		return
+	}
+
+	plan.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *catalogTableOptimizerResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var data resourceCatalogTableOptimizerData
+	var data catalogTableOptimizerResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -175,7 +297,7 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 
 	output, err := findCatalogTableOptimizer(ctx, conn, data.CatalogID.ValueString(), data.DatabaseName.ValueString(), data.TableName.ValueString(), data.Type.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -196,8 +318,7 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &data)...)
-
+	data.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -205,10 +326,10 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCatalogTableOptimizer) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *catalogTableOptimizerResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().GlueClient(ctx)
 
-	var plan, state resourceCatalogTableOptimizerData
+	var plan, state catalogTableOptimizerResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -240,14 +361,34 @@ func (r *resourceCatalogTableOptimizer) Update(ctx context.Context, request reso
 			)
 			return
 		}
+		output, err := findCatalogTableOptimizer(ctx, conn, plan.CatalogID.ValueString(), plan.DatabaseName.ValueString(), plan.TableName.ValueString(), plan.Type.ValueString())
+		if err != nil {
+			id, _ := flex.FlattenResourceId([]string{
+				plan.CatalogID.ValueString(),
+				plan.DatabaseName.ValueString(),
+				plan.TableName.ValueString(),
+				plan.Type.ValueString(),
+			}, idParts, false)
+
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Glue, create.ErrActionReading, ResNameCatalogTableOptimizer, id, err),
+				err.Error(),
+			)
+			return
+		}
+
+		plan.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *catalogTableOptimizerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var data resourceCatalogTableOptimizerData
+	var data catalogTableOptimizerResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -255,7 +396,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]any{
 		names.AttrCatalogID:    data.CatalogID.ValueString(),
 		names.AttrDatabaseName: data.DatabaseName.ValueString(),
 		names.AttrTableName:    data.TableName.ValueString(),
@@ -289,7 +430,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *catalogTableOptimizerResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts, err := flex.ExpandResourceId(request.ID, idParts, false)
 
 	if err != nil {
@@ -306,7 +447,30 @@ func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[3])...)
 }
 
-type resourceCatalogTableOptimizerData struct {
+func (c *catalogTableOptimizerResourceModel) flatten(ctx context.Context, data *awstypes.TableOptimizer, diags *diag.Diagnostics) {
+	configuration, d := c.Configuration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	// CompactionConfiguration causes persistent drift since the AWS API returns defaults.
+	// suppress it being flattened if it is not in plan or state
+	if configuration != nil && !configuration.CompactionConfiguration.IsNull() {
+		diags.Append(fwflex.Flatten(ctx, data, c)...)
+		if diags.HasError() {
+			return
+		}
+	} else {
+		diags.Append(fwflex.Flatten(ctx, data, c, fwflex.WithIgnoredFieldNamesAppend("CompactionConfiguration"))...)
+		if diags.HasError() {
+			return
+		}
+	}
+}
+
+type catalogTableOptimizerResourceModel struct {
+	framework.WithRegionModel
 	CatalogID     types.String                                       `tfsdk:"catalog_id"`
 	Configuration fwtypes.ListNestedObjectValueOf[configurationData] `tfsdk:"configuration"`
 	DatabaseName  types.String                                       `tfsdk:"database_name"`
@@ -315,8 +479,42 @@ type resourceCatalogTableOptimizerData struct {
 }
 
 type configurationData struct {
-	Enabled types.Bool  `tfsdk:"enabled"`
-	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
+	Enabled                         types.Bool                                                           `tfsdk:"enabled"`
+	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
+	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
+	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
+}
+
+type retentionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergRetentionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergRetentionConfigurationData struct {
+	CleanExpiredFiles             types.Bool  `tfsdk:"clean_expired_files"`
+	NumberOfSnapshotsToRetain     types.Int32 `tfsdk:"number_of_snapshots_to_retain"`
+	RunRateInHours                types.Int32 `tfsdk:"run_rate_in_hours"`
+	SnapshotRetentionPeriodInDays types.Int32 `tfsdk:"snapshot_retention_period_in_days"`
+}
+
+type orphanFileDeletionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergOrphanFileDeletionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergOrphanFileDeletionConfigurationData struct {
+	Location                        types.String `tfsdk:"location"`
+	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
+	RunRateInHours                  types.Int32  `tfsdk:"run_rate_in_hours"`
+}
+
+type compactionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergCompactionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergCompactionConfigurationData struct {
+	DeleteFileThreshold types.Int32                                     `tfsdk:"delete_file_threshold"`
+	MinInputFiles       types.Int32                                     `tfsdk:"min_input_files"`
+	Strategy            fwtypes.StringEnum[awstypes.CompactionStrategy] `tfsdk:"strategy"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
@@ -331,8 +529,7 @@ func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -341,7 +538,7 @@ func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

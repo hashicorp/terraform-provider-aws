@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -22,61 +24,63 @@ func dataSourceSDK() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSDKRead,
 
-		Schema: map[string]*schema.Schema{
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sdk_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"java", "javascript", "android", "objectivec", "swift", "ruby"}, false),
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sdk_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice([]string{"java", "javascript", "android", "objectivec", "swift", "ruby"}, false),
+				},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	stageName := d.Get("stage_name").(string)
 	sdkType := d.Get("sdk_type").(string)
-	input := &apigateway.GetSdkInput{
+	input := apigateway.GetSdkInput{
 		RestApiId: aws.String(apiID),
 		SdkType:   aws.String(sdkType),
 		StageName: aws.String(stageName),
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	id := apiID + ":" + stageName + ":" + sdkType
 
-	sdk, err := conn.GetSdk(ctx, input)
+	sdk, err := conn.GetSdk(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway SDK (%s): %s", id, err)

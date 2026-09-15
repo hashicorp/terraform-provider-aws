@@ -1,20 +1,26 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package meta
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("aws_service_principal", name="Service Principal")
+// @Region(validateOverrideInPartition=false)
 func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &servicePrincipalDataSource{}
 
@@ -22,24 +28,14 @@ func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type servicePrincipalDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*servicePrincipalDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service_principal"
+	framework.DataSourceWithModel[servicePrincipalDataSourceModel]
 }
 
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: datasourceattribute.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrServiceName: schema.StringAttribute{
@@ -59,55 +55,65 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	var region *endpoints.Region
+	name := d.Meta().Region(ctx)
+	region, err := findRegionByName(ctx, name)
 
-	// find the region given by the user
-	if !data.Region.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Region.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
-		if err != nil {
-			response.Diagnostics.AddError("finding Region by name", err.Error())
-
-			return
-		}
-
-		region = matchingRegion
+		return
 	}
 
-	// Default to provider current region if no other filters matched
-	if region == nil {
-		matchingRegion, err := FindRegionByName(d.Meta().Region)
+	regionID := region.ID()
+	serviceName := fwflex.StringValueFromFramework(ctx, data.ServiceName)
+	sourceServicePrincipal := servicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
 
-		if err != nil {
-			response.Diagnostics.AddError("finding Region using the provider", err.Error())
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+regionID+"."+sourceServicePrincipal)
+	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+sourceServicePrincipal)
+	data.Suffix = fwflex.StringValueToFrameworkLegacy(ctx, sourceServicePrincipal)
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
 
-			return
-		}
-
-		region = matchingRegion
-	}
-
-	partition := names.PartitionForRegion(region.ID())
-
-	serviceName := ""
-
-	if !data.ServiceName.IsNull() {
-		serviceName = data.ServiceName.ValueString()
-	}
-
-	SourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
-
-	data.ID = types.StringValue(serviceName + "." + region.ID() + "." + SourceServicePrincipal)
-	data.Name = types.StringValue(serviceName + "." + SourceServicePrincipal)
-	data.Suffix = types.StringValue(SourceServicePrincipal)
-	data.Region = types.StringValue(region.ID())
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type servicePrincipalDataSourceModel struct {
+	framework.WithRegionModel
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
-	Region      types.String `tfsdk:"region"`
 	ServiceName types.String `tfsdk:"service_name"`
 	Suffix      types.String `tfsdk:"suffix"`
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func servicePrincipalNameForPartition(service string, partition endpoints.Partition) string {
+	if partitionID := partition.ID(); service != "" && partitionID != endpoints.AwsPartitionID {
+		switch partitionID {
+		case endpoints.AwsIsoPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsIsoBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsCnPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs",
+				"ec2",
+				"s3":
+				return partition.DNSSuffix()
+			}
+		}
+	}
+
+	return "amazonaws.com"
 }

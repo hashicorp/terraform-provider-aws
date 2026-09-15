@@ -31,6 +31,7 @@ resource "aws_vpc_ipam_resource_discovery_association" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipam_id` - (Required) The ID of the IPAM to associate.
 * `ipam_resource_discovery_id` - (Required) The ID of the Resource Discovery to associate.
 * `tags` - (Optional) A map of tags to add to the IPAM resource discovery association resource.
@@ -39,14 +40,22 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of IPAM Resource Discovery Association.
+* `arn` - ARN of IPAM Resource Discovery Association.
 * `id` - The ID of the IPAM Resource Discovery Association.
 * `owner_id` - The account ID for the account that manages the Resource Discovery
-* `ipam_arn` - The Amazon Resource Name (ARN) of the IPAM.
+* `ipam_arn` - ARN of the IPAM.
 * `ipam_region` - The home region of the IPAM.
 * `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery.
 * `state` - The lifecycle state of the association when you associate or disassociate a resource discovery.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `update` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 

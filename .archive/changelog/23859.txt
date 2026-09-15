@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_eips: Set `public_ips` for VPC as well as EC2 Classic
-```

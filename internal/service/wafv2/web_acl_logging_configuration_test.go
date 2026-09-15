@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -9,37 +9,36 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFV2WebACLLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
@@ -54,34 +53,34 @@ func TestAccWAFV2WebACLLoggingConfiguration_basic(t *testing.T) {
 func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateTwoSingleHeaderRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"single_header.0.name": "referer",
+						"single_header.0.name": "sso.csrf",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "user-agent",
@@ -91,10 +90,10 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateSingleHeaderRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "user-agent",
 					}),
@@ -113,34 +112,34 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "method"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"method.#": acctest.Ct1,
+						"method.#": "1",
 					}),
 				),
 			},
@@ -157,34 +156,34 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing
 func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "query_string"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"query_string.#": acctest.Ct1,
+						"query_string.#": "1",
 					}),
 				),
 			},
@@ -201,34 +200,34 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *te
 func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"uri_path.#": acctest.Ct1,
+						"uri_path.#": "1",
 					}),
 				),
 			},
@@ -245,55 +244,55 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testin
 func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"uri_path.#": acctest.Ct1,
+						"uri_path.#": "1",
 					}),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateTwoRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"uri_path.#": acctest.Ct1,
+						"uri_path.#": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"method.#": acctest.Ct1,
+						"method.#": "1",
 					}),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateThreeRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"uri_path.#": acctest.Ct1,
+						"uri_path.#": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"query_string.#": acctest.Ct1,
+						"query_string.#": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "user-agent",
@@ -312,35 +311,35 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameNew := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &before),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(webACLResourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &after),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(webACLResourceName, names.AttrName, rNameNew),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
@@ -355,36 +354,36 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameNew := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &before),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(kinesisResourceName, names.AttrName, fmt.Sprintf("aws-waf-logs-%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateLogDestination(rName, rNameNew),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &after),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(kinesisResourceName, names.AttrName, fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
@@ -399,22 +398,30 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 func TestAccWAFV2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLLoggingConfiguration(), resourceName),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACLLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -423,23 +430,23 @@ func TestAccWAFV2WebACLLoggingConfiguration_disappears(t *testing.T) {
 func TestAccWAFV2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
@@ -454,34 +461,34 @@ func TestAccWAFV2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
 func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"uri_path.#": acctest.Ct1,
+						"uri_path.#": "1",
 					}),
 				),
 			},
@@ -497,23 +504,31 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing
 func TestAccWAFV2WebACLLoggingConfiguration_Disappears_webACL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACL(), webACLResourceName),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -522,29 +537,29 @@ func TestAccWAFV2WebACLLoggingConfiguration_Disappears_webACL(t *testing.T) {
 func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", acctest.Ct1),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "KEEP"),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
 						"behavior":    string(awstypes.FilterBehaviorKeep),
-						"condition.#": acctest.Ct1,
+						"condition.#": "1",
 						"requirement": string(awstypes.FilterRequirementMeetsAll),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
-						"action_condition.#":        acctest.Ct1,
+						"action_condition.#":        "1",
 						"action_condition.0.action": string(awstypes.ActionValueAllow),
 					}),
 				),
@@ -557,30 +572,30 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateFilterTwoFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", acctest.Ct1),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "DROP"),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
 						"behavior":    string(awstypes.FilterBehaviorKeep),
-						"condition.#": acctest.Ct1,
+						"condition.#": "1",
 						"requirement": string(awstypes.FilterRequirementMeetsAll),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
-						"action_condition.#":        acctest.Ct1,
+						"action_condition.#":        "1",
 						"action_condition.0.action": string(awstypes.ActionValueAllow),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
 						"behavior":    string(awstypes.FilterBehaviorDrop),
-						"condition.#": acctest.Ct2,
+						"condition.#": "2",
 						"requirement": string(awstypes.FilterRequirementMeetsAny),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
-						"action_condition.#":        acctest.Ct1,
+						"action_condition.#":        "1",
 						"action_condition.0.action": string(awstypes.ActionValueBlock),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
-						"label_name_condition.#":            acctest.Ct1,
+						"label_name_condition.#":            "1",
 						"label_name_condition.0.label_name": fmt.Sprintf("prefix:test:%s", rName),
 					}),
 				),
@@ -588,17 +603,17 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateFilterOneFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", acctest.Ct1),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "KEEP"),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
 						"behavior":    string(awstypes.FilterBehaviorKeep),
-						"condition.#": acctest.Ct1,
+						"condition.#": "1",
 						"requirement": string(awstypes.FilterRequirementMeetsAll),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
-						"action_condition.#":        acctest.Ct1,
+						"action_condition.#":        "1",
 						"action_condition.0.action": string(awstypes.ActionValueCount),
 					}),
 				),
@@ -611,26 +626,26 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", acctest.Ct0),
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckWebACLLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWebACLLoggingConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafv2_web_acl_logging_configuration" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 			_, err := tfwafv2.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -645,7 +660,7 @@ func testAccCheckWebACLLoggingConfigurationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckWebACLLoggingConfigurationExists(ctx context.Context, n string, v *awstypes.LoggingConfiguration) resource.TestCheckFunc {
+func testAccCheckWebACLLoggingConfigurationExists(ctx context.Context, t *testing.T, n string, v *awstypes.LoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -656,7 +671,7 @@ func testAccCheckWebACLLoggingConfigurationExists(ctx context.Context, n string,
 			return fmt.Errorf("No WAFv2 WebACL Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 		output, err := tfwafv2.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
@@ -801,7 +816,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
   redacted_fields {
     single_header {
-      name = "referer"
+      name = "sso.csrf"
     }
   }
 

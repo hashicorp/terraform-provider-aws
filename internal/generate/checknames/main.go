@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -10,7 +9,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,7 +22,7 @@ const (
 	lineOffset = 2 // 1 for skipping header line + 1 to translate from 0-based to 1-based index
 )
 
-// DocPrefix tests/column needs to be reworked for compatibility with tfproviderdocs
+// DocPrefix tests/column needs to be reworked for compatibility with the documentation linter
 type DocPrefix struct {
 	HumanFriendly  string
 	DocPrefixRegex []string
@@ -89,15 +87,15 @@ func main() {
 			}
 		}
 
-		if !l.ClientSDKV1() && !l.ClientSDKV2() && !l.Exclude() {
+		if !l.IsClientSDKV1() && !l.IsClientSDKV2() && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
+		if l.IsClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV2() && l.GoV2Package() == "" {
+		if l.IsClientSDKV2() && l.GoV2Package() == "" && l.ProviderPackage() != "meta" {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -163,6 +161,10 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, SDKID is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
+		if l.ARNNamespace() == "" && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, ARNNamespace is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+		}
+
 		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, EndpointAPICall is required for unless NotImplemented or Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
@@ -181,11 +183,11 @@ func main() {
 
 		allChecks++
 	}
-	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 40))
+	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 41))
 
 	var fileErrs bool
 
-	// DocPrefix needs to be reworked for compatibility with tfproviderdocs, in the meantime skip
+	// DocPrefix needs to be reworked for compatibility with the documentation linter, in the meantime skip
 	err = checkDocDir("../../../website/docs/r/", docPrefixes)
 	if err != nil {
 		fileErrs = true
@@ -220,7 +222,7 @@ func checkNotAllLowercase(i int, service, name, value string) {
 }
 
 func checkDocDir(dir string, prefixes []DocPrefix) error {
-	fs, err := ioutil.ReadDir(dir)
+	fs, err := os.ReadDir(dir)
 	if err != nil {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}
@@ -272,7 +274,7 @@ func checkDocFile(dir, name string, prefixes []DocPrefix) error {
 			sc := scanner.Text()
 			sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
 			if hf != sc {
-				return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", name, sc, hf)
+				return fmt.Errorf("file (%s) subcategory (%s) doesn't match HumanFriendly, expecting %s", name, sc, hf)
 			}
 		case 2:
 			continue

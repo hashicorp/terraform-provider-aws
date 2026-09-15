@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -10,37 +10,36 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var TapePool awstypes.PoolInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTapePoolDestroy(ctx),
+		CheckDestroy:             testAccCheckTapePoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTapePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					testAccCheckTapePoolExists(ctx, t, resourceName, &TapePool),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "0"),
 				),
 			},
 			{
@@ -55,24 +54,24 @@ func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 	ctx := acctest.Context(t)
 	var TapePool awstypes.PoolInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTapePoolDestroy(ctx),
+		CheckDestroy:             testAccCheckTapePoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTapePoolConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					testAccCheckTapePoolExists(ctx, t, resourceName, &TapePool),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "GOVERNANCE"),
-					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "1"),
 				),
 			},
 			{
@@ -87,20 +86,20 @@ func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var TapePool awstypes.PoolInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTapePoolDestroy(ctx),
+		CheckDestroy:             testAccCheckTapePoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTapePoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckTapePoolExists(ctx, t, resourceName, &TapePool),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -112,8 +111,8 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 			{
 				Config: testAccTapePoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckTapePoolExists(ctx, t, resourceName, &TapePool),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -121,8 +120,8 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 			{
 				Config: testAccTapePoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckTapePoolExists(ctx, t, resourceName, &TapePool),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -133,35 +132,43 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 func TestAccStorageGatewayTapePool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var storedIscsiVolume awstypes.PoolInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTapePoolDestroy(ctx),
+		CheckDestroy:             testAccCheckTapePoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTapePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTapePoolExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceTapePool(), resourceName),
+					testAccCheckTapePoolExists(ctx, t, resourceName, &storedIscsiVolume),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceTapePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_tape_pool.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_tape_pool.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckTapePoolExists(ctx context.Context, n string, v *awstypes.PoolInfo) resource.TestCheckFunc {
+func testAccCheckTapePoolExists(ctx context.Context, t *testing.T, n string, v *awstypes.PoolInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).StorageGatewayClient(ctx)
 
 		output, err := tfstoragegateway.FindTapePoolByARN(ctx, conn, rs.Primary.ID)
 
@@ -175,9 +182,9 @@ func testAccCheckTapePoolExists(ctx context.Context, n string, v *awstypes.PoolI
 	}
 }
 
-func testAccCheckTapePoolDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTapePoolDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).StorageGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_tape_pool" {
@@ -186,7 +193,7 @@ func testAccCheckTapePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfstoragegateway.FindTapePoolByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

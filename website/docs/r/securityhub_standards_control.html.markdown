@@ -37,19 +37,58 @@ resource "aws_securityhub_standards_control" "ensure_iam_password_policy_prevent
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `standards_control_arn` - (Required) The standards control ARN. See the AWS documentation for how to list existing controls using [`get-enabled-standards`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/get-enabled-standards.html) and [`describe-standards-controls`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/describe-standards-controls.html).
-* `control_status` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabled_reason` argument for `DISABLED` control status.
-* `disabled_reason` – (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `control_status` will be set to `DISABLED` automatically.
+* `control_status` - (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabled_reason` argument for `DISABLED` control status.
+* `disabled_reason` - (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `control_status` will be set to `DISABLED` automatically.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The standard control ARN.
-* `control_id` – The identifier of the security standard control.
-* `control_status_updated_at` – The date and time that the status of the security standard control was most recently updated.
-* `description` – The standard control longer description. Provides information about what the control is checking for.
-* `related_requirements` – The list of requirements that are related to this control.
-* `remediation_url` – A link to remediation information for the control in the Security Hub user documentation.
-* `severity_rating` – The severity of findings generated from this security standard control.
-* `title` – The standard control title.
+* `control_id` - The identifier of the security standard control.
+* `control_status_updated_at` - The date and time that the status of the security standard control was most recently updated.
+* `description` - The standard control longer description. Provides information about what the control is checking for.
+* `related_requirements` - The list of requirements that are related to this control.
+* `remediation_url` - A link to remediation information for the control in the Security Hub user documentation.
+* `severity_rating` - The severity of findings generated from this security standard control.
+* `title` - The standard control title.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control.example
+  identity = {
+    standards_control_arn = "arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+  }
+}
+
+resource "aws_securityhub_standards_control" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `standards_control_arn` (String) Standards control ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards controls using `standards_control_arn`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control.example
+  id = "arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+}
+```
+
+Using `terraform import`, import Security Hub standards controls using `standards_control_arn`. For example:
+
+```console
+% terraform import aws_securityhub_standards_control.example arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10
+```

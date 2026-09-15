@@ -1,35 +1,47 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_parameter", name="Parameter")
-// @Tags(identifierAttribute="id", resourceType="Parameter")
+// @Tags(identifierAttribute="name", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(plannableImportAction="NoOp")
+// @CustomImport
+// @Testing(identityTestCases="basic;leadingslash;path")
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -38,112 +50,159 @@ func resourceParameter() *schema.Resource {
 		DeleteWithoutTimeout: resourceParameterDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// We allow importing by ARN and versioned parameter in addition to named parameter
+				if id := d.Id(); id != "" {
+					if arn.IsARN(id) {
+						paramARN, err := arn.Parse(id)
+						if err != nil {
+							return nil, err
+						}
+						id = paramARN.Resource
+						// The resource part of the ARN is "parameter/<name>", where "<name>" is either a bare string
+						// or a path with leading slash. If there are any slashes in "<name>" (after the separating slash),
+						// we need to keep the leading slash, otherwise we must remove it.
+						id = strings.TrimPrefix(id, names.AttrParameter)
+						if !strings.Contains(id[1:], "/") {
+							id = strings.TrimPrefix(id, "/")
+						}
+						d.SetId(id)
+					}
+				}
+
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"data_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"aws:ec2:image",
-					"aws:ssm:integration",
-					"text",
-				}, false),
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"insecure_value": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"overwrite": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "this attribute has been deprecated",
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tier": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ParameterTier](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old != "" {
-						return awstypes.ParameterTier(new) == awstypes.ParameterTierIntelligentTiering
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ParameterType](),
-			},
-			names.AttrValue: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"data_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"aws:ec2:image",
+						"aws:ssm:integration",
+						"text",
+					}, false),
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"has_value_wo": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"insecure_value": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"overwrite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tier": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ParameterTier](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old != "" {
+							return awstypes.ParameterTier(new) == awstypes.ParameterTierIntelligentTiering
+						}
+						return false
+					},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ParameterType](),
+				},
+				names.AttrValue: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					Computed:     true,
+					ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+				},
+				"value_wo": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					WriteOnly:    true,
+					ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+					RequiredWith: []string{"value_wo_version"},
+				},
+				"value_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"value_wo"},
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta any) bool {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
-			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange(names.AttrValue)
+			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue) || diff.HasChange(names.AttrDescription)
 			}),
-			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")
 			}),
-			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange(names.AttrValue)
+			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if diff.NewValueKnown("insecure_value") {
+					return false
+				}
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue)
 			}),
-
-			verify.SetTagsDiff,
+			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("value_wo_version") || !diff.NewValueKnown("value_wo_version")
+			}),
 		),
 	}
 }
 
-func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -153,6 +212,17 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 		value = v
 	}
+
+	valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if valueWO != "" {
+		value = valueWO
+	}
+
 	input := &ssm.PutParameterInput{
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 		Name:           aws.String(name),
@@ -178,7 +248,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// AWS SSM Service only supports PutParameter requests with Tags
-	// iff Overwrite is not provided or is false; in this resource's case,
+	// if Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
 	tags := getTagsIn(ctx)
 	if !aws.ToBool(input.Overwrite) {
@@ -211,7 +281,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -220,11 +290,11 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		timeout = 2 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {
-			if d.IsNewResource() && tfresource.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
+			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
 				return true, err
 			}
 
@@ -232,7 +302,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		},
 	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -243,24 +313,10 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	param := outputRaw.(*awstypes.Parameter)
-	d.Set(names.AttrARN, param.ARN)
-	d.Set(names.AttrName, param.Name)
-	d.Set(names.AttrType, param.Type)
-	d.Set(names.AttrVersion, param.Version)
 
-	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
-		d.Set("insecure_value", param.Value)
-	} else {
-		d.Set(names.AttrValue, param.Value)
-	}
+	paramMetadata, err := findParameterMetadataByName(ctx, conn, aws.ToString(param.Name))
 
-	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
-		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
-	}
-
-	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -270,16 +326,57 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allowed_pattern", detail.AllowedPattern)
-	d.Set("data_type", detail.DataType)
-	d.Set(names.AttrDescription, detail.Description)
-	d.Set(names.AttrKeyID, detail.KeyId)
-	d.Set("tier", detail.Tier)
+	resourceParameterFlatten(d, param, paramMetadata)
+
+	hasWriteOnly := d.Get("has_value_wo").(bool)
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsNull() {
+		valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if valueWO != "" {
+			hasWriteOnly = true
+		} else {
+			hasWriteOnly = false
+		}
+	}
+
+	if hasWriteOnly {
+		d.Set("has_value_wo", true)
+		d.Set(names.AttrValue, nil)
+	} else {
+		d.Set("has_value_wo", nil)
+		if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
+			d.Set("insecure_value", param.Value)
+		} else {
+			d.Set(names.AttrValue, param.Value)
+		}
+	}
+
+	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
+		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
+	}
 
 	return diags
 }
 
-func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterFlatten(d *schema.ResourceData, param *awstypes.Parameter, paramMetadata *awstypes.ParameterMetadata) {
+	d.Set(names.AttrARN, param.ARN)
+	d.Set(names.AttrName, param.Name)
+	d.Set(names.AttrType, param.Type)
+	d.Set(names.AttrVersion, param.Version)
+
+	d.Set("allowed_pattern", paramMetadata.AllowedPattern)
+	d.Set("data_type", paramMetadata.DataType)
+	d.Set(names.AttrDescription, paramMetadata.Description)
+	d.Set(names.AttrKeyID, paramMetadata.KeyId)
+	d.Set("tier", paramMetadata.Tier)
+}
+
+func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -289,6 +386,19 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 			value = v
 		}
+
+		if d.HasChanges("value_wo_version") {
+			valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if valueWO != "" {
+				value = valueWO
+			}
+		}
+
 		input := &ssm.PutParameterInput{
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 			Name:           aws.String(d.Id()),
@@ -331,7 +441,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -362,8 +472,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 
 	if errs.IsA[*awstypes.ParameterNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -372,7 +481,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	}
 
 	if output == nil || output.Parameter == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Parameter, nil

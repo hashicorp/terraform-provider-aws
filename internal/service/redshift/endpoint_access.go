@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshift
 
@@ -18,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,91 +36,93 @@ func resourceEndpointAccess() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"endpoint_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 30),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-				),
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrResourceOwner: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"vpc_endpoint": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"network_interface": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAvailabilityZone: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrNetworkInterfaceID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"private_ip_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrSubnetID: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"endpoint_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 30),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					),
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"vpc_endpoint": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"network_interface": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAvailabilityZone: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrNetworkInterfaceID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"private_ip_address": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrSubnetID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
 
-func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -154,13 +158,13 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	endpoint, err := findEndpointAccessByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift endpoint access (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -185,7 +189,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -218,7 +222,7 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -248,12 +252,12 @@ func vpcSgsIdsToSlice(vpsSgsIds []awstypes.VpcSecurityGroupMembership) []string 
 	return VpcSgsSlice
 }
 
-func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []interface{} {
+func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.NetworkInterfaces; v != nil {
 		tfMap["network_interface"] = flattenNetworkInterfaces(v)
@@ -267,11 +271,11 @@ func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []interface{} {
 		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
@@ -292,12 +296,12 @@ func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]int
 	return tfMap
 }
 
-func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenNetworkInterface(apiObject))

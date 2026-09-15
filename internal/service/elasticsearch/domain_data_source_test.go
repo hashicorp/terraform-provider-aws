@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -18,12 +18,12 @@ func TestAccElasticsearchDomainDataSource_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,12 +62,12 @@ func TestAccElasticsearchDomainDataSource_advanced(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -125,7 +125,7 @@ resource "aws_elasticsearch_domain" "test" {
       "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*",
       "Condition": {
         "IpAddress": {
           "aws:SourceIp": [
@@ -255,7 +255,7 @@ resource "aws_elasticsearch_domain" "test" {
       "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
     }
   ]
 }

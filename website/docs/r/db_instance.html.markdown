@@ -27,25 +27,13 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `password_wo` is available to use in place of `password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
-## RDS Instance Class Types
+Amazon RDS supports instance classes for General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads use cases. For more information see [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html).
 
-Amazon RDS supports instance classes for the following use cases: General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads.
-For more information please read the AWS RDS documentation about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
-
-## Low-Downtime Updates
-
-By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
-Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
-
-Low-downtime updates are only available for DB Instances using MySQL, MariaDB and PostgreSQL,
-as other engines are not supported by RDS Blue/Green deployments.
-They cannot be used with DB Instances with replicas.
-
-Backups must be enabled to use low-downtime updates.
-
-Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
+By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
 
 ## Example Usage
 
@@ -272,13 +260,35 @@ resource "aws_db_instance" "default" {
 }
 ```
 
-## Argument Reference
+### Disabling Master Password Rotation
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+When `manage_master_user_password` is enabled, Secrets Manager rotates the master user password automatically (every 7 days by default). To disable that rotation while keeping the managed secret, manage the secret's rotation with [`aws_secretsmanager_secret_rotation`](/docs/providers/aws/r/secretsmanager_secret_rotation.html) and set `rotation_enabled = false`.
+
+Referencing `aws_db_instance.default.master_user_secret[0].secret_arn` (as in the example below) ensures the rotation change is applied after the instance is available. Avoid hardcoding the secret ARN, which would remove that ordering.
+
+```terraform
+resource "aws_db_instance" "default" {
+  allocated_storage           = 10
+  db_name                     = "mydb"
+  engine                      = "mysql"
+  engine_version              = "8.0"
+  instance_class              = "db.t3.micro"
+  manage_master_user_password = true
+  username                    = "foo"
+  parameter_group_name        = "default.mysql8.0"
+}
+
+resource "aws_secretsmanager_secret_rotation" "default" {
+  secret_id        = aws_db_instance.default.master_user_secret[0].secret_arn
+  rotation_enabled = false
+}
+```
+
+## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
@@ -308,16 +318,16 @@ Defaults to true.
   See [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html) or
   [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
   Cannot be set  with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
-* `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
+* `copy_tags_to_snapshot` - (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `custom_iam_instance_profile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
+* `database_insights_mode` - (Optional) The mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
 * `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
-* `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
-be created in the VPC associated with the DB subnet group. If unspecified, will
-be created in the `default` VPC, or in EC2 Classic, if available. When working
-with read replicas, it should be specified only if the source database
-specifies an instance in another AWS Region. See [DBSubnetGroupName in API
-action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica constraints.
+* `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
+  DB instance will be created in the VPC associated with the DB subnet group.
+  If unspecified, will be created in the `default` Subnet Group.
+  When working with read replicas created in the same region, defaults to the Subnet Group Name of the source DB.
+  When working with read replicas created in a different region, defaults to the `default` Subnet Group.
+  See [DBSubnetGroupName in API action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html) for additional read replica constraints.
 * `dedicated_log_volume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
@@ -356,9 +366,9 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
-* `manage_master_user_password` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` is provided.
+* `manage_master_user_password` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` or `password_wo` is provided.
 * `master_user_secret_kms_key_id` - (Optional) The Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
-* `max_allocated_storage` - (Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to `allocated_storage`. Must be greater than or equal to `allocated_storage` or `0` to disable Storage Autoscaling.
+* `max_allocated_storage` - (Optional) Specifies the maximum storage (in GiB) that Amazon RDS can automatically scale to for this DB instance. By default, Storage Autoscaling is disabled. To enable Storage Autoscaling, set `max_allocated_storage` to **greater than or equal to** `allocated_storage`. Setting `max_allocated_storage` to 0 explicitly disables Storage Autoscaling. When configured, changes to `allocated_storage` will be automatically ignored as the storage can dynamically scale.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points
 when Enhanced Monitoring metrics are collected for the DB instance. To disable
 collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid
@@ -374,9 +384,9 @@ Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to associate.
-* `password` - (Required unless `manage_master_user_password` is set to true or unless a `snapshot_identifier` or `replicate_source_db`
-is provided or `manage_master_user_password` is set.) Password for the master DB user. Note that this may show up in
-logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
+* `password` - (Optional required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password_wo` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
+* `password_wo` - (Optional, Write-Only required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
+* `password_wo_version` - (Optional) Used together with `password_wo` to trigger an update. Increment this value when an update to `password_wo` is required.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
 * `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
@@ -385,26 +395,26 @@ logs, and it will be stored in the state file. Cannot be set if `manage_master_u
 accessible. Default is `false`.
 * `replica_mode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
 is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
-* `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
-database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate (if replicating within
-a single region) or ARN of the Amazon RDS Database to replicate (if replicating
-cross-region). Note that if you are
-creating a cross-region replica of an encrypted database you will also need to
-specify a `kms_key_id`. See [DB Instance Replication][instance-replication] and [Working with
-PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
-for more information on using Replication.
-* `upgrade_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the read replica. Can only be set with `replicate_source_db`.
-* `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
+* `replicate_source_db` - (Optional) Specifies that this resource is a Replica database, and to use this value as the source database.
+  If replicating an Amazon RDS Database Instance in the same region, use the `identifier` of the source DB, unless also specifying the `db_subnet_group_name`.
+  If specifying the `db_subnet_group_name` in the same region, use the `arn` of the source DB.
+  If replicating an Instance in a different region, use the `arn` of the source DB.
+  Note that if you are creating a cross-region replica of an encrypted database you will also need to specify a `kms_key_id`.
+  See [DB Instance Replication][instance-replication] and [Working with PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html) for more information on using Replication.
+* `upgrade_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the read replica.
+  Can only be set with `replicate_source_db`.
+* `warning_event_categories` - (Optional) Set of RDS event categories (for example `failure`, `maintenance`) to check for after create and update operations. If set, Terraform describes RDS events reported for this instance during the operation and surfaces a warning diagnostic, with the RDS event message, for each one found in these categories. Has no effect if unset; see [DescribeEvents](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html) and the [`aws_rds_events`](/docs/providers/aws/d/rds_events.html) data source for the source of these events. Requires the `rds:DescribeEvents` IAM permission when set.
+* `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time.
+  Requires the `identifier` argument to be set with the name of the new DB instance to be created.
+  See [Restore To Point In Time](#restore-to-point-in-time) below for details.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is
 created before the DB instance is deleted. If true is specified, no DBSnapshot
 is created. If false is specified, a DB snapshot is created before the DB
 instance is deleted, using the value from `final_snapshot_identifier`. Default
 is `false`.
-* `snapshot_identifier` - (Optional) Specifies whether or not to create this
-database from a snapshot. This correlates to the snapshot ID you'd find in the
-RDS console, e.g: rds:production-2015-06-26-06-05.
+* `snapshot_identifier` - (Optional) Specifies whether or not to create this database from a snapshot.
+  This corresponds to the snapshot ID you'd find in the RDS console, e.g: rds:production-2015-06-26-06-05.
 * `storage_encrypted` - (Optional) Specifies whether the DB instance is
 encrypted. Note that if you are creating a cross-region read replica this field
 is ignored and you should instead declare `kms_key_id` with a valid ARN. The
@@ -425,6 +435,9 @@ is provided) Username for the master DB user. Cannot be specified for a replica.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
 * `customer_owned_ip_enabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
+
+For more detailed documentation about each argument, refer to the [AWS official
+documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -516,6 +529,7 @@ in a Route 53 Alias record).
 * `status` - The RDS instance status.
 * `storage_encrypted` - Whether the DB instance is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `upgrade_rollout_order` - Order in which the instances are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 * `username` - The master username for the database.
 
 On Oracle and Microsoft SQL instances the following is exported additionally:
@@ -533,7 +547,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 The `master_user_secret` configuration block supports the following attributes:
 
 * `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_arn` - ARN of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
@@ -545,6 +559,32 @@ The `master_user_secret` configuration block supports the following attributes:
 - `delete` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_db_instance.default
+  identity = {
+    identifier = "mydb-rds-instance"
+  }
+}
+
+resource "aws_db_instance" "default" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `identifier` (String) Identifier of the DB Instance.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 

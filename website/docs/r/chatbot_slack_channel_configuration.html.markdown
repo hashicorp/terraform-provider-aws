@@ -38,6 +38,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `guardrail_policy_arns` - (Optional) List of IAM policy ARNs that are applied as channel guardrails. The AWS managed `AdministratorAccess` policy is applied by default if this is not set.
 * `logging_level` - (Optional) Logging levels include `ERROR`, `INFO`, or `NONE`.
 * `sns_topic_arns` - (Optional) ARNs of the SNS topics that deliver notifications to AWS Chatbot.
@@ -68,12 +69,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_chatbot_slack_channel_configuration.example
-  id = "arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal"
+  id = "arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal"
 }
 ```
 
 Using `terraform import`, import Chatbot Slack Channel Configuration using the `chat_configuration_arn`. For example:
 
 ```console
-% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal
+% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal
 ```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -15,15 +17,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_default_vpc", name="Default VPC")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
+// @Testing(generator=false)
+// @Testing(importIgnore="force_destroy;existing_default_vpc", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.52.0")
 func resourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -35,8 +42,6 @@ func resourceDefaultVPC() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVPCImport,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  vpcMigrateState,
@@ -50,109 +55,111 @@ func resourceDefaultVPC() *schema.Resource {
 		// and additions:
 		//   - existing_default_vpc Computed-only, set in resourceDefaultVPCCreate
 		//   - force_destroy Optional
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_generated_ipv6_cidr_block": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"ipv6_ipam_pool_id"},
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_network_acl_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_dns_hostnames": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_network_address_usage_metrics": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"existing_default_vpc": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"instance_tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-				ValidateFunc:  validVPCIPv6CIDRBlock,
-			},
-			"ipv6_cidr_block_network_border_group": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-			},
-			"main_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_generated_ipv6_cidr_block": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"ipv6_ipam_pool_id"},
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_network_acl_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_dns_hostnames": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"enable_dns_support": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"enable_network_address_usage_metrics": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"existing_default_vpc": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"instance_tenancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+					ValidateFunc:  validVPCIPv6CIDRBlock,
+				},
+				"ipv6_cidr_block_network_border_group": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_ipam_pool_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+					ConflictsWith: []string{"ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"main_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -173,23 +180,23 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 		vpcInfo.vpc = vpc
 
-		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+		if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 		} else {
 			vpcInfo.enableDnsHostnames = v
 		}
 
-		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+		if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 		} else {
 			vpcInfo.enableDnsSupport = v
 		}
-		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 		} else {
 			vpcInfo.enableNetworkAddressUsageMetrics = v
 		}
-	} else if tfresource.NotFound(err) {
+	} else if retry.NotFound(err) {
 		input := &ec2.CreateDefaultVpcInput{}
 
 		output, err := conn.CreateDefaultVpc(ctx, input)
@@ -269,7 +276,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Configure tags.
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
@@ -282,7 +289,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceVPCRead(ctx, d, meta)...)
 }
 
-func resourceDefaultVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.Get(names.AttrForceDestroy).(bool) {
 		return append(diags, resourceVPCDelete(ctx, d, meta)...)

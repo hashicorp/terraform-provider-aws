@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -10,7 +10,7 @@ provider "aws" {
   }
 }
 
-resource "aws_appconfig_deployment" "test"{
+resource "aws_appconfig_deployment" "test" {
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
   configuration_version    = aws_appconfig_hosted_configuration_version.test.version_number

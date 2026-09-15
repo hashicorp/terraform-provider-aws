@@ -73,6 +73,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The Field Level Encryption Config ARN.
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the Field Level Encryption Config.
 * `etag` - The current version of the Field Level Encryption Config. For example: `E2QWRUHAPOMQZL`.
 * `id` - The identifier for the Field Level Encryption Config. For example: `K3D5EWEUDCCXON`.

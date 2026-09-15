@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns_test
@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
 
 type proxyCase struct {
@@ -456,20 +455,14 @@ func TestProxyConfig(t *testing.T) {
 
 			maps.Copy(config, tc.config)
 
-			p, err := provider.New(ctx)
+			p, err := sdkv2.NewProvider(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			expectedDiags := tc.expectedDiags
-			expectedDiags = append(
-				expectedDiags,
-				errs.NewWarningDiagnostic(
-					"AWS account ID not found for provider",
-					"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-				),
-			)
+			p.TerraformVersion = "1.0.0"
 
+			expectedDiags := tc.expectedDiags
 			diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 			if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {

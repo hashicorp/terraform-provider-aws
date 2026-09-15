@@ -1,6 +1,7 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_batch_scheduling_policy" "test" {
   arn = aws_batch_scheduling_policy.test.arn
 }

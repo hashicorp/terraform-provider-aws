@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -9,21 +11,19 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,120 +40,120 @@ func resourceAccessPoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"posix_user": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"gid": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						"secondary_gids": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-							ForceNew: true,
-						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"posix_user": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"gid": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							"secondary_gids": {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								Optional: true,
+								ForceNew: true,
+							},
+							"uid": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"root_directory": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"creation_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"owner_gid": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									"owner_uid": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrPermissions: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+				"root_directory": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"creation_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"owner_gid": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										"owner_uid": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrPermissions: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
-	input := &efs.CreateAccessPointInput{
+	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsID),
 		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("posix_user"); ok {
-		input.PosixUser = expandAccessPointPOSIXUser(v.([]interface{}))
+		input.PosixUser = expandPOSIXUser(v.([]any))
 	}
 
 	if v, ok := d.GetOk("root_directory"); ok {
-		input.RootDirectory = expandAccessPointRootDirectory(v.([]interface{}))
+		input.RootDirectory = expandRootDirectory(v.([]any))
 	}
 
-	output, err := conn.CreateAccessPoint(ctx, input)
+	output, err := conn.CreateAccessPoint(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS Access Point for File System (%s): %s", fsID, err)
@@ -168,13 +168,14 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
 	ap, err := findAccessPointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,20 +187,13 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.ToString(ap.FileSystemId)
-	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "file-system/" + fsID,
-		Service:   "elasticfilesystem",
-	}.String()
-	d.Set("file_system_arn", fsARN)
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrOwnerID, ap.OwnerId)
-	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
+	if err := d.Set("posix_user", flattenPOSIXUser(ap.PosixUser)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}
-	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
+	if err := d.Set("root_directory", flattenRootDirectory(ap.RootDirectory)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting root_directory: %s", err)
 	}
 
@@ -208,7 +202,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -216,14 +210,15 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS Access Point: %s", d.Id())
-	_, err := conn.DeleteAccessPoint(ctx, &efs.DeleteAccessPointInput{
+	input := efs.DeleteAccessPointInput{
 		AccessPointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAccessPoint(ctx, &input)
 
 	if errs.IsA[*awstypes.AccessPointNotFound](err) {
 		return diags
@@ -240,7 +235,7 @@ func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[*awstypes.AccessPointDescription]) (*awstypes.AccessPointDescription, error) {
+func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[awstypes.AccessPointDescription]) (*awstypes.AccessPointDescription, error) {
 	output, err := findAccessPoints(ctx, conn, input, filter)
 
 	if err != nil {
@@ -250,7 +245,7 @@ func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeA
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[*awstypes.AccessPointDescription]) ([]awstypes.AccessPointDescription, error) {
+func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[awstypes.AccessPointDescription]) ([]awstypes.AccessPointDescription, error) {
 	var output []awstypes.AccessPointDescription
 
 	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
@@ -259,8 +254,7 @@ func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.Describe
 
 		if errs.IsA[*awstypes.AccessPointNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -269,7 +263,7 @@ func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.Describe
 		}
 
 		for _, v := range page.AccessPoints {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -279,11 +273,11 @@ func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.Describe
 }
 
 func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.AccessPointDescription, error) {
-	input := &efs.DescribeAccessPointsInput{
+	input := efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(id),
 	}
 
-	output, err := findAccessPoint(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AccessPointDescription]())
+	output, err := findAccessPoint(ctx, conn, &input, tfslices.PredicateTrue[awstypes.AccessPointDescription]())
 
 	if err != nil {
 		return nil, err
@@ -291,19 +285,18 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusAccessPointLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAccessPointLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -322,7 +315,7 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
+		Refresh: statusAccessPointLifeCycleState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -343,7 +336,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
+		Refresh: statusAccessPointLifeCycleState(conn, id),
 		Timeout: accessPointDeletedTimeout,
 	}
 
@@ -356,12 +349,12 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 	return nil, err
 }
 
-func expandAccessPointPOSIXUser(tfList []interface{}) *awstypes.PosixUser {
+func expandPOSIXUser(tfList []any) *awstypes.PosixUser {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.PosixUser{
 		Gid: aws.Int64(int64(tfMap["gid"].(int))),
 		Uid: aws.Int64(int64(tfMap["uid"].(int))),
@@ -374,12 +367,12 @@ func expandAccessPointPOSIXUser(tfList []interface{}) *awstypes.PosixUser {
 	return apiObject
 }
 
-func expandAccessPointRootDirectory(tfList []interface{}) *awstypes.RootDirectory {
+func expandRootDirectory(tfList []any) *awstypes.RootDirectory {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.RootDirectory{}
 
 	if v, ok := tfMap[names.AttrPath]; ok {
@@ -387,18 +380,18 @@ func expandAccessPointRootDirectory(tfList []interface{}) *awstypes.RootDirector
 	}
 
 	if v, ok := tfMap["creation_info"]; ok {
-		apiObject.CreationInfo = expandAccessPointRootDirectoryCreationInfo(v.([]interface{}))
+		apiObject.CreationInfo = expandCreationInfo(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandAccessPointRootDirectoryCreationInfo(tfList []interface{}) *awstypes.CreationInfo {
+func expandCreationInfo(tfList []any) *awstypes.CreationInfo {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CreationInfo{
 		OwnerGid:    aws.Int64(int64(tfMap["owner_gid"].(int))),
 		OwnerUid:    aws.Int64(int64(tfMap["owner_uid"].(int))),
@@ -408,43 +401,43 @@ func expandAccessPointRootDirectoryCreationInfo(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenAccessPointPOSIXUser(apiObject *awstypes.PosixUser) []interface{} {
+func flattenPOSIXUser(apiObject *awstypes.PosixUser) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"gid":            aws.ToInt64(apiObject.Gid),
 		"uid":            aws.ToInt64(apiObject.Uid),
 		"secondary_gids": apiObject.SecondaryGids,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAccessPointRootDirectory(apiObject *awstypes.RootDirectory) []interface{} {
+func flattenRootDirectory(apiObject *awstypes.RootDirectory) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
-		"creation_info": flattenAccessPointRootDirectoryCreationInfo(apiObject.CreationInfo),
+	tfMap := map[string]any{
+		"creation_info": flattenCreationInfo(apiObject.CreationInfo),
 		names.AttrPath:  aws.ToString(apiObject.Path),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAccessPointRootDirectoryCreationInfo(apiObject *awstypes.CreationInfo) []interface{} {
+func flattenCreationInfo(apiObject *awstypes.CreationInfo) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"owner_gid":           aws.ToInt64(apiObject.OwnerGid),
 		"owner_uid":           aws.ToInt64(apiObject.OwnerUid),
 		names.AttrPermissions: aws.ToString(apiObject.Permissions),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

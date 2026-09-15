@@ -16,38 +16,13 @@ Amazon-issued, where AWS provides the certificate authority and automatically ma
 imported certificates, issued by another certificate authority;
 and private certificates, issued using an ACM Private Certificate Authority.
 
-## Amazon-Issued Certificates
+-> **Note:** Write-Only argument `private_key_wo` is available to use in place of `private_key`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
-For Amazon-issued certificates, this resource deals with requesting certificates and managing their attributes and life-cycle.
-This resource does not deal with validation of a certificate but can provide inputs
-for other resources implementing the validation.
-It does not wait for a certificate to be issued.
-Use a [`aws_acm_certificate_validation`](acm_certificate_validation.html) resource for this.
+For Amazon-issued certificates, this resource deals with requesting certificates and managing their attributes and life-cycle. It does not wait for a certificate to be issued — use [`aws_acm_certificate_validation`](acm_certificate_validation.html) for that. Most commonly used together with [`aws_route53_record`](route53_record.html) and [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate, deploy the required validation records, and wait for validation to complete. It's recommended to specify `create_before_destroy = true` in a [lifecycle](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) block to replace a certificate which is currently in use (e.g., by [`aws_lb_listener`](lb_listener.html)).
 
-Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
-[`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
-deploy the required validation records and wait for validation to complete.
+Imported certificates can be used to make certificates created with an external certificate authority available for AWS services. As they are not managed by AWS, imported certificates are not eligible for automatic renewal. New certificate materials can be supplied to an existing imported certificate to update it in place.
 
-Domain validation through email is also supported but should be avoided as it requires a manual step outside of Terraform.
-
-It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
-which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
-
-## Certificates Imported from Other Certificate Authority
-
-Imported certificates can be used to make certificates created with an external certificate authority available for AWS services.
-
-As they are not managed by AWS, imported certificates are not eligible for automatic renewal.
-New certificate materials can be supplied to an existing imported certificate to update it in place.
-
-## Private Certificates
-
-Private certificates are issued by an ACM Private Certificate Authority, which can be created using the resource type [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html).
-
-Private certificates created using this resource are eligible for managed renewal if they have been exported or associated with another AWS service.
-See [managed renewal documentation](https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html) for more information.
-By default, a certificate is valid for 395 days and the managed renewal process will start 60 days before expiration.
-To renew the certificate earlier than 60 days before expiration, configure `early_renewal_duration`.
+Private certificates are issued by an ACM Private Certificate Authority, which can be created using [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html). Private certificates created using this resource are eligible for managed renewal if they have been exported or associated with another AWS service. See [managed renewal documentation](https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html) for more information. By default, a certificate is valid for 395 days and the managed renewal process will start 60 days before expiration. To renew the certificate earlier than 60 days before expiration, configure `early_renewal_duration`.
 
 ## Example Usage
 
@@ -113,6 +88,38 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
+### Existing Certificate Body Import With Write-Only Private Key
+
+```terraform
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = tls_private_key.example.private_key_pem
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key_wo         = tls_private_key.example.private_key_pem
+  private_key_wo_version = 1
+  certificate_body       = tls_self_signed_cert.example.cert_pem
+}
+```
+
 ### Referencing domain_validation_options With for_each Based Resources
 
 See the [`aws_acm_certificate_validation` resource](acm_certificate_validation.html) for a full example of performing DNS validation.
@@ -140,6 +147,7 @@ resource "aws_route53_record" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * Creating an Amazon issued certificate
     * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
@@ -148,7 +156,9 @@ This resource supports the following arguments:
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `private_key` - (Required) Certificate's PEM-formatted private key
+    * `private_key` - (Optional) Certificate's PEM-formatted private key. Conflicts with `private_key_wo`.
+    * `private_key_wo` - (Optional, Write-Only) Certificate's PEM-formatted private key. Conflicts with `private_key`. Must be used together with `private_key_wo_version`.
+    * `private_key_wo_version` - (Optional) Used together with `private_key_wo` to trigger an update. Increment this value when an update to `private_key_wo` is required.
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
@@ -159,18 +169,17 @@ This resource supports the following arguments:
       Represented by either
       a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `P90D`),
       or a string such as `2160h`.
-* `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.
-  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
-  or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## options Configuration Block
+### options Configuration Block
 
 Supported nested arguments for the `options` configuration block:
 
 * `certificate_transparency_logging_preference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+* `export` - (Optional) Whether the certificate can be exported. Valid values are `ENABLED` or `DISABLED` (default). **Note** Issuing an exportable certificate is subject to additional charges. See [AWS Certificate Manager pricing](https://aws.amazon.com/certificate-manager/pricing/) for more details.
 
-## validation_option Configuration Block
+### validation_option Configuration Block
 
 Supported nested arguments for the `validation_option` configuration block:
 
@@ -209,15 +218,34 @@ Renewal summary objects export the following attributes:
 * `renewal_status` - The status of ACM's managed renewal of the certificate
 * `renewal_status_reason` - The reason that a renewal request was unsuccessful or is pending
 
-[1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
-
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_acm_certificate.example
+  identity = {
+    "arn" = "arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a"
+  }
+}
+
+resource "aws_acm_certificate" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the certificate.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import certificates using their ARN. For example:
 
 ```terraform
 import {
-  to = aws_acm_certificate.cert
+  to = aws_acm_certificate.example
   id = "arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a"
 }
 ```
@@ -225,5 +253,5 @@ import {
 Using `terraform import`, import certificates using their ARN. For example:
 
 ```console
-% terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
+% terraform import aws_acm_certificate.example arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```

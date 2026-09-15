@@ -1,12 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package secretsmanager
+package secretsmanager_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 )
 
 func TestValidSecretName(t *testing.T) {
@@ -25,12 +26,12 @@ func TestValidSecretName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(513, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 513, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validSecretName(tc.Value, "aws_secretsmanager_secret")
+		_, errors := tfsecretsmanager.ValidSecretName(tc.Value, "aws_secretsmanager_secret")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Secretsmanager Secret Name to not trigger a validation error for %q", tc.Value)
 		}
@@ -53,12 +54,12 @@ func TestValidSecretNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(512, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 512, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validSecretNamePrefix(tc.Value, "aws_secretsmanager_secret")
+		_, errors := tfsecretsmanager.ValidSecretNamePrefix(tc.Value, "aws_secretsmanager_secret")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Secretsmanager Secret Name to not trigger a validation error for %q", tc.Value)
 		}

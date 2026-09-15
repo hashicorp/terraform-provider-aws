@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -25,59 +27,61 @@ func dataSourceBucketObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Deprecated: "Use the aws_s3_objects data source instead",
-				Type:       schema.TypeString,
-				Required:   true,
-			},
-			"common_prefixes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"delimiter": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"encoding_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"fetch_owner": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"keys": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"max_keys": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1000,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrPrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"start_after": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Deprecated: "bucket is deprecated. Use the aws_s3_objects data source instead.",
+					Type:       schema.TypeString,
+					Required:   true,
+				},
+				"common_prefixes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"delimiter": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"encoding_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"fetch_owner": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"keys": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"max_keys": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  1000,
+				},
+				"owners": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"start_after": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 
 		DeprecationMessage: `use the aws_s3_objects data source instead`,
 	}
 }
 
-func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 

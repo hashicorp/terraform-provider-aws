@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,7 +32,7 @@ func resourceDomainSAMLOptions() *schema.Resource {
 		UpdateWithoutTimeout: resourceDomainSAMLOptionsPut,
 		DeleteWithoutTimeout: resourceDomainSAMLOptionsDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set(names.AttrDomainName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -40,91 +43,93 @@ func resourceDomainSAMLOptions() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"saml_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"idp": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"entity_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metadata_content": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringIsNotEmpty,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"saml_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"idp": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"entity_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metadata_content": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
+										},
 									},
 								},
 							},
-						},
-						"master_backend_role": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"master_user_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"roles_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"session_timeout_minutes": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Default:          60,
-							ValidateFunc:     validation.IntBetween(1, 1440),
-							DiffSuppressFunc: domainSamlOptionsDiffSupress,
-						},
-						"subject_key": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "",
-							DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							"master_backend_role": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"master_user_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"roles_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"session_timeout_minutes": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Default:          60,
+								ValidateFunc:     validation.IntBetween(1, 1440),
+								DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							},
+							"subject_key": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "",
+								DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
-	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
-		if enabled, ok := v[0].(map[string]interface{})[names.AttrEnabled].(bool); ok && !enabled {
+	if v, ok := d.Get("saml_options").([]any); ok && len(v) > 0 {
+		if enabled, ok := v[0].(map[string]any)[names.AttrEnabled].(bool); ok && !enabled {
 			return true
 		}
 	}
 	return false
 }
 
-func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain SAML Options (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -145,17 +150,17 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	config := awstypes.AdvancedSecurityOptionsInput{}
-	config.SAMLOptions = expandESSAMLOptions(d.Get("saml_options").([]interface{}))
+	config.SAMLOptions = expandESSAMLOptions(d.Get("saml_options").([]any))
 
 	log.Printf("[DEBUG] Updating OpenSearch domain SAML Options %#v", config)
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 			DomainName:              aws.String(domainName),
 			AdvancedSecurityOptions: &config,
@@ -175,14 +180,14 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
-func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	config := awstypes.AdvancedSecurityOptionsInput{}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 			DomainName:              aws.String(domainName),
 			AdvancedSecurityOptions: &config,

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -18,96 +20,99 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_glue_script")
-func DataSourceScript() *schema.Resource {
+// @SDKDataSource("aws_glue_script", name="Script")
+func dataSourceScript() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceScriptRead,
-		Schema: map[string]*schema.Schema{
-			"dag_edge": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSource: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrTarget: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"target_parameter": {
-							Type:     schema.TypeString,
-							Optional: true,
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"dag_edge": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSource: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrTarget: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"target_parameter": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"dag_node": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"args": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"param": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
+				"dag_node": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"args": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"param": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"line_number": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"node_type": {
-							Type:     schema.TypeString,
-							Required: true,
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"line_number": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"node_type": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"language": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.LanguagePython,
-				ValidateDiagFunc: enum.Validate[awstypes.Language](),
-			},
-			"python_script": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"scala_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"language": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.LanguagePython,
+					ValidateDiagFunc: enum.Validate[awstypes.Language](),
+				},
+				"python_script": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"scala_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	dagEdge := d.Get("dag_edge").([]interface{})
-	dagNode := d.Get("dag_node").([]interface{})
+	dagEdge := d.Get("dag_edge").([]any)
+	dagNode := d.Get("dag_node").([]any)
 
 	input := &glue.CreateScriptInput{
 		DagEdges: expandCodeGenEdges(dagEdge),
@@ -128,18 +133,18 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "script not created")
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("python_script", output.PythonScript)
 	d.Set("scala_code", output.ScalaCode)
 
 	return diags
 }
 
-func expandCodeGenNodeArgs(l []interface{}) []awstypes.CodeGenNodeArg {
+func expandCodeGenNodeArgs(l []any) []awstypes.CodeGenNodeArg {
 	args := []awstypes.CodeGenNodeArg{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 		arg := awstypes.CodeGenNodeArg{
 			Name:  aws.String(m[names.AttrName].(string)),
 			Param: m["param"].(bool),
@@ -151,11 +156,11 @@ func expandCodeGenNodeArgs(l []interface{}) []awstypes.CodeGenNodeArg {
 	return args
 }
 
-func expandCodeGenEdges(l []interface{}) []awstypes.CodeGenEdge {
+func expandCodeGenEdges(l []any) []awstypes.CodeGenEdge {
 	edges := []awstypes.CodeGenEdge{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 		edge := awstypes.CodeGenEdge{
 			Source: aws.String(m[names.AttrSource].(string)),
 			Target: aws.String(m[names.AttrTarget].(string)),
@@ -169,13 +174,13 @@ func expandCodeGenEdges(l []interface{}) []awstypes.CodeGenEdge {
 	return edges
 }
 
-func expandCodeGenNodes(l []interface{}) []awstypes.CodeGenNode {
+func expandCodeGenNodes(l []any) []awstypes.CodeGenNode {
 	nodes := []awstypes.CodeGenNode{}
 
 	for _, mRaw := range l {
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 		node := awstypes.CodeGenNode{
-			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
+			Args:     expandCodeGenNodeArgs(m["args"].([]any)),
 			Id:       aws.String(m[names.AttrID].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}

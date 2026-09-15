@@ -1,18 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func IsIsolatedRegion(region string) bool {
 	partition := names.PartitionForRegion(region)
 
-	return IsIsolatedPartition(partition)
+	return IsIsolatedPartition(partition.ID())
 }
 
 func IsIsolatedPartition(partition string) bool {
@@ -26,11 +26,11 @@ func IsIsolatedPartition(partition string) bool {
 func IsStandardRegion(region string) bool {
 	partition := names.PartitionForRegion(region)
 
-	return IsStandardPartition(partition)
+	return IsStandardPartition(partition.ID())
 }
 
-func IsStandardPartition(partitionId string) bool {
-	return partitionId == names.StandardPartitionID
+func IsStandardPartition(partitionID string) bool {
+	return partitionID == endpoints.AwsPartitionID
 }
 
 func RegionsInPartition(partitionName string) []string {

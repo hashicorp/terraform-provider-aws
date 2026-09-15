@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_route: Add `carrier_gateway_id` attribute
-```

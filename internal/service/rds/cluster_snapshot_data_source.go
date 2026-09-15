@@ -1,11 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -27,93 +29,95 @@ func dataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_cluster_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"include_shared": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_create_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"db_cluster_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_cluster_snapshot_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_public": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"include_shared": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_create_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"source_db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -137,7 +141,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	f := tfslices.PredicateTrue[*types.DBClusterSnapshot]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		f = func(v *types.DBClusterSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 
@@ -151,16 +155,16 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var snapshot *types.DBClusterSnapshot
-	if len(snapshots) > 1 {
-		if d.Get(names.AttrMostRecent).(bool) {
-			snapshot = mostRecentClusterSnapshot(snapshots)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
-		}
-	} else {
-		snapshot = &snapshots[0]
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 	}
+
+	snapshot := slices.MaxFunc(snapshots, func(a, b types.DBClusterSnapshot) int {
+		if a.SnapshotCreateTime == nil || b.SnapshotCreateTime == nil {
+			return 0
+		}
+		return a.SnapshotCreateTime.Compare(aws.ToTime(b.SnapshotCreateTime))
+	})
 
 	d.SetId(aws.ToString(snapshot.DBClusterSnapshotIdentifier))
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
@@ -185,26 +189,4 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
-}
-
-type rdsClusterSnapshotSort []types.DBClusterSnapshot
-
-func (a rdsClusterSnapshotSort) Len() int      { return len(a) }
-func (a rdsClusterSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a rdsClusterSnapshotSort) Less(i, j int) bool {
-	// Snapshot creation can be in progress
-	if a[i].SnapshotCreateTime == nil {
-		return true
-	}
-	if a[j].SnapshotCreateTime == nil {
-		return false
-	}
-
-	return (aws.ToTime(a[i].SnapshotCreateTime)).Before(aws.ToTime(a[j].SnapshotCreateTime))
-}
-
-func mostRecentClusterSnapshot(snapshots []types.DBClusterSnapshot) *types.DBClusterSnapshot {
-	sortedSnapshots := snapshots
-	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
-	return &sortedSnapshots[len(sortedSnapshots)-1]
 }

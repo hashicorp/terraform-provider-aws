@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_appconfig_application
-```
-
-```release-note:new-resource
-aws_appconfig_environment
-```

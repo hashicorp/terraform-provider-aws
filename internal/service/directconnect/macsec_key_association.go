@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -35,48 +38,50 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cak": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"ckn"},
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
-			},
-			"ckn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{"ckn", "secret_arn"},
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"secret_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{"ckn", "secret_arn"},
-				ValidateFunc: verify.ValidARN,
-			},
-			"start_on": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cak": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"ckn"},
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				"ckn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{"ckn", "secret_arn"},
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"secret_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{"ckn", "secret_arn"},
+					ValidateFunc: verify.ValidARN,
+				},
+				"start_on": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -110,7 +115,7 @@ func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceMacSecKeyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -121,7 +126,7 @@ func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	key, err := findMacSecKeyByTwoPartKey(ctx, conn, connectionID, secretARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect MACSec Key Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -140,7 +145,7 @@ func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -150,10 +155,11 @@ func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect MACSec Key Association: %s", d.Id())
-	_, err = conn.DisassociateMacSecKey(ctx, &directconnect.DisassociateMacSecKeyInput{
+	input := directconnect.DisassociateMacSecKeyInput{
 		ConnectionId: aws.String(connectionID),
 		SecretARN:    aws.String(secretARN),
-	})
+	}
+	_, err = conn.DisassociateMacSecKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting MACSec Key Association (%s): %s", d.Id(), err)

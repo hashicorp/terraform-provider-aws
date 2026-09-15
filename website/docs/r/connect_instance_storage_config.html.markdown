@@ -110,8 +110,9 @@ resource "aws_connect_instance_storage_config" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `resource_type` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS` | `SCREEN_RECORDINGS`.
+* `resource_type` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `EMAIL_MESSAGES` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_CHAT_SEGMENTS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `REAL_TIME_CONTACT_ANALYSIS_VOICE_SEGMENTS` | `SCHEDULED_REPORTS` | `SCREEN_RECORDINGS`.
 * `storage_config` - (Required) Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
 
 ### `storage_config`
@@ -128,13 +129,13 @@ The `storage_config` configuration block supports the following arguments:
 
 The `kinesis_firehose_config` configuration block supports the following arguments:
 
-* `firehose_arn` - (Required) The Amazon Resource Name (ARN) of the delivery stream.
+* `firehose_arn` - (Required) ARN of the delivery stream.
 
 #### `kinesis_stream_config`
 
 The `kinesis_stream_config` configuration block supports the following arguments:
 
-* `stream_arn` - (Required) The Amazon Resource Name (ARN) of the data stream.
+* `stream_arn` - (Required) ARN of the data stream.
 
 #### `kinesis_video_stream_config`
 

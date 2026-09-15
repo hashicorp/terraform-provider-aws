@@ -1,6 +1,7 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_apigatewayv2_api" "test" {
   api_id = aws_apigatewayv2_api.test.id
 }

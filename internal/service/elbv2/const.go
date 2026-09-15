@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -33,6 +33,9 @@ const (
 	loadBalancerAttributeConnectionLogsS3Enabled                         = "connection_logs.s3.enabled"
 	loadBalancerAttributeConnectionLogsS3Bucket                          = "connection_logs.s3.bucket"
 	loadBalancerAttributeConnectionLogsS3Prefix                          = "connection_logs.s3.prefix"
+	loadBalancerAttributeHealthCheckLogsS3Enabled                        = "health_check_logs.s3.enabled"
+	loadBalancerAttributeHealthCheckLogsS3Bucket                         = "health_check_logs.s3.bucket"
+	loadBalancerAttributeHealthCheckLogsS3Prefix                         = "health_check_logs.s3.prefix"
 	loadBalancerAttributeRoutingHTTPDesyncMitigationMode                 = "routing.http.desync_mitigation_mode"
 	loadBalancerAttributeRoutingHTTPDropInvalidHeaderFieldsEnabled       = "routing.http.drop_invalid_header_fields.enabled"
 	loadBalancerAttributeRoutingHTTPPreserveHostHeaderEnabled            = "routing.http.preserve_host_header.enabled"
@@ -41,9 +44,11 @@ const (
 	loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode              = "routing.http.xff_header_processing.mode"
 	loadBalancerAttributeRoutingHTTP2Enabled                             = "routing.http2.enabled"
 	loadBalancerAttributeWAFFailOpenEnabled                              = "waf.fail_open.enabled"
+	loadBalancerAttributeZonalShiftConfigEnabled                         = "zonal_shift.config.enabled"
 
 	// The following attributes are supported by only Network Load Balancers:
-	loadBalancerAttributeDNSRecordClientRoutingPolicy = "dns_record.client_routing_policy"
+	loadBalancerAttributeDNSRecordClientRoutingPolicy      = "dns_record.client_routing_policy"
+	loadBalancerAttributeSecondaryIPsAutoAssignedPerSubnet = "secondary_ips.auto_assigned.per_subnet"
 )
 
 const (
@@ -199,8 +204,8 @@ const (
 	healthCheckPortTrafficPort = "traffic-port"
 )
 
-func healthCheckProtocolEnumValues() []string {
-	return enum.Slice[awstypes.ProtocolEnum](
+func healthCheckProtocolEnumValues() []awstypes.ProtocolEnum {
+	return enum.EnumSlice(
 		awstypes.ProtocolEnumHttp,
 		awstypes.ProtocolEnumHttps,
 		awstypes.ProtocolEnumTcp,

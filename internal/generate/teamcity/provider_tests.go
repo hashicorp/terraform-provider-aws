@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -28,8 +27,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		acceptanceTestsScriptFile = `.teamcity/scripts/provider_tests/acceptance_tests.sh`
-		unitTestsScriptFile       = `.teamcity/scripts/provider_tests/unit_tests.sh`
+		acceptanceTestsScriptFile = `.teamcity/scripts/provider_tests/tests.sh`
 	)
 	g := common.NewGenerator()
 
@@ -57,8 +55,6 @@ func main() {
 	}
 
 	generator.generate(acceptanceTestsScriptFile, acceptanceTestsTmpl)
-
-	generator.generate(unitTestsScriptFile, unitTestsTmpl)
 }
 
 type generator struct {
@@ -74,7 +70,7 @@ func (g generator) generate(filename, template string) {
 
 	d := g.g.NewUnformattedFileDestination(destFile)
 
-	if err := d.WriteTemplate("teamcity", template, g.dirNames); err != nil {
+	if err := d.BufferTemplate("teamcity", template, g.dirNames); err != nil {
 		g.g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -83,8 +79,5 @@ func (g generator) generate(filename, template string) {
 	}
 }
 
-//go:embed acceptance_tests.tmpl
+//go:embed tests.tmpl
 var acceptanceTestsTmpl string
-
-//go:embed unit_tests.tmpl
-var unitTestsTmpl string

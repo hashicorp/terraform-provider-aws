@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +40,7 @@ func resourceUser() *schema.Resource {
 		DeleteWithoutTimeout: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), userResourceIDSeparator)
 
 				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
@@ -52,112 +54,114 @@ func resourceUser() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAttributes: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if k == "attributes.sub" || k == "attributes.%" {
-						return true
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAttributes: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if k == "attributes.sub" || k == "attributes.%" {
+							return true
+						}
 
-					return false
+						return false
+					},
 				},
-			},
-			"client_metadata": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"desired_delivery_mediums": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"client_metadata": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"desired_delivery_mediums": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.DeliveryMediumType](),
+					},
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"force_alias_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"last_modified_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"message_action": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.DeliveryMediumType](),
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MessageActionType](),
 				},
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"force_alias_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"message_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MessageActionType](),
-			},
-			"mfa_setting_list": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"mfa_setting_list": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrPassword: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ValidateFunc:  validation.StringLenBetween(6, 256),
-				ConflictsWith: []string{"temporary_password"},
-			},
-			"preferred_mfa_setting": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sub": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"temporary_password": {
-				Type:          schema.TypeString,
-				Sensitive:     true,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(6, 256),
-				ConflictsWith: []string{names.AttrPassword},
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrUsername: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"validation_data": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrPassword: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ValidateFunc:  validation.StringLenBetween(6, 256),
+					ConflictsWith: []string{"temporary_password"},
 				},
-			},
+				"preferred_mfa_setting": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sub": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"temporary_password": {
+					Type:          schema.TypeString,
+					Sensitive:     true,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(6, 256),
+					ConflictsWith: []string{names.AttrPassword},
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrUsername: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"validation_data": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -170,7 +174,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("client_metadata"); ok {
-		input.ClientMetadata = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.ClientMetadata = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("desired_delivery_mediums"); ok {
@@ -190,11 +194,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk(names.AttrAttributes); ok {
-		input.UserAttributes = expandAttributeTypes(v.(map[string]interface{}))
+		input.UserAttributes = expandAttributeTypes(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("validation_data"); ok {
-		input.ValidationData = expandAttributeTypes(v.(map[string]interface{}))
+		input.ValidationData = expandAttributeTypes(v.(map[string]any))
 	}
 
 	_, err := conn.AdminCreateUser(ctx, input)
@@ -236,14 +240,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 	user, err := findUserByTwoPartKey(ctx, conn, userPoolID, username)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -271,7 +275,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -279,7 +283,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange(names.AttrAttributes) {
 		o, n := d.GetChange(names.AttrAttributes)
-		upd, del := expandUpdateUserAttributes(o.(map[string]interface{}), n.(map[string]interface{}))
+		upd, del := expandUpdateUserAttributes(o.(map[string]any), n.(map[string]any))
 
 		if len(upd) > 0 {
 			input := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
@@ -289,7 +293,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			if v, ok := d.GetOk("client_metadata"); ok {
-				input.ClientMetadata = flex.ExpandStringValueMap(v.(map[string]interface{}))
+				input.ClientMetadata = flex.ExpandStringValueMap(v.(map[string]any))
 			}
 
 			_, err := conn.AdminUpdateUserAttributes(ctx, input)
@@ -381,17 +385,18 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 
 	log.Printf("[DEBUG] Deleting Cognito User: %s", d.Id())
-	_, err := conn.AdminDeleteUser(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
+	input := cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(username),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err := conn.AdminDeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.UserNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -425,8 +430,7 @@ func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Cli
 
 	if errs.IsA[*awstypes.UserNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -435,13 +439,13 @@ func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandAttributeTypes(tfMap map[string]interface{}) []awstypes.AttributeType {
+func expandAttributeTypes(tfMap map[string]any) []awstypes.AttributeType {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -458,8 +462,8 @@ func expandAttributeTypes(tfMap map[string]interface{}) []awstypes.AttributeType
 	return apiObjects
 }
 
-func flattenAttributeTypes(apiObjects []awstypes.AttributeType) map[string]interface{} {
-	tfMap := make(map[string]interface{})
+func flattenAttributeTypes(apiObjects []awstypes.AttributeType) map[string]any {
+	tfMap := make(map[string]any)
 
 	for _, apiObject := range apiObjects {
 		if apiObject.Name != nil {
@@ -485,8 +489,8 @@ func flattenUserSub(apiObjects []awstypes.AttributeType) *string {
 	return nil
 }
 
-func expandUpdateUserAttributes(oldMap, newMap map[string]interface{}) (map[string]interface{}, []string) {
-	upd := make(map[string]interface{})
+func expandUpdateUserAttributes(oldMap, newMap map[string]any) (map[string]any, []string) {
+	upd := make(map[string]any)
 
 	for k, v := range newMap {
 		if old, ok := oldMap[k]; ok {

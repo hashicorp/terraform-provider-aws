@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -13,42 +15,44 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sesv2_email_identity_mail_from_attributes")
-func DataSourceEmailIdentityMailFromAttributes() *schema.Resource {
+// @SDKDataSource("aws_sesv2_email_identity_mail_from_attributes", name="Email Identity Mail From Attributes")
+func dataSourceEmailIdentityMailFromAttributes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityMailFromAttributesRead,
 
-		Schema: map[string]*schema.Schema{
-			"behavior_on_mx_failure": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"mail_from_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"behavior_on_mx_failure": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"email_identity": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mail_from_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
 const (
-	DSNameEmailIdentityMailFromAttributes = "Email Identity Mail From Attributes Data Source"
+	dsNameEmailIdentityMailFromAttributes = "Email Identity Mail From Attributes Data Source"
 )
 
-func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	name := d.Get("email_identity").(string)
 
-	out, err := FindEmailIdentityByID(ctx, conn, name)
+	out, err := findEmailIdentityByID(ctx, conn, name)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityMailFromAttributes, name, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameEmailIdentityMailFromAttributes, name, err)
 	}
 
 	d.SetId(name)

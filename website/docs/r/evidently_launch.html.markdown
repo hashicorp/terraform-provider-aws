@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Evidently Launch resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -257,6 +259,7 @@ resource "aws_evidently_launch" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the launch.
 * `groups` - (Required) One or up to five blocks that contain the feature and variations that are to be used for the launch. [Detailed below](#groups).
 * `metric_monitors` - (Optional) One or up to three blocks that define the metrics that will be used to monitor the launch performance. [Detailed below](#metric_monitors).
@@ -311,14 +314,6 @@ The `steps` block supports the following arguments:
 * `segment` - (Required) The name or ARN of the segment to use.
 * `weights` - (Required) The traffic allocation percentages among the feature variations to assign to this segment. This is a set of key-value pairs. The keys are variation names. The values represent the amount of traffic to allocate to that variation for this segment. This is expressed in thousandths of a percent, so a weight of 50000 represents 50% of traffic.
 
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-* `create` - (Default `2m`)
-* `delete` - (Default `2m`)
-* `update` - (Default `2m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -339,6 +334,14 @@ The `execution` block supports the following attributes:
 
 * `ended_time` - The date and time that the launch ended.
 * `started_time` - The date and time that the launch started.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
 
 ## Import
 

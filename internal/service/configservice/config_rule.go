@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,15 +23,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_config_rule", name="Config Rule")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigRule")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,
@@ -37,170 +42,164 @@ func resourceConfigRule() *schema.Resource {
 		UpdateWithoutTimeout: resourceConfigRulePut,
 		DeleteWithoutTimeout: resourceConfigRuleDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"evaluation_mode": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.EvaluationMode](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"evaluation_mode": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.EvaluationMode](),
+							},
 						},
 					},
 				},
-			},
-			"input_parameters": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"maximum_execution_frequency": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrScope: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compliance_resource_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"compliance_resource_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 100,
-							Elem: &schema.Schema{
+				"input_parameters": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"maximum_execution_frequency": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"rule_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrScope: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compliance_resource_id": {
 								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 256),
 							},
-							Set: schema.HashString,
-						},
-						"tag_key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 128),
-						},
-						"tag_value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
+							"compliance_resource_types": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 100,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(0, 256),
+								},
+							},
+							"tag_key": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 128),
+							},
+							"tag_value": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
 						},
 					},
 				},
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_policy_details": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enable_debug_log_delivery": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"policy_runtime": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 64),
-											validation.StringMatch(regexache.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
-										),
-									},
-									"policy_text": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 10000),
-									},
-								},
-							},
-						},
-						names.AttrOwner: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.Owner](),
-						},
-						"source_detail": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 25,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_source": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.EventSourceAwsConfig,
-										ValidateDiagFunc: enum.Validate[types.EventSource](),
-									},
-									"maximum_execution_frequency": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
-									},
-									"message_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.MessageType](),
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_policy_details": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enable_debug_log_delivery": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"policy_runtime": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 64),
+												validation.StringMatch(regexache.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
+											),
+										},
+										"policy_text": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 10000),
+										},
 									},
 								},
 							},
-							Set: sdkv2.SimpleSchemaSetFunc("message_type", "event_source", "maximum_execution_frequency"),
-						},
-						"source_identifier": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
+							names.AttrOwner: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.Owner](),
+							},
+							"source_detail": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 25,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"event_source": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.EventSourceAwsConfig,
+											ValidateDiagFunc: enum.Validate[types.EventSource](),
+										},
+										"maximum_execution_frequency": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+										},
+										"message_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.MessageType](),
+										},
+									},
+								},
+							},
+							"source_identifier": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -226,21 +225,21 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			configRule.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			configRule.Scope = expandScope(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			configRule.Source = expandSource(v.([]any)[0].(map[string]any))
 		}
 
-		input := &configservice.PutConfigRuleInput{
+		input := configservice.PutConfigRuleInput{
 			ConfigRule: configRule,
 			Tags:       getTagsIn(ctx),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*types.InsufficientPermissionsException](ctx, propagationTimeout, func() (interface{}, error) {
-			return conn.PutConfigRule(ctx, input)
+		_, err := tfresource.RetryWhenIsA[any, *types.InsufficientPermissionsException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.PutConfigRule(ctx, &input)
 		})
 
 		if err != nil {
@@ -255,13 +254,13 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceConfigRuleRead(ctx, d, meta)...)
 }
 
-func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	rule, err := findConfigRuleByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Config Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -271,45 +270,26 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Config Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.ConfigRuleArn)
-	d.Set(names.AttrDescription, rule.Description)
-	if err := d.Set("evaluation_mode", flattenEvaluationModeConfigurations(rule.EvaluationModes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting evaluation_mode: %s", err)
-	}
-	d.Set("input_parameters", rule.InputParameters)
-	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
-	d.Set(names.AttrName, rule.ConfigRuleName)
-	d.Set("rule_id", rule.ConfigRuleId)
-	if rule.Scope != nil {
-		if err := d.Set(names.AttrScope, flattenScope(rule.Scope)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting scope: %s", err)
-		}
-	}
-	if rule.Source != nil && rule.Source.CustomPolicyDetails != nil && aws.ToString(rule.Source.CustomPolicyDetails.PolicyText) == "" {
-		// Source.CustomPolicyDetails.PolicyText is not returned by the API, so copy from state.
-		if v, ok := d.GetOk("source.0.custom_policy_details.0.policy_text"); ok {
-			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
-		}
-	}
-	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
+	if err := resourceConfigRuleFlatten(ctx, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Config Rule: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Config Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
-		return conn.DeleteConfigRule(ctx, &configservice.DeleteConfigRuleInput{
-			ConfigRuleName: aws.String(d.Id()),
-		})
+	input := configservice.DeleteConfigRuleInput{
+		ConfigRuleName: aws.String(d.Id()),
+	}
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteConfigRule(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchConfigRuleException](err) {
@@ -327,12 +307,40 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
+func resourceConfigRuleFlatten(_ context.Context, rule *types.ConfigRule, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, rule.ConfigRuleArn)
+	d.Set(names.AttrDescription, rule.Description)
+	if err := d.Set("evaluation_mode", flattenEvaluationModeConfigurations(rule.EvaluationModes)); err != nil {
+		return fmt.Errorf("setting evaluation_mode: %w", err)
+	}
+	d.Set("input_parameters", rule.InputParameters)
+	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
+	d.Set(names.AttrName, rule.ConfigRuleName)
+	d.Set("rule_id", rule.ConfigRuleId)
+	if rule.Scope != nil {
+		if err := d.Set(names.AttrScope, flattenScope(rule.Scope)); err != nil {
+			return fmt.Errorf("setting scope: %w", err)
+		}
+	}
+	if rule.Source != nil && rule.Source.CustomPolicyDetails != nil && aws.ToString(rule.Source.CustomPolicyDetails.PolicyText) == "" {
+		// Source.CustomPolicyDetails.PolicyText is not returned by the API, so copy from state.
+		if v, ok := d.GetOk("source.0.custom_policy_details.0.policy_text"); ok {
+			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
+		}
+	}
+	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
+		return fmt.Errorf("setting source: %w", err)
+	}
+
+	return nil
+}
+
 func findConfigRuleByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigRule, error) {
-	input := &configservice.DescribeConfigRulesInput{
+	input := configservice.DescribeConfigRulesInput{
 		ConfigRuleNames: []string{name},
 	}
 
-	return findConfigRule(ctx, conn, input)
+	return findConfigRule(ctx, conn, &input)
 }
 
 func findConfigRule(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigRulesInput) (*types.ConfigRule, error) {
@@ -354,8 +362,7 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 
 		if errs.IsA[*types.NoSuchConfigRuleException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -369,11 +376,11 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 	return output, nil
 }
 
-func statusConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConfigRule(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigRuleByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -397,7 +404,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 			types.ConfigRuleStateEvaluating,
 		),
 		Target:  []string{},
-		Refresh: statusConfigRule(ctx, conn, name),
+		Refresh: statusConfigRule(conn, name),
 		Timeout: timeout,
 	}
 
@@ -410,7 +417,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 	return nil, err
 }
 
-func expandEvaluationModeConfigurations(tfList []interface{}) []types.EvaluationModeConfiguration {
+func expandEvaluationModeConfigurations(tfList []any) []types.EvaluationModeConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -418,7 +425,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 	var apiObjects []types.EvaluationModeConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -435,7 +442,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 	return apiObjects
 }
 
-func expandScope(tfMap map[string]interface{}) *types.Scope {
+func expandScope(tfMap map[string]any) *types.Scope {
 	if tfMap == nil {
 		return nil
 	}
@@ -461,7 +468,7 @@ func expandScope(tfMap map[string]interface{}) *types.Scope {
 	return apiObject
 }
 
-func expandSource(tfMap map[string]interface{}) *types.Source {
+func expandSource(tfMap map[string]any) *types.Source {
 	if tfMap == nil {
 		return nil
 	}
@@ -470,8 +477,8 @@ func expandSource(tfMap map[string]interface{}) *types.Source {
 		Owner: types.Owner(tfMap[names.AttrOwner].(string)),
 	}
 
-	if v, ok := tfMap["custom_policy_details"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CustomPolicyDetails = expandCustomPolicyDetails(v[0].(map[string]interface{}))
+	if v, ok := tfMap["custom_policy_details"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CustomPolicyDetails = expandCustomPolicyDetails(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["source_detail"].(*schema.Set); ok && v.Len() > 0 {
@@ -485,7 +492,7 @@ func expandSource(tfMap map[string]interface{}) *types.Source {
 	return apiObject
 }
 
-func expandCustomPolicyDetails(tfMap map[string]interface{}) *types.CustomPolicyDetails {
+func expandCustomPolicyDetails(tfMap map[string]any) *types.CustomPolicyDetails {
 	if tfMap == nil {
 		return nil
 	}
@@ -499,7 +506,7 @@ func expandCustomPolicyDetails(tfMap map[string]interface{}) *types.CustomPolicy
 	return apiObject
 }
 
-func expandSourceDetails(tfList []interface{}) []types.SourceDetail {
+func expandSourceDetails(tfList []any) []types.SourceDetail {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -507,7 +514,7 @@ func expandSourceDetails(tfList []interface{}) []types.SourceDetail {
 	var apiObjects []types.SourceDetail
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -532,15 +539,15 @@ func expandSourceDetails(tfList []interface{}) []types.SourceDetail {
 	return apiObjects
 }
 
-func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfiguration) []interface{} {
+func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrMode: apiObject.Mode,
 		}
 
@@ -550,12 +557,12 @@ func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfig
 	return tfList
 }
 
-func flattenScope(apiObject *types.Scope) []interface{} {
+func flattenScope(apiObject *types.Scope) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComplianceResourceId != nil {
 		tfMap["compliance_resource_id"] = aws.ToString(apiObject.ComplianceResourceId)
@@ -573,15 +580,15 @@ func flattenScope(apiObject *types.Scope) []interface{} {
 		tfMap["tag_value"] = aws.ToString(apiObject.TagValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSource(apiObject *types.Source) []interface{} {
+func flattenSource(apiObject *types.Source) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrOwner:     apiObject.Owner,
 		"source_identifier": aws.ToString(apiObject.SourceIdentifier),
 	}
@@ -594,32 +601,32 @@ func flattenSource(apiObject *types.Source) []interface{} {
 		tfMap["source_detail"] = flattenSourceDetails(apiObject.SourceDetails)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomPolicyDetails(apiObject *types.CustomPolicyDetails) []interface{} {
+func flattenCustomPolicyDetails(apiObject *types.CustomPolicyDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"enable_debug_log_delivery": apiObject.EnableDebugLogDelivery,
 		"policy_runtime":            aws.ToString(apiObject.PolicyRuntime),
 		"policy_text":               aws.ToString(apiObject.PolicyText),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSourceDetails(apiObjects []types.SourceDetail) []interface{} {
+func flattenSourceDetails(apiObjects []types.SourceDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"event_source":                apiObject.EventSource,
 			"maximum_execution_frequency": apiObject.MaximumExecutionFrequency,
 			"message_type":                apiObject.MessageType,

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -18,62 +20,65 @@ func dataSourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizerRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorizer_credentials": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorizer_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"authorizer_result_ttl_in_seconds": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"authorizer_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_validation_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"provider_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authorizer_credentials": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authorizer_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"authorizer_result_ttl_in_seconds": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"authorizer_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_source": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_validation_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"provider_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	authorizerID := d.Get("authorizer_id").(string)
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, authorizerID, apiID)
 
 	if err != nil {
@@ -81,7 +86,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(authorizerID)
-	d.Set(names.AttrARN, authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
+	d.Set(names.AttrARN, authorizerARN(ctx, c, apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)

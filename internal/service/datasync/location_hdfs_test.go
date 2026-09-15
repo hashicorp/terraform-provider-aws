@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -10,13 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,20 +23,20 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationHDFSExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SIMPLE"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_keytab"),
@@ -46,15 +45,15 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_krb5_conf_base64"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_principal", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "name_node.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
 						names.AttrPort: "80",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "replication_factor", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "simple_user", rName),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
@@ -71,21 +70,29 @@ func TestAccDataSyncLocationHDFS_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
+					testAccCheckLocationHDFSExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationHDFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -95,19 +102,19 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHDFSConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckLocationHDFSExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -119,8 +126,8 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationHDFSConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckLocationHDFSExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -128,8 +135,8 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationHDFSConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckLocationHDFSExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -141,21 +148,21 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	principal := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	principal := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHDFSConfig_kerberos(rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationHDFSExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "KERBEROS"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_keytab"),
@@ -164,14 +171,14 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_krb5_conf_base64"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_principal", principal),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "name_node.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
 						names.AttrPort: "80",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_factor", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
@@ -188,9 +195,9 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationHDFSDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationHDFSDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_hdfs" {
@@ -199,7 +206,7 @@ func testAccCheckLocationHDFSDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfdatasync.FindLocationHDFSByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -214,14 +221,14 @@ func testAccCheckLocationHDFSDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckLocationHDFSExists(ctx context.Context, n string, v *datasync.DescribeLocationHdfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationHDFSExists(ctx context.Context, t *testing.T, n string, v *datasync.DescribeLocationHdfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationHDFSByARN(ctx, conn, rs.Primary.ID)
 
@@ -236,7 +243,7 @@ func testAccCheckLocationHDFSExists(ctx context.Context, n string, v *datasync.D
 }
 
 func testAccLocationHDFSConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q

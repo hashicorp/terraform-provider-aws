@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint
@@ -25,43 +25,41 @@ func sweepApps(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.PinpointClient(ctx)
-
 	input := &pinpoint.GetAppsInput{}
+	conn := client.PinpointClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.GetApps(ctx, input)
-		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Pinpoint apps: %s", err)
+	err = getAppsPages(ctx, conn, input, func(page *pinpoint.GetAppsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if len(output.ApplicationsResponse.Item) == 0 {
-			log.Print("[DEBUG] No Pinpoint apps to sweep")
-			return nil
+		for _, v := range page.ApplicationsResponse.Item {
+			r := resourceApp()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		for _, item := range output.ApplicationsResponse.Item {
-			name := aws.ToString(item.Name)
+		return !lastPage
+	})
 
-			log.Printf("[INFO] Deleting Pinpoint app %s", name)
-			_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
-				ApplicationId: item.Id,
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting Pinpoint app %s: %s", name, err)
-			}
-		}
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping End User Messaging App sweep for %s: %s", region, err)
+		return nil
+	}
 
-		if output.ApplicationsResponse.NextToken == nil {
-			break
-		}
-		input.Token = output.ApplicationsResponse.NextToken
+	if err != nil {
+		return fmt.Errorf("error listing End User Messaging Apps (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping End User Messaging Apps (%s): %w", region, err)
 	}
 
 	return nil

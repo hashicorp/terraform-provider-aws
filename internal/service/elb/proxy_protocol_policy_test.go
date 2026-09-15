@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,10 +14,10 @@ import (
 
 func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
+	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(t, 5))
 	resourceName := "aws_proxy_protocol_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -28,7 +27,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				Config: testAccProxyProtocolPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "load_balancer", lbName),
-					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_ports.*", "25"),
 				),
 			},
@@ -36,7 +35,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				Config: testAccProxyProtocolPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "load_balancer", lbName),
-					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "instance_ports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_ports.*", "25"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_ports.*", "587"),
 				),

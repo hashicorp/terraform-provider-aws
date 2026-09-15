@@ -71,6 +71,7 @@ resource "aws_iam_role_policy" "p" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the delivery channel. Defaults to `default`. Changing it recreates the resource.
 * `s3_bucket_name` - (Required) The name of the S3 bucket used to store the configuration history.
 * `s3_key_prefix` - (Optional) The prefix for the specified S3 bucket.
@@ -84,23 +85,47 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The name of the delivery channel.
+This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Delivery Channel using the name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_config_delivery_channel.foo
+  to = aws_config_delivery_channel.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_delivery_channel" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the delivery channel.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Delivery Channels using the `name`. For example:
+
+```terraform
+import {
+  to = aws_config_delivery_channel.example
   id = "example"
 }
 ```
 
-Using `terraform import`, import Delivery Channel using the name. For example:
+Using `terraform import`, import Delivery Channels using the `name`. For example:
 
 ```console
-% terraform import aws_config_delivery_channel.foo example
+% terraform import aws_config_delivery_channel.example example
 ```

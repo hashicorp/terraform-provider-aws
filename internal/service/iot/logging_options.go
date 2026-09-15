@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -20,6 +22,11 @@ import (
 )
 
 // @SDKResource("aws_iot_logging_options", name="Logging Options")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @NoImport
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
 func resourceLoggingOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingOptionsPut,
@@ -27,26 +34,28 @@ func resourceLoggingOptions() *schema.Resource {
 		UpdateWithoutTimeout: resourceLoggingOptionsPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"default_log_level": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
-			},
-			"disable_all_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"default_log_level": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
+				},
+				"disable_all_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
 
-func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
@@ -65,7 +74,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.SetV2LoggingOptions(ctx, input)
 	})
 
@@ -74,13 +83,13 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceLoggingOptionsRead(ctx, d, meta)...)
 }
 
-func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)

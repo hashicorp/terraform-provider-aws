@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # names
 
 Package `names` provides AWS service-name information that is critical to the Terraform AWS Provider working correctly. If you are unsure about a change you are making, please do not hesitate to ask!
@@ -20,23 +23,23 @@ The schema of the attributes and blocks of `data/names_data.hcl` are as follows:
 ```hcl
 service "" {
 
-  // If both of these attributes are the same as the service block's name, this block will be ommitted
+  // If both of these attributes are the same as the service block's name, this block will be omitted
   cli_v2_command { 
     aws_cli_v2_command           = ""
     aws_cli_v2_command_no_dashes = ""
   }
 
-  // If both of these attributes are the same as the service block's name, this block will be ommitted
+  // If both of these attributes are the same as the service block's name, this block will be omitted
   go_packages { 
     v1_package = ""
     v2_package = ""
   } 
 
-  // If any blocks below here have attirbutes with empty strings or false bools, they will be ommitted
-  // Blocks with zero attributes will be ommitted 
+  // If any blocks below here have attirbutes with empty strings or false bools, they will be omitted
+  // Blocks with zero attributes will be omitted 
   sdk {
     id             = "" 
-    client_version = [] 
+    client_version = 2 
   }
 
   names {
@@ -76,6 +79,7 @@ service "" {
   not_implemented     = bool
   allowed_subcategory = bool
   note                = ""
+  is_global           = bool
 }
 
 ```
@@ -90,10 +94,11 @@ The explanation of the attributes of `data/names_data.hcl` are as follows:
 | `v1_package` | Code | [AWS SDK for Go v1](https://docs.aws.amazon.com/sdk-for-go/api/) package name |
 | `v2_package` | Code | [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2) package name |
 | `id` | Code | Represents the ServiceID of a AWS service which is a unique identifier of a specific service |
-| `client_version` | Code | HCL int list containing if in the TF AWS Provider, the service currently uses AWS SDK for Go v1 and/or v2; each integer represents the correlating version|
+| `client_version` | Code | Indicates which version of the AWS SDK is used for this service. Defaults to `2` |
 | `aliases` | Code | HCL string list of name variations (_e.g._, for "AMP", `prometheus,prometheusservice`). Do not include **ProviderPackageActual (or `provider_package_correct`, if blank) since that will create duplicates in the [Custom Endpoints guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/custom-service-endpoints). |
 | `provider_name_upper` | Code | [Correctly capitalized](https://hashicorp.github.io/terraform-provider-aws/naming/#mixed-caps) `ProviderPackageActual`, if it exists, otherwise `provider_package_correct` |
 | `human_friendly` | Code | [REQUIRED] Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
+| `human_friendly_short` | Code | Human-friendly name of service as used by AWS, but without parentheticals, _e.g._, For S3, this would be `S3` instead of `S3 (Simple Storage)`. |
 | `go_v1_client_typename` | Code | _Exact name_ (_i.e._, spelling and capitalization) of the AWS SDK for Go v1 client type (_e.g._, see the [`New()` return type](https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#New) for SES). Also excluded when service only supports AWS SDK for Go v2|
 | `skip_client_generate` | Code | Some service clients need special configuration rather than the default generated configuration; use a non-empty value to skip generation but you must then manually configure the client in `internal/conns/config.go` |
 | `deprecated_env_var` | Code | Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services |
@@ -113,5 +118,6 @@ The explanation of the attributes of `data/names_data.hcl` are as follows:
 | `allowed_subcategory` | Code | Bool based on if `Exclude` is non-blank, whether to include `human_friendly` in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides `exclude` in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if `Exclude` is non-blank. |
 | `not_implemented` | Code | Bool based on whether the service is implemented by the provider |
 | `note` | Reference | Very brief note usually to explain why excluded |
+| `is_global` | Code | Bool indicating whether the service is [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html). See [the Enhanced Region Support Guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/enhanced-region-support#global-services) |
 
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).

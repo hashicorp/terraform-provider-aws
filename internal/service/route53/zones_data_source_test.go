@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -14,10 +14,10 @@ import (
 
 func TestAccRoute53ZonesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 	dataSourceName := "data.aws_route53_zones.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

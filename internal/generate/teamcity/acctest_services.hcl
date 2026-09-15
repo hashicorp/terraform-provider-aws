@@ -1,5 +1,9 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
+
+service "agentregistry" {
+  parallelism = 10
+}
 
 service "amp" {
   # The maximum scrapers per region quota is fixed at 10
@@ -11,7 +15,8 @@ service "apigateway" {
 }
 
 service "apigatewayv2" {
-  vpc_lock = true
+  vpc_lock    = true
+  parallelism = 10
 }
 
 service "appautoscaling" {
@@ -22,8 +27,16 @@ service "appfabric" {
   region = "us-east-1"
 }
 
+service "appintegrations" {
+  parallelism = 10
+}
+
 service "appstream" {
   vpc_lock    = true
+  parallelism = 10
+}
+
+service "arcregionswitch" {
   parallelism = 10
 }
 
@@ -39,6 +52,10 @@ service "bcmdataexports" {
   parallelism = 5
 }
 
+service "cleanrooms" {
+  parallelism = 10
+}
+
 service "cloudformation" {
   vpc_lock = true
 }
@@ -47,12 +64,20 @@ service "cloudhsmv2" {
   vpc_lock = true
 }
 
+service "cloudtrail" {
+  parallelism = 5
+}
+
 service "comprehend" {
   parallelism = 10
 }
 
 service "cur" {
   region = "us-east-1"
+}
+
+service "dataexchange" {
+  parallelism = 10
 }
 
 service "datasync" {
@@ -125,6 +150,10 @@ service "elasticsearch" {
   vpc_lock = true
 }
 
+service "elastictranscoder" {
+  skip = true
+}
+
 service "elb" {
   vpc_lock = true
 }
@@ -137,6 +166,14 @@ service "emr" {
   vpc_lock = true
 }
 
+service "evidently" {
+  skip = true
+}
+
+service "finspace" {
+  skip = true
+}
+
 service "fms" {
   region = "us-east-1"
 }
@@ -147,6 +184,10 @@ service "fsx" {
 
 service "imagebuilder" {
   vpc_lock = true
+}
+
+service "inspector" {
+  skip = true
 }
 
 service "ipam" {
@@ -175,8 +216,16 @@ service "lambda" {
   vpc_lock = true
 }
 
+service "lexmodels" {
+  skip = true
+}
+
 service "lightsail" {
   region = "us-east-1"
+}
+
+service "m2" {
+  skip = true
 }
 
 service "mq" {
@@ -207,12 +256,25 @@ service "pricing" {
   region = "us-east-1"
 }
 
+service "qldb" {
+  skip = true
+}
+
+service "ram" {
+  parallelism = 10 # Max Permissions
+}
+
 service "rds" {
   vpc_lock = true
 }
 
 service "redshift" {
-  vpc_lock = true
+  vpc_lock    = true
+  parallelism = 10 # Max Snapshot Copy Grants
+}
+
+service "resiliencehub" {
+  parallelism = 10
 }
 
 service "route53" {
@@ -221,6 +283,10 @@ service "route53" {
 
 service "route53resolver" {
   vpc_lock = true
+}
+
+service "glacier" {
+  skip = true
 }
 
 service "sagemaker" {
@@ -270,6 +336,11 @@ service "vpc" {
   split_package_real_package = "ec2"
 }
 
+service "vpclattice" {
+  vpc_lock    = true
+  parallelism = 10
+}
+
 service "vpnclient" {
   vpc_lock                   = true
   pattern_override           = "TestAccClientVPN"
@@ -283,7 +354,11 @@ service "vpnsite" {
 }
 
 service "waf" {
-  region = "us-east-1"
+  skip = true
+}
+
+service "wafregional" {
+  skip = true
 }
 
 service "wavelength" {

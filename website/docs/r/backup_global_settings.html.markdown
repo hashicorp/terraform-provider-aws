@@ -10,12 +10,16 @@ description: |-
 
 Provides an AWS Backup Global Settings resource.
 
+~> **Note:** This resource will show perpetual differences for any supported settings not explicitly configured in the `global_settings` configuration block. To avoid this, specify all supported options with their default values (typically `"false"`, but check the plan diff for the actual value). See [UpdateGlobalSettings](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_UpdateGlobalSettings.html) in the AWS Backup Developer Guide for available settings.
+
 ## Example Usage
 
 ```terraform
 resource "aws_backup_global_settings" "test" {
   global_settings = {
-    "isCrossAccountBackupEnabled" = "true"
+    "isCrossAccountBackupEnabled"     = "true"
+    "isMpaEnabled"                    = "false"
+    "isDelegatedAdministratorEnabled" = "false"
   }
 }
 ```
@@ -24,7 +28,7 @@ resource "aws_backup_global_settings" "test" {
 
 This resource supports the following arguments:
 
-* `global_settings` - (Required) A list of resources along with the opt-in preferences for the account.
+* `global_settings` - (Required) A list of resources along with the opt-in preferences for the account. For a list of inputs, see [UpdateGlobalSettings](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_UpdateGlobalSettings.html) in the AWS Backup Developer Guide.
 
 ## Attribute Reference
 

@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 set -euo pipefail
+
+# shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
+if [[ "%SERVICE_PACKAGE%" == "" ]]; then
+	echo "SERVICE_PACKAGE variable is required"
+	exit 1
+fi
+
+PKG="./internal/service/%SERVICE_PACKAGE%/..."
 
 # shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
@@ -8,35 +18,16 @@ if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
 	exit 1
 fi
 
-echo "Filtering acceptance tests: %TEST_PATTERN%"
-
-TEST_LIST=$(go test ./... -list="%TEST_PATTERN%" 2>/dev/null)
-
-read -r -a split <<<"${TEST_LIST}"
-TEST_COUNT=${#split[@]}
-
-if [[ "${TEST_COUNT}" == 0 ]]; then
-	echo "Zero tests"
-	exit 0
-elif [[ "${TEST_COUNT}" == 1 ]]; then
-	echo "Running 1 test:"
-else
-	echo "Running ${TEST_COUNT} tests:"
-fi
-echo "${TEST_LIST}"
-echo
-
 # shellcheck disable=2157 # These aren't constant strings, they're TeamCity variable substitution
 if [[ -n "%ACCTEST_ROLE_ARN%" || -n "%ACCTEST_ALTERNATE_ROLE_ARN%" ]]; then
 	conf=$(pwd)/aws.conf
 
 	function cleanup {
-		rm "${conf}"
+		rm -f "${conf}"
 	}
 	trap cleanup EXIT
 
-	touch "${conf}"
-	chmod 600 "${conf}"
+	install -m 600 /dev/null "${conf}"
 
 	export AWS_CONFIG_FILE="${conf}"
 
@@ -70,11 +61,26 @@ aws_access_key_id     = %AWS_ALTERNATE_ACCESS_KEY_ID%
 aws_secret_access_key = %AWS_ALTERNATE_SECRET_ACCESS_KEY%
 EOF
 
-		unset AWS_ALTERNATE_ACCESS_KEY_ID
-		unset AWS_ALTERNATE_SECRET_ACCESS_KEY
-
 		export AWS_ALTERNATE_PROFILE=alternate
 	fi
 fi
 
-TF_ACC=1 go test ./... -run="%TEST_PATTERN%" -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0
+echo "Downloading Go module dependencies"
+go mod download
+
+echo "Running acceptance tests for ${PKG} with pattern %TEST_PREFIX%"
+
+TEST_PREFIX="%TEST_PREFIX%"
+TEST_PREFIX="${TEST_PREFIX#\(}"
+TEST_PREFIX="${TEST_PREFIX%\)}"
+echo "% TF_ACC=1 go test '${PKG}' -count=1 -json -v -run='%TEST_PREFIX%' -parallel '%ACCTEST_PARALLELISM%' -timeout=0 -vet=off -buildvcs=false" > /tmp/test_command.txt
+
+TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false \
+    | tee /tmp/test_output.json || true
+
+jq -s '[.[] | select(.Action == "pass" or .Action == "fail" or .Action == "skip") | select(.Test != null)] | length' \
+    /tmp/test_output.json > /tmp/test_count.txt
+
+echo "Total tests run: $(cat /tmp/test_count.txt)"
+
+exit 0

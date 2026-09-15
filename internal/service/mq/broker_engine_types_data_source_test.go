@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mq_test
@@ -16,7 +16,7 @@ func TestAccMQBrokerEngineTypesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_mq_broker_engine_types.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
@@ -28,7 +28,7 @@ func TestAccMQBrokerEngineTypesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBrokerEngineTypesDataSourceConfig_basic("ACTIVEMQ"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.0.engine_type", "ACTIVEMQ"),
 				),
 			},

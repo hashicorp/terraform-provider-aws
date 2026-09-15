@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package qldb
 
@@ -17,45 +19,47 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_qldb_ledger")
+// @SDKDataSource("aws_qldb_ledger", name="Ledger")
 func dataSourceLedger() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLedgerRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrKMSKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
-				),
-			},
-			"permissions_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrKMSKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 32),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					),
+				},
+				"permissions_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	ledger, err := findLedgerByName(ctx, conn, name)
@@ -67,8 +71,9 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(ledger.Name))
 	d.Set(names.AttrARN, ledger.Arn)
 	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
-	if ledger.EncryptionDescription != nil {
-		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+	encryptionDescription := ledger.EncryptionDescription
+	if encryptionDescription != nil {
+		d.Set(names.AttrKMSKey, encryptionDescription.KmsKeyArn)
 	} else {
 		d.Set(names.AttrKMSKey, nil)
 	}

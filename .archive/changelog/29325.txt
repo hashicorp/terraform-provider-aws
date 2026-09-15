@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_log_group: Fix IAM eventual consistency error when setting a retention policy
-```

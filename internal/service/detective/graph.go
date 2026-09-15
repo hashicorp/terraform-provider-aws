@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package detective
 
@@ -16,57 +18,58 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_detective_graph", name="Graph")
-// @Tags(identifierAttribute="id")
-func ResourceGraph() *schema.Resource {
+// @Tags(identifierAttribute="graph_arn")
+// @ArnIdentity("graph_arn")
+// @Testing(preIdentityVersion="v6.50.0")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/detective/types;awstypes;awstypes.Graph")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+func resourceGraph() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGraphCreate,
 		ReadWithoutTimeout:   resourceGraphRead,
 		UpdateWithoutTimeout: resourceGraphUpdate,
 		DeleteWithoutTimeout: resourceGraphDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"graph_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"graph_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
+
+	input := detective.CreateGraphInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	const (
 		timeout = 4 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
-
-	input := &detective.CreateGraphInput{
-		Tags: getTagsIn(ctx),
-	}
-
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, timeout, func() (interface{}, error) {
-		return conn.CreateGraph(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InternalServerException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.CreateGraph(ctx, &input)
 	})
 
 	if err != nil {
@@ -78,14 +81,14 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGraphRead(ctx, d, meta)...)
 }
 
-func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	graph, err := FindGraphByARN(ctx, conn, d.Id())
+	graph, err := findGraphByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Detective Graph (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -101,20 +104,21 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceGraphRead(ctx, d, meta)
 }
 
-func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Graph: %s", d.Id())
-	_, err := conn.DeleteGraph(ctx, &detective.DeleteGraphInput{
+	input := detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGraph(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -127,10 +131,10 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindGraphByARN(ctx context.Context, conn *detective.Client, arn string) (*awstypes.Graph, error) {
-	input := &detective.ListGraphsInput{}
+func findGraphByARN(ctx context.Context, conn *detective.Client, arn string) (*awstypes.Graph, error) {
+	var input detective.ListGraphsInput
 
-	return findGraph(ctx, conn, input, func(v awstypes.Graph) bool {
+	return findGraph(ctx, conn, &input, func(v awstypes.Graph) bool {
 		return aws.ToString(v.Arn) == arn
 	})
 }
@@ -149,7 +153,6 @@ func findGraphs(ctx context.Context, conn *detective.Client, input *detective.Li
 	var output []awstypes.Graph
 
 	pages := detective.NewListGraphsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

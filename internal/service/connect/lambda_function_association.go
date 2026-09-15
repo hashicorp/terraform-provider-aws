@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -11,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,37 +40,41 @@ func resourceLambdaFunctionAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFunctionARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFunctionARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	functionARN := d.Get(names.AttrFunctionARN).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{instanceID, functionARN}, lambdaFunctionAssociationResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{instanceID, functionARN}, lambdaFunctionAssociationResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &connect.AssociateLambdaFunctionInput{
 		FunctionArn: aws.String(functionARN),
 		InstanceId:  aws.String(instanceID),
 	}
 
-	_, err := conn.AssociateLambdaFunction(ctx, input)
-
-	if err != nil {
+	if _, err := conn.AssociateLambdaFunction(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Lambda Function Association (%s): %s", id, err)
 	}
 
@@ -77,7 +83,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceLambdaFunctionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -89,7 +95,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	instanceID, functionARN := parts[0], parts[1]
 	_, err = findLambdaFunctionAssociationByTwoPartKey(ctx, conn, instanceID, functionARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -105,7 +111,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -117,10 +123,11 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 	instanceID, functionARN := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Connect Lambda Function Association: %s", d.Id())
-	_, err = conn.DisassociateLambdaFunction(ctx, &connect.DisassociateLambdaFunctionInput{
+	input := connect.DisassociateLambdaFunctionInput{
 		InstanceId:  aws.String(instanceID),
 		FunctionArn: aws.String(functionARN),
-	})
+	}
+	_, err = conn.DisassociateLambdaFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -164,8 +171,7 @@ func findLambdaFunctions(ctx context.Context, conn *connect.Client, input *conne
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

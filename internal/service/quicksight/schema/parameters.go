@@ -1,12 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
+	"sync"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,7 +31,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -51,7 +51,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -70,7 +70,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -89,7 +89,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrName: stringNonEmptyRequiredSchema(),
 							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -106,35 +106,43 @@ func ParametersSchema() *schema.Schema {
 	}
 }
 
-func ExpandParameters(tfList []interface{}) *awstypes.Parameters {
+var stringNonEmptyRequiredSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringIsNotWhiteSpace,
+	}
+})
+
+func ExpandParameters(tfList []any) *awstypes.Parameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.Parameters{}
 
-	if v, ok := tfMap["date_time_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["date_time_parameters"].([]any); ok && len(v) > 0 {
 		apiObject.DateTimeParameters = expandDateTimeParameters(v)
 	}
-	if v, ok := tfMap["decimal_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["decimal_parameters"].([]any); ok && len(v) > 0 {
 		apiObject.DecimalParameters = expandDecimalParameters(v)
 	}
-	if v, ok := tfMap["integer_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["integer_parameters"].([]any); ok && len(v) > 0 {
 		apiObject.IntegerParameters = expandIntegerParameters(v)
 	}
-	if v, ok := tfMap["string_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["string_parameters"].([]any); ok && len(v) > 0 {
 		apiObject.StringParameters = expandStringParameters(v)
 	}
 
 	return apiObject
 }
 
-func expandDateTimeParameters(tfList []interface{}) []awstypes.DateTimeParameter {
+func expandDateTimeParameters(tfList []any) []awstypes.DateTimeParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -142,7 +150,7 @@ func expandDateTimeParameters(tfList []interface{}) []awstypes.DateTimeParameter
 	var apiObjects []awstypes.DateTimeParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -158,7 +166,7 @@ func expandDateTimeParameters(tfList []interface{}) []awstypes.DateTimeParameter
 	return apiObjects
 }
 
-func expandDateTimeParameter(tfMap map[string]interface{}) *awstypes.DateTimeParameter {
+func expandDateTimeParameter(tfMap map[string]any) *awstypes.DateTimeParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -168,14 +176,14 @@ func expandDateTimeParameter(tfMap map[string]interface{}) *awstypes.DateTimePar
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringTimeValueList(v, time.RFC3339)
 	}
 
 	return apiObject
 }
 
-func expandDecimalParameters(tfList []interface{}) []awstypes.DecimalParameter {
+func expandDecimalParameters(tfList []any) []awstypes.DecimalParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -183,7 +191,7 @@ func expandDecimalParameters(tfList []interface{}) []awstypes.DecimalParameter {
 	var apiObjects []awstypes.DecimalParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -199,7 +207,7 @@ func expandDecimalParameters(tfList []interface{}) []awstypes.DecimalParameter {
 	return apiObjects
 }
 
-func expandDecimalParameter(tfMap map[string]interface{}) *awstypes.DecimalParameter {
+func expandDecimalParameter(tfMap map[string]any) *awstypes.DecimalParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -209,14 +217,14 @@ func expandDecimalParameter(tfMap map[string]interface{}) *awstypes.DecimalParam
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandFloat64ValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandIntegerParameters(tfList []interface{}) []awstypes.IntegerParameter {
+func expandIntegerParameters(tfList []any) []awstypes.IntegerParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -224,7 +232,7 @@ func expandIntegerParameters(tfList []interface{}) []awstypes.IntegerParameter {
 	var apiObjects []awstypes.IntegerParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -240,7 +248,7 @@ func expandIntegerParameters(tfList []interface{}) []awstypes.IntegerParameter {
 	return apiObjects
 }
 
-func expandIntegerParameter(tfMap map[string]interface{}) *awstypes.IntegerParameter {
+func expandIntegerParameter(tfMap map[string]any) *awstypes.IntegerParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -250,14 +258,14 @@ func expandIntegerParameter(tfMap map[string]interface{}) *awstypes.IntegerParam
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandInt64ValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandStringParameters(tfList []interface{}) []awstypes.StringParameter {
+func expandStringParameters(tfList []any) []awstypes.StringParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -265,7 +273,7 @@ func expandStringParameters(tfList []interface{}) []awstypes.StringParameter {
 	var apiObjects []awstypes.StringParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -281,7 +289,7 @@ func expandStringParameters(tfList []interface{}) []awstypes.StringParameter {
 	return apiObjects
 }
 
-func expandStringParameter(tfMap map[string]interface{}) *awstypes.StringParameter {
+func expandStringParameter(tfMap map[string]any) *awstypes.StringParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -291,7 +299,7 @@ func expandStringParameter(tfMap map[string]interface{}) *awstypes.StringParamet
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 

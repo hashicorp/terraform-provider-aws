@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -407,7 +407,7 @@ func resourceClusterResourceV0() *schema.Resource {
 	}
 }
 
-func clusterStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func clusterStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return nil, nil
 	}
