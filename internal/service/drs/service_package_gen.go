@@ -27,6 +27,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newLaunchConfigurationTemplateResource,
+			TypeName: "aws_drs_launch_configuration_template",
+			Name:     "Launch Configuration Template",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newReplicationConfigurationTemplateResource,
 			TypeName: "aws_drs_replication_configuration_template",
 			Name:     "Replication Configuration Template",
