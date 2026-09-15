@@ -70,6 +70,7 @@ The following arguments are optional:
 * `ingress_point_configuration` - (Optional) Configuration used to authenticate with the ingress point. See [`ingress_point_configuration` Block](#ingress_point_configuration-block) for details.
 * `network_configuration` - (Optional) Network configuration for the ingress point. See [`network_configuration` Block](#network_configuration-block) for details. Changing this value forces a new resource.
 * `region` - (Optional) Region where this resource is managed.
+* `status_to_update` - (Optional) Status to apply to the ingress point. Valid values are `ACTIVE` and `CLOSED`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tls_policy` - (Optional) TLS policy for the ingress point. Valid values are `REQUIRED`, `OPTIONAL`, and `FIPS`.
 

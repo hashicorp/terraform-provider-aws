@@ -33,14 +33,6 @@ type fileSystemListResource struct {
 func (r *fileSystemListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().S3FilesClient(ctx)
 
-	var query listFileSystemModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		input := s3files.ListFileSystemsInput{}
@@ -83,8 +75,4 @@ func (r *fileSystemListResource) List(ctx context.Context, request list.ListRequ
 			}
 		}
 	}
-}
-
-type listFileSystemModel struct {
-	framework.WithRegionModel
 }
