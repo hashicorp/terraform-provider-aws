@@ -145,6 +145,73 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 	})
 }
 
+func TestAccDirectConnectPublicVirtualInterface_rateLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	var vif awstypes.VirtualInterface
+	resourceName := "aws_dx_public_virtual_interface.test"
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
+	amazonAddress := "175.45.176.9/28"
+	customerAddress := "175.45.176.10/28"
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPublicVirtualInterfaceConfig_rateLimit(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "1Gbps"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDirectConnectPublicVirtualInterface_bgpASNLong(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	var vif awstypes.VirtualInterface
+	resourceName := "aws_dx_public_virtual_interface.test"
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
+	amazonAddress := "175.45.177.1/28"
+	customerAddress := "175.45.177.2/28"
+	vlan := acctest.RandIntRange(t, 2049, 4094)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPublicVirtualInterfaceConfig_bgpASNLong(connectionID, rName, amazonAddress, customerAddress, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn_long", "4200012999"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPublicVirtualInterfaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckVirtualInterfaceDestroy(ctx, t, s, "aws_dx_public_virtual_interface")
@@ -224,40 +291,6 @@ resource "aws_dx_public_virtual_interface" "test" {
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
 }
 
-func TestAccDirectConnectPublicVirtualInterface_rateLimit(t *testing.T) {
-	ctx := acctest.Context(t)
-	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
-
-	var vif awstypes.VirtualInterface
-	resourceName := "aws_dx_public_virtual_interface.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
-	amazonAddress := "175.45.176.9/28"
-	customerAddress := "175.45.176.10/28"
-	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
-	vlan := acctest.RandIntRange(t, 2049, 4094)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPublicVirtualInterfaceConfig_rateLimit(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
-					resource.TestCheckResourceAttr(resourceName, "rate_limit", "1Gbps"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccPublicVirtualInterfaceConfig_rateLimit(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "test" {
@@ -276,4 +309,23 @@ resource "aws_dx_public_virtual_interface" "test" {
   ]
 }
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
+}
+
+func testAccPublicVirtualInterfaceConfig_bgpASNLong(cid, rName, amzAddr, custAddr string, vlan int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_public_virtual_interface" "test" {
+  address_family   = "ipv4"
+  amazon_address   = %[3]q
+  bgp_asn_long     = "4200012999"
+  connection_id    = %[1]q
+  customer_address = %[4]q
+  name             = %[2]q
+  vlan             = %[5]d
+
+  route_filter_prefixes = [
+    "175.45.176.0/22",
+    "210.52.109.0/24",
+  ]
+}
+`, cid, rName, amzAddr, custAddr, vlan)
 }
