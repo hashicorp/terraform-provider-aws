@@ -9,7 +9,9 @@ var (
 	ResourceLandingZone = resourceLandingZone
 	ResourceBaseline    = newResourceBaseline
 
-	FindBaselineByID               = findBaselineByID
-	FindEnabledControlByTwoPartKey = findEnabledControlByTwoPartKey
-	FindLandingZoneByID            = findLandingZoneByID
+	FindBaselineByID                           = findBaselineByID
+	FindEnabledControlByTwoPartKey             = findEnabledControlByTwoPartKey
+	FindLandingZoneByID                        = findLandingZoneByID
+	NormalizeManifestJSON                      = normalizeManifestJSON
+	SuppressEquivalentLandingZoneManifestDiffs = suppressEquivalentLandingZoneManifestDiffs
 )
