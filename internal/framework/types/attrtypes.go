@@ -60,7 +60,7 @@ func attributeTypesSlow[T any](ctx context.Context, typ reflect.Type) (map[strin
 			return nil, diags
 		}
 
-		if field.Type.Implements(attrValueType) {
+		if field.Type.Kind() != reflect.Interface && field.Type.Implements(attrValueType) {
 			v := reflect.New(field.Type).Elem().Interface().(attr.Value)
 			attributeTypes[tag] = v.Type(ctx)
 		}

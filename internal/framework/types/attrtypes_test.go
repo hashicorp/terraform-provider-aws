@@ -44,6 +44,11 @@ type attributeTypesTestStructNonAttrValue struct {
 	NotAttr string       `tfsdk:"not_attr"`
 }
 
+type attributeTypesTestStructInterfaceField struct {
+	Name  types.String `tfsdk:"name"`
+	Value attr.Value   `tfsdk:"value"`
+}
+
 type attributeTypesTestInnerModel struct {
 	Value types.String `tfsdk:"value"`
 }
@@ -108,6 +113,12 @@ func TestAttributeTypes(t *testing.T) {
 		},
 		"non-attr.Value field skipped": {
 			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructNonAttrValue],
+			expected: map[string]attr.Type{
+				"name": types.StringType,
+			},
+		},
+		"attr.Value interface field skipped": {
+			attributeTypes: fwtypes.AttributeTypes[attributeTypesTestStructInterfaceField],
 			expected: map[string]attr.Type{
 				"name": types.StringType,
 			},
