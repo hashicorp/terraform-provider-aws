@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dx_bgp_peer: Add `bgp_asn_long` argument
+```
+
+```release-note:note
+resource/aws_dx_bgp_peer: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```
