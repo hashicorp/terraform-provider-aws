@@ -521,9 +521,9 @@ resource "aws_iam_role_policy" "test" {
         ]
       },
       {
-        Sid      = "GlueSchemaRegistryAccess"
-        Effect   = "Allow"
-        Action   = ["glue:GetSchemaVersion"]
+        Sid    = "GlueSchemaRegistryAccess"
+        Effect = "Allow"
+        Action = ["glue:GetSchemaVersion"]
         Resource = [
           aws_glue_registry.test.arn,
           aws_glue_schema.test.arn,
