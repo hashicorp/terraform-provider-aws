@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestServicePackageNewClient_ignoresAWSBearerToken(t *testing.T) {
+func TestServicePackageNewClient_ignoresBearerTokenEnvVar(t *testing.T) {
 	t.Setenv("AWS_BEARER_TOKEN_BEDROCK", "test-token")
 
 	authorization := make(chan string, 1)
@@ -29,7 +29,7 @@ func TestServicePackageNewClient_ignoresAWSBearerToken(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	cfg := aws.Config{
-		Region:      "us-west-2",
+		Region:      "test-region",
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("access-key", "secret-key", "")),
 		HTTPClient:  server.Client(),
 	}
