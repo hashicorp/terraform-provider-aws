@@ -2527,6 +2527,7 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.use_latest_service_software_for_blue_green", acctest.CtFalse),
 				),
 			},
 			{
@@ -2534,6 +2535,7 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.use_latest_service_software_for_blue_green", acctest.CtTrue),
 				),
 			},
 		},
@@ -4912,7 +4914,8 @@ resource "aws_opensearch_domain" "test" {
   }
 
   software_update_options {
-    auto_software_update_enabled = %[2]t
+    auto_software_update_enabled               = %[2]t
+    use_latest_service_software_for_blue_green = %[2]t
   }
 }
 `, rName, option)
