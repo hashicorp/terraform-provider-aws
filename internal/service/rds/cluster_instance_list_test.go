@@ -166,7 +166,7 @@ func TestAccRDSClusterInstance_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("warning_event_categories"), knownvalue.SetSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("warning_event_categories"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("writer"), knownvalue.Bool(true)),
 					}),
 				},
@@ -208,7 +208,6 @@ func TestAccRDSClusterInstance_List_regionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("rds", "db:"+rName+"-0")),
-
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("rds", "db:"+rName+"-1")),
 				},
@@ -225,7 +224,6 @@ func TestAccRDSClusterInstance_List_regionOverride(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_rds_cluster_instance.test", identity1.Checks()),
-
 					tfquerycheck.ExpectIdentityFunc("aws_rds_cluster_instance.test", identity2.Checks()),
 				},
 			},
