@@ -88,7 +88,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"creation_time": schema.StringAttribute{
+			names.AttrCreationTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -128,7 +128,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
 						},
@@ -270,7 +270,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"source": schema.ListNestedBlock{
+												names.AttrSource: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[partitionSourceModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -374,7 +374,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 										CustomType: fwtypes.StringEnumType[awstypes.S3CompressionType](),
 										Required:   true,
 									},
-									"expected_bucket_owner": schema.StringAttribute{
+									names.AttrExpectedBucketOwner: schema.StringAttribute{
 										Optional: true,
 									},
 									"output_key_template": schema.StringAttribute{
@@ -383,7 +383,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 									"output_prefix": schema.StringAttribute{
 										Optional: true,
 									},
-									"storage_class": schema.StringAttribute{
+									names.AttrStorageClass: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.S3StorageClass](),
 										Required:   true,
 									},
@@ -393,7 +393,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -420,7 +420,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloudwatch_logs": schema.ListNestedBlock{
+						names.AttrCloudWatchLogs: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -488,7 +488,7 @@ func deadLetterQueueS3NestedObject() schema.NestedBlockObject {
 			"error_output_prefix": schema.StringAttribute{
 				Optional: true,
 			},
-			"expected_bucket_owner": schema.StringAttribute{
+			names.AttrExpectedBucketOwner: schema.StringAttribute{
 				Optional: true,
 			},
 		},
