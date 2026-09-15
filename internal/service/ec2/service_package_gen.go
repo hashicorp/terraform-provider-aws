@@ -2224,6 +2224,18 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newNetworkACLRuleResourceAsListResource,
+			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("network_acl_id", true),
+				inttypes.BoolIdentityAttribute("egress", true),
+				inttypes.IntIdentityAttribute("rule_number", true),
+				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
+			}),
+		},
+		{
 			Factory:  newNetworkInterfaceResourceAsListResource,
 			TypeName: "aws_network_interface",
 			Name:     "Network Interface",

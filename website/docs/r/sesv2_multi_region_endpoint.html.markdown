@@ -56,12 +56,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the multi-region endpoint.
 * `endpoint_id` - ID assigned to the multi-region endpoint.
-* `routes` - List of active routes. See [`routes`](#routes) below.
+* `routes` - List of active routes. See [`routes` Block](#routes-block) below.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### `routes`
+### `routes` Block
 
-`routes` supports:
+The `routes` block supports:
 
 * `region` - AWS region name for this route.
 
