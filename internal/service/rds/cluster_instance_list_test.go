@@ -4,6 +4,8 @@
 package rds_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -11,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,6 +21,9 @@ import (
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -194,7 +200,7 @@ func TestAccRDSClusterInstance_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckClusterInstanceDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -229,4 +235,29 @@ func TestAccRDSClusterInstance_List_regionOverride(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckClusterInstanceDestroyWithRegion(ctx context.Context, t *testing.T) acctest.TestCheckWithRegionFunc {
+	return func(s *terraform.State, region string) error {
+		ctx = conns.NewResourceContext(ctx, "RDS", "Cluster Instance", "aws_rds_cluster_instance", region)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster_instance" {
+				continue
+			}
+
+			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Cluster Instance %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
