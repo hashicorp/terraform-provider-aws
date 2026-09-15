@@ -56,10 +56,11 @@ func resourceBGPPeer() *schema.Resource {
 					ForceNew: true,
 				},
 				"bgp_auth_key": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-					ForceNew: true,
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					ForceNew:  true,
+					Sensitive: true,
 				},
 				"bgp_peer_id": {
 					Type:     schema.TypeString,
