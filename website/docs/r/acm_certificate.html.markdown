@@ -158,7 +158,7 @@ This resource supports the following arguments:
 * Importing an existing certificate
     * `private_key` - (Optional) Certificate's PEM-formatted private key. Conflicts with `private_key_wo`.
     * `private_key_wo` - (Optional, Write-Only) Certificate's PEM-formatted private key. Conflicts with `private_key`. If set, requires `private_key_wo_version` to be set.
-    * `private_key_wo_version` - (Optional) Used together with `private_key_wo` to trigger an update. Change this value when an update to `private_key_wo` is required.
+    * `private_key_wo_version` - (Optional) Required when `private_key_wo` is set. Changing this value triggers an update to `private_key_wo`.
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate

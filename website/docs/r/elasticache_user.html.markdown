@@ -81,7 +81,7 @@ The following arguments are optional:
 * `no_password_required` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
 * `passwords_wo` - (Optional, Write-Only) Write-only password for this user. This argument is not stored in state. Conflicts with `passwords` and `authentication_mode`. If set, requires `passwords_wo_version` to be set.
-* `passwords_wo_version` - (Optional) Used together with `passwords_wo` to trigger an update. Change this value when an update to `passwords_wo` is required.
+* `passwords_wo_version` - (Optional) Required when `passwords_wo` is set. Changing this value triggers an update to `passwords_wo`.
 * `tags` - (Optional) A list of tags to be added to this resource. A tag is a key-value pair.
 
 ### authentication_mode Configuration Block

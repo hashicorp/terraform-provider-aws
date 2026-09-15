@@ -234,7 +234,7 @@ The following arguments are optional:
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `auth_token_update_strategy` - (Optional) Strategy used when modifying `auth_token` or `auth_token_wo` on an existing replication group. Not used during initial create. Valid values are `SET`, `ROTATE`, and `DELETE`. If omitted during an auth token change, AWS defaults to `ROTATE`. If value is `DELETE` then `auth_token` and `auth_token_wo` must be omitted.
 * `auth_token_wo` - (Optional, Write-Only) Password used to access a password protected server, whose value will not be stored in state. Can be specified only if `transit_encryption_enabled = true`. Conflicts with `auth_token`. If set, requires `auth_token_wo_version` to be set.
-* `auth_token_wo_version` - (Optional) Used together with `auth_token_wo` to trigger an update. Change this value when an update to `auth_token_wo` is required.
+* `auth_token_wo_version` - (Optional) Required when `auth_token_wo` is set. Changing this value triggers an update to `auth_token_wo`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine types `"redis"` and `"valkey"` and if the engine version is 6 or higher.
   If this argument is not explicitly set in the configuration, AWS will set a default value of `true` and Terraform will not detect drift on this attribute.

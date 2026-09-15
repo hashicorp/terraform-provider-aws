@@ -114,7 +114,7 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret_wo` - (Optional, Write-Only) Write-only OAuth2 client secret. Conflicts with `client_secret`. If set, requires `client_id_wo` and `client_credentials_wo_version` to be set.
-* `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Change this value when an update to `client_id_wo` or `client_secret_wo` is required.
+* `client_credentials_wo_version` - (Optional) Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
 
 **OAuth Discovery Configuration:**
 
@@ -133,7 +133,7 @@ These predefined provider blocks support the following:
 
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret_wo` - (Optional, Write-Only) Write-only OAuth2 client secret. Conflicts with `client_secret`. If set, requires `client_id_wo` and `client_credentials_wo_version` to be set.
-* `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Change this value when an update to `client_id_wo` or `client_secret_wo` is required.
+* `client_credentials_wo_version` - (Optional) Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
 
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
 

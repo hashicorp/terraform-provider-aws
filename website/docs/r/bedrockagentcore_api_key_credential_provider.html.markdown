@@ -51,7 +51,7 @@ The following arguments are optional:
 **Write-Only API Key (choose one approach):**
 
 * `api_key_wo` - (Optional, Write-Only) Write-only API key value. Conflicts with `api_key`. If set, requires `api_key_wo_version` to be set.
-* `api_key_wo_version` - (Optional) Used together with `api_key_wo` to trigger an update. Change this value when an update to `api_key_wo` is required.
+* `api_key_wo_version` - (Optional) Required when `api_key_wo` is set. Changing this value triggers an update to `api_key_wo`.
 
 ## Attribute Reference
 

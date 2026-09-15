@@ -79,7 +79,7 @@ The `ingress_point_configuration` block supports the following:
 
 * `secret_arn` - (Optional) ARN of the secret in AWS Secrets Manager that holds the SMTP password, used for `AUTH` ingress points.
 * `smtp_password_wo` - (Optional, Write-Only) SMTP password used for `AUTH` ingress points. This argument is not stored in state. If set, requires `smtp_password_wo_version` to be set.
-* `smtp_password_wo_version` - (Optional) Used together with `smtp_password_wo` to trigger an update. Change this value when an update to `smtp_password_wo` is required.
+* `smtp_password_wo_version` - (Optional) Required when `smtp_password_wo` is set. Changing this value triggers an update to `smtp_password_wo`.
 * `tls_auth_configuration` - (Optional) Configuration used to authenticate with `MTLS` ingress points. See [`tls_auth_configuration` Block](#tls_auth_configuration-block) for details.
 
 ### `tls_auth_configuration` Block

@@ -122,7 +122,7 @@ The `self_managed_active_directory` configuration block supports the following a
 * `organizational_unit_distinguished_name` - (Optional) Fully qualified distinguished name of the organizational unit within your self-managed AD directory that the Windows File Server instance will join. For example, `OU=FSx,DC=yourdomain,DC=corp,DC=com`. Only accepts OU as the direct parent of the file system. If none is provided, the FSx file system is created in the default location of your self-managed AD directory. To learn more, see [RFC 2253](https://tools.ietf.org/html/rfc2253).
 * `password` - (Optional) Password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. Conflicts with `domain_join_service_account_secret` and `password_wo`.
 * `password_wo` - (Optional, Write-Only) Password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. This argument is not persisted to state. Conflicts with `domain_join_service_account_secret` and `password`. If set, requires `password_wo_version` to be set.
-* `password_wo_version` - (Optional) Used together with `password_wo` to trigger an update. Change this value when an update to `password_wo` is required.
+* `password_wo_version` - (Optional) Required when `password_wo` is set. Changing this value triggers an update to `password_wo`.
 * `username` - (Optional) User name for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. Conflicts with `domain_join_service_account_secret`.
 
 ## Attribute Reference
