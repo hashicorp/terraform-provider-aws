@@ -192,29 +192,29 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 func TestAccSecretsManagerSecret_removeReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secret secretsmanager.DescribeSecretOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckSecretDestroy(ctx),
+		CheckDestroy:             testAccCheckSecretDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_basicReplica(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretExists(ctx, resourceName, &secret),
+					testAccCheckSecretExists(ctx, t, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
 			{
 				Config: testAccSecretConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretExists(ctx, resourceName, &secret),
+					testAccCheckSecretExists(ctx, t, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 		},
