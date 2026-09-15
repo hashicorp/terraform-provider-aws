@@ -11,6 +11,7 @@ var (
 	ResourceBrowser                  = newBrowserResource
 	ResourceBrowserProfile           = newBrowserProfileResource
 	ResourceCodeInterpreter          = newCodeInterpreterResource
+	ResourceConfigurationBundle      = newConfigurationBundleResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayRule              = newGatewayRuleResource
@@ -33,6 +34,7 @@ var (
 	FindBrowserByID                      = findBrowserByID
 	FindBrowserProfileByID               = findBrowserProfileByID
 	FindCodeInterpreterByID              = findCodeInterpreterByID
+	FindConfigurationBundleByID          = findConfigurationBundleByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayRuleByTwoPartKey          = findGatewayRuleByTwoPartKey
