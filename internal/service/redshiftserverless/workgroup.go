@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -38,6 +39,7 @@ func resourceWorkgroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceWorkgroupRead,
 		UpdateWithoutTimeout: resourceWorkgroupUpdate,
 		DeleteWithoutTimeout: resourceWorkgroupDelete,
+		CustomizeDiff:        resourceWorkgroupCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -64,41 +66,7 @@ func resourceWorkgroup() *schema.Resource {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"parameter_key": {
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									// https://docs.aws.amazon.com/redshift-serverless/latest/APIReference/API_CreateWorkgroup.html#redshiftserverless-CreateWorkgroup-request-configParameters
-									"auto_mv",
-									"datestyle",
-									"enable_case_sensitive_identifier", // "ValidationException: The parameter key enable_case_sensitivity_identifier isn't supported. Supported values: [[max_query_cpu_usage_percent, max_join_row_count, auto_mv, max_query_execution_time, max_query_queue_time, max_query_blocks_read, max_return_row_count, search_path, datestyle, max_query_cpu_time, max_io_skew, max_scan_row_count, query_group, enable_user_activity_logging, enable_case_sensitive_identifier, max_nested_loop_join_row_count, max_query_temp_blocks_to_disk, max_cpu_skew]]"
-									"enable_user_activity_logging",
-									"query_group",
-									"search_path",
-									// https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless
-									"max_query_cpu_time",
-									"max_query_blocks_read",
-									"max_scan_row_count",
-									"max_query_execution_time",
-									"max_query_queue_time",
-									"max_query_cpu_usage_percent",
-									"max_query_temp_blocks_to_disk",
-									"max_join_row_count",
-									"max_nested_loop_join_row_count",
-									// default SSL parameters automatically added by AWS
-									// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
-									"require_ssl",
-									"use_fips_ssl",
-								}, false),
-								Required: true,
-							},
-							"parameter_value": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-						},
-					},
+					Elem:     workgroupConfigParameterSchema(),
 				},
 				names.AttrEndpoint: {
 					Type:     schema.TypeList,
@@ -326,7 +294,9 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.Set(names.AttrARN, out.WorkgroupArn)
 	d.Set("base_capacity", out.BaseCapacity)
-	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
+	// Keep state aligned with the subset Terraform is actively managing.
+	configParameters := flattenConfigParametersForState(out.ConfigParameters, configuredConfigParameterKeysFromSet(d.Get("config_parameter")))
+	if err := d.Set("config_parameter", configParameters); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
 	if err := d.Set(names.AttrEndpoint, []any{flattenEndpoint(out.Endpoint)}); err != nil {
@@ -347,6 +317,38 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("workgroup_name", out.WorkgroupName)
 
 	return diags
+}
+
+func resourceWorkgroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	if diff.Id() == "" || !diff.HasChange("config_parameter") {
+		return nil
+	}
+
+	configuredKeys, ok := configuredConfigParameterKeys(diff.GetRawConfig())
+	if !ok {
+		return nil
+	}
+
+	serverOnlyConfigParameters := legacyServerOnlyConfigParameters(diff.GetRawState(), configuredKeys)
+	if len(serverOnlyConfigParameters) == 0 {
+		return nil
+	}
+
+	configParameters, ok := diff.Get("config_parameter").(*schema.Set)
+	if !ok {
+		return nil
+	}
+
+	mergedConfigParameters := schema.NewSet(schema.HashResource(workgroupConfigParameterSchema()), configParameters.List())
+	for _, configParameter := range serverOnlyConfigParameters {
+		mergedConfigParameters.Add(configParameter)
+	}
+
+	if err := diff.SetNew("config_parameter", mergedConfigParameters); err != nil {
+		return fmt.Errorf("setting config_parameter diff: %w", err)
+	}
+
+	return nil
 }
 
 func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -757,6 +759,23 @@ func flattenPerformanceTarget(apiObject *awstypes.PerformanceTarget) []any {
 	return []any{tfMap}
 }
 
+func workgroupConfigParameterSchema() *schema.Resource {
+	return &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"parameter_key": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"parameter_value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
+		},
+	}
+}
+
 func expandConfigParameter(tfMap map[string]any) awstypes.ConfigParameter {
 	apiObject := awstypes.ConfigParameter{}
 
@@ -804,15 +823,149 @@ func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]any {
 	return tfMap
 }
 
-func flattenConfigParameters(apiObjects []awstypes.ConfigParameter) []any {
-	if len(apiObjects) == 0 {
+var legacyConfigParameterKeys = map[string]struct{}{
+	"auto_mv":                          {},
+	"datestyle":                        {},
+	"enable_case_sensitive_identifier": {},
+	"enable_user_activity_logging":     {},
+	"query_group":                      {},
+	"search_path":                      {},
+	"max_query_cpu_time":               {},
+	"max_query_blocks_read":            {},
+	"max_scan_row_count":               {},
+	"max_query_execution_time":         {},
+	"max_query_queue_time":             {},
+	"max_query_cpu_usage_percent":      {},
+	"max_query_temp_blocks_to_disk":    {},
+	"max_join_row_count":               {},
+	"max_nested_loop_join_row_count":   {},
+	"require_ssl":                      {},
+	"use_fips_ssl":                     {},
+}
+
+func configuredConfigParameterKeys(rawConfig cty.Value) (map[string]struct{}, bool) {
+	if rawConfig.IsNull() || !rawConfig.IsKnown() || !rawConfig.Type().HasAttribute("config_parameter") {
+		return nil, false
+	}
+
+	configParameters := rawConfig.GetAttr("config_parameter")
+	if configParameters.IsNull() {
+		return nil, false
+	}
+
+	if !configParameters.IsKnown() || !configParameters.CanIterateElements() {
+		return nil, false
+	}
+
+	keys := make(map[string]struct{}, configParameters.LengthInt())
+
+	for it := configParameters.ElementIterator(); it.Next(); {
+		_, configParameter := it.Element()
+		if configParameter.IsNull() || !configParameter.IsKnown() || !configParameter.Type().HasAttribute("parameter_key") {
+			continue
+		}
+
+		parameterKey := configParameter.GetAttr("parameter_key")
+		if parameterKey.IsNull() || !parameterKey.IsKnown() {
+			continue
+		}
+
+		keys[parameterKey.AsString()] = struct{}{}
+	}
+
+	return keys, true
+}
+
+func configuredConfigParameterKeysFromSet(tfSet any) map[string]struct{} {
+	configParameters, ok := tfSet.(*schema.Set)
+	if !ok || configParameters == nil {
+		return nil
+	}
+
+	keys := make(map[string]struct{}, configParameters.Len())
+
+	for _, tfMapRaw := range configParameters.List() {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		parameterKey, ok := tfMap["parameter_key"].(string)
+		if !ok || parameterKey == "" {
+			continue
+		}
+
+		keys[parameterKey] = struct{}{}
+	}
+
+	return keys
+}
+
+func flattenConfigParametersForState(apiObjects []awstypes.ConfigParameter, configuredKeys map[string]struct{}) []any {
+	if len(apiObjects) == 0 || len(configuredKeys) == 0 {
 		return nil
 	}
 
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
+		if apiObject.ParameterKey == nil {
+			continue
+		}
+
+		if _, ok := configuredKeys[aws.ToString(apiObject.ParameterKey)]; !ok {
+			continue
+		}
+
 		tfList = append(tfList, flattenConfigParameter(apiObject))
+	}
+
+	return tfList
+}
+
+func legacyServerOnlyConfigParameters(rawState cty.Value, configuredKeys map[string]struct{}) []any {
+	if rawState.IsNull() || !rawState.IsKnown() || !rawState.Type().HasAttribute("config_parameter") {
+		return nil
+	}
+
+	configParameters := rawState.GetAttr("config_parameter")
+	if configParameters.IsNull() || !configParameters.IsKnown() || !configParameters.CanIterateElements() {
+		return nil
+	}
+
+	var tfList []any
+
+	for it := configParameters.ElementIterator(); it.Next(); {
+		_, configParameter := it.Element()
+		if configParameter.IsNull() || !configParameter.IsKnown() {
+			continue
+		}
+		if !configParameter.Type().HasAttribute("parameter_key") || !configParameter.Type().HasAttribute("parameter_value") {
+			continue
+		}
+
+		parameterKey := configParameter.GetAttr("parameter_key")
+		if parameterKey.IsNull() || !parameterKey.IsKnown() {
+			continue
+		}
+
+		key := parameterKey.AsString()
+		if _, ok := configuredKeys[key]; ok {
+			continue
+		}
+		if _, ok := legacyConfigParameterKeys[key]; ok {
+			continue
+		}
+
+		parameterValue := configParameter.GetAttr("parameter_value")
+		if parameterValue.IsNull() || !parameterValue.IsKnown() {
+			continue
+		}
+
+		tfList = append(tfList, map[string]any{
+			"parameter_key":   key,
+			"parameter_value": parameterValue.AsString(),
+		})
 	}
 
 	return tfList
