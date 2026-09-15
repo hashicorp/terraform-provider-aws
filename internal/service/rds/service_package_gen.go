@@ -468,6 +468,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrClusterIdentifier, true)),
 		},
+		{
+			Factory:  newClusterInstanceResourceAsListResource,
+			TypeName: "aws_rds_cluster_instance",
+			Name:     "Cluster Instance",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrIdentifier, true)),
+		},
 	})
 }
 

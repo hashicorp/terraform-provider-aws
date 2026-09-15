@@ -394,25 +394,23 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
-	dbClusterID := aws.ToString(db.DBClusterIdentifier)
+	return sdkdiag.AppendFromErr(diags, resourceClusterInstanceFlatten(ctx, meta.(*conns.AWSClient), db, d))
+}
 
+func resourceClusterInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, db *types.DBInstance, d *schema.ResourceData) error {
+	dbClusterID := aws.ToString(db.DBClusterIdentifier)
 	if dbClusterID == "" {
-		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
+		return fmt.Errorf("DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
-	dbc, err := findDBClusterByID(ctx, conn, dbClusterID)
-
+	dbc, err := findDBClusterByID(ctx, awsClient.RDSClient(ctx), dbClusterID)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
+		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)
 	}
 
 	for _, m := range dbc.DBClusterMembers {
-		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
-			if aws.ToBool(m.IsClusterWriter) {
-				d.Set("writer", true)
-			} else {
-				d.Set("writer", false)
-			}
+		if aws.ToString(m.DBInstanceIdentifier) == aws.ToString(db.DBInstanceIdentifier) {
+			d.Set("writer", m.IsClusterWriter)
 		}
 	}
 
@@ -421,6 +419,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 
+	d.SetId(aws.ToString(db.DBInstanceIdentifier))
 	d.Set(names.AttrARN, db.DBInstanceArn)
 	d.Set(names.AttrAutoMinorVersionUpgrade, db.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
@@ -453,10 +452,9 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
-
 	setTagsOut(ctx, db.TagList)
 
-	return diags
+	return nil
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
