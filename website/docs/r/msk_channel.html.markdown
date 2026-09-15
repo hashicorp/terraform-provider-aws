@@ -115,7 +115,7 @@ resource "aws_msk_channel" "example" {
 The following arguments are required:
 
 * `channel_name` - (Required) Name of the channel. Must be unique within the cluster. Changing this forces a new resource to be created.
-* `cluster_arn` - (Required) Amazon Resource Name (ARN) that uniquely identifies the cluster. Changing this forces a new resource to be created.
+* `cluster_arn` - (Required) ARN that uniquely identifies the cluster. Changing this forces a new resource to be created.
 * `topic_configuration` - (Required) Configuration of the Apache Kafka topic that feeds the channel. Changing this forces a new resource to be created. See [`topic_configuration` Block](#topic_configuration-block) below.
 
 The following arguments are optional:
@@ -132,7 +132,7 @@ The following arguments are optional:
 The following arguments are required:
 
 * `record_converter` - (Required) Configuration that controls how Apache Kafka record values are deserialized for the destination. See [`record_converter` Block](#record_converter-block) below.
-* `topic_arn` - (Required) Amazon Resource Name (ARN) that uniquely identifies the topic.
+* `topic_arn` - (Required) ARN that uniquely identifies the topic.
 
 The following arguments are optional:
 
@@ -144,14 +144,14 @@ The following arguments are optional:
 
 ### `record_schema` Block
 
-* `gsr_arn` - (Required) Amazon Resource Name (ARN) of the AWS Glue Schema Registry schema used to validate records for the destination Apache Iceberg table.
+* `gsr_arn` - (Required) ARN of the AWS Glue Schema Registry schema used to validate records for the destination Apache Iceberg table.
 
 ### `s3_destination` Block
 
 The following arguments are required:
 
 * `dead_letter_queue_s3` - (Required) Amazon S3 bucket and prefix where MSK writes records that fail to deliver. See [`dead_letter_queue_s3` Block](#dead_letter_queue_s3-block) below.
-* `service_execution_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role that MSK assumes to write to the destination Amazon S3 bucket and the dead-letter bucket.
+* `service_execution_role_arn` - (Required) ARN of the IAM role that MSK assumes to write to the destination Amazon S3 bucket and the dead-letter bucket.
 * `storage` - (Required) Amazon S3 bucket, prefix, and storage class for delivered records. See [`storage` Block](#storage-block) below.
 
 The following arguments are optional:
@@ -162,7 +162,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `bucket_arn` - (Required) Amazon Resource Name (ARN) of the destination Amazon S3 bucket.
+* `bucket_arn` - (Required) ARN of the destination Amazon S3 bucket.
 * `compression_type` - (Required) Compression codec applied to delivered Amazon S3 objects.
 * `storage_class` - (Required) Amazon S3 storage class for delivered objects.
 
@@ -180,7 +180,7 @@ The following arguments are required:
 * `dead_letter_queue_s3` - (Required) Amazon S3 bucket and prefix where MSK writes records that fail to deliver. See [`dead_letter_queue_s3` Block](#dead_letter_queue_s3-block) below.
 * `destination_table` - (Required) Destination Iceberg table. See [`destination_table` Block](#destination_table-block) below.
 * `schema_evolution` - (Required) Configuration controlling whether the destination table's schema is evolved to match incoming records. See [`schema_evolution` Block](#schema_evolution-block) below.
-* `service_execution_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role that MSK assumes to access the destination table, the AWS Glue Data Catalog, and the dead-letter Amazon S3 bucket.
+* `service_execution_role_arn` - (Required) ARN of the IAM role that MSK assumes to access the destination table, the AWS Glue Data Catalog, and the dead-letter Amazon S3 bucket.
 * `table_creation` - (Required) Configuration controlling whether MSK creates the destination table if it does not already exist. See [`table_creation` Block](#table_creation-block) below.
 
 The following arguments are optional:
@@ -214,14 +214,14 @@ The following arguments are optional:
 
 ### `catalog` Block
 
-* `catalog_arn` - (Optional) Amazon Resource Name (ARN) of the federated AWS Glue Data Catalog that projects the S3 Tables bucket.
-* `warehouse_location` - (Optional) Amazon Resource Name (ARN) of the S3 Tables bucket that backs the Apache Iceberg warehouse.
+* `catalog_arn` - (Optional) ARN of the federated AWS Glue Data Catalog that projects the S3 Tables bucket.
+* `warehouse_location` - (Optional) ARN of the S3 Tables bucket that backs the Apache Iceberg warehouse.
 
 ### `dead_letter_queue_s3` Block
 
 The following arguments are required:
 
-* `bucket_arn` - (Required) Amazon Resource Name (ARN) of the dead-letter Amazon S3 bucket.
+* `bucket_arn` - (Required) ARN of the dead-letter Amazon S3 bucket.
 
 The following arguments are optional:
 
@@ -230,7 +230,7 @@ The following arguments are optional:
 
 ### `encryption_configuration` Block
 
-* `kms_key_arn` - (Required) Amazon Resource Name (ARN) of the AWS KMS key used to encrypt the data.
+* `kms_key_arn` - (Required) ARN of the AWS KMS key used to encrypt the data.
 
 ### `logging_info` Block
 
@@ -311,7 +311,7 @@ resource "aws_msk_channel" "example" {
 #### Required
 
 * `arn` (String) ARN of the channel.
-* `cluster_arn` (String) Amazon Resource Name (ARN) that uniquely identifies the cluster.
+* `cluster_arn` (String) ARN that uniquely identifies the cluster.
 
 #### Optional
 
