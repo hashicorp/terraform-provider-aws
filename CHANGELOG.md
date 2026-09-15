@@ -3,6 +3,9 @@
 NOTES:
 
 * resource/aws_dx_bgp_peer: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49590](https://github.com/hashicorp/terraform-provider-aws/issues/49590))
+* resource/aws_dx_hosted_private_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49591](https://github.com/hashicorp/terraform-provider-aws/issues/49591))
+* resource/aws_dx_hosted_public_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49591](https://github.com/hashicorp/terraform-provider-aws/issues/49591))
+* resource/aws_dx_hosted_transit_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49591](https://github.com/hashicorp/terraform-provider-aws/issues/49591))
 * resource/aws_dx_public_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49589](https://github.com/hashicorp/terraform-provider-aws/issues/49589))
 
 FEATURES:
@@ -35,6 +38,9 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id`, `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo`, and `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo_version` arguments ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `token_endpoint_auth_methods` attribute to all `oauth2_provider_config.*.oauth_discovery` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_dx_bgp_peer: Add `bgp_asn_long` argument ([#49590](https://github.com/hashicorp/terraform-provider-aws/issues/49590))
+* resource/aws_dx_hosted_private_virtual_interface: Add `bgp_asn_long` argument ([#49591](https://github.com/hashicorp/terraform-provider-aws/issues/49591))
+* resource/aws_dx_hosted_public_virtual_interface: Add `bgp_asn_long` argument ([#49591](https://github.com/hashicorp/terraform-provider-aws/issues/49591))
+* resource/aws_dx_hosted_transit_virtual_interface: Add `bgp_asn_long` argument ([#49591](https://github.com/hashicorp/terraform-provider-aws/issues/49591))
 * resource/aws_dx_public_virtual_interface: Add `bgp_asn_long` argument ([#49589](https://github.com/hashicorp/terraform-provider-aws/issues/49589))
 * resource/aws_glue_catalog_table: Add resource identity support ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
 * resource/aws_glue_catalog_table: Change `storage_descriptor.additional_locations`, `storage_descriptor.bucket_columns`, `storage_descriptor.columns.parameters`, `storage_descriptor.parameters`, `storage_descriptor.ser_de_info`, `storage_descriptor.ser_de_info.parameters`, `view_definition`, `view_definition.definer`, `view_definition.is_protected`, `view_definition.representations.validation_connection`, `view_definition.representations.view_expanded_text`, `view_definition.representations.view_original_text`, `view_definition.sub_object_version_ids`, and `view_definition.sub_objects` to Optional and Computed ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
@@ -45,6 +51,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_agentregistry_registry: Correct attribute validation so that at least one of `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.allowed_audience`, `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.allowed_clients`, or `discovery_configuration.authorizer_configuration.custom_jwt_authorizer.allowed_scopes` is configured ([#50025](https://github.com/hashicorp/terraform-provider-aws/issues/50025))
 * resource/aws_amplify_app: Fix `BadRequestException: Environment variables cannot have an empty key` when clearing `auto_branch_creation_config.environment_variables` ([#49858](https://github.com/hashicorp/terraform-provider-aws/issues/49858))
 * resource/aws_amplify_branch: Fix `BadRequestException: Environment variables cannot have an empty key` when clearing `environment_variables` ([#49858](https://github.com/hashicorp/terraform-provider-aws/issues/49858))
 * resource/aws_bedrockagent_data_source: Change `data_source_configuration.managed_knowledge_base_connector_configuration.deletion_protection_configuration.deletion_protection_threshold` to Optional and Computed ([#49977](https://github.com/hashicorp/terraform-provider-aws/issues/49977))
