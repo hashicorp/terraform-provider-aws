@@ -1,5 +1,10 @@
 ## 6.65.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dx_bgp_peer: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49590](https://github.com/hashicorp/terraform-provider-aws/issues/49590))
+* resource/aws_dx_public_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49589](https://github.com/hashicorp/terraform-provider-aws/issues/49589))
+
 FEATURES:
 
 * **New List Resource:** `aws_api_gateway_deployment` ([#49820](https://github.com/hashicorp/terraform-provider-aws/issues/49820))
@@ -27,6 +32,8 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.atlassian_oauth2_provider_config`, `oauth2_provider_config.included_oauth2_provider_config`, and `oauth2_provider_config.linkedin_oauth2_provider_config` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id`, `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo`, and `oauth2_provider_config.microsoft_oauth2_provider_config.tenant_id_wo_version` arguments ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
 * resource/aws_bedrockagentcore_oauth2_credential_provider: Add `token_endpoint_auth_methods` attribute to all `oauth2_provider_config.*.oauth_discovery` configuration blocks ([#48517](https://github.com/hashicorp/terraform-provider-aws/issues/48517))
+* resource/aws_dx_bgp_peer: Add `bgp_asn_long` argument ([#49590](https://github.com/hashicorp/terraform-provider-aws/issues/49590))
+* resource/aws_dx_public_virtual_interface: Add `bgp_asn_long` argument ([#49589](https://github.com/hashicorp/terraform-provider-aws/issues/49589))
 * resource/aws_glue_catalog_table: Add resource identity support ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
 * resource/aws_glue_catalog_table: Change `storage_descriptor.additional_locations`, `storage_descriptor.bucket_columns`, `storage_descriptor.columns.parameters`, `storage_descriptor.parameters`, `storage_descriptor.ser_de_info`, `storage_descriptor.ser_de_info.parameters`, `view_definition`, `view_definition.definer`, `view_definition.is_protected`, `view_definition.representations.validation_connection`, `view_definition.representations.view_expanded_text`, `view_definition.representations.view_original_text`, `view_definition.sub_object_version_ids`, and `view_definition.sub_objects` to Optional and Computed ([#49953](https://github.com/hashicorp/terraform-provider-aws/issues/49953))
 * resource/aws_iam_group: Add resource identity support ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
