@@ -301,4 +301,10 @@ func BenchmarkAttributeTypes(b *testing.B) {
 			fwtypes.AttributeTypesMust[attributeTypesTestNestedModel](ctx)
 		}
 	})
+
+	b.Run("ptr", func(b *testing.B) {
+		for b.Loop() {
+			fwtypes.AttributeTypesMust[*attributeTypesTestStruct2](ctx)
+		}
+	})
 }
