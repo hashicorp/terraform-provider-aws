@@ -144,6 +144,14 @@ func resourceInstance() *schema.Resource {
 
 				return nil
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				rawConfig := diff.GetRawConfig()
+				if !rawConfig.GetAttr("ena_queue_count").IsNull() && rawConfig.GetAttr(names.AttrSubnetID).IsNull() {
+					return fmt.Errorf("subnet_id must be configured when ena_queue_count is set")
+				}
+
+				return nil
+			},
 			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("launch_template.0.id")
 			}),
@@ -153,7 +161,7 @@ func resourceInstance() *schema.Resource {
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
 				// as part of Update and there is already a public_ip value in state.
-				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
+				if diff.Id() != "" && diff.HasChanges("ena_queue_count", names.AttrInstanceType, "user_data", "user_data_base64") {
 					// user_data is stored in state as a hash.
 					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
 						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
@@ -460,6 +468,12 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			Computed: true,
 			ForceNew: true,
 		},
+		"ena_queue_count": {
+			Type:          schema.TypeInt,
+			Optional:      true,
+			ConflictsWith: []string{"network_interface", "primary_network_interface"},
+			ValidateFunc:  validation.IntInSlice([]int{1, 2, 4, 8, 16, 32, 64, 128}),
+		},
 		"enclave_options": {
 			Type:     schema.TypeList,
 			Optional: true,
@@ -743,7 +757,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"network_interface": {
-			ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+			ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ena_queue_count", "ipv6_addresses", "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 			Type:          schema.TypeSet,
 			Optional:      true,
 			Computed:      true,
@@ -810,7 +824,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 		},
 		"primary_network_interface": {
 			// Note: Changes to `primary_network_interface` should be mirrored in `aws_spot_instance_request`
-			ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+			ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ena_queue_count", "ipv6_addresses", "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -1619,6 +1633,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Disable stop protection before any update that might stop the instance.
+	if d.HasChange("disable_api_stop") && !d.IsNewResource() && !d.Get("disable_api_stop").(bool) {
+		if err := disableInstanceAPIStop(ctx, conn, d.Id(), false); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
+		}
+	}
+
 	// See also CustomizeDiff.
 	if d.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") && !d.IsNewResource() {
 		// For each argument change, we start and stop the instance
@@ -1686,8 +1707,71 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if d.HasChange("disable_api_stop") && !d.IsNewResource() {
-		if err := disableInstanceAPIStop(ctx, conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
+	if d.HasChange("ena_queue_count") && !d.IsNewResource() {
+		instance, err := findInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+
+		var primaryInterface *awstypes.InstanceNetworkInterface
+		for _, networkInterface := range instance.NetworkInterfaces {
+			if aws.ToInt32(networkInterface.Attachment.DeviceIndex) == 0 {
+				primaryInterface = &networkInterface
+				break
+			}
+		}
+
+		if primaryInterface == nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) ENA queue count, which does not contain a primary network interface", d.Id())
+		}
+
+		restoreStopProtection := d.Get("disable_api_stop").(bool)
+		if restoreStopProtection {
+			if err := disableInstanceAPIStop(ctx, conn, d.Id(), false); err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling EC2 Instance (%s) stop protection before modifying ENA queue count: %s", d.Id(), err)
+			}
+		}
+
+		if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
+			if restoreStopProtection {
+				err = errors.Join(err, disableInstanceAPIStop(ctx, conn, d.Id(), true))
+			}
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		attachment := &awstypes.NetworkInterfaceAttachmentChanges{
+			AttachmentId: primaryInterface.Attachment.AttachmentId,
+		}
+		if v, ok := d.GetOk("ena_queue_count"); ok {
+			attachment.EnaQueueCount = aws.Int32(int32(v.(int)))
+		} else {
+			attachment.DefaultEnaQueueCount = aws.Bool(true)
+		}
+
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			Attachment:         attachment,
+			NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+		}
+		_, modifyErr := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+		startErr := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout)
+		var restoreStopProtectionErr error
+		if restoreStopProtection {
+			restoreStopProtectionErr = disableInstanceAPIStop(ctx, conn, d.Id(), true)
+		}
+		if modifyErr != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) primary network interface ENA queue count: %s", d.Id(), errors.Join(modifyErr, startErr, restoreStopProtectionErr))
+		}
+		if startErr != nil {
+			return sdkdiag.AppendFromErr(diags, errors.Join(startErr, restoreStopProtectionErr))
+		}
+		if restoreStopProtectionErr != nil {
+			return sdkdiag.AppendErrorf(diags, "restoring EC2 Instance (%s) stop protection after modifying ENA queue count: %s", d.Id(), restoreStopProtectionErr)
+		}
+	}
+
+	// Enable stop protection only after updates that might stop the instance.
+	if d.HasChange("disable_api_stop") && !d.IsNewResource() && d.Get("disable_api_stop").(bool) {
+		if err := disableInstanceAPIStop(ctx, conn, d.Id(), true); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 		}
 	}
@@ -2409,6 +2493,14 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 			ni.AssociatePublicIpAddress = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("ena_queue_count"); ok {
+			ni.EnaQueueCount = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("enable_primary_ipv6"); ok {
+			ni.PrimaryIpv6 = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("private_ip"); ok {
 			ni.PrivateIpAddress = aws.String(v.(string))
 		}
@@ -2952,13 +3044,14 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	}
 
 	_, assocPubIPA := d.GetOkExists("associate_public_ip_address")
+	_, enaQueueCount := d.GetOk("ena_queue_count")
 	_, privIP := d.GetOk("private_ip")
 	_, secPrivIP := d.GetOk("secondary_private_ips")
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 	primaryNetworkInterface, primaryNetworkInterfaceOk := d.GetOk("primary_network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk || primaryNetworkInterfaceOk {
+	if (hasSubnet && (assocPubIPA || enaQueueCount || privIP || secPrivIP)) || interfacesOk || primaryNetworkInterfaceOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces, primaryNetworkInterface)
 	} else {
@@ -3317,6 +3410,9 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			ni := make(map[string]any)
 			if aws.ToInt32(iNi.Attachment.DeviceIndex) == 0 {
 				primaryNetworkInterface = iNi
+				if _, ok := rd.GetOk("ena_queue_count"); ok {
+					rd.Set("ena_queue_count", iNi.Attachment.EnaQueueCount)
+				}
 			}
 			// If the attached network device is inside our configuration, refresh state with values found.
 			// Otherwise, assume the network device was attached via an outside resource.
