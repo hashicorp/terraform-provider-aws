@@ -49,10 +49,10 @@ func TestAccIAMOpenIDConnectProvider_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-1", rName))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-1", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
 				},
 			},
 			{
@@ -64,11 +64,11 @@ func TestAccIAMOpenIDConnectProvider_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_iam_openid_connect_provider.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(fmt.Sprintf("accounts.testle.com/%s-0", rName))),
+					querycheck.ExpectResourceDisplayName("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(fmt.Sprintf("accounts.testle.com/%s-0", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
 					tfquerycheck.ExpectNoResourceObject("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_iam_openid_connect_provider.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(fmt.Sprintf("accounts.testle.com/%s-1", rName))),
+					querycheck.ExpectResourceDisplayName("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(fmt.Sprintf("accounts.testle.com/%s-1", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
 					tfquerycheck.ExpectNoResourceObject("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -118,15 +118,15 @@ func TestAccIAMOpenIDConnectProvider_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_iam_openid_connect_provider.test", identity.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))),  // nosemgrep:ci.semgrep.domain-names.domain-names
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("client_id_list"), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.StringExact("266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"),
+							knownvalue.StringExact("266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"), // nosemgrep:ci.semgrep.domain-names.domain-names
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("thumbprint_list"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.StringExact("cf23df2207d99a74fbe169e3eba035e633b65d94"),
 						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrURL), knownvalue.StringExact(fmt.Sprintf("accounts.testle.com/%s-0", rName))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrURL), knownvalue.StringExact(fmt.Sprintf("accounts.testle.com/%s-0", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
