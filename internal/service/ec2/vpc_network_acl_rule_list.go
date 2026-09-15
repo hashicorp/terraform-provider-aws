@@ -52,9 +52,6 @@ func (l *networkACLRuleListResource) List(ctx context.Context, request list.List
 
 			for _, entry := range nacl.Entries {
 				ruleNumber := int(aws.ToInt32(entry.RuleNumber))
-				if ruleNumber == defaultACLRuleNumberIPv4 || ruleNumber == defaultACLRuleNumberIPv6 {
-					continue
-				}
 				egress := aws.ToBool(entry.Egress)
 				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("network_acl_id"), naclID)
 				ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("rule_number"), ruleNumber)
