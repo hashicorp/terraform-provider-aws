@@ -417,7 +417,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -580,7 +580,7 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.image_id", amiDatasourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "4"),
@@ -642,7 +642,7 @@ func TestAccBatchComputeEnvironment_createSpot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "2"),
@@ -703,7 +703,7 @@ func TestAccBatchComputeEnvironment_CreateSpotAllocationStrategy_bidPercentage(t
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1089,7 +1089,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1124,7 +1124,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "4"),
@@ -1159,7 +1159,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "2"),
@@ -1219,7 +1219,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1254,7 +1254,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "8"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1289,7 +1289,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "2"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1350,7 +1350,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
@@ -1416,7 +1416,7 @@ func TestAccBatchComputeEnvironment_ec2ConfigurationPlacementGroup(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
@@ -1482,7 +1482,7 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_name", launchTemplateResourceName, names.AttrName),
@@ -1546,7 +1546,7 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_name", ""),
@@ -1584,7 +1584,7 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_name", ""),
@@ -1812,7 +1812,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1850,7 +1850,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", updatedInstanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.version", "$Latest"),
@@ -1889,7 +1889,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -1958,7 +1958,7 @@ func TestAccBatchComputeEnvironment_updateInstanceTypeWithAllocationStrategy(t *
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_PRICE_CAPACITY_OPTIMIZED"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "m7i"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "m7i"),
 				),
 			},
 			{
@@ -1972,7 +1972,7 @@ func TestAccBatchComputeEnvironment_updateInstanceTypeWithAllocationStrategy(t *
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_PRICE_CAPACITY_OPTIMIZED"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "r7i"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "r7i"),
 				),
 			},
 		}})
@@ -2614,6 +2614,156 @@ resource "aws_batch_compute_environment" "test" {
   ]
 }
 `, rName))
+}
+
+// Upgrading across the instance_type set-to-list change must not disturb an
+// existing compute environment, including one whose configured order differs from
+// the order the set happened to store.
+func TestAccBatchComputeEnvironment_upgradeV1ToV2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	resourceName := "aws_batch_compute_environment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.64.0",
+					},
+				},
+				Config: testAccComputeEnvironmentConfig_upgradeV1ToV2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "3"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccComputeEnvironmentConfig_upgradeV1ToV2(rName),
+				// The stored order is whatever the set happened to hold and is left
+				// alone, because it means nothing under BEST_FIT_PROGRESSIVE. What
+				// matters is that the upgrade plans nothing.
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "3"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccComputeEnvironmentConfig_upgradeV1ToV2(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["m7i", "c7i", "r7i"]
+    max_vcpus           = 16
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  type = "MANAGED"
+}
+`, rName))
+}
+
+func TestAccBatchComputeEnvironment_instanceTypeOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	resourceName := "aws_batch_compute_environment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_instanceTypeOrder(rName, `"m7i", "c7i", "r7i"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE_ORDERED"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "m7i"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.1", "c7i"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.2", "r7i"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Re-prioritising is a change of value, not of membership, so it has to
+			// reach AWS and it has to do so without replacing the compute environment.
+			{
+				Config: testAccComputeEnvironmentConfig_instanceTypeOrder(rName, `"r7i", "m7i", "c7i"`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.0", "r7i"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.1", "m7i"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.2", "c7i"),
+				),
+			},
+		},
+	})
+}
+
+// Uses the service-linked role, since isUpdatableComputeEnvironment requires one
+// before AWS will accept an infrastructure update rather than a replacement.
+func testAccComputeEnvironmentConfig_instanceTypeOrder(rName, instanceTypes string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE_ORDERED"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = [%[2]s]
+    max_vcpus           = 16
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  type = "MANAGED"
+}
+`, rName, instanceTypes))
 }
 
 func testAccComputeEnvironmentConfig_ec2(rName string) string {

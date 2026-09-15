@@ -247,3 +247,33 @@ func computeEnvironmentStateUpgradeV0(_ context.Context, rawState map[string]any
 
 	return rawState, nil
 }
+
+// computeEnvironmentSchemaV1 is the V0 schema with the rename performed by
+// computeEnvironmentStateUpgradeV0 applied. Nothing else changed between the two
+// versions, so deriving it keeps the two definitions from drifting apart.
+func computeEnvironmentSchemaV1() *schema.Resource {
+	return &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			s := computeEnvironmentSchemaV0().SchemaFunc()
+
+			s[names.AttrName] = s["compute_environment_name"]
+			s[names.AttrNamePrefix] = s["compute_environment_name_prefix"]
+			delete(s, "compute_environment_name")
+			delete(s, "compute_environment_name_prefix")
+
+			return s
+		},
+	}
+}
+
+// computeEnvironmentStateUpgradeV1 accompanies the change of
+// compute_resources.instance_type from a set to a list. Both are stored as a JSON
+// array, so no value needs rewriting here; the schema version bump is what makes
+// Terraform re-decode the stored array as a list instead of a set.
+func computeEnvironmentStateUpgradeV1(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	if rawState == nil {
+		rawState = map[string]any{}
+	}
+
+	return rawState, nil
+}

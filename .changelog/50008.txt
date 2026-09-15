@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_batch_compute_environment: Change `compute_resources.instance_type` to a list so that its order is preserved for the `BEST_FIT_PROGRESSIVE_ORDERED` and `SPOT_CAPACITY_OPTIMIZED_PRIORITIZED` allocation strategies
+```
+
+```release-note:bug
+resource/aws_batch_compute_environment: Allow in-place updates when `compute_resources.allocation_strategy` is `BEST_FIT_PROGRESSIVE_ORDERED` or `SPOT_CAPACITY_OPTIMIZED_PRIORITIZED`
+```
