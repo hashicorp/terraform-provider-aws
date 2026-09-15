@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_savingsplans_savings_plan: Fix `Provider returned invalid result object after apply` error for `purchase_time` when it's omitted from the configuration
+```
