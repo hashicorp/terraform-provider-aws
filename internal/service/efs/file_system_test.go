@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
@@ -293,6 +294,72 @@ func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 			{
 				Config:      testAccFileSystemConfig_kmsKey(rName, false),
 				ExpectError: regexache.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
+			},
+		},
+	})
+}
+
+func TestAccEFSFileSystem_encryptedComputedOnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc awstypes.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_encrypted(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrEncrypted)),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFileSystem(ctx, t, resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEncrypted),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEFSFileSystem_encryptedTrueToFalseNoReplacement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc awstypes.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_encrypted(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFileSystem(ctx, t, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccFileSystemConfig_encrypted(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFileSystem(ctx, t, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+				),
 			},
 		},
 	})
@@ -684,6 +751,14 @@ resource "aws_efs_file_system" "test" {
   }
 }
 `, rName, enable)
+}
+
+func testAccFileSystemConfig_encrypted(encrypted bool) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  encrypted = %[1]t
+}
+`, encrypted)
 }
 
 func testAccFileSystemConfig_throughputMode(throughputMode string) string {
