@@ -13,11 +13,6 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"
