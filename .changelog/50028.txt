@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Fix updates of `serverlessv2_scaling_configuration.min_capacity` from `1` to `0` being ignored
+```

@@ -17,8 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -68,6 +70,97 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Read replica DB clusters are not available in this region for engine aurora",
 		"no matching RDS Reserved Instance Offering found",
 	)
+}
+
+func TestClusterServerlessV2ScalingConfigurationDiff(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		oldCapacity string
+		newCapacity float64
+		removeBlock bool
+		emptyBlock  bool
+	}{
+		"one to zero":          {oldCapacity: "1", newCapacity: 0},
+		"fractional to zero":   {oldCapacity: "2.5", newCapacity: 0},
+		"zero to one":          {oldCapacity: "0", newCapacity: 1},
+		"unchanged zero":       {oldCapacity: "0", newCapacity: 0},
+		"remove block at zero": {oldCapacity: "0", removeBlock: true},
+		"remove block at one":  {oldCapacity: "1", removeBlock: true},
+		"remove block at 2.5":  {oldCapacity: "2.5", removeBlock: true},
+		"empty block at zero":  {oldCapacity: "0", removeBlock: true, emptyBlock: true},
+		"empty block at one":   {oldCapacity: "1", removeBlock: true, emptyBlock: true},
+		"empty block at 2.5":   {oldCapacity: "2.5", removeBlock: true, emptyBlock: true},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			const key = "serverlessv2_scaling_configuration"
+			r := &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					key: tfrds.ResourceCluster().SchemaMap()[key],
+				},
+			}
+			state := &tfterraform.InstanceState{
+				ID: "test",
+				Attributes: map[string]string{
+					key + ".#":                          "1",
+					key + ".0.max_capacity":             "4",
+					key + ".0.min_capacity":             testCase.oldCapacity,
+					key + ".0.seconds_until_auto_pause": "300",
+				},
+			}
+			block := []any{}
+			if !testCase.removeBlock {
+				block = append(block, map[string]any{
+					names.AttrMaxCapacity: 4.0,
+					"min_capacity":        testCase.newCapacity,
+				})
+			}
+			configMap := map[string]any{}
+			if !testCase.removeBlock || testCase.emptyBlock {
+				configMap[key] = block
+			}
+			config := tfterraform.NewResourceConfigRaw(configMap)
+			rawBlock := cty.ListValEmpty(cty.Object(map[string]cty.Type{
+				names.AttrMaxCapacity: cty.Number,
+				"min_capacity":        cty.Number,
+			}))
+			if !testCase.removeBlock {
+				rawBlock = cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+					names.AttrMaxCapacity: cty.NumberIntVal(4),
+					"min_capacity":        cty.NumberFloatVal(testCase.newCapacity),
+				})})
+			}
+			config.CtyValue = cty.ObjectVal(map[string]cty.Value{key: rawBlock})
+			diff, err := r.Diff(t.Context(), state, config, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			newCapacity := strconv.FormatFloat(testCase.newCapacity, 'f', -1, 64)
+			if testCase.oldCapacity == newCapacity {
+				if !diff.Empty() {
+					t.Fatalf("expected no changes, got: %#v", diff.Attributes)
+				}
+				return
+			}
+
+			if diff.Empty() {
+				t.Fatal("expected a min_capacity change")
+			}
+			change := diff.Attributes[key+".0.min_capacity"]
+			// Block removal suppresses the count diff, preserving nested removal diffs.
+			if change == nil || change.Old != testCase.oldCapacity || change.New != newCapacity || change.NewRemoved != testCase.removeBlock {
+				t.Fatalf("expected min_capacity %s -> %s, got: %#v", testCase.oldCapacity, newCapacity, change)
+			}
+			if len(diff.Attributes) != 1 {
+				t.Fatalf("expected only min_capacity to change, got: %#v", diff.Attributes)
+			}
+		})
+	}
 }
 
 func TestAccRDSCluster_basic(t *testing.T) {
@@ -2235,7 +2328,23 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
+				),
+			},
+			// https://github.com/hashicorp/terraform-provider-aws/issues/40685.
+			{
 				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 0),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("serverlessv2_scaling_configuration").AtSliceIndex(0).AtMapKey("min_capacity"), knownvalue.Float64Exact(0)),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
