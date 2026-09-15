@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -33,7 +34,11 @@ import (
 
 // @SDKResource("aws_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NetworkAcl")
+// @Testing(preIdentityVersion="v6.62.0")
 func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLCreate,
@@ -43,6 +48,15 @@ func resourceNetworkACL() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				// Region may be overridden in the import block.
+				// Ensure the appropriate value is in context before initializing the client.
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					ctx = conns.NewResourceContext(ctx, names.EC2, "Network ACL", "aws_network_acl", v.(string))
+				}
 				conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 				nacl, err := findNetworkACLByID(ctx, conn, d.Id())
