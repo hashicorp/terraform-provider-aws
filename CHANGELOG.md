@@ -32,10 +32,13 @@ ENHANCEMENTS:
 * resource/aws_iam_group: Add resource identity support ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
 * resource/aws_iam_user_policy: Add resource identity support ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
+* resource/aws_network_acl_rule: Remove filtering of default Ipv4 and Ipv6 rules from list ([#50017](https://github.com/hashicorp/terraform-provider-aws/issues/50017))
 
 BUG FIXES:
 
+* resource/aws_bedrockagent_data_source: Change `data_source_configuration.managed_knowledge_base_connector_configuration.deletion_protection_configuration.deletion_protection_threshold` to Optional and Computed ([#49977](https://github.com/hashicorp/terraform-provider-aws/issues/49977))
 * resource/aws_mailmanager_traffic_policy: Make `policy_statement` optional ([#49509](https://github.com/hashicorp/terraform-provider-aws/issues/49509))
+* resource/aws_secretsmanager_secret: Fix removal of all `replica` blocks not being detected as a change ([#39235](https://github.com/hashicorp/terraform-provider-aws/issues/39235))
 * resource/aws_wafv2_rule_group: Fix `field_to_match.single_header.name` and `field_to_match.single_query_argument.name` rejecting values the AWS WAF API accepts, such as names containing `.` ([#49984](https://github.com/hashicorp/terraform-provider-aws/issues/49984))
 * resource/aws_wafv2_web_acl: Fix `field_to_match.single_header.name` and `field_to_match.single_query_argument.name` rejecting values the AWS WAF API accepts, such as names containing `.` ([#49984](https://github.com/hashicorp/terraform-provider-aws/issues/49984))
 
