@@ -114,14 +114,14 @@ The `custom_oauth2_provider_config` block supports the following:
 
 **Standard Credentials (choose one pair):**
 
-* `client_id` - (Optional) OAuth2 client ID. Cannot be used with `client_id_wo`. Must be used together with `client_secret`.
-* `client_secret` - (Optional) OAuth2 client secret. Cannot be used with `client_secret_wo`. Must be used together with `client_id`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 
 **Write-Only Credentials (choose one pair):**
 
-* `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
-* `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
-* `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
+* `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
+* `client_secret_wo` - (Optional, Write-Only) Write-only OAuth2 client secret. Conflicts with `client_secret`. If set, requires `client_id_wo` and `client_credentials_wo_version` to be set.
+* `client_credentials_wo_version` - (Optional) Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
 
 **OAuth Discovery Configuration:**
 
@@ -202,9 +202,9 @@ The `atlassian_oauth2_provider_config`, `github_oauth2_provider_config`, `google
 
 **Write-Only Credentials (choose one pair):**
 
-* `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
-* `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
-* `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
+* `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
+* `client_secret_wo` - (Optional, Write-Only) Write-only OAuth2 client secret. Conflicts with `client_secret`. If set, requires `client_id_wo` and `client_credentials_wo_version` to be set.
+* `client_credentials_wo_version` - (Optional) Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
 
 **Microsoft-Specific Configuration:**
 
