@@ -85,7 +85,6 @@ func TestBGPASNResourceSchemas(t *testing.T) {
 		"BGP peer":    resourceBGPPeer,
 		"private VIF": resourcePrivateVirtualInterface,
 		"transit VIF": resourceTransitVirtualInterface,
-		"public VIF":  resourcePublicVirtualInterface,
 	}
 
 	for name, resourceFactory := range resourceFactories {

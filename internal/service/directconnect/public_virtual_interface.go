@@ -68,8 +68,11 @@ func resourcePublicVirtualInterface() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"bgp_asn":      bgpASNAttributeSchema(false),
-				"bgp_asn_long": bgpASNAttributeSchema(true),
+				"bgp_asn": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
 				"bgp_auth_key": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -125,14 +128,12 @@ func resourcePublicVirtualInterface() *schema.Resource {
 func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
-	asn, asnLong := expandBGPASN(d)
 
 	input := &directconnect.CreatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPublicVirtualInterface: &awstypes.NewPublicVirtualInterface{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                  asn,
-			AsnLong:              asnLong,
+			Asn:                  int32(d.Get("bgp_asn").(int)),
 			Tags:                 getTagsIn(ctx),
 			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 int32(d.Get("vlan").(int)),
@@ -202,9 +203,7 @@ func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceD
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
-	if err := setBGPASN(d, vif.Asn, vif.AsnLong); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting BGP ASN: %s", err)
-	}
+	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set(names.AttrConnectionID, vif.ConnectionId)
@@ -244,10 +243,6 @@ func resourcePublicVirtualInterfaceImport(ctx context.Context, d *schema.Resourc
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "public" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
-	}
-
-	if err := setBGPASN(d, vif.Asn, vif.AsnLong); err != nil {
-		return nil, fmt.Errorf("setting BGP ASN: %w", err)
 	}
 
 	return []*schema.ResourceData{d}, nil
