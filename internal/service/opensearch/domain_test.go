@@ -134,6 +134,28 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 }
 
+func TestServerlessVectorAccelerationEnableVersion(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]bool{
+		"OpenSearch_3.1":      true,
+		"OpenSearch_3.5":      true,
+		"OpenSearch_2.19":     false,
+		"Elasticsearch_7.10":  false,
+		"unparseable version": false,
+	}
+
+	for engineVersion, want := range testCases {
+		t.Run(engineVersion, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfopensearch.ServerlessVectorAccelerationEnableVersion(engineVersion); got != want {
+				t.Errorf("got %t, want %t", got, want)
+			}
+		})
+	}
+}
+
 func TestExpandServerlessVectorAcceleration(t *testing.T) {
 	t.Parallel()
 

@@ -28,4 +28,6 @@ var (
 	ParseEngineVersion                  = parseEngineVersion
 	VPCEndpointsError                   = vpcEndpointsError
 	WaitForDomainCreation               = waitForDomainCreation
+
+	ServerlessVectorAccelerationEnableVersion = serverlessVectorAccelerationEnableVersion
 )

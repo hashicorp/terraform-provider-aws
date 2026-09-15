@@ -1265,6 +1265,11 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		if d.HasChange("aiml_options") {
 			if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+
+				// serverless_vector_acceleration is Computed; omit it on OpenSearch versions that don't support it.
+				if input.AIMLOptions != nil && !serverlessVectorAccelerationEnableVersion(d.Get(names.AttrEngineVersion).(string)) {
+					input.AIMLOptions.ServerlessVectorAcceleration = nil
+				}
 			}
 		}
 
@@ -1500,6 +1505,22 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 		case string(awstypes.EngineTypeOpenSearch):
 			// All OpenSearch versions support enabling encryption in-place.
 			return true
+		}
+	}
+
+	return false
+}
+
+// serverlessVectorAccelerationEnableVersion returns true if, based on version,
+// serverless_vector_acceleration is supported (OpenSearch 3.1+).
+func serverlessVectorAccelerationEnableVersion(version string) bool {
+	if engineType, version, err := parseEngineVersion(version); err == nil {
+		switch engineType {
+		case string(awstypes.EngineTypeOpenSearch):
+			return semver.GreaterThanOrEqual(version, "3.1")
+		case string(awstypes.EngineTypeElasticsearch):
+			// Not supported on Elasticsearch.
+			return false
 		}
 	}
 
