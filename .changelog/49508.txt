@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_endpoint: Fix `oracle_settings.trim_space_in_char` being silently ignored for source endpoints (the value is now sent to the DMS API on create and update)
+```
