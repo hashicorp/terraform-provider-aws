@@ -152,10 +152,10 @@ func testAccTransitGatewayPolicyTableEntry_fullRule(t *testing.T, semaphore tfsy
 						"destination_cidr_block": knownvalue.StringExact("10.0.2.0/24"),
 						"destination_port_range": knownvalue.StringExact("443"),
 						"metadata": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"key":   knownvalue.StringExact("test"),
-							"value": knownvalue.StringExact("test"),
+							names.AttrKey:   knownvalue.StringExact("test"),
+							names.AttrValue: knownvalue.StringExact("test"),
 						})}),
-						"protocol":          knownvalue.StringExact("6"),
+						names.AttrProtocol:  knownvalue.StringExact("6"),
 						"source_cidr_block": knownvalue.StringExact("10.0.1.0/24"),
 						"source_port_range": knownvalue.StringExact("1024-65535"),
 					})})),
