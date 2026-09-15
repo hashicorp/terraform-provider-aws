@@ -226,21 +226,27 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(nacl.OwnerId)
+	return append(diags, resourceNetworkACLFlatten(ctx, c, d, nacl)...)
+}
+
+func resourceNetworkACLFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, networkACL *awstypes.NetworkAcl) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	ownerID := aws.ToString(networkACL.OwnerId)
 	d.Set(names.AttrARN, networkACLARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 
 	var subnetIDs []string
-	for _, v := range nacl.Associations {
+	for _, v := range networkACL.Associations {
 		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetId))
 	}
 	d.Set(names.AttrSubnetIDs, subnetIDs)
 
-	d.Set(names.AttrVPCID, nacl.VpcId)
+	d.Set(names.AttrVPCID, networkACL.VpcId)
 
 	var egressEntries []awstypes.NetworkAclEntry
 	var ingressEntries []awstypes.NetworkAclEntry
-	for _, v := range nacl.Entries {
+	for _, v := range networkACL.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users.
 		if v := aws.ToInt32(v.RuleNumber); v == defaultACLRuleNumberIPv4 || v == defaultACLRuleNumberIPv6 {
@@ -260,7 +266,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
-	setTagsOut(ctx, nacl.Tags)
+	setTagsOut(ctx, networkACL.Tags)
 
 	return diags
 }
