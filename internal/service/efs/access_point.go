@@ -7,6 +7,8 @@ package efs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -29,16 +31,15 @@ import (
 
 // @SDKResource("aws_efs_access_point", name="Access Point")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs/types;awstypes;awstypes.AccessPointDescription")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointCreate,
 		ReadWithoutTimeout:   resourceAccessPointRead,
 		UpdateWithoutTimeout: resourceAccessPointUpdate,
 		DeleteWithoutTimeout: resourceAccessPointDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -235,8 +236,25 @@ func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[awstypes.AccessPointDescription]) (*awstypes.AccessPointDescription, error) {
-	output, err := findAccessPoints(ctx, conn, input, filter)
+func listAccessPointPages(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, optFns ...func(*efs.Options)) iter.Seq2[[]awstypes.AccessPointDescription, error] {
+	return func(yield func([]awstypes.AccessPointDescription, error) bool) {
+		pages := efs.NewDescribeAccessPointsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing EFS Access Points: %w", err))
+				return
+			}
+
+			if !yield(page.AccessPoints, nil) {
+				return
+			}
+		}
+	}
+}
+
+func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) (*awstypes.AccessPointDescription, error) {
+	output, err := findAccessPoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -245,28 +263,17 @@ func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeA
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[awstypes.AccessPointDescription]) ([]awstypes.AccessPointDescription, error) {
-	var output []awstypes.AccessPointDescription
+func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
+	output, err := tfslices.CollectAndConcatWithError(listAccessPointPages(ctx, conn, input))
 
-	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.AccessPointNotFound](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsA[*awstypes.AccessPointNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.AccessPoints {
-			if filter(v) {
-				output = append(output, v)
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
@@ -277,7 +284,7 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 		AccessPointId: aws.String(id),
 	}
 
-	output, err := findAccessPoint(ctx, conn, &input, tfslices.PredicateTrue[awstypes.AccessPointDescription]())
+	output, err := findAccessPoint(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -292,7 +299,7 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	return output, nil
 }
 
-func statusAccessPointLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+func statusAccessPoint(conn *efs.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 
@@ -315,7 +322,7 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh: statusAccessPointLifeCycleState(conn, id),
+		Refresh: statusAccessPoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -336,7 +343,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusAccessPointLifeCycleState(conn, id),
+		Refresh: statusAccessPoint(conn, id),
 		Timeout: accessPointDeletedTimeout,
 	}
 

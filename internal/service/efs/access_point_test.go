@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -33,7 +34,10 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, names.AttrARN),
@@ -45,8 +49,17 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -238,7 +251,10 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceAccessPoint(), resourceName),
@@ -301,22 +317,6 @@ func testAccCheckAccessPointExists(ctx context.Context, t *testing.T, n string, 
 
 		return nil
 	}
-}
-
-func testAccAccessPointConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_access_point" "test" {
-  file_system_id = aws_efs_file_system.test.id
-}
-`, rName)
 }
 
 func testAccAccessPointConfig_rootDirectory(rName, dir string) string {

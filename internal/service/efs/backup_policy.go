@@ -27,16 +27,15 @@ import (
 )
 
 // @SDKResource("aws_efs_backup_policy", name="Backup Policy")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs/types;awstypes;awstypes.BackupPolicy")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceBackupPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackupPolicyCreate,
 		ReadWithoutTimeout:   resourceBackupPolicyRead,
 		UpdateWithoutTimeout: resourceBackupPolicyUpdate,
 		DeleteWithoutTimeout: resourceBackupPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -72,7 +71,6 @@ func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
-
 	if err := putBackupPolicy(ctx, conn, fsID, d.Get("backup_policy").([]any)[0].(map[string]any)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -137,12 +135,12 @@ func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func putBackupPolicy(ctx context.Context, conn *efs.Client, fsID string, tfMap map[string]any) error {
-	input := &efs.PutBackupPolicyInput{
+	input := efs.PutBackupPolicyInput{
 		BackupPolicy: expandBackupPolicy(tfMap),
 		FileSystemId: aws.String(fsID),
 	}
 
-	_, err := conn.PutBackupPolicy(ctx, input)
+	_, err := conn.PutBackupPolicy(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("putting EFS Backup Policy (%s): %w", fsID, err)
@@ -162,10 +160,13 @@ func putBackupPolicy(ctx context.Context, conn *efs.Client, fsID string, tfMap m
 }
 
 func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.BackupPolicy, error) {
-	input := &efs.DescribeBackupPolicyInput{
+	input := efs.DescribeBackupPolicyInput{
 		FileSystemId: aws.String(id),
 	}
+	return findBackupPolicy(ctx, conn, &input)
+}
 
+func findBackupPolicy(ctx context.Context, conn *efs.Client, input *efs.DescribeBackupPolicyInput) (*awstypes.BackupPolicy, error) {
 	output, err := conn.DescribeBackupPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
