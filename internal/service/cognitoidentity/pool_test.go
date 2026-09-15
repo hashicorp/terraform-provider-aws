@@ -24,7 +24,7 @@ import (
 
 func TestAccCognitoIdentityPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := acctest.RandString(t, 10)
 	updatedName := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
@@ -52,10 +52,28 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 			},
 			{
 				Config: testAccPoolConfig_basic(updatedName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, t, resourceName, &v2),
-					testAccCheckPoolRecreated(&v1, &v2),
+					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", updatedName)),
+				),
+			},
+			{
+				Config: testAccPoolConfig_basic(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
+					testAccCheckPoolNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 				),
 			},
 		},
@@ -96,6 +114,49 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 					testAccCheckPoolRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", developerProviderNameUpdated),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIdentityPool_renameWithDeveloperProviderName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
+	name := acctest.RandString(t, 10)
+	updatedName := acctest.RandString(t, 10)
+	developerProviderName := acctest.RandString(t, 10)
+	resourceName := "aws_cognito_identity_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolConfig_developerProviderName(name, developerProviderName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", developerProviderName),
+				),
+			},
+			// Renaming is now an in-place update, and resourcePoolUpdate does not send
+			// DeveloperProviderName even though UpdateIdentityPool accepts it. The API
+			// docs warn that omitted members are reset to their default, so pin the
+			// observed behaviour: the developer provider name survives a rename.
+			{
+				Config: testAccPoolConfig_developerProviderName(updatedName, developerProviderName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
+					testAccCheckPoolNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", updatedName)),
+					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", developerProviderName),
 				),
 			},
 		},
