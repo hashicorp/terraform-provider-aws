@@ -115,6 +115,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_apigatewayv2_integration",
 			Name:     "Integration",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+				ImportID:     integrationImportID{},
+			},
 		},
 		{
 			Factory:  resourceIntegrationResponse,
@@ -180,6 +188,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newIntegrationResourceAsListResource,
+			TypeName: "aws_apigatewayv2_integration",
+			Name:     "Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
 		},
 		{
 			Factory:  newRouteResourceAsListResource,

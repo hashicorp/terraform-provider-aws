@@ -51,6 +51,11 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags assigned to the WorkSpaces directory.
 * `user_identity_type` - The user identity type for the WorkSpaces directory.
 * `workspace_access_properties` - Specifies which devices and operating systems users can use to access their WorkSpaces.
+    * `access_endpoint_config` - Configuration for accessing WorkSpaces through VPC endpoints instead of the public internet.
+        * `access_endpoints` - Set of access endpoints used to control the network paths that users use to access their WorkSpaces.
+            * `access_endpoint_type` - Type of access endpoint.
+            * `vpc_endpoint_id` - Identifier of the VPC endpoint that the access endpoint uses.
+        * `internet_fallback_protocols` - List of protocols that fall back to the public internet when streaming over a VPC endpoint is unavailable.
     * `device_type_android` - (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
     * `device_type_chromeos` - (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
     * `device_type_ios` - (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.

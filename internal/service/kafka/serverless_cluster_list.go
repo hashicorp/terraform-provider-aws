@@ -37,14 +37,6 @@ type serverlessClusterListResource struct {
 func (l *serverlessClusterListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().KafkaClient(ctx)
 
-	var query listServerlessClusterModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := kafka.ListClustersV2Input{
 			ClusterTypeFilter: aws.String("SERVERLESS"),
@@ -101,10 +93,6 @@ func (l *serverlessClusterListResource) List(ctx context.Context, request list.L
 			}
 		}
 	}
-}
-
-type listServerlessClusterModel struct {
-	framework.WithRegionModel
 }
 
 func listServerlessClusters(ctx context.Context, conn *kafka.Client, input *kafka.ListClustersV2Input) iter.Seq2[awstypes.Cluster, error] {

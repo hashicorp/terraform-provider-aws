@@ -24,7 +24,6 @@ var (
 	ResourceHarness                  = newHarnessResource
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
 	ResourcePolicyEngine             = newPolicyEngineResource
-	ResourceRegistry                 = newRegistryResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
@@ -46,7 +45,6 @@ var (
 	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindPolicyEngineByID                 = findPolicyEngineByID
-	FindRegistryByID                     = findRegistryByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
 )

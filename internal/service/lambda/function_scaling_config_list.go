@@ -35,14 +35,6 @@ type listResourceFunctionScalingConfig struct {
 func (r *listResourceFunctionScalingConfig) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var query functionScalingConfigListModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		// Scaling configurations only apply to functions using a capacity provider,
 		// so enumerate capacity providers, then the function versions attached to
@@ -124,10 +116,6 @@ func (r *listResourceFunctionScalingConfig) List(ctx context.Context, request li
 			}
 		}
 	}
-}
-
-type functionScalingConfigListModel struct {
-	framework.WithRegionModel
 }
 
 func listFunctionVersionsByCapacityProvider(ctx context.Context, conn *lambda.Client, capacityProviderName string) iter.Seq2[awstypes.FunctionVersionsByCapacityProviderListItem, error] {
