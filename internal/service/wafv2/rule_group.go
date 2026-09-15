@@ -80,6 +80,7 @@ func resourceRuleGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monetization_config": monetizationConfigSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -130,6 +131,7 @@ func resourceRuleGroup() *schema.Resource {
 										"captcha":   captchaConfigSchema(),
 										"challenge": challengeConfigSchema(),
 										"count":     countConfigSchema(),
+										"monetize":  monetizeConfigSchema(),
 									},
 								},
 							},
@@ -196,6 +198,10 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+		input.MonetizationConfig = expandMonetizationConfig(v.([]any))
+	}
+
 	const (
 		timeout = 5 * time.Minute
 	)
@@ -237,6 +243,9 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set(names.AttrDescription, ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
+	if err := d.Set("monetization_config", flattenMonetizationConfig(ruleGroup.MonetizationConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monetization_config: %s", err)
+	}
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
 	if _, ok := d.GetOk("rules_json"); !ok {
@@ -285,6 +294,10 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+			input.MonetizationConfig = expandMonetizationConfig(v.([]any))
 		}
 
 		const (
