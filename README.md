@@ -26,3 +26,5 @@ The [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/
 - [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
 
 _**Please note:** We take Terraform's security and our users' trust very seriously. If you believe you have found a security issue in the Terraform AWS Provider, please responsibly disclose it by contacting us at security@hashicorp.com._
+
+> **Documentation Note:** In `aws_cloudwatch_event_target` examples, the `rule` argument must reference `aws_cloudwatch_event_rule.name` (not `.id`). This affects the API Gateway target, Input Transformer, and other examples in the resource documentation.
