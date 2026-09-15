@@ -49,7 +49,7 @@ resource "aws_ec2_transit_gateway_policy_table_entry" "example" {
 
 The following arguments are required:
 
-* `policy_rule_number` - (Required, Forces new resource) Rule number for this entry. Lower numbers are evaluated first and take precedence. Enter an integer from 1 to 50,000. Leave gaps between numbers (for example, 100, 110, 120) so you can insert rules later without renumbering.
+* `policy_rule_number` - (Required) Rule number for this entry. Changing this value forces a new resource. Lower numbers are evaluated first and take precedence. Enter an integer from 1 to 50,000. Leave gaps between numbers (for example, 100, 110, 120) so you can insert rules later without renumbering.
 * `target_route_table_id` - (Required) ID of the transit gateway route table to use for traffic matching this rule.
 * `transit_gateway_policy_table_id` - (Required, Forces new resource) EC2 Transit Gateway Policy Table identifier.
 
