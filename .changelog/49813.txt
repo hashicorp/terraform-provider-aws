@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_network_interface: Add `attachment.ena_queue_count` argument
+```
+
+```release-note:enhancement
+data-source/aws_network_interface: Add `attachment.ena_queue_count` attribute
+```

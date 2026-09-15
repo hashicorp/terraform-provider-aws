@@ -70,6 +70,11 @@ func resourceNetworkInterface() *schema.Resource {
 								Type:     schema.TypeInt,
 								Required: true,
 							},
+							"ena_queue_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8, 16, 32, 64, 128}),
+							},
 							"instance": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -532,6 +537,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 			DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
 		}
 
+		if v, ok := attachment["ena_queue_count"].(int); ok && v != 0 {
+			input.EnaQueueCount = aws.Int32(int32(v))
+		}
+
 		if v, ok := attachment["network_card_index"]; ok {
 			if v, ok := v.(int); ok {
 				input.NetworkCardIndex = aws.Int32(int32(v))
@@ -594,30 +603,70 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
-
-		if oa != nil && oa.(*schema.Set).Len() > 0 {
-			attachment := oa.(*schema.Set).List()[0].(map[string]any)
-
-			if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+		os, ns := new(schema.Set), new(schema.Set)
+		if oa != nil {
+			os = oa.(*schema.Set)
+		}
+		if na != nil {
+			ns = na.(*schema.Set)
 		}
 
-		if na != nil && na.(*schema.Set).Len() > 0 {
-			attachment := na.(*schema.Set).List()[0].(map[string]any)
-			input := ec2.AttachNetworkInterfaceInput{
-				NetworkInterfaceId: aws.String(d.Id()),
-				InstanceId:         aws.String(attachment["instance"].(string)),
-				DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
+		if networkInterfaceAttachmentCanUpdateEnaQueueCount(os, ns) {
+			oldAttachment := os.List()[0].(map[string]any)
+			newAttachment := ns.List()[0].(map[string]any)
+			oldEnaQueueCount := networkInterfaceAttachmentIntValue(oldAttachment, "ena_queue_count")
+			newEnaQueueCount := networkInterfaceAttachmentIntValue(newAttachment, "ena_queue_count")
+
+			if oldEnaQueueCount != newEnaQueueCount {
+				attachment := &awstypes.NetworkInterfaceAttachmentChanges{
+					AttachmentId: aws.String(oldAttachment["attachment_id"].(string)),
+				}
+
+				if newEnaQueueCount != 0 {
+					attachment.EnaQueueCount = aws.Int32(int32(newEnaQueueCount))
+				} else {
+					attachment.DefaultEnaQueueCount = aws.Bool(true)
+				}
+
+				input := ec2.ModifyNetworkInterfaceAttributeInput{
+					Attachment:         attachment,
+					NetworkInterfaceId: aws.String(d.Id()),
+				}
+
+				if _, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input); err != nil {
+					return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) attachment ENA queue count: %s", d.Id(), err)
+				}
 			}
-			if v, ok := attachment["network_card_index"]; ok {
-				if v, ok := v.(int); ok {
-					input.NetworkCardIndex = aws.Int32(int32(v))
+		} else {
+			if os.Len() > 0 {
+				attachment := os.List()[0].(map[string]any)
+
+				if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 
-			if _, err := attachNetworkInterface(ctx, conn, &input); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+			if ns.Len() > 0 {
+				attachment := ns.List()[0].(map[string]any)
+				input := ec2.AttachNetworkInterfaceInput{
+					NetworkInterfaceId: aws.String(d.Id()),
+					InstanceId:         aws.String(attachment["instance"].(string)),
+					DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
+				}
+
+				if v, ok := attachment["ena_queue_count"].(int); ok && v != 0 {
+					input.EnaQueueCount = aws.Int32(int32(v))
+				}
+
+				if v, ok := attachment["network_card_index"]; ok {
+					if v, ok := v.(int); ok {
+						input.NetworkCardIndex = aws.Int32(int32(v))
+					}
+				}
+
+				if _, err := attachNetworkInterface(ctx, conn, &input); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
 			}
 		}
 	}
@@ -1252,6 +1301,10 @@ func flattenNetworkInterfaceAttachment(apiObject *awstypes.NetworkInterfaceAttac
 		tfMap["device_index"] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.EnaQueueCount; v != nil {
+		tfMap["ena_queue_count"] = aws.ToInt32(v)
+	}
+
 	if v := apiObject.InstanceId; v != nil {
 		tfMap["instance"] = aws.ToString(v)
 	}
@@ -1261,6 +1314,36 @@ func flattenNetworkInterfaceAttachment(apiObject *awstypes.NetworkInterfaceAttac
 	}
 
 	return tfMap
+}
+
+func networkInterfaceAttachmentCanUpdateEnaQueueCount(oldAttachments, newAttachments *schema.Set) bool {
+	if oldAttachments.Len() != 1 || newAttachments.Len() != 1 {
+		return false
+	}
+
+	oldAttachment := oldAttachments.List()[0].(map[string]any)
+	newAttachment := newAttachments.List()[0].(map[string]any)
+
+	return oldAttachment["instance"] == newAttachment["instance"] &&
+		networkInterfaceAttachmentIntValue(oldAttachment, "device_index") == networkInterfaceAttachmentIntValue(newAttachment, "device_index") &&
+		networkInterfaceAttachmentIntValue(oldAttachment, "network_card_index") == networkInterfaceAttachmentIntValue(newAttachment, "network_card_index")
+}
+
+func networkInterfaceAttachmentIntValue(attachment map[string]any, key string) int {
+	if v, ok := attachment[key].(int); ok {
+		return v
+	}
+
+	return 0
+}
+
+func networkInterfaceAttachmentHasEnaQueueCount(v any) bool {
+	attachments, ok := v.(*schema.Set)
+	if !ok || attachments.Len() != 1 {
+		return false
+	}
+
+	return networkInterfaceAttachmentIntValue(attachments.List()[0].(map[string]any), "ena_queue_count") != 0
 }
 
 func expandPrivateIPAddressSpecification(tfString string) *awstypes.PrivateIpAddressSpecification {
@@ -1599,7 +1682,11 @@ func resourceNetworkInterfaceFlatten(ctx context.Context, awsClient *conns.AWSCl
 	ownerID := aws.ToString(eni.OwnerId)
 	d.Set(names.AttrARN, networkInterfaceARN(ctx, awsClient, ownerID, d.Id()))
 	if eni.Attachment != nil {
-		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
+		attachment := flattenNetworkInterfaceAttachment(eni.Attachment)
+		if !networkInterfaceAttachmentHasEnaQueueCount(d.Get("attachment")) {
+			delete(attachment, "ena_queue_count")
+		}
+		if err := d.Set("attachment", []any{attachment}); err != nil {
 			return fmt.Errorf("setting attachment: %w", err)
 		}
 	} else {
