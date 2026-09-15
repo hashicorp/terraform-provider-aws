@@ -41,7 +41,7 @@ func TestAccVPCNetworkACL_List_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VPCNetworkACL/list_basic"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_basic"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 				},
@@ -52,11 +52,12 @@ func TestAccVPCNetworkACL_List_basic(t *testing.T) {
 			},
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/VPCNetworkACL/list_basic"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_basic"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_network_acl.test", 2),
 					querycheck.ExpectIdentity("aws_network_acl.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
@@ -92,7 +93,7 @@ func TestAccVPCNetworkACL_List_regionOverride(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VPCNetworkACL/list_region_override"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_region_override"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -103,7 +104,7 @@ func TestAccVPCNetworkACL_List_regionOverride(t *testing.T) {
 			},
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/VPCNetworkACL/list_region_override"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_region_override"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -144,7 +145,7 @@ func TestAccVPCNetworkACL_List_includeResource(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VPCNetworkACL/list_include_resource"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_include_resource"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -157,12 +158,13 @@ func TestAccVPCNetworkACL_List_includeResource(t *testing.T) {
 			},
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/VPCNetworkACL/list_include_resource"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_include_resource"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_network_acl.test", 1),
 					tfquerycheck.ExpectIdentityFunc("aws_network_acl.test", identity.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_network_acl.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), id.ValueCheck()),
 					querycheck.ExpectResourceKnownValues("aws_network_acl.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{

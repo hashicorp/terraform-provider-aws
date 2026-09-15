@@ -86,6 +86,10 @@ func (l *networkACLListResource) List(ctx context.Context, request list.ListRequ
 				return
 			}
 
+			if aws.ToBool(networkACL.IsDefault) {
+				continue
+			}
+
 			id := aws.ToString(networkACL.NetworkAclId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
 

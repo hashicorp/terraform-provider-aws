@@ -31,7 +31,7 @@ list "aws_network_acl" "example" {
   config {
     filter {
       name   = "vpc-id"
-      values = [aws_vpc.example.id]
+      values = ["vpc-12345678"]
     }
   }
 }
