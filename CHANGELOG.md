@@ -19,6 +19,7 @@ FEATURES:
 * **New List Resource:** `aws_iam_user_policy` ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
 * **New List Resource:** `aws_network_acl_rule` ([#49916](https://github.com/hashicorp/terraform-provider-aws/issues/49916))
+* **New List Resource:** `aws_wafv2_ip_set` ([#50031](https://github.com/hashicorp/terraform-provider-aws/issues/50031))
 * **New Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
 * **New Resource:** `aws_ec2_transit_gateway_policy_table_entry` ([#49256](https://github.com/hashicorp/terraform-provider-aws/issues/49256))
 * **New Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
@@ -48,6 +49,7 @@ ENHANCEMENTS:
 * resource/aws_iam_user_policy: Add resource identity support ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
 * resource/aws_network_acl_rule: Remove filtering of default Ipv4 and Ipv6 rules from list ([#50017](https://github.com/hashicorp/terraform-provider-aws/issues/50017))
+* resource/aws_wafv2_ip_set: Add Resource Identity support ([#50031](https://github.com/hashicorp/terraform-provider-aws/issues/50031))
 
 BUG FIXES:
 
