@@ -141,12 +141,12 @@ The `authorizer_configuration` block supports the following:
 
 The `custom_jwt_authorizer` block supports the following:
 
-* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint) below.
 * `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
 
@@ -174,11 +174,11 @@ Exactly one of the following must be specified:
 ### `managed_vpc_resource` Block
 
 * `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
-* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
-* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 * `routing_domain` - (Optional) Routing domain for the endpoint.
 * `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
 * `tags` - (Optional) Tags to assign to the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 
 ### `self_managed_lattice_resource` Block
 
@@ -206,46 +206,46 @@ The `claim_match_value` block supports the following:
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 
-### `interceptor_configuration`
+### `interceptor_configuration` Block
 
 The `interceptor_configuration` block supports the following:
 
+* `input_configuration` - (Optional) Input configuration for the interceptor. See [`input_configuration`](#input_configuration) below.
 * `interception_points` - (Required) Set of interception points. Valid values: `REQUEST`, `RESPONSE`.
 * `interceptor` - (Required) Interceptor infrastructure configuration. See [`interceptor`](#interceptor) below.
-* `input_configuration` - (Optional) Input configuration for the interceptor. See [`input_configuration`](#input_configuration) below.
 
-### `interceptor`
+### `interceptor` Block
 
 The `interceptor` block supports the following:
 
 * `lambda` - (Required) Lambda function configuration for the interceptor. See [`lambda`](#lambda) below.
 
-### `lambda`
+### `lambda` Block
 
 The `lambda` block supports the following:
 
 * `arn` - (Required) ARN of the Lambda function to invoke for the interceptor.
 
-### `input_configuration`
+### `input_configuration` Block
 
 The `input_configuration` block supports the following:
 
 * `pass_request_headers` - (Required) Whether to pass request headers to the interceptor.
 
-### `policy_engine_configuration`
+### `policy_engine_configuration` Block
 
 The `policy_engine_configuration` block supports the following:
 
 * `arn` - (Required) ARN of the policy engine. The policy engine contains Cedar policies that define fine-grained authorization rules specifying who can perform what actions on which resources as agents interact through the gateway.
 * `mode` - (Required) Enforcement mode for the policy engine. Valid values: `LOG_ONLY`, `ENFORCE`. In `LOG_ONLY` mode, the policy engine evaluates actions and records traces but does not enforce decisions. In `ENFORCE` mode, the policy engine evaluates actions and enforces allow/deny decisions.
 
-### `protocol_configuration`
+### `protocol_configuration` Block
 
 The `protocol_configuration` block supports the following:
 
 * `mcp` - (Optional) Model Context Protocol (MCP) configuration block. See [`mcp`](#mcp) below.
 
-### `mcp`
+### `mcp` Block
 
 The `mcp` block supports the following:
 
@@ -255,13 +255,13 @@ The `mcp` block supports the following:
 * `streaming_configuration` - (Optional) Configuration block for streaming settings of the MCP gateway. See [`streaming_configuration`](#streaming_configuration) below.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
 
-### `session_configuration`
+### `session_configuration` Block
 
 The `session_configuration` block supports the following:
 
 * `session_timeout_in_seconds` - (Optional) Integer value for session timeout in seconds. Must be between 900 and 28800.
 
-### `streaming_configuration`
+### `streaming_configuration` Block
 
 The `streaming_configuration` block supports the following:
 
@@ -274,10 +274,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `gateway_arn` - ARN of the Gateway.
 * `gateway_id` - Unique identifier of the Gateway.
 * `gateway_url` - URL endpoint for the gateway.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workload_identity_details` - Workload identity details for the gateway. See [`workload_identity_details`](#workload_identity_details) below.
 
-### `workload_identity_details`
+### `workload_identity_details` Block
 
 The `workload_identity_details` block contains the following:
 
