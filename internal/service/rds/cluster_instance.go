@@ -399,19 +399,18 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
-	return sdkdiag.AppendFromErr(diags, resourceClusterInstanceFlatten(ctx, meta.(*conns.AWSClient), db, d))
-}
-
-func resourceClusterInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, db *types.DBInstance, d *schema.ResourceData) error {
-	dbClusterID := aws.ToString(db.DBClusterIdentifier)
-	dbc, err := findDBClusterByID(ctx, awsClient.RDSClient(ctx), dbClusterID)
+	dbc, err := findDBClusterByID(ctx, conn, dbClusterID)
 	if err != nil {
-		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
-	for _, m := range dbc.DBClusterMembers {
+	return sdkdiag.AppendFromErr(diags, resourceClusterInstanceFlatten(ctx, db, d, dbc))
+}
+
+func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) error {
+	for _, m := range dbClusters.DBClusterMembers {
 		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
-			d.Set("writer", m.IsClusterWriter)
+			d.Set("writer", aws.ToBool(m.IsClusterWriter))
 		}
 	}
 

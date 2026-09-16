@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -34,6 +35,8 @@ func (l *clusterInstanceListResource) List(ctx context.Context, request list.Lis
 	awsClient := l.Meta()
 	conn := awsClient.RDSClient(ctx)
 
+	dbClusters := make(map[string]*types.DBCluster)
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &rds.DescribeDBInstancesInput{}
 		for item, err := range listDBInstances(ctx, conn, input) {
@@ -52,8 +55,17 @@ func (l *clusterInstanceListResource) List(ctx context.Context, request list.Lis
 			rd.SetId(identifier)
 			rd.Set(names.AttrIdentifier, identifier)
 
+			if _, ok := dbClusters[identifier]; !ok {
+				dbc, err := findDBClusterByID(ctx, conn, aws.ToString(item.DBClusterIdentifier))
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+				dbClusters[identifier] = dbc
+			}
+
 			if request.IncludeResource {
-				if err := resourceClusterInstanceFlatten(ctx, awsClient, &item, rd); err != nil {
+				if err := resourceClusterInstanceFlatten(ctx, &item, rd, dbClusters[identifier]); err != nil {
 					tflog.Error(ctx, "Flattening RDS Cluster Instance", map[string]any{
 						"error": err.Error(),
 					})
