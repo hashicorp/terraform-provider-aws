@@ -73,7 +73,7 @@ The `approval_configuration` configuration block supports the following argument
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
+* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -83,14 +83,14 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
-* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
-* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
-* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint) below.
-* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration-block) below.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim-block) below.
+* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint-block) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides-block) below.
 
 ### `allowed_workload_configuration` Block
 
-* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment) below.
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment-block) below.
 * `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
 
 ### `hosting_environment` Block
@@ -100,14 +100,14 @@ The `custom_jwt_authorizer` block supports the following:
 ### `private_endpoint_overrides` Block
 
 * `domain` - (Required) Domain the override applies to.
-* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint-block) below.
 
 ### `private_endpoint` Block
 
 Exactly one of the following must be specified:
 
-* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
-* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource-block) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource-block) below.
 
 ### `managed_vpc_resource` Block
 
@@ -126,7 +126,7 @@ Exactly one of the following must be specified:
 
 The `custom_claim` block supports the following:
 
-* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value-block) below.
 * `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
 * `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
 
@@ -135,7 +135,7 @@ The `custom_claim` block supports the following:
 The `authorizing_claim_match_value` block supports the following:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
-* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value-block) below.
 
 ### `claim_match_value` Block
 

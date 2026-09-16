@@ -218,7 +218,7 @@ You can configure a MRSC global table with three replicas, or with two replicas 
 
 Consistency Mode (`consistency_mode`) on the embedded `replica` allows you to configure consistency mode for Global Tables.
 
-##### Consistency mode with 3 Replicas
+#### Consistency mode with 3 Replicas
 
 ```terraform
 resource "aws_dynamodb_table" "example" {
@@ -245,7 +245,7 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
-##### Consistency Mode with 2 Replicas and Witness Region
+#### Consistency Mode with 2 Replicas and Witness Region
 
 ```terraform
 resource "aws_dynamodb_table" "example" {

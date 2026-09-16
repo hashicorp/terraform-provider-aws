@@ -163,7 +163,7 @@ The following arguments are required:
 
 * `agent_runtime_name` - (Required) Name of the agent runtime.
 * `role_arn` - (Required) ARN of the IAM role that the agent runtime assumes to access AWS services.
-* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent-runtime-artifact) below.
+* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent_runtime_artifact) below.
 * `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration) below.
 
 The following arguments are optional:
@@ -171,7 +171,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the agent runtime.
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
-* `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
+* `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration-block) below.
 * `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
@@ -217,7 +217,7 @@ The `container_configuration` block supports the following:
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
+* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -227,14 +227,14 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
-* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
-* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
-* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint) below.
-* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration-block) below.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim-block) below.
+* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint-block) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides-block) below.
 
 ### `allowed_workload_configuration` Block
 
-* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment) below.
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment-block) below.
 * `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
 
 ### `hosting_environment` Block
@@ -244,14 +244,14 @@ The `custom_jwt_authorizer` block supports the following:
 ### `private_endpoint_overrides` Block
 
 * `domain` - (Required) Domain the override applies to.
-* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint-block) below.
 
 ### `private_endpoint` Block
 
 Exactly one of the following must be specified:
 
-* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
-* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource-block) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource-block) below.
 
 ### `managed_vpc_resource` Block
 
@@ -270,7 +270,7 @@ Exactly one of the following must be specified:
 
 The `custom_claim` block supports the following:
 
-* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value-block) below.
 * `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
 * `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
 
@@ -279,7 +279,7 @@ The `custom_claim` block supports the following:
 The `authorizing_claim_match_value` block supports the following:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
-* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value-block) below.
 
 ### `claim_match_value` Block
 

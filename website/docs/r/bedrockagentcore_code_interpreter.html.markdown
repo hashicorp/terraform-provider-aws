@@ -75,7 +75,7 @@ The following arguments are optional:
 
 The `certificate` block supports the following:
 
-* `location` - (Required) Location from which to retrieve the certificate. See [`certificates.location`](#certificateslocation) below.
+* `location` - (Required) Location from which to retrieve the certificate. See [`certificate.location`](#certificatelocation) below.
 
 ### `certificate.location`
 

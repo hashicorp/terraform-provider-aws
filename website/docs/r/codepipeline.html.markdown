@@ -256,14 +256,14 @@ A `on_failure` block supports the following arguments:
 * `result` - (Optional) The conditions that are configured as failure conditions. Possible values are `ROLLBACK`,  `FAIL`, `RETRY` and `SKIP`.
 * `retry_configuration` - (Optional) The retry configuration specifies automatic retry for a failed stage, along with the configured retry mode. Defined as a `retry_configuration` block below.
 
-##### `condition`
+#### `condition`
 
 A `condition` block supports the following arguments:
 
 * `result` - (Optional) The action to be done when the condition is met. For example, rolling back an execution for a failure condition. Possible values are `ROLLBACK`, `FAIL`, `RETRY` and `SKIP`.
 * `rule` - (Optional) The rules that make up the condition. Defined as a `rule` block below.
 
-##### `rule`
+#### `rule`
 
 A `rule` block supports the following arguments:
 
@@ -276,7 +276,7 @@ A `rule` block supports the following arguments:
 * `role_arn` - (Optional) The pipeline role ARN associated with the rule.
 * `timeout_in_minutes` - (Optional) The action timeout for the rule.
 
-##### `rule_type_id`
+#### `rule_type_id`
 
 A `rule_type_id` block supports the following arguments:
 
@@ -285,7 +285,7 @@ A `rule_type_id` block supports the following arguments:
 * `owner` - (Optional) The creator of the rule being called. The valid value for the Owner field in the rule category is `AWS`.
 * `version` - (Optional) A string that describes the rule version.
 
-##### `retry_configuration`
+#### `retry_configuration`
 
 A `retry_configuration` block supports the following arguments:
 
@@ -306,7 +306,7 @@ A `git_configuration` block supports the following arguments:
 * `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
 * `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
 
-##### `pull_request`
+#### `pull_request`
 
 A `pull_request` block supports the following arguments:
 
@@ -314,7 +314,7 @@ A `pull_request` block supports the following arguments:
 * `branches` - (Optional) The field that specifies to filter on branches for the pull request trigger configuration. A `branches` block is documented below.
 * `file_paths` - (Optional) The field that specifies to filter on file paths for the pull request trigger configuration. A `file_paths` block is documented below.
 
-##### `push`
+#### `push`
 
 A `push` block supports the following arguments:
 
@@ -322,21 +322,21 @@ A `push` block supports the following arguments:
 * `file_paths` - (Optional) The field that specifies to filter on file paths for the push trigger configuration. A `file_paths` block is documented below.
 * `tags` - (Optional) The field that contains the details for the Git tags trigger configuration. A `tags` block is documented below.
 
-##### `branches`
+#### `branches`
 
 A `branches` block supports the following arguments:
 
 * `includes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be included as criteria that starts the pipeline.
 * `excludes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be excluded from starting the pipeline.
 
-##### `file_paths`
+#### `file_paths`
 
 A `file_paths` block supports the following arguments:
 
 * `includes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be included as criteria that starts the pipeline.
 * `excludes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be excluded from starting the pipeline.
 
-##### `tags`
+#### `tags`
 
 A `tags` block supports the following arguments:
 

@@ -161,7 +161,7 @@ The `s3` object supports the following:
 
 The `certificate` block supports the following:
 
-* `location` - (Required) Location from which to retrieve the certificate. See [`certificates.location`](#certificateslocation) below.
+* `location` - (Required) Location from which to retrieve the certificate. See [`certificate.location`](#certificatelocation) below.
 
 ### `certificate.location`
 

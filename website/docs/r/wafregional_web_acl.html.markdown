@@ -128,7 +128,7 @@ This resource supports the following arguments:
 
 * `field_to_match` - (Required) Set of configuration blocks for fields to redact. Detailed below.
 
-##### `field_to_match` Configuration Block
+#### `field_to_match` Configuration Block
 
 -> Additional information about this configuration can be found in the [AWS WAF Regional API Reference](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_FieldToMatch.html).
 
