@@ -92,6 +92,8 @@ resource "aws_rds_integration" "example" {
 
 The following arguments are required:
 
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-integration.html).
+
 * `integration_name` - (Required) Name of the integration.
 * `source_arn` - (Required, Forces new resources) ARN of the database to use as the source for replication.
 * `target_arn` - (Required, Forces new resources) ARN of the Redshift data warehouse to use as the target for replication.
@@ -103,8 +105,6 @@ The following arguments are optional:
 * `kms_key_id` - (Optional, Forces new resources) KMS key identifier for the key to use to encrypt the integration. If you don't specify an encryption key, RDS uses a default AWS owned key. If you use the default AWS owned key, you should ignore `kms_key_id` parameter by using [`lifecycle` parameter](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to avoid unintended change after the first creation.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-integration.html).
 
 ## Attribute Reference
 

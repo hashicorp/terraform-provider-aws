@@ -42,6 +42,8 @@ resource "aws_rds_shard_group" "example" {
 
 This resource supports the following arguments:
 
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-shard-group.html).
+
 * `compute_redundancy` - (Optional) Whether to create standby DB shard groups for the DB shard group. Valid values are `0` (no standby DB shard group, the default), `1` (one standby DB shard group in a different Availability Zone), and `2` (two standby DB shard groups in two different Availability Zones).
 * `db_cluster_identifier` - (Required) Name of the primary DB cluster for the DB shard group.
 * `db_shard_group_identifier` - (Required) Name of the DB shard group.
@@ -50,8 +52,6 @@ This resource supports the following arguments:
 * `publicly_accessible` - (Optional) Whether the DB shard group is publicly accessible.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-shard-group.html).
 
 ## Attribute Reference
 
