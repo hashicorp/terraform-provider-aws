@@ -229,7 +229,7 @@ func TestAccSSMQuickSetupConfigurationManager_resourceExplorer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Reproduces GH-44687: API injects a "QSForceUpdateParam" key.
-				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, "true"),
+				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -248,11 +248,11 @@ func TestAccSSMQuickSetupConfigurationManager_resourceExplorer(t *testing.T) {
 			},
 			{
 				// Triggers UpdateConfigurationDefinition.
-				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, "false"),
+				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "configuration_definition.0.parameters.ReplaceExistingAggregator", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_definition.0.parameters.ReplaceExistingAggregator", acctest.CtFalse),
 				),
 			},
 		},
