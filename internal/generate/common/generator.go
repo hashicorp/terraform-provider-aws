@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/cli"
+	"golang.org/x/tools/imports"
 )
 
 type Generator struct {
@@ -240,8 +241,8 @@ func goodgo(body []byte) ([]byte, error) {
 		return nil, fmt.Errorf("running gofmt: %w", err)
 	}
 
-	// Run goimports to fix imports
-	formattedBody, err = runCommand("goimports", "-v", formattedBody)
+	// Run goimports to fix imports.
+	formattedBody, err = imports.Process("<standard input>", formattedBody, nil)
 	if err != nil {
 		return nil, fmt.Errorf("running goimports: %w", err)
 	}
