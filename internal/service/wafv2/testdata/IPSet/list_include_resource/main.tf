@@ -5,9 +5,14 @@ resource "aws_wafv2_ip_set" "test" {
   count = var.resource_count
 
   name               = "${var.rName}-${count.index}"
+  description        = "${var.rName}-${count.index}"
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32"]
+
+  tags = {
+    key1 = "value1"
+  }
 }
 
 variable "rName" {

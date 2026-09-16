@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,7 +49,7 @@ func (l *ipSetListResource) ListResourceConfigSchema(_ context.Context, _ list.L
 		Attributes: map[string]listschema.Attribute{
 			names.AttrScope: listschema.StringAttribute{
 				Required:    true,
-				Description: "Specifies whether this is for a global (CLOUDFRONT) or regional (REGIONAL) application.",
+				Description: "Whether this is for a global (CLOUDFRONT) or regional (REGIONAL) application.",
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.Scope](),
 				},
@@ -97,11 +98,12 @@ func (l *ipSetListResource) List(ctx context.Context, request list.ListRequest, 
 
 			if request.IncludeResource {
 				output, err := findIPSetByThreePartKey(ctx, conn, id, name, scope)
-				if err != nil {
-					tflog.Error(ctx, "Reading WAFv2 IPSet", map[string]any{
-						"error": err.Error(),
-					})
+				if retry.NotFound(err) {
 					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
 				}
 
 				resourceIPSetFlatten(output, rd)
