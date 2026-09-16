@@ -99,7 +99,7 @@ func (l *networkACLListResource) List(ctx context.Context, request list.ListRequ
 
 			if request.IncludeResource {
 				if diags := resourceNetworkACLFlatten(ctx, awsClient, rd, &networkACL); diags.HasError() {
-					tflog.Error(ctx, "Reading EC2 Network ACL", map[string]any{
+					tflog.Error(ctx, "Flattening EC2 Network ACL", map[string]any{
 						"diags": diags,
 					})
 					continue

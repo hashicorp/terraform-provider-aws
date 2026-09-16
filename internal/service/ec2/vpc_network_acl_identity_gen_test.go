@@ -180,7 +180,7 @@ func TestAccVPCNetworkACL_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.62.0
+// Resource Identity was added after v6.64.0
 func TestAccVPCNetworkACL_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -197,7 +197,7 @@ func TestAccVPCNetworkACL_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/basic_v6.62.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/basic_v6.64.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, t, resourceName, &v),
@@ -233,7 +233,7 @@ func TestAccVPCNetworkACL_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.62.0
+// Resource Identity was added after v6.64.0
 func TestAccVPCNetworkACL_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -255,7 +255,7 @@ func TestAccVPCNetworkACL_Identity_ExistingResource_noRefreshNoChange(t *testing
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/basic_v6.62.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/basic_v6.64.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, t, resourceName, &v),

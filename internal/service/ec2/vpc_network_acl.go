@@ -38,7 +38,7 @@ import (
 // @CustomImport
 // @Testing(tagsTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NetworkAcl")
-// @Testing(preIdentityVersion="v6.62.0")
+// @Testing(preIdentityVersion="v6.64.0")
 // @Testing(generator=false)
 func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{

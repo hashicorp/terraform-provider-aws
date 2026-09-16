@@ -188,3 +188,55 @@ func TestAccVPCNetworkACL_List_includeResource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVPCNetworkACL_List_filterNetworkACLIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_network_acl.test[0]"
+	resourceName2 := "aws_network_acl.test[1]"
+
+	id1 := tfstatecheck.StateValue()
+	id2 := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckNetworkACLDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_network_acl_ids"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(3),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
+					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACL/list_network_acl_ids"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(3),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_network_acl.test", 2),
+					querycheck.ExpectIdentity("aws_network_acl.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        id1.ValueCheck(),
+					}),
+					querycheck.ExpectIdentity("aws_network_acl.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        id2.ValueCheck(),
+					}),
+				},
+			},
+		},
+	})
+}
