@@ -9,7 +9,6 @@ import (
 	"go/format"
 	"maps"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 	"text/template"
@@ -235,8 +234,7 @@ func (d *baseDestination) format(body []byte) ([]byte, error) {
 
 // goodgo formats the given Go source code using gofmt and goimports.
 func goodgo(body []byte) ([]byte, error) {
-	// Run gofmt with the -s option
-	formattedBody, err := runCommand("gofmt", "-s", body)
+	formattedBody, err := format.Source(body)
 	if err != nil {
 		return nil, fmt.Errorf("running gofmt: %w", err)
 	}
@@ -248,17 +246,4 @@ func goodgo(body []byte) ([]byte, error) {
 	}
 
 	return formattedBody, nil
-}
-
-// runCommand runs a command with the given arguments and input, and returns the output.
-func runCommand(name string, arg string, input []byte) ([]byte, error) {
-	cmd := exec.Command(name, arg)
-	cmd.Stdin = bytes.NewReader(input)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return nil, err
-	}
-	return out.Bytes(), nil
 }
