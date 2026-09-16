@@ -87,126 +87,142 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `content_policy_config` - (Optional) Content policy config for a guardrail. See [`content_policy_config` Block](#content_policy_config-block) for more information.
+* `contextual_grounding_policy_config` - (Optional) Contextual grounding policy config for a guardrail. See [`contextual_grounding_policy_config` Block](#contextual_grounding_policy_config-block) for more information.
+* `cross_region_config` - (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [`cross_region_config` Block](#cross_region_config-block) for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+* `description` - (Optional) Description of the guardrail or its version.
+* `kms_key_arn` - (Optional) KMS key with which the guardrail was encrypted at rest.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `content_policy_config` - (Optional) Content policy config for a guardrail. See [Content Policy Config](#content-policy-config) for more information.
-* `contextual_grounding_policy_config` - (Optional) Contextual grounding policy config for a guardrail. See [Contextual Grounding Policy Config](#contextual-grounding-policy-config) for more information.
-* `description` (Optional) Description of the guardrail or its version.
-* `kms_key_arn` (Optional) The KMS key with which the guardrail was encrypted at rest.
-* `sensitive_information_policy_config` (Optional) Sensitive information policy config for a guardrail. See [Sensitive Information Policy Config](#sensitive-information-policy-config) for more information.
-* `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `topic_policy_config` (Optional) Topic policy config for a guardrail. See [Topic Policy Config](#topic-policy-config) for more information.
-* `word_policy_config` (Optional) Word policy config for a guardrail. See [Word Policy Config](#word-policy-config) for more information.
+* `sensitive_information_policy_config` - (Optional) Sensitive information policy config for a guardrail. See [`sensitive_information_policy_config` Block](#sensitive_information_policy_config-block) for more information.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `topic_policy_config` - (Optional) Topic policy config for a guardrail. See [`topic_policy_config` Block](#topic_policy_config-block) for more information.
+* `word_policy_config` - (Optional) Word policy config for a guardrail. See [`word_policy_config` Block](#word_policy_config-block) for more information.
 
-### Content Policy Config
+### `content_policy_config` Block
 
 The `content_policy_config` configuration block supports the following arguments:
 
-* `filters_config` - (Optional) Set of content filter configs in content policy.
-  See [Filters Config](#content-filters-config) for more information.
-* `tier_config` - (Optional) Configuration block for the content policy tier. See [Tier Config](#content-tier-config) for more information.
+* `filters_config` - (Optional) Set of content filter configs in content policy. See [`content_policy_config.filters_config` Block](#content_policy_configfilters_config-block) for more information.
+* `tier_config` - (Optional) Configuration block for the content policy tier. See [`content_policy_config.tier_config` Block](#content_policy_configtier_config-block) for more information.
 
-#### Content Filters Config
+### `content_policy_config.filters_config` Block
 
 The `filters_config` configuration block supports the following arguments:
 
 * `input_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
 * `input_enabled` - (Optional) Toggles guardrail evaluation on input.
 * `input_modalities` - (Optional) List of selected input modalities. Valid values: `IMAGE`, `TEXT`.
-* `input_strength` - (Optional) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
+* `input_strength` - (Required) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
 * `output_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
 * `output_enabled` - (Optional) Toggles guardrail evaluation on output.
 * `output_modalities` - (Optional) List of selected output modalities. Valid values: `IMAGE`, `TEXT`.
-* `output_strength` - (Optional) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
-* `type` - (Optional) Type of filter in content policy. Valid Values: `SEXUAL`, `VIOLENCE`, `HATE`, `INSULTS`, `MISCONDUCT`, `PROMPT_ATTACK`.
+* `output_strength` - (Required) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
+* `type` - (Required) Type of filter in content policy. Valid values: `SEXUAL`, `VIOLENCE`, `HATE`, `INSULTS`, `MISCONDUCT`, `PROMPT_ATTACK`.
 
-#### Content Tier Config
+### `content_policy_config.tier_config` Block
 
 The `tier_config` configuration block supports the following arguments:
 
-* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
+* `tier_name` - (Required) Name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
-### Contextual Grounding Policy Config
+### `contextual_grounding_policy_config` Block
 
-* `filters_config` (Required) One or more blocks defining contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
+The `contextual_grounding_policy_config` configuration block supports the following arguments:
 
-#### Contextual Grounding Filters Config
+* `filters_config` - (Required) One or more blocks defining contextual grounding filter configs. See [`contextual_grounding_policy_config.filters_config` Block](#contextual_grounding_policy_configfilters_config-block) for more information.
+
+### `contextual_grounding_policy_config.filters_config` Block
 
 The `filters_config` configuration block supports the following arguments:
 
-* `threshold` - (Required) The threshold for this filter.
+* `threshold` - (Required) Threshold for this filter.
 * `type` - (Required) Type of contextual grounding filter.
 
-### Cross Region Inference
+### `cross_region_config` Block
 
-* `cross_region_config` (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [Cross Region Config](#cross-region-config for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+The `cross_region_config` configuration block supports the following arguments:
 
-#### Cross Region Config
+* `guardrail_profile_identifier` - (Required) Guardrail profile ARN.
 
-* `guardrail_profile_identifier` (Required) Guardrail profile ARN.
+### `sensitive_information_policy_config` Block
 
-### Topic Policy Config
+The `sensitive_information_policy_config` configuration block supports the following arguments:
 
-* `tier_config` - (Optional) Configuration block for the topic policy tier. See [Tier Config](#topics-tier-config) for more information.
-* `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
+* `pii_entities_config` - (Optional) List of entities. See [`pii_entities_config` Block](#pii_entities_config-block) for more information.
+* `regexes_config` - (Optional) List of regex. See [`regexes_config` Block](#regexes_config-block) for more information.
 
-#### Topics Config
+### `pii_entities_config` Block
 
-* `definition` (Required) Definition of topic in topic policy.
-* `name` (Required) Name of topic in topic policy.
-* `type` (Required) Type of topic in a policy.
-* `examples` (Optional) List of text examples.
+The `pii_entities_config` configuration block supports the following arguments:
 
-#### Topics Tier Config
+* `action` - (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_action` - (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_enabled` - (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` - (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `output_enabled` - (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
+* `type` - (Required) Currently supported PII entities.
+
+### `regexes_config` Block
+
+The `regexes_config` configuration block supports the following arguments:
+
+* `action` - (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `description` - (Optional) Regex description.
+* `input_action` - (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_enabled` - (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `name` - (Required) Regex name.
+* `output_action` - (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `output_enabled` - (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
+* `pattern` - (Required) Regex pattern.
+
+### `topic_policy_config` Block
+
+The `topic_policy_config` configuration block supports the following arguments:
+
+* `tier_config` - (Optional) Configuration block for the topic policy tier. See [`topic_policy_config.tier_config` Block](#topic_policy_configtier_config-block) for more information.
+* `topics_config` - (Required) List of topic configs in topic policy. See [`topics_config` Block](#topics_config-block) for more information.
+
+### `topic_policy_config.tier_config` Block
 
 The `tier_config` configuration block supports the following arguments:
 
-* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
+* `tier_name` - (Required) Name of the topic policy tier. Valid values include STANDARD or CLASSIC.
 
-### Sensitive Information Policy Config
+### `topics_config` Block
 
-* `pii_entities_config` (Optional) List of entities. See [PII Entities Config](#pii-entities-config) for more information.
-* `regexes_config` (Optional) List of regex. See [Regexes Config](#regexes-config) for more information.
+The `topics_config` configuration block supports the following arguments:
 
-#### PII Entities Config
+* `definition` - (Required) Definition of topic in topic policy.
+* `examples` - (Optional) List of text examples.
+* `name` - (Required) Name of topic in topic policy.
+* `type` - (Required) Type of topic in a policy.
 
-* `action` (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
-* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
-* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
-* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
-* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
-* `type` (Required) The currently supported PII entities.
+### `word_policy_config` Block
 
-#### Regexes Config
+The `word_policy_config` configuration block supports the following arguments:
 
-* `action` (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
-* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
-* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
-* `name` (Required) The regex name.
-* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
-* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
-* `pattern` (Required) The regex pattern.
-* `description` (Optional) The regex description.
+* `managed_word_lists_config` - (Optional) Config for the list of managed words. See [`managed_word_lists_config` Block](#managed_word_lists_config-block) for more information.
+* `words_config` - (Optional) List of custom word configs. See [`words_config` Block](#words_config-block) for more information.
 
-### Word Policy Config
+### `managed_word_lists_config` Block
 
-* `managed_word_lists_config` (Optional) A config for the list of managed words. See [Managed Word Lists Config](#managed-word-lists-config) for more information.
-* `words_config` (Optional) List of custom word configs. See [Words Config](#words-config) for more information.
+The `managed_word_lists_config` configuration block supports the following arguments:
 
-#### Managed Word Lists Config
+* `input_action` - (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` - (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` - (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` - (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
+* `type` - (Required) Options for managed words.
 
-* `type` (Required) Options for managed words.
-* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
-* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
-* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
-* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
+### `words_config` Block
 
-#### Words Config
+The `words_config` configuration block supports the following arguments:
 
-* `text` (Required) The custom word text.
-* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
-* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
-* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
-* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
+* `input_action` - (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` - (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` - (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` - (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
+* `text` - (Required) Custom word text.
 
 ## Attribute Reference
 
