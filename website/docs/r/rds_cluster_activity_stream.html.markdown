@@ -55,11 +55,11 @@ resource "aws_rds_cluster_activity_stream" "default" {
 
 This resource supports the following arguments:
 
+* `engine_native_audit_fields_included` - (Optional, Forces new resources) Whether the database activity stream includes engine-native audit fields. This option only applies to an Oracle DB instance. By default, no engine-native audit fields are included. Defaults `false`.
+* `kms_key_id` - (Required, Forces new resources) AWS KMS key identifier for encrypting messages in the database activity stream. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key.
+* `mode` - (Required, Forces new resources) Mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required, Forces new resources) ARN of the DB cluster.
-* `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.
-* `kms_key_id` - (Required, Forces new resources) The AWS KMS key identifier for encrypting messages in the database activity stream. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key.
-* `engine_native_audit_fields_included` - (Optional, Forces new resources) Specifies whether the database activity stream includes engine-native audit fields. This option only applies to an Oracle DB instance. By default, no engine-native audit fields are included. Defaults `false`.
 
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/start-activity-stream.html).
@@ -69,7 +69,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the DB cluster.
-* `kinesis_stream_name` - The name of the Amazon Kinesis data stream to be used for the database activity stream.
+* `kinesis_stream_name` - Name of the Amazon Kinesis data stream to be used for the database activity stream.
 
 ## Import
 
