@@ -120,7 +120,7 @@ func TestAccIAMOpenIDConnectProvider_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_iam_openid_connect_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))), // nosemgrep:ci.semgrep.domain-names.domain-names
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), tfknownvalue.GlobalARNExact("iam", fmt.Sprintf("oidc-provider/accounts.testle.com/%s-0", rName))),  // nosemgrep:ci.semgrep.domain-names.domain-names
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("client_id_list"), knownvalue.ListExact([]knownvalue.Check{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("client_id_list"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.StringExact("266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"), // nosemgrep:ci.semgrep.domain-names.domain-names
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("thumbprint_list"), knownvalue.ListExact([]knownvalue.Check{
