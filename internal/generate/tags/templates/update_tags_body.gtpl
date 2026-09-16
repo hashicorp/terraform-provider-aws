@@ -1,3 +1,20 @@
+{{ define "populateFields" -}}
+{{- if not ( .TagTypeIDElem ) }}
+	{{- if .TagInIDNeedValueSlice }}
+		{{ .TagInIDElem }}: []string{identifier},
+	{{- else }}
+		{{ .TagInIDElem }}: aws.String(identifier),
+	{{- end }}
+	{{- if .TagResTypeElem }}
+		{{- if .TagResTypeElemType }}
+			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
+		{{- else }}
+			{{ .TagResTypeElem }}: aws.String(resourceType),
+		{{- end }}
+	{{- end }}
+{{- end }}
+{{- end }}
+
 // {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -30,20 +47,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	input := {{ .AWSService }}.{{ .TagOp }}Input{
-		{{- if not ( .TagTypeIDElem ) }}
-		{{- if .TagInIDNeedValueSlice }}
-		{{ .TagInIDElem }}: []string{identifier},
-		{{- else }}
-		{{ .TagInIDElem }}:   aws.String(identifier),
-		{{- end }}
-		{{- if .TagResTypeElem }}
-		{{- if .TagResTypeElemType }}
-		{{ .TagResTypeElem }}:      awstypes.{{ .TagResTypeElemType }}(resourceType),
-		{{- else }}
-		{{ .TagResTypeElem }}:      aws.String(resourceType),
-		{{- end }}
-		{{- end }}
-		{{- end }}
+		{{- template "populateFields" . }}
 	}
 
 	if len(updatedTags) > 0 {
@@ -87,20 +91,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
 		input := {{ .AWSService }}.{{ .UntagOp }}Input{
-			{{- if not ( .TagTypeIDElem ) }}
-			{{- if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: []string{identifier},
-			{{- else }}
-			{{ .TagInIDElem }}:   aws.String(identifier),
-			{{- end }}
-			{{- if .TagResTypeElem }}
-		    {{- if .TagResTypeElemType }}
-			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
-		    {{- else }}
-			{{ .TagResTypeElem }}: aws.String(resourceType),
-			{{- end }}
-			{{- end }}
-			{{- end }}
+			{{- template "populateFields" . }}
 			{{- if .UntagInNeedTagType }}
 			{{ .UntagInTagsElem }}:       {{ .TagsFunc }}(removedTags),
 			{{- else if .UntagInNeedTagKeyType }}
@@ -139,20 +130,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
 		input := {{ .AWSService }}.{{ .TagOp }}Input{
-			{{- if not ( .TagTypeIDElem ) }}
-			{{- if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: []string{identifier},
-			{{- else }}
-			{{ .TagInIDElem }}: aws.String(identifier),
-			{{- end }}
-			{{- if .TagResTypeElem }}
-		    {{- if .TagResTypeElemType }}
-			{{ .TagResTypeElem }}:    awstypes.{{ .TagResTypeElemType }}(resourceType),
-		    {{- else }}
-			{{ .TagResTypeElem }}:    aws.String(resourceType),
-			{{- end }}
-			{{- end }}
-			{{- end }}
+			{{- template "populateFields" . }}
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
