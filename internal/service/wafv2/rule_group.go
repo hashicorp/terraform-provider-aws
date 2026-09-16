@@ -66,7 +66,8 @@ func resourceRuleGroup() *schema.Resource {
 				},
 				"capacity": {
 					Type:         schema.TypeInt,
-					Required:     true,
+					Optional:     true,
+					Computed:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.IntAtLeast(1),
 				},
@@ -169,7 +170,6 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateRuleGroupInput{
-		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Name:             aws.String(name),
 		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:             getTagsIn(ctx),
@@ -194,6 +194,19 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("capacity"); ok {
+		input.Capacity = aws.Int64((int64(v.(int))))
+	} else {
+		capacityOutput, err := conn.CheckCapacity(ctx, &wafv2.CheckCapacityInput{
+			Scope: input.Scope,
+			Rules: input.Rules,
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "checking capacity: %s", err)
+		}
+		input.Capacity = &capacityOutput.Capacity
 	}
 
 	const (
