@@ -3,7 +3,6 @@ SHELL := /bin/bash
 ACCTEST_PARALLELISM          ?= 20
 ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
-GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
 P                            ?= 20
 PKG_NAME                     ?= internal
@@ -382,19 +381,19 @@ fix-imports-core: ## Fixing core directory imports with goimports
 		fi; \
 	done
 
-fmt: prereq-go ## Fix Go source formatting
+fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
-	$(GOFMT) -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-fmt-core: prereq-go ## Fix Go source formatting in core directories
+fmt-core: ## Fix Go source formatting in core directories
 	@echo "make: Fixing core directory source code with gofmt..."
 	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
-	$(GOFMT) -s -w $$core_pkgs
+	gofmt -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
-fmt-check: prereq-go ## Verify Go source is formatted
+fmt-check: ## Verify Go source is formatted
 	@echo "make: Verifying source code with gofmt..."
-	@GOFMT="$(GOFMT)" sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
