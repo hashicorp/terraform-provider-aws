@@ -205,6 +205,7 @@ type lambdaConfigTypeModel struct {
 	CustomMessage               types.String                                                              `tfsdk:"custom_message"`
 	CustomSMSSender             fwtypes.ListNestedObjectValueOf[customSMSLambdaVersionConfigTypeModel]    `tfsdk:"custom_sms_sender"`
 	DefineAuthChallenge         types.String                                                              `tfsdk:"define_auth_challenge"`
+	InboundFederation           fwtypes.ListNestedObjectValueOf[inboundFederationLambdaTypeModel]         `tfsdk:"inbound_federation"`
 	KMSKeyID                    types.String                                                              `tfsdk:"kms_key_id"`
 	PostAuthentication          types.String                                                              `tfsdk:"post_authentication"`
 	PostConfirmation            types.String                                                              `tfsdk:"post_confirmation"`
@@ -227,6 +228,11 @@ type customSMSLambdaVersionConfigTypeModel struct {
 }
 
 type preTokenGenerationVersionConfigTypeModel struct {
+	LambdaARN     types.String `tfsdk:"lambda_arn"`
+	LambdaVersion types.String `tfsdk:"lambda_version"`
+}
+
+type inboundFederationLambdaTypeModel struct {
 	LambdaARN     types.String `tfsdk:"lambda_arn"`
 	LambdaVersion types.String `tfsdk:"lambda_version"`
 }
