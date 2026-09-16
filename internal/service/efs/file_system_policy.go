@@ -28,6 +28,7 @@ import (
 // @SDKResource("aws_efs_file_system_policy", name="File System Policy")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs;;efs.DescribeFileSystemPolicyOutput")
+// @Testing(generator=false)
 // @Testing(importIgnore="bypass_policy_lockout_safety_check")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="v6.64.0")

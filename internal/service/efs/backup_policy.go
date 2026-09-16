@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_efs_backup_policy", name="Backup Policy")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs/types;awstypes;awstypes.BackupPolicy")
+// @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.64.0")
 func resourceBackupPolicy() *schema.Resource {
 	return &schema.Resource{

@@ -59,7 +59,6 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -69,9 +68,7 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/FileSystemPolicy/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, t, resourceName, &desc),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystemPolicy(), resourceName),

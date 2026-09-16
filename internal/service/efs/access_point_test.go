@@ -23,7 +23,6 @@ import (
 func TestAccEFSAccessPoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ap awstypes.AccessPointDescription
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_access_point.test"
 	fsResourceName := "aws_efs_file_system.test"
 
@@ -35,9 +34,7 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, names.AttrARN),
@@ -56,10 +53,8 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/AccessPoint/basic/"),
+				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -242,7 +237,6 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ap awstypes.AccessPointDescription
 	resourceName := "aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -252,9 +246,7 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceAccessPoint(), resourceName),
