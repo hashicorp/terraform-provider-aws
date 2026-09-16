@@ -30,16 +30,17 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_event_connection", name="Connection")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeConnectionOutput")
+// @Testing(importIgnore="auth_parameters.0.basic.0.password")
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
 		ReadWithoutTimeout:   resourceConnectionRead,
 		UpdateWithoutTimeout: resourceConnectionUpdate,
 		DeleteWithoutTimeout: resourceConnectionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			connectionHttpParameters := func(parent string) *schema.Resource {
@@ -468,7 +469,11 @@ func findConnectionByName(ctx context.Context, conn *eventbridge.Client, name st
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeConnection(ctx, &input)
+	return findConnection(ctx, conn, &input)
+}
+
+func findConnection(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeConnectionInput) (*eventbridge.DescribeConnectionOutput, error) {
+	output, err := conn.DescribeConnection(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Prevent state inconsistencies caused by the service-managed policy session header
+```

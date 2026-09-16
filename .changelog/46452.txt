@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_autoscaling_group: Fix `couldn't find resource` error during creation when waiting for capacity to be satisfied
-```

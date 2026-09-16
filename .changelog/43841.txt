@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_elasticache_cluster: Fix `provider produced unexpected value` for `cache_usage_limits` argument.
-```

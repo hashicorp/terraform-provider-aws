@@ -14,12 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -40,16 +37,16 @@ func TestAccODBNetworkDataSource_basic(t *testing.T) {
 	}
 	networkResource := "aws_odb_network.test_resource"
 	networkDataSource := "data.aws_odb_network.test"
-	rName := sdkacctest.RandomWithPrefix("tf-ora-net")
+	rName := acctest.RandomWithPrefix(t, "tf-ora-net")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkDataSourceTestEntity.testAccNetworkDataSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx),
+		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSource(rName, endpoints.UsWest2RegionID),
@@ -68,16 +65,16 @@ func TestAccODBNetworkDataSource_ec2PlacementGroupIDs(t *testing.T) {
 	}
 	networkResource := "aws_odb_network.test_resource"
 	networkDataSource := "data.aws_odb_network.test"
-	rName := sdkacctest.RandomWithPrefix("tf-ora-net")
+	rName := acctest.RandomWithPrefix(t, "tf-ora-net")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkDataSourceTestEntity.testAccNetworkDataSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx),
+		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSourceForEC2PlacementGroup(rName),
@@ -99,9 +96,9 @@ func TestAccODBNetworkDataSource_ec2PlacementGroupIDs(t *testing.T) {
 	})
 }
 
-func (oracleDBNetworkDataSourceTest) testAccCheckNetworkDataSourceDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (oracleDBNetworkDataSourceTest) testAccCheckNetworkDataSourceDestroyed(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network" {
@@ -130,9 +127,8 @@ func (oracleDBNetworkDataSourceTest) findNetwork(ctx context.Context, conn *odb.
 	out, err := conn.GetOdbNetwork(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -178,7 +174,7 @@ data "aws_odb_network" "test" {
 }
 
 func (oracleDBNetworkDataSourceTest) testAccNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListOdbNetworksInput{}
 	_, err := conn.ListOdbNetworks(ctx, &input)
 	if acctest.PreCheckSkipError(err) {

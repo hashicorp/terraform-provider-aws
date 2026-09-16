@@ -10,9 +10,11 @@ linters:
     - gocritic
     - godox
     - govet
+    - iface
     - importas
     - ineffassign
     - makezero
+    - mirror
     - misspell
     - mnd
   settings:

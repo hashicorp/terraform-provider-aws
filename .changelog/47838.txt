@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_lambda_function: Support mounting Amazon S3 buckets as file systems with S3 Files
-```

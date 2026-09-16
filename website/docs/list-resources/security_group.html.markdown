@@ -3,12 +3,12 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) Security Group resources.
+  Lists EC2 Security Group resources.
 ---
 
 # List Resource: aws_security_group
 
-Lists EC2 (Elastic Compute Cloud) Security Group resources.
+Lists EC2 Security Group resources.
 
 ## Example Usage
 

@@ -428,7 +428,19 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
+		c, err := expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
+		if err != nil {
+			path := cty.GetAttrPath("assume_role_with_web_identity")
+			diags = append(diags,
+				errs.NewInvalidValueAttributeCombinationError(
+					path.IndexInt(0),
+					err.Error(),
+				),
+			)
+			return nil, diags
+		}
+		config.AssumeRoleWithWebIdentity = c
+
 		tflog.Info(ctx, "assume_role_with_web_identity configuration set", map[string]any{
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
@@ -551,21 +563,18 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			if isRegionOverrideEnabled {
 				v := v.Region.Value()
-				s := r.SchemaMap()
 
-				if _, ok := s[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					regionSchema := sdkv2.RegionOptionalComputed()
+				// Inject a top-level "region" attribute.
+				regionSchema := sdkv2.RegionOptionalComputed()
 
-					if f := r.SchemaFunc; f != nil {
-						r.SchemaFunc = func() map[string]*schema.Schema {
-							s := f()
-							s[names.AttrRegion] = regionSchema
-							return s
-						}
-					} else {
-						r.Schema[names.AttrRegion] = regionSchema
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
 					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
 				}
 
 				if v.IsValidateOverrideInPartition {
@@ -644,26 +653,23 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			if isRegionOverrideEnabled {
 				v := resource.Region.Value()
-				s := r.SchemaMap()
 
-				if _, ok := s[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					regionSchema := sdkv2.RegionOptionalComputed()
+				// Inject a top-level "region" attribute.
+				regionSchema := sdkv2.RegionOptionalComputed()
 
-					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
-					if r.UpdateWithoutTimeout == nil {
-						r.UpdateWithoutTimeout = schema.NoopContext
+				// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
+				if r.UpdateWithoutTimeout == nil {
+					r.UpdateWithoutTimeout = schema.NoopContext
+				}
+
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
 					}
-
-					if f := r.SchemaFunc; f != nil {
-						r.SchemaFunc = func() map[string]*schema.Schema {
-							s := f()
-							s[names.AttrRegion] = regionSchema
-							return s
-						}
-					} else {
-						r.Schema[names.AttrRegion] = regionSchema
-					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
 				}
 
 				if v.IsValidateOverrideInPartition {
@@ -903,15 +909,15 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 					ValidateFunc: validAssumeRoleSessionName,
 				},
 				"web_identity_token": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(4, 20000),
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(4, 20000),
+					ConflictsWith: []string{"assume_role_with_web_identity.0.web_identity_token_file"},
 				},
 				"web_identity_token_file": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"assume_role_with_web_identity.0.web_identity_token"},
 				},
 			},
 		},
@@ -988,9 +994,21 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 	return result, diags
 }
 
-func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
+const (
+	// Environment variable specifying a web identity token file.
+	//
+	// Any value read from this environment variable is ignored when a web identity token or token file is configured.
+	awsWebIdentityTokenFileEnvVar = "AWS_WEB_IDENTITY_TOKEN_FILE" // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
+
+	// Environment variable specifying a web identity token.
+	//
+	// Any value read from this environment variable is ignored when a web identity token or token file is configured.
+	tfWebIdentityTokenEnvVar = "TF_AWS_WEB_IDENTITY_TOKEN"
+)
+
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) (*awsbase.AssumeRoleWithWebIdentity, error) {
 	if tfMap == nil {
-		return nil
+		return nil, nil
 	}
 
 	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
@@ -1016,15 +1034,32 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *a
 		assumeRole.SessionName = v
 	}
 
-	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
-		assumeRole.WebIdentityToken = v
+	configuredToken, _ := tfMap["web_identity_token"].(string)
+	configuredTokenFile, _ := tfMap["web_identity_token_file"].(string)
+
+	if configuredToken != "" && configuredTokenFile != "" {
+		return nil, errors.New("Exactly one of web_identity_token or web_identity_token_file is required")
 	}
 
-	if v, ok := tfMap["web_identity_token_file"].(string); ok && v != "" {
-		assumeRole.WebIdentityTokenFile = v
+	// Provider configuration takes precedence over ambient environment variables across both token sources.
+	switch {
+	case configuredToken != "":
+		assumeRole.WebIdentityToken = configuredToken
+	case configuredTokenFile != "":
+		assumeRole.WebIdentityTokenFile = configuredTokenFile
+	default:
+		assumeRole.WebIdentityToken = os.Getenv(tfWebIdentityTokenEnvVar)
+
+		// We need to read any environment variable value here:
+		// https://github.com/hashicorp/aws-sdk-go-base/blob/71dcf8ad2f4d8c9f02407d73a8dc666f79bfb555/credentials.go#L81-L82
+		assumeRole.WebIdentityTokenFile = os.Getenv(awsWebIdentityTokenFileEnvVar)
 	}
 
-	return &assumeRole
+	if (assumeRole.WebIdentityToken != "") == (assumeRole.WebIdentityTokenFile != "") {
+		return nil, errors.New("Exactly one of web_identity_token or web_identity_token_file is required")
+	}
+
+	return &assumeRole, nil
 }
 
 func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {

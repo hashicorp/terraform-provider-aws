@@ -47,11 +47,11 @@ jobs:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         id: cache-go-pkg-mod
         timeout-minutes: 2
@@ -61,13 +61,70 @@ jobs:
       - if: steps.cache-go-pkg-mod.outputs.cache-hit != 'true' || steps.cache-go-pkg-mod.outcome == 'failure'
         run: go mod download
 
+  # Single WRITER for the tools cache lane (see .github/workflows/README.md).
+  # Installs the full .ci/tools toolset and saves the installed binaries plus
+  # the tools build cache. Reader jobs in other workflows restore this cache
+  # read-only and skip `go install` on a hit. Saves only on refs/heads/main.
+  tools_cache:
+    name: tools cache
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .ci/tools/go.mod
+          cache: false
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_ENV"
+          echo "GOBIN_PATH=$(go env GOPATH)/bin" >> "$GITHUB_ENV"
+      # Restore first so an existing entry short-circuits reinstalling all tools.
+      - name: Restore tools cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: cache-tools
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: |
+            ${{ env.GOBIN_PATH }}
+            ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+      - name: Install tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        run: |
+          cd .ci/tools
+          go install \
+            github.com/YakDriver/copyplop \
+            github.com/YakDriver/swissshepherd \
+            github.com/client9/misspell/cmd/misspell \
+            github.com/golangci/golangci-lint/v2/cmd/golangci-lint \
+            github.com/hashicorp/go-changelog/cmd/changelog-build \
+            github.com/katbyte/tctest \
+            github.com/katbyte/terrafmt \
+            github.com/pavius/impi/cmd/impi \
+            github.com/rhysd/actionlint/cmd/actionlint \
+            github.com/terraform-linters/tflint \
+            golang.org/x/tools/cmd/stringer \
+            mvdan.cc/gofumpt
+      - name: Save tools cache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          path: |
+            ${{ env.GOBIN_PATH }}
+            ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+
   go_build:
     name: go build
     needs: [go_mod_download]
     runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
@@ -78,7 +135,7 @@ jobs:
       # Restore build cache with daily rotation to prevent unbounded growth
       # Falls back to yesterday's cache if today's doesn't exist
       - name: Restore Go Build Cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: cache-go-build
         continue-on-error: true
         timeout-minutes: 3
@@ -89,7 +146,7 @@ jobs:
             ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
             ${{ runner.os }}-go-build-
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -121,7 +178,7 @@ jobs:
 
       # Save build cache for reuse by go_test and future runs
       - name: Save Go Build Cache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always() && steps.cache-go-build.outputs.cache-hit != 'true'
         continue-on-error: true
         timeout-minutes: 5
@@ -134,8 +191,8 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
@@ -144,7 +201,7 @@ jobs:
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
 
       # Reuse build cache from go_build
-      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -154,7 +211,7 @@ jobs:
             ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
             ${{ runner.os }}-go-build-
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -172,7 +229,7 @@ jobs:
     name: terraform fmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
@@ -195,10 +252,10 @@ jobs:
     env:
       GOMAXPROCS: 8
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
@@ -209,7 +266,7 @@ jobs:
       # Reuse build cache from go_build job to avoid recompilation
       # This is the key optimization - tests reuse production build artifacts
       - name: Restore Go Build Cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: cache-go-build
         continue-on-error: true
         timeout-minutes: 3
@@ -219,7 +276,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-build-
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -251,7 +308,7 @@ jobs:
       # Save updated cache with test compilation (but cleaned)
       # Only shard 0 saves to avoid race conditions
       - name: Save Go Build Cache
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: always() && matrix.shard == 0 && steps.cache-go-build.outputs.cache-hit != 'true'
         continue-on-error: true
         timeout-minutes: 5
@@ -263,15 +320,15 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -279,7 +336,7 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
           restore-keys: |
             ${{ runner.os }}-go-build-
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -296,17 +353,17 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -314,7 +371,7 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
           restore-keys: |
             ${{ runner.os }}-go-build-
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -330,7 +387,7 @@ jobs:
             (echo; echo "Expected `strings` to detect sweeper function names in sweeper binary."; exit 1)
 
       # Use cached provider or rebuild
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         continue-on-error: true
         id: cache-terraform-plugin-dir
         timeout-minutes: 2
@@ -354,15 +411,15 @@ jobs:
   cache-info:
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -389,7 +446,7 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "."
@@ -398,11 +455,11 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 3
         with:

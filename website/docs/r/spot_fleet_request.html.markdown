@@ -343,7 +343,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 
     ```
     Valid names:

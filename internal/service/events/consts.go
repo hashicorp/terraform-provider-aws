@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultEventBusName = "default"
+	defaultEventBusName = "default"
 )
 
 const (

@@ -1,3 +1,0 @@
-```release-note:note
-provider: validation of arguments implementing the custom `ARNType` will properly surface validation errors
-```

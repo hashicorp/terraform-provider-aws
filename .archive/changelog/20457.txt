@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_athena_workgroup: Add `requester_pays_enabled` argument
-```

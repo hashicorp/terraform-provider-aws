@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sqs_queue: Accommodate accounts that take longer to process with customizable `timeouts`.
-```

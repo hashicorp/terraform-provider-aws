@@ -1,3 +1,0 @@
-```release-note:bug
- resource/aws_organizations_policy: Prevent `InvalidParameter` errors by handling `content` as generic JSON, not an IAM policy
- ```

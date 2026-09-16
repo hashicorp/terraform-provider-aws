@@ -32,7 +32,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie account.
-* `service_role` - The Amazon Resource Name (ARN) of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
+* `service_role` - ARN of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
 * `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
 * `updated_at` - The date and time, in UTC and extended RFC 3339 format, of the most recent change to the status of the Macie account.
 

@@ -128,44 +128,44 @@ resource "aws_appsync_resolver" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API ID for the GraphQL API.
-* `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
-* `type` - (Required) Type name from the schema defined in the GraphQL API.
+* `caching_config` - (Optional) Caching Config. See [Caching Config](#caching_config-block).
+* `code` - (Optional) Function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
+* `data_source` - (Optional) Data source name.
 * `field` - (Required) Field name from the schema defined in the GraphQL API.
+* `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
+* `max_batch_size` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
+* `pipeline_config` - (Optional) Caching configuration for the resolver. See [Pipeline Config](#pipeline_config-block).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `request_template` - (Optional) Request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
 * `response_template` - (Optional) Response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
-* `data_source` - (Optional) Data source name.
-* `max_batch_size` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
-* `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
-* `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
-* `pipeline_config` - (Optional) The caching configuration for the resolver. See [Pipeline Config](#pipeline-config).
-* `caching_config` - (Optional) The Caching Config. See [Caching Config](#caching-config).
-* `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime).
+* `runtime` - (Optional) Runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime-block).
+* `sync_config` - (Optional) Sync configuration for a resolver. See [Sync Config](#sync_config-block).
+* `type` - (Required) Type name from the schema defined in the GraphQL API.
 
-### Caching Config
+### `caching_config` Block
 
-* `caching_keys` - (Optional) The caching keys for a resolver that has caching activated. Valid values are entries from the $context.arguments, $context.source, and $context.identity maps.
-* `ttl` - (Optional) The TTL in seconds for a resolver that has caching activated. Valid values are between `1` and `3600` seconds.
+* `caching_keys` - (Optional) Caching keys for a resolver that has caching activated. Valid values are entries from the $context.arguments, $context.source, and $context.identity maps.
+* `ttl` - (Optional) TTL in seconds for a resolver that has caching activated. Valid values are between `1` and `3600` seconds.
 
-### Pipeline Config
+### `pipeline_config` Block
 
-* `functions` - (Optional) A list of Function objects.
+* `functions` - (Optional) List of Function objects.
 
-### Sync Config
+### `sync_config` Block
 
 * `conflict_detection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
 * `conflict_handler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
-* `lambda_conflict_handler_config` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+* `lambda_conflict_handler_config` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda_conflict_handler_config-block).
 
-#### Lambda Conflict Handler Config
+#### `lambda_conflict_handler_config` Block
 
 * `lambda_conflict_handler_arn` - (Optional) ARN for the Lambda function to use as the Conflict Handler.
 
-### Runtime
+### `runtime` Block
 
-* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
-* `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
+* `name` - (Optional) Name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtime_version` - (Optional) Version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ## Attribute Reference
 

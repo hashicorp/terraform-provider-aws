@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	ID = smarterr.ID
+	ID   = smarterr.ID
+	Name = names.AttrName
 )
 
 // This is smarterr wrapping to inject private context into keyvals for the SDK and Framework diagnostics.

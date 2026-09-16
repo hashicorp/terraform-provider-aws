@@ -473,15 +473,14 @@ The following arguments are optional:
 
 ~> **Note:** Explicitly configuring both `read_units_per_second` and `write_units_per_second` to the default/minimum values will cause Terraform to report differences.
 
-* `read_units_per_second` - (Optional) Number of read operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `12000` (default).
-* `write_units_per_second` - (Optional) Number of write operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `4000` (default).
+* `read_units_per_second` - (Optional) Number of read operations a table or index can instantaneously support. For the base table, this value cannot be decreased. For a global secondary index, this value can be increased or decreased. Minimum value of `12000` (default).
+* `write_units_per_second` - (Optional) Number of write operations a table or index can instantaneously support. For the base table, this value cannot be decreased. For a global secondary index, this value can be increased or decreased. Minimum value of `4000` (default).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table
-* `id` - Name of the table
 * `replica.*.arn` - ARN of the replica
 * `replica.*.stream_arn` - ARN of the replica Table Stream. Only available when `stream_enabled = true`.
 * `replica.*.stream_label` - Timestamp, in ISO 8601 format, for the replica stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`.

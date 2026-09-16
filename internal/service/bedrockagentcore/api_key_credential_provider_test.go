@@ -81,6 +81,100 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "write-only-api-key-123", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{"api_key_wo_version"},
+			},
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "updated-write-only-api-key-456", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAPIKeyCredentialProvider, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
@@ -215,182 +309,11 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_secretSourceValidation(t *t
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAPIKeyCredentialProviderConfig_apiKeyWithExternalSource(rName),
-				ExpectError: regexache.MustCompile(`Attribute\s+"api_key"\s+cannot\s+be\s+specified\s+when\s+"api_key_secret_source"\s+is\s+"EXTERNAL"`),
+				ExpectError: regexache.MustCompile(`Attribute\s+api_key_secret_config\s+must\s+be\s+configured\s+when\s+api_key_secret_source\s+equals\s+"EXTERNAL"`),
 			},
 			{
 				Config:      testAccAPIKeyCredentialProviderConfig_secretConfigWithManagedSource(rName),
-				ExpectError: regexache.MustCompile(`Attribute\s+"api_key_secret_config"\s+cannot\s+be\s+specified\s+when\s+"api_key_secret_source"\s+is\s+"MANAGED"`),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
-	ctx := acctest.Context(t)
-	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "write-only-api-key-123", 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
-						}),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{"api_key_wo_version"},
-			},
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "updated-write-only-api-key-456", 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreAPIKeyCredentialProvider_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_tags1(rName, "secret-value-1", acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{"api_key"},
-			},
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_tags2(rName, "secret-value-2", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_tags1(rName, "secret-value-1", acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAPIKeyCredentialProvider, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
+				ExpectError: regexache.MustCompile(`One\s+\(and\s+only\s+one\)\s+of\s+\[api_key,api_key_wo\]\s+must\s+be\s+configured\s+when\s+api_key_secret_source\s+equals\s+"MANAGED".\s+No\s+attribute\s+configured.`),
 			},
 		},
 	})
@@ -520,31 +443,4 @@ resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
   }
 }
 `, rName)
-}
-
-func testAccAPIKeyCredentialProviderConfig_tags1(rName, apiKey, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name    = %[1]q
-  api_key = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rName, apiKey, tag1Key, tag1Value)
-}
-
-func testAccAPIKeyCredentialProviderConfig_tags2(rName, apiKey, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name    = %[1]q
-  api_key = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, apiKey, tag1Key, tag1Value, tag2Key, tag2Value)
 }

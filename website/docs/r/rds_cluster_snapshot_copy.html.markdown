@@ -42,11 +42,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
-* `destination_region` - (Optional) The Destination region to place snapshot copy.
+* `destination_region` - (Optional) Destination region to place the snapshot copy.
 * `kms_key_id` - (Optional) KMS key ID.
 * `presigned_url` - (Optional) URL that contains a Signature Version 4 signed request.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -54,19 +54,19 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
-* `availability_zones` - Specifies the the Availability Zones the DB cluster was located in at the time of the DB snapshot.
-* `db_cluster_snapshot_arn` - The Amazon Resource Name (ARN) for the DB cluster snapshot.
-* `engine` - Specifies the name of the database engine.
-* `engine_version` - Specifies the version of the database engine.
+* `allocated_storage` - Allocated storage size in gigabytes (GB).
+* `db_cluster_snapshot_arn` - ARN for the DB cluster snapshot.
+* `engine` - Name of the database engine.
+* `engine_version` - Version of the database engine.
 * `id` - Cluster snapshot identifier.
 * `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
-* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
+* `shared_accounts` - List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
+* `snapshot_type` - Type of the DB cluster snapshot.
 * `source_db_cluster_snapshot_identifier` - DB snapshot ARN that the DB cluster snapshot was copied from. It only has value in case of cross customer or cross region copy.
-* `storage_encrypted` - Specifies whether the DB cluster snapshot is encrypted.
-* `storage_type` - Specifies the storage type associated with DB cluster snapshot.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `storage_encrypted` - Whether the DB cluster snapshot is encrypted.
+* `storage_type` - Storage type associated with DB cluster snapshot.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - Provides the VPC ID associated with the DB cluster snapshot.
 
 ## Timeouts

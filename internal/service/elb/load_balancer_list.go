@@ -37,14 +37,6 @@ type listResourceLoadBalancer struct {
 func (l *listResourceLoadBalancer) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ELBClient(ctx)
 
-	var query listLoadBalancerModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing ELB Classic Load Balancer")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input elasticloadbalancing.DescribeLoadBalancersInput
@@ -97,10 +89,6 @@ func (l *listResourceLoadBalancer) List(ctx context.Context, request list.ListRe
 			}
 		}
 	}
-}
-
-type listLoadBalancerModel struct {
-	framework.WithRegionModel
 }
 
 func listLoadBalancers(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeLoadBalancersInput) iter.Seq2[awstypes.LoadBalancerDescription, error] {

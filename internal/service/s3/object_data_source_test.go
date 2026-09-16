@@ -556,7 +556,7 @@ func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,

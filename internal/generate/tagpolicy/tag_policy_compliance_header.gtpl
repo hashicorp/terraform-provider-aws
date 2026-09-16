@@ -75,7 +75,7 @@ The Terraform configuration below will create a tag policy and attach it to the 
 The policy content is inlined for demonstration purposes.
 Consider moving this to a separate JSON file for more complex policy definitions.
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 resource "aws_organizations_policy" "example" {
@@ -112,7 +112,7 @@ Once a policy is attached, the provider can opt-in to enforcing compliance with 
 To enforce compliance with the organizational tag policy on all resources in a workspace, set the `tag_policy_compliance` provider argument.
 For example,
 
-```hcl
+```terraform
 provider "aws" {
   tag_policy_compliance = "error"
 }
@@ -131,7 +131,7 @@ When both the environment variable and provider argument are set, the provider a
 If the tag policy from the example above were attached, an `aws_cloudwatch_log_group` resource configured with no tags would trigger an error.
 For example,
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name = "required-tags-demo"
 }
@@ -154,7 +154,7 @@ Planning failed. Terraform encountered an error while generating this plan.
 
 To resolve the error, the `Owner` tag can be set.
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name = "required-tags-demo"
 
@@ -167,7 +167,7 @@ resource "aws_cloudwatch_log_group" "example" {
 Alternatively, the `default_tags` argument can be set in the `provider` block.
 All resources within this configuration will now inherit the `Owner` tag, making the `aws_cloudwatch_log_group` compliant even without a configured `tags` argument.
 
-```hcl
+```terraform
 provider "aws" {
   tag_policy_compliance = "error"
 

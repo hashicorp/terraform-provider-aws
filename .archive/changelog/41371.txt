@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_secretsmanager_secret_version: Add `secret_string_wo` write-only attribute
-```

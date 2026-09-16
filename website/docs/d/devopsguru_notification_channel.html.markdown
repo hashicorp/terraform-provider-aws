@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `sns` Attribute Reference
 
-* `topic_arn` - Amazon Resource Name (ARN) of an Amazon Simple Notification Service topic.
+* `topic_arn` - ARN of an Amazon Simple Notification Service topic.
 
 ### `filters` Attribute Reference
 

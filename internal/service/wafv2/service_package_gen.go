@@ -118,6 +118,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrScope, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      ipSetImportID{},
+			},
 		},
 		{
 			Factory:  resourceRegexPatternSet,
@@ -159,6 +168,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newIPSetResourceAsListResource,
+			TypeName: "aws_wafv2_ip_set",
+			Name:     "IP Set",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrScope, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

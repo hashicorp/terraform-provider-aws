@@ -145,6 +145,7 @@ The following arguments are optional:
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_share_arns` - (Optional) Set of [AWS RAM](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html) resource share ARNs that grant the broker access to shared resources for [private networking](https://aws.amazon.com/blogs/big-data/introducing-private-networking-for-amazon-mq-for-rabbitmq/). Applies to `engine_type` of `RabbitMQ` only. Because Amazon MQ applies resource shares during a reboot, set `apply_immediately` to `true` for changes to take effect without waiting for the next maintenance window.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
 * `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, valid values are `efs` and `ebs` (AWS-default is `efs`). For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
@@ -231,6 +232,11 @@ This resource exports the following attributes in addition to the arguments abov
             * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
             * `instances.0.endpoints.1` - `https://broker-id.mq.us-west-2.amazonaws.com:16001`
 * `pending_data_replication_mode` - Data replication mode that will be applied after reboot.
+* `shared_resources` - List of resources shared with the broker via `resource_share_arns`. Only populated for `engine_type` of `RabbitMQ`.
+    * `shared_resources.0.dns_names` - DNS names through which the broker reaches the shared resource.
+    * `shared_resources.0.resource_arn` - ARN of the shared resource.
+    * `shared_resources.0.status` - Status of the shared resource.
+    * `shared_resources.0.type` - Type of the shared resource, either `RESOURCE_SHARE` or `RESOURCE`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

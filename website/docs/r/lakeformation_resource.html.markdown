@@ -31,7 +31,7 @@ resource "aws_lakeformation_resource" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) ARN of the resource.
 
 The following arguments are optional:
 

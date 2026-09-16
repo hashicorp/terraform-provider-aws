@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,9 +36,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="Api Key Credential Provider")
+// Standard Bedrock AgentCore outbound auth provider resource name validator.
+var validOutboundAuthProviderResourceName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`),                                                            // AWS API definition.
+	`Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters.`, // AWS Console text.
+)
+
+// @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="API Key Credential Provider")
 // @Tags(identifierAttribute="credential_provider_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput")
+// @Testing(importIgnore="api_key")
+// @Testing(importStateIdAttribute="name")
+// @Testing(preCheck="testAccPreCheckAPIKeyCredentialProviders")
 func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiKeyCredentialProviderResource{}
 	return r, nil
@@ -57,12 +66,12 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(
 						path.MatchRoot("api_key"),
-						path.MatchRoot("api_key_wo"),
 						path.MatchRoot("api_key_secret_config"),
-					),
-					stringvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("api_key_wo"),
-					}...),
+					),
+					stringvalidator.ConflictsWith(
+						path.MatchRoot("api_key_wo"),
+					),
 					stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("api_key_wo")),
 				},
 			},
@@ -71,22 +80,17 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				WriteOnly: true,
 				Sensitive: true,
 				Validators: []validator.String{
-					stringvalidator.ExactlyOneOf(
-						path.MatchRoot("api_key"),
-						path.MatchRoot("api_key_wo"),
-						path.MatchRoot("api_key_secret_config"),
-					),
-					stringvalidator.AlsoRequires(path.Expressions{
+					stringvalidator.AlsoRequires(
 						path.MatchRoot("api_key_wo_version"),
-					}...),
+					),
 				},
 			},
 			"api_key_wo_version": schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
-					int64validator.AlsoRequires(path.Expressions{
+					int64validator.AlsoRequires(
 						path.MatchRoot("api_key_wo"),
-					}...),
+					),
 				},
 			},
 			"api_key_secret_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
@@ -94,6 +98,17 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 				Optional:   true,
 				Computed:   true,
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.SecretSourceTypeExternal,
+						path.MatchRoot("api_key_secret_config"),
+					),
+					tfstringvalidator.ExactlyOneOfWhenEquals(
+						awstypes.SecretSourceTypeManaged,
+						path.MatchRoot("api_key"),
+						path.MatchRoot("api_key_wo"),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -102,8 +117,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), ""),
+					validOutboundAuthProviderResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -113,29 +127,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"api_key_secret_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[secretReferenceModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-					listvalidator.AlsoRequires(path.MatchRoot("api_key_secret_source")),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"secret_id": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 2048),
-							},
-						},
-						"json_key": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 128),
-							},
-						},
-					},
-				},
-			},
+			"api_key_secret_config": secretReferenceBlock(ctx),
 		},
 	}
 }
@@ -322,35 +314,6 @@ func (r *apiKeyCredentialProviderResource) ModifyPlan(ctx context.Context, reque
 	}
 }
 
-func (r *apiKeyCredentialProviderResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	var data apiKeyCredentialProviderResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if data.APIKeySecretSource.IsUnknown() || data.APIKeySecretSource.IsNull() {
-		return
-	}
-
-	switch data.APIKeySecretSource.ValueEnum() {
-	case awstypes.SecretSourceTypeExternal:
-		if !data.APIKey.IsNull() {
-			response.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(path.Root("api_key"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeExternal)))
-		}
-		if !data.APIKeyWO.IsNull() {
-			response.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(path.Root("api_key_wo"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeExternal)))
-		}
-		if data.APIKeySecretConfig.IsNull() {
-			response.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(path.Root("api_key_secret_config"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeExternal)))
-		}
-	case awstypes.SecretSourceTypeManaged:
-		if !data.APIKeySecretConfig.IsNull() {
-			response.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(path.Root("api_key_secret_config"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeManaged)))
-		}
-	}
-}
-
 func findAPIKeyCredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput, error) {
 	input := bedrockagentcorecontrol.GetApiKeyCredentialProviderInput{
 		Name: aws.String(name),
@@ -395,9 +358,4 @@ type apiKeyCredentialProviderResourceModel struct {
 
 type secretModel struct {
 	SecretARN fwtypes.ARN `tfsdk:"secret_arn"`
-}
-
-type secretReferenceModel struct {
-	SecretID types.String `tfsdk:"secret_id"`
-	JSONKey  types.String `tfsdk:"json_key"`
 }

@@ -7,6 +7,8 @@ package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,6 +36,7 @@ import (
 // @ImportIDHandler("resourcePolicyImportID")
 // @Testing(preIdentityVersion="v6.51.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.ResourcePolicy")
+// @Testing(identityTestCases="accountscope")
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
@@ -130,10 +133,12 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	var resourcePolicy *awstypes.ResourcePolicy
 	var err error
-	if v, ok := d.GetOk("policy_scope"); ok && awstypes.PolicyScope(v.(string)) == awstypes.PolicyScopeResource {
-		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, d.Id())
+	if v, ok := d.GetOk(names.AttrResourceARN); ok {
+		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, v.(string))
+	} else if v, ok := d.GetOk("policy_name"); ok {
+		resourcePolicy, err = findResourcePolicyByName(ctx, conn, v.(string))
 	} else {
-		resourcePolicy, err = findResourcePolicyByName(ctx, conn, d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Resource Policy (%s): missing required policy_name or resource_arn", d.Id())
 	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -197,9 +202,9 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 
 func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.ResourcePolicy, error) {
 	var input cloudwatchlogs.DescribeResourcePoliciesInput
-	output, err := findResourcePolicy(ctx, conn, &input, func(v *awstypes.ResourcePolicy) bool {
+	output, err := findResourcePolicy(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.ResourcePolicy) bool {
 		return aws.ToString(v.PolicyName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.ResourcePolicy]())
 
 	if err != nil {
 		return nil, err
@@ -217,10 +222,9 @@ func findResourcePolicyByResourceARN(ctx context.Context, conn *cloudwatchlogs.C
 		ResourceArn: aws.String(arn),
 		PolicyScope: awstypes.PolicyScopeResource,
 	}
-
-	output, err := findResourcePolicy(ctx, conn, &input, func(v *awstypes.ResourcePolicy) bool {
+	output, err := findResourcePolicy(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.ResourcePolicy) bool {
 		return aws.ToString(v.ResourceArn) == arn
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.ResourcePolicy]())
 
 	if err != nil {
 		return nil, err
@@ -233,8 +237,8 @@ func findResourcePolicyByResourceARN(ctx context.Context, conn *cloudwatchlogs.C
 	return output, err
 }
 
-func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {
-	output, err := findResourcePolicies(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...tfslices.FinderOptionsFunc[awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {
+	output, err := findResourcePolicies(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -243,32 +247,29 @@ func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.ResourcePolicy, error) {
-	var output []awstypes.ResourcePolicy
-	opts := tfslices.NewFinderOptions(optFns)
+func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...tfslices.FinderOptionsFunc[awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
+	return tfslices.CollectAndConcatWithError(listResourcePolicyPages(ctx, conn, input), optFns...)
+}
 
-	err := describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.ResourcePolicies {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return false
-				}
+func listResourcePolicyPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.ResourcePolicy, error] {
+	return func(yield func([]awstypes.ResourcePolicy, error) bool) {
+		err := describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
+
+			if !yield(page.ResourcePolicies, nil) {
+				return false
+			}
+
+			return !lastPage
+		}, optFns...)
+
+		if err != nil {
+			yield(nil, fmt.Errorf("listing CloudWatch Logs Resource Policies: %w", err))
+			return
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
-
-	return output, nil
 }
 
 var (
@@ -281,13 +282,11 @@ func (resourcePolicyImportID) Parse(id string) (string, map[string]any, error) {
 	var result map[string]any
 	if arn.IsARN(id) {
 		result = map[string]any{
-			"policy_scope":        awstypes.PolicyScopeResource,
 			names.AttrResourceARN: id,
 		}
 	} else {
 		result = map[string]any{
-			"policy_name":  id,
-			"policy_scope": awstypes.PolicyScopeAccount,
+			"policy_name": id,
 		}
 	}
 

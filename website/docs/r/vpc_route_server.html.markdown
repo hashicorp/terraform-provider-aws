@@ -3,11 +3,11 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_route_server"
 description: |-
-  Terraform resource for managing a VPC (Virtual Private Cloud) Route Server.
+  Terraform resource for managing a VPC Route Server.
 ---
 # Resource: aws_vpc_route_server
 
-  Provides a resource for managing a VPC (Virtual Private Cloud) Route Server.
+  Provides a resource for managing a VPC Route Server.
 
 ## Example Usage
 
@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server using the `route_server_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Route Server using the `route_server_id`. For example:
 
 ```terraform
 import {
@@ -80,7 +80,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC (Virtual Private Cloud) Route Server using the `route_server_id`. For example:
+Using `terraform import`, import VPC Route Server using the `route_server_id`. For example:
 
 ```console
 % terraform import aws_vpc_route_server.example rs-12345678

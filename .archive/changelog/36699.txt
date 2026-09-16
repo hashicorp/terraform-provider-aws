@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_record: Fix to correctly interpret alias names with wildcards
-```

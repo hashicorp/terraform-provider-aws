@@ -42,14 +42,14 @@ resource "aws_appconfig_application" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required, Forces new resource) AppConfig application ID. Must be between 4 and 7 characters in length.
-* `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
 * `description` - (Optional) Description of the environment. Can be at most 1024 characters.
 * `monitor` - (Optional) Set of Amazon CloudWatch alarms to monitor during the deployment process. Maximum of 5. See [Monitor](#monitor) below for more details.
+* `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Monitor
+### `monitor` Block
 
 The `monitor` block supports the following:
 
@@ -61,10 +61,9 @@ The `monitor` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Environment.
-* `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).
 * `environment_id` - AppConfig environment ID.
-* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
-  or `ROLLED_BACK`.
+* `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK` or `ROLLED_BACK`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

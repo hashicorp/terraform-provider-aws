@@ -53,6 +53,16 @@ resource "aws_organizations_aws_service_access" "example" {
 }
 ```
 
+### Identity Schema
+
+#### Required
+
+* `service_principal` (String) Service principal name of the AWS service for which you want to enable integration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import trusted access using the `service_principal`. For example:
 
 ```terraform

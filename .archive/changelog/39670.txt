@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_backup_vault: Fix `empty result` errors reading vaults in certain Regions
-```

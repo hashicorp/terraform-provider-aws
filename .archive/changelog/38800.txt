@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_event_connection: Fix various expander type assertions to prevent crashes
-```

@@ -104,8 +104,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for this export.
-* `export[0].export_arn` - Amazon Resource Name (ARN) for this export.
+* `arn` - ARN for this export.
+* `export[0].export_arn` - ARN for this export.
 
 ## Timeouts
 
@@ -135,7 +135,7 @@ resource "aws_bcmdataexports_export" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the BCM Data Exports export.
+- `arn` (String) ARN of the BCM Data Exports export.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the export ARN. For example:
 

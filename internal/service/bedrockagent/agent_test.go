@@ -17,6 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.BedrockAgentServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Bedrock Agents is in Maintenance Mode. New agent creation is not available",
+	)
+}
+
 func TestAccBedrockAgentAgent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

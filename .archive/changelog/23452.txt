@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_eks_node_group: Add `taints` attribute
-```

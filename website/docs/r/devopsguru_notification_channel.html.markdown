@@ -49,7 +49,7 @@ The following arguments are optional:
 
 ### `sns` Argument Reference
 
-* `topic_arn` - (Required) Amazon Resource Name (ARN) of an Amazon Simple Notification Service topic.
+* `topic_arn` - (Required) ARN of an Amazon Simple Notification Service topic.
 
 ### `filters` Argument Reference
 

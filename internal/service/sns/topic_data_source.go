@@ -23,7 +23,6 @@ import (
 )
 
 // @SDKDataSource("aws_sns_topic", name="Topic")
-// @Testing(tagsTest=true)
 // @Tags(identifierAttribute="arn")
 func dataSourceTopic() *schema.Resource {
 	return &schema.Resource{

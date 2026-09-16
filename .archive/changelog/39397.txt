@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_amplify_app: Fix failure when unsetting the `environment_variables` argument
-```

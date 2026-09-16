@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecs_capacity_provider: Add `auto_scaling_group_provider.managed_draining` argument
-```

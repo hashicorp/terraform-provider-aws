@@ -8,6 +8,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 
@@ -107,8 +108,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ls.Arn)
-	d.Set(names.AttrName, ls.LogStreamName)
+	resourceStreamFlatten(ctx, d, *ls)
 
 	return diags
 }
@@ -135,19 +135,24 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func resourceStreamFlatten(_ context.Context, d *schema.ResourceData, ls awstypes.LogStream) {
+	d.Set(names.AttrARN, ls.Arn)
+	d.Set(names.AttrName, ls.LogStreamName)
+}
+
 func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	input := cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(name),
 	}
 
-	return findLogStream(ctx, conn, &input, func(v *awstypes.LogStream) bool {
+	return findLogStream(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.LogStream) bool {
 		return aws.ToString(v.LogStreamName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.LogStream]())
 }
 
-func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	output, err := findLogStreams(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogStream]) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+	output, err := findLogStreams(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -156,35 +161,37 @@ func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	var output []awstypes.LogStream
-	opts := tfslices.NewFinderOptions(optFns)
+func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogStream]) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
+	output, err := tfslices.CollectAndConcatWithError(listLogStreamPages(ctx, conn, input), optFns...)
 
-	pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.LogStreams {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
+}
+
+func listLogStreamPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogStream, error] { // nosemgrep:ci.logs-in-func-name
+	return func(yield func([]awstypes.LogStream, error) bool) {
+		pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Log Streams: %w", err))
+				return
+			}
+
+			if !yield(page.LogStreams, nil) {
+				return
+			}
+		}
+	}
 }
 
 const streamImportIDSeparator = ":"

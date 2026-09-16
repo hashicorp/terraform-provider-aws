@@ -20,6 +20,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newApplyServiceUpdateAction,
+			TypeName: "aws_elasticache_apply_service_update",
+			Name:     "Apply Service Update",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
@@ -32,6 +43,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newServerlessCacheDataSource,
 			TypeName: "aws_elasticache_serverless_cache",
 			Name:     "Serverless Cache",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newServiceUpdateActionsDataSource,
+			TypeName: "aws_elasticache_service_update_actions",
+			Name:     "Service Update Actions",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newServiceUpdatesDataSource,
+			TypeName: "aws_elasticache_service_updates",
+			Name:     "Service Updates",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

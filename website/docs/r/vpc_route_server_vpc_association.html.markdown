@@ -3,11 +3,11 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_route_server_vpc_association"
 description: |-
-  Terraform resource for managing a VPC (Virtual Private Cloud) Route Server Association.
+  Terraform resource for managing a VPC Route Server Association.
 ---
 # Resource: aws_vpc_route_server_vpc_association
 
-  Provides a resource for managing association between VPC (Virtual Private Cloud) route server and a VPC.
+  Provides a resource for managing association between VPC route server and a VPC.
 
 ## Example Usage
 
@@ -44,7 +44,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to  to import VPC (Virtual Private Cloud) Route Server Association using the associated resource ID and VPC Id separated by a comma (,). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to  to import VPC Route Server Association using the associated resource ID and VPC Id separated by a comma (,). For example:
 
 ```terraform
 import {
@@ -53,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, to  to import VPC (Virtual Private Cloud) Route Server Association using the associated resource ID and VPC Id separated by a comma (,). For example:
+Using `terraform import`, to  to import VPC Route Server Association using the associated resource ID and VPC Id separated by a comma (,). For example:
 
 ```console
 % terraform import aws_vpc_route_server_vpc_association.example rs-12345678,vpc-0f001273ec18911b1

@@ -24,20 +24,20 @@ data "aws_sesv2_dedicated_ip_pool" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `pool_name` - (Required) Name of the dedicated IP pool.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Dedicated IP Pool.
-* `dedicated_ips` - A list of objects describing the pool's dedicated IP's. See [`dedicated_ips`](#dedicated_ips).
-* `scaling_mode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`.
-* `tags` - A map of tags attached to the pool.
+* `dedicated_ips` - List of objects describing the pool's dedicated IP's. See [`dedicated_ips`](#dedicated_ips).
+* `scaling_mode` - IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`.
+* `tags` - Map of tags attached to the pool.
 
-### dedicated_ips
+### `dedicated_ips` Block
 
 * `ip` - IPv4 address.
-* `warmup_percentage` - Indicates how complete the dedicated IP warm-up process is. When this value equals `1`, the address has completed the warm-up process and is ready for use.
-* `warmup_status` - The warm-up status of a dedicated IP address. Valid values: `IN_PROGRESS`, `DONE`.
+* `warmup_percentage` - How complete the dedicated IP warm-up process is. When this value equals `1`, the address has completed the warm-up process and is ready for use.
+* `warmup_status` - Warm-up status of a dedicated IP address. Valid values: `IN_PROGRESS`, `DONE`.

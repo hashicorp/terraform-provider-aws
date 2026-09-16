@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_ses_domain_identity
-```
-
-```release-note:new-data-source
-aws_ses_email_identity
-```

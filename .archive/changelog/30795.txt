@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpc: Don't overwrite any configured value for `ipv6_ipam_pool_id` with _IPAM Managed_
-```

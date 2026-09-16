@@ -515,11 +515,14 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, 
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
-		Target:         []string{},
-		Refresh:        statusGlobalCluster(conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
+		Pending:                   []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
+		Target:                    []string{},
+		Refresh:                   statusGlobalCluster(conn, id),
+		Timeout:                   timeout,
+		Delay:                     1 * time.Second,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

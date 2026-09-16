@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_placement_group: Add `partition_count` argument
-```

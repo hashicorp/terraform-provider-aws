@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudfront_distribution: Add `cache_tag_config` configuration block
-```
