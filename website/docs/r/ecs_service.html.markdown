@@ -339,8 +339,8 @@ The `lifecycle_hook` configuration block supports the following:
 
 The `timeout_configuration` configuration block supports the following:
 
-* `action` - (Optional) Action ECS takes when the pause hook times out. Valid values: `ROLLBACK`, `CONTINUE`.
-* `timeout_in_minutes` - (Optional) Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes.
+* `action` - (Optional) Action ECS takes when the pause hook times out. Valid values: `ROLLBACK`, `CONTINUE`. Default: `ROLLBACK`.
+* `timeout_in_minutes` - (Optional) Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes. Default: `1440` (24 hours).
 
 ### `linear_configuration` Block
 
