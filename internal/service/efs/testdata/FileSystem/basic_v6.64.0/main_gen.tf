@@ -4,11 +4,6 @@
 resource "aws_efs_file_system" "test" {
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 terraform {
   required_providers {
     aws = {
