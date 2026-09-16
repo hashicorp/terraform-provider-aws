@@ -1,6 +1,6 @@
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
-  name     = var.domain
+  name     = var.directoryDomain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
@@ -13,7 +13,7 @@ resource "aws_directory_service_directory" "test" {
 resource "aws_directoryservicedata_user" "test" {
   directory_id     = aws_directory_service_directory.test.id
   sam_account_name = "testuser"
-  email_address    = "testuser@example.com"
+  email_address    = var.emailAddress
   given_name       = "Test"
   surname          = "User"
 }

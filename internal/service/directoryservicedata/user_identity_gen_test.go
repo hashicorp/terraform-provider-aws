@@ -25,7 +25,9 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 
 	resourceName := "aws_directoryservicedata_user.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	directoryDomain := acctest.RandomDomainName(t)
 	domain := acctest.RandomDomainName(t)
+	emailAddress := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -40,8 +42,9 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName),
@@ -63,8 +66,9 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -76,8 +80,9 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -95,8 +100,9 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -118,7 +124,9 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 
 	resourceName := "aws_directoryservicedata_user.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	directoryDomain := acctest.RandomDomainName(t)
 	domain := acctest.RandomDomainName(t)
+	emailAddress := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -133,9 +141,10 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
+					"region":          config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -154,9 +163,10 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
+					"region":          config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -169,9 +179,10 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
+					"region":          config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -190,9 +201,10 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:   config.StringVariable(rName),
+					"directoryDomain": config.StringVariable(directoryDomain),
+					"emailAddress":    config.StringVariable(emailAddress),
+					"region":          config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
