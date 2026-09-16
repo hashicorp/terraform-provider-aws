@@ -7,9 +7,11 @@ package ecs
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -283,6 +285,31 @@ func dataSourceService() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monitoring": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_names": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"resolution_seconds": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrNetworkConfiguration: {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -540,6 +567,35 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	if service.LoadBalancers != nil {
 		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
+		}
+	}
+	// The monitoring configuration is only returned on service revisions (DescribeServiceRevisions),
+	// not on the Service object itself.
+	var revisionARNs []string
+	for _, v := range service.CurrentServiceRevisions {
+		if arn := aws.ToString(v.Arn); arn != "" {
+			revisionARNs = append(revisionARNs, arn)
+		}
+	}
+	if len(revisionARNs) > 0 {
+		input := ecs.DescribeServiceRevisionsInput{
+			ServiceRevisionArns: revisionARNs,
+		}
+		revisions, err := findServiceRevisions(ctx, conn, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s) revisions: %s", arn, err)
+		}
+
+		if len(revisions) > 0 {
+			// During a deployment there can be multiple current revisions.
+			// The newest one reflects the service's target configuration.
+			revision := slices.MaxFunc(revisions, func(a, b awstypes.ServiceRevision) int {
+				return aws.ToTime(a.CreatedAt).Compare(aws.ToTime(b.CreatedAt))
+			})
+			if err := d.Set("monitoring", flattenMonitoringConfiguration(revision.Monitoring)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting monitoring: %s", err)
+			}
 		}
 	}
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
