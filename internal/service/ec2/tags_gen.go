@@ -71,7 +71,6 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 	pages := ec2.NewDescribeTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
-
 		if err != nil {
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
@@ -86,7 +85,6 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).EC2Client(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

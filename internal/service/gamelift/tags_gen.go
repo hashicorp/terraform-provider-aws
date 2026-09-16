@@ -27,9 +27,7 @@ func listTags(ctx context.Context, conn *gamelift.Client, identifier string, opt
 	input := gamelift.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -41,7 +39,6 @@ func listTags(ctx context.Context, conn *gamelift.Client, identifier string, opt
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).GameLiftClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

@@ -73,7 +73,6 @@ func listTags(ctx context.Context, conn *autoscaling.Client, identifier, resourc
 	pages := autoscaling.NewDescribeTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
-
 		if err != nil {
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
@@ -88,7 +87,6 @@ func listTags(ctx context.Context, conn *autoscaling.Client, identifier, resourc
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).AutoScalingClient(ctx), identifier, resourceType)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

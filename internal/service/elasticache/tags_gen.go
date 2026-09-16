@@ -29,14 +29,12 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 	input := elasticache.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
-
 	output, err := tfresource.RetryWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
 		func(ctx context.Context) (*elasticache.ListTagsForResourceOutput, error) {
 			return conn.ListTagsForResource(ctx, &input, optFns...)
 		},
 		"not in available state",
 	)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -48,7 +46,6 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

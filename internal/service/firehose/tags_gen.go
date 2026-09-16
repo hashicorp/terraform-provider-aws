@@ -39,7 +39,6 @@ func listTags(ctx context.Context, conn *firehose.Client, identifier string, opt
 
 		return !lastPage
 	}, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
@@ -51,7 +50,6 @@ func listTags(ctx context.Context, conn *firehose.Client, identifier string, opt
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).FirehoseClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

@@ -27,9 +27,7 @@ func listTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier str
 	input := elasticbeanstalk.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -41,7 +39,6 @@ func listTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier str
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

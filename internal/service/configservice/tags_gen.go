@@ -33,7 +33,6 @@ func listTags(ctx context.Context, conn *configservice.Client, identifier string
 	pages := configservice.NewListTagsForResourcePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
-
 		if err != nil {
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
@@ -48,7 +47,6 @@ func listTags(ctx context.Context, conn *configservice.Client, identifier string
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ConfigServiceClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

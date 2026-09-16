@@ -49,15 +49,12 @@ func listTags(ctx context.Context, conn *dynamodb.Client, identifier string, opt
 	input := dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsOfResource(ctx, &input, optFns...)
-
 	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
 	}
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -69,7 +66,6 @@ func listTags(ctx context.Context, conn *dynamodb.Client, identifier string, opt
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).DynamoDBClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

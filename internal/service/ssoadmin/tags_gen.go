@@ -34,7 +34,6 @@ func listTags(ctx context.Context, conn *ssoadmin.Client, identifier, resourceTy
 	pages := ssoadmin.NewListTagsForResourcePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
-
 		if err != nil {
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
@@ -49,7 +48,6 @@ func listTags(ctx context.Context, conn *ssoadmin.Client, identifier, resourceTy
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSOAdminClient(ctx), identifier, resourceType)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

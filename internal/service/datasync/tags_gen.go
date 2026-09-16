@@ -33,7 +33,6 @@ func listTags(ctx context.Context, conn *datasync.Client, identifier string, opt
 	pages := datasync.NewListTagsForResourcePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
-
 		if err != nil {
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
@@ -48,7 +47,6 @@ func listTags(ctx context.Context, conn *datasync.Client, identifier string, opt
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).DataSyncClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

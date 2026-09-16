@@ -48,15 +48,12 @@ func listTags(ctx context.Context, conn *ecs.Client, identifier string, optFns .
 	input := ecs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
-
 	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
 	}
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -68,7 +65,6 @@ func listTags(ctx context.Context, conn *ecs.Client, identifier string, optFns .
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ECSClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

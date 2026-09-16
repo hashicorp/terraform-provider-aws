@@ -26,9 +26,7 @@ func listTags(ctx context.Context, conn *glue.Client, identifier string, optFns 
 	input := glue.GetTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.GetTags(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -40,7 +38,6 @@ func listTags(ctx context.Context, conn *glue.Client, identifier string, optFns 
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).GlueClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

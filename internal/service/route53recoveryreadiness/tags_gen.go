@@ -26,9 +26,7 @@ func listTags(ctx context.Context, conn *route53recoveryreadiness.Client, identi
 	input := route53recoveryreadiness.ListTagsForResourcesInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResources(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -40,7 +38,6 @@ func listTags(ctx context.Context, conn *route53recoveryreadiness.Client, identi
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

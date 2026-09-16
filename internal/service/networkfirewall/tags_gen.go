@@ -33,7 +33,6 @@ func listTags(ctx context.Context, conn *networkfirewall.Client, identifier stri
 	pages := networkfirewall.NewListTagsForResourcePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
-
 		if err != nil {
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
@@ -48,7 +47,6 @@ func listTags(ctx context.Context, conn *networkfirewall.Client, identifier stri
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).NetworkFirewallClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

@@ -27,9 +27,7 @@ func listTags(ctx context.Context, conn *billing.Client, identifier string, optF
 	input := billing.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -41,7 +39,6 @@ func listTags(ctx context.Context, conn *billing.Client, identifier string, optF
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).BillingClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

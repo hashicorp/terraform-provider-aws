@@ -27,9 +27,7 @@ func listTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifi
 	input := elasticloadbalancingv2.DescribeTagsInput{
 		ResourceArns: []string{identifier},
 	}
-
 	output, err := conn.DescribeTags(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -41,7 +39,6 @@ func listTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifi
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ELBV2Client(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

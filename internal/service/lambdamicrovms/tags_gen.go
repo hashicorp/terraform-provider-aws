@@ -26,9 +26,7 @@ func listTags(ctx context.Context, conn *lambdamicrovms.Client, identifier strin
 	input := lambdamicrovms.ListTagsInput{
 		Resource: aws.String(identifier),
 	}
-
 	output, err := conn.ListTags(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -40,7 +38,6 @@ func listTags(ctx context.Context, conn *lambdamicrovms.Client, identifier strin
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).LambdaMicroVMsClient(ctx), identifier)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

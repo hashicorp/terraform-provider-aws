@@ -28,9 +28,7 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 		ResourceArn: aws.String(identifier),
 		AccountId:   aws.String(resourceType),
 	}
-
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
-
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
@@ -43,7 +41,6 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	c := meta.(*conns.AWSClient)
 	tags, err := listTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}
