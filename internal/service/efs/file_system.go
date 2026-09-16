@@ -37,7 +37,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs/types;awstypes;awstypes.FileSystemDescription")
 // @Testing(generator=false)
-// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(preIdentityVersion="v6.65.0")
 func resourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemCreate,

@@ -31,7 +31,7 @@ import (
 // @Testing(generator=false)
 // @Testing(importIgnore="bypass_policy_lockout_safety_check")
 // @Testing(plannableImportAction="NoOp")
-// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(preIdentityVersion="v6.65.0")
 func resourceFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemPolicyPut,

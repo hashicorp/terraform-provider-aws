@@ -190,7 +190,7 @@ func TestAccEFSReplicationConfiguration_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.64.0
+// Resource Identity was added after v6.65.0
 func TestAccEFSReplicationConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -206,7 +206,7 @@ func TestAccEFSReplicationConfiguration_Identity_ExistingResource_basic(t *testi
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic_v6.64.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic_v6.65.0/"),
 				ConfigVariables: config.Variables{
 					"destination_region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -246,7 +246,7 @@ func TestAccEFSReplicationConfiguration_Identity_ExistingResource_basic(t *testi
 	})
 }
 
-// Resource Identity was added after v6.64.0
+// Resource Identity was added after v6.65.0
 func TestAccEFSReplicationConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -267,7 +267,7 @@ func TestAccEFSReplicationConfiguration_Identity_ExistingResource_noRefreshNoCha
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic_v6.64.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic_v6.65.0/"),
 				ConfigVariables: config.Variables{
 					"destination_region": config.StringVariable(acctest.AlternateRegion()),
 				},

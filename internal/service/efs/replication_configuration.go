@@ -33,7 +33,7 @@ import (
 // Tests require configuration of 'destination_region' variable.
 // @Testing(identityTest=false)
 // @Testing(generator=false)
-// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(preIdentityVersion="v6.65.0")
 func resourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigurationCreate,
