@@ -24,7 +24,6 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_directoryservicedata_user.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	directoryDomain := acctest.RandomDomainName(t)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
@@ -42,7 +41,6 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 				},
@@ -66,7 +64,6 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 				},
@@ -80,7 +77,6 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 				},
@@ -100,7 +96,6 @@ func TestAccDirectoryServiceDataUser_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 				},
@@ -123,7 +118,6 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_directoryservicedata_user.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	directoryDomain := acctest.RandomDomainName(t)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
@@ -141,7 +135,6 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 					"region":          config.StringVariable(acctest.AlternateRegion()),
@@ -163,7 +156,6 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 					"region":          config.StringVariable(acctest.AlternateRegion()),
@@ -179,7 +171,6 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 					"region":          config.StringVariable(acctest.AlternateRegion()),
@@ -201,7 +192,6 @@ func TestAccDirectoryServiceDataUser_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
 					"directoryDomain": config.StringVariable(directoryDomain),
 					"emailAddress":    config.StringVariable(emailAddress),
 					"region":          config.StringVariable(acctest.AlternateRegion()),

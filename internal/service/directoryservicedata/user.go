@@ -37,6 +37,7 @@ import (
 // @IdentityAttribute("sam_account_name")
 // @ImportIDHandler("userImportID")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
 // @Testing(domainTfVar="directoryDomain")
 // @Testing(emailAddress="emailAddress")
 func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -53,7 +54,6 @@ const (
 	ResNameUser             = "User"
 	userResourceIDPartCount = 2
 	statusFound             = "found"
-	statusUpdated           = "updated"
 )
 
 type userResource struct {
