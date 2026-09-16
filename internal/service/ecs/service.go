@@ -695,7 +695,7 @@ func resourceService() *schema.Resource {
 									Schema: map[string]*schema.Schema{
 										"hook_target_arn": {
 											Type:         schema.TypeString,
-										Optional:     true,
+											Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"lifecycle_stages": {
@@ -708,7 +708,7 @@ func resourceService() *schema.Resource {
 										},
 										names.AttrRoleARN: {
 											Type:         schema.TypeString,
-										Optional:     true,
+											Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"hook_details": {
@@ -717,34 +717,34 @@ func resourceService() *schema.Resource {
 											DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 											ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 										},
-									"target_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookTargetType](),
-									},
-									"timeout_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAction: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													Computed:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
-												},
-												"timeout_in_minutes": {
-													Type:         nullable.TypeNullableInt,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20160),
+										"target_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookTargetType](),
+										},
+										"timeout_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAction: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
+													},
+													"timeout_in_minutes": {
+														Type:         nullable.TypeNullableInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20160),
+													},
 												},
 											},
 										},
-									},
 									},
 								},
 							},
@@ -2719,9 +2719,9 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 		}
 
 		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
-		if v := apiObject.TimeoutConfiguration; v != nil {
+			if v := apiObject.TimeoutConfiguration; v != nil {
 				tfMap["timeout_configuration"] = flattenLifecycleHookTimeoutConfiguration(v)
-		}
+			}
 		}
 
 		tfList = append(tfList, tfMap)
