@@ -36,6 +36,8 @@ import (
 // @IdentityAttribute("directory_id")
 // @IdentityAttribute("sam_account_name")
 // @ImportIDHandler("userImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(domainTfVar="domain")
 func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userResource{}
 
