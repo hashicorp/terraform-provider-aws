@@ -69,7 +69,7 @@ func TestAccKafkaChannel_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrARN, "cluster_arn"),
+				ImportStateIdFunc:                    testAccChannelImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -85,7 +85,7 @@ func TestAccKafkaChannel_Identity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrARN, "cluster_arn"),
+				ImportStateIdFunc: testAccChannelImportStateIDFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),

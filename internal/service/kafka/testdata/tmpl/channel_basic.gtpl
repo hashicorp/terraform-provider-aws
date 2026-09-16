@@ -31,7 +31,7 @@ resource "aws_msk_channel" "test" {
 
 resource "aws_msk_topic" "test" {
 {{- template "region" }}
-  name               = var.rName
+  name               = "${var.rName}-topic"
   cluster_arn        = aws_msk_cluster.test.arn
   partition_count    = 2
   replication_factor = 3
@@ -39,7 +39,7 @@ resource "aws_msk_topic" "test" {
 
 resource "aws_msk_cluster" "test" {
 {{- template "region" }}
-  cluster_name           = var.rName
+  cluster_name           = "${var.rName}-cluster"
   kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
@@ -54,6 +54,7 @@ resource "aws_msk_cluster" "test" {
 
 resource "aws_security_group" "test" {
 {{- template "region" }}
+  name   = var.rName
   vpc_id = aws_vpc.test.id
 }
 

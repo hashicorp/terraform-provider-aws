@@ -1,6 +1,3 @@
-# Copyright IBM Corp. 2014, 2026
-# SPDX-License-Identifier: MPL-2.0
-
 resource "aws_msk_channel" "test" {
   channel_name = var.rName
   cluster_arn  = aws_msk_cluster.test.arn
@@ -15,6 +12,7 @@ resource "aws_msk_channel" "test" {
 
   s3_destination {
     service_execution_role_arn = aws_iam_role.test.arn
+    data_freshness_in_seconds  = var.data_freshness_in_seconds
 
     dead_letter_queue_s3 {
       bucket_arn = aws_s3_bucket.dlq.arn
@@ -29,6 +27,7 @@ resource "aws_msk_channel" "test" {
 
   depends_on = [aws_iam_role_policy.test]
 }
+
 
 resource "aws_msk_topic" "test" {
   name               = "${var.rName}-topic"
@@ -180,4 +179,10 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "data_freshness_in_seconds" {
+  type     = number
+  nullable = true
+  default  = null
 }

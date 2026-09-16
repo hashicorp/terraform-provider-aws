@@ -51,7 +51,8 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(identityRegionOverrideTest=false)
-// @Testing(importStateIdAttributes="arn;cluster_arn")
+// @Testing(importStateIdFunc="testAccChannelImportStateIDFunc")
+// @Testing(importStateIdAttribute="arn")
 func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelResource{}
 
