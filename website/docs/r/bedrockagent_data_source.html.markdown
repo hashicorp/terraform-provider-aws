@@ -143,313 +143,369 @@ resource "aws_bedrockagent_data_source" "example" {
 
 The following arguments are required:
 
-* `data_source_configuration` - (Required) Details about how the data source is stored. See [`data_source_configuration` block](#data_source_configuration-block) for details.
+* `data_source_configuration` - (Required) Details about how the data source is stored. See [`data_source_configuration` Block](#data_source_configuration-block) for details.
 * `knowledge_base_id` - (Required) Unique identifier of the knowledge base to which the data source belongs.
 * `name` - (Required, Forces new resource) Name of the data source.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_deletion_policy` - (Optional) Data deletion policy for a data source. Valid values: `RETAIN`, `DELETE`.
 * `description` - (Optional) Description of the data source.
-* `server_side_encryption_configuration` - (Optional) Details about the configuration of the server-side encryption. See [`server_side_encryption_configuration` block](#server_side_encryption_configuration-block) for details.
-* `vector_ingestion_configuration` - (Optional, Forces new resource) Details about the configuration of the server-side encryption. See [`vector_ingestion_configuration` block](#vector_ingestion_configuration-block) for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `server_side_encryption_configuration` - (Optional) Details about the configuration of the server-side encryption. See [`server_side_encryption_configuration` Block](#server_side_encryption_configuration-block) for details.
+* `vector_ingestion_configuration` - (Optional, Forces new resource) Details about how to ingest the documents in the data source. See [`vector_ingestion_configuration` Block](#vector_ingestion_configuration-block) for details.
 
-### `data_source_configuration` block
+### `data_source_configuration` Block
 
 The `data_source_configuration` configuration block supports the following arguments:
 
+* `confluence_configuration` - (Optional) Configuration details for the Confluence data source. See [`data_source_configuration.confluence_configuration` Block](#data_source_configurationconfluence_configuration-block) for details.
+* `managed_knowledge_base_connector_configuration` - (Optional) Configuration details for a Managed Knowledge Base connector data source. See [`managed_knowledge_base_connector_configuration` Block](#managed_knowledge_base_connector_configuration-block) for details.
+* `s3_configuration` - (Optional) Configuration details for the S3 object that contains the data source. See [`s3_configuration` Block](#s3_configuration-block) for details.
+* `salesforce_configuration` - (Optional) Configuration details for the Salesforce data source. See [`data_source_configuration.salesforce_configuration` Block](#data_source_configurationsalesforce_configuration-block) for details.
+* `share_point_configuration` - (Optional) Configuration details for the SharePoint data source. See [`data_source_configuration.share_point_configuration` Block](#data_source_configurationshare_point_configuration-block) for details.
 * `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`, `MANAGED_KNOWLEDGE_BASE_CONNECTOR`.
-* `confluence_configuration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
-* `managed_knowledge_base_connector_configuration` - (Optional) Details about the configuration of a Managed Knowledge Base connector data source. See [`managed_knowledge_base_connector_configuration` block](#managed_knowledge_base_connector_configuration-block) for details.
-* `s3_configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
-* `salesforce_configuration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
-* `share_point_configuration` - (Optional) Details about the configuration of the SharePoint data source. See [`share_point_data_source_configuration` block](#share_point_data_source_configuration-block) for details.
-* `web_configuration` - (Optional) Details about the configuration of the web data source. See [`web_data_source_configuration` block](#web_data_source_configuration-block) for details.
+* `web_configuration` - (Optional) Configuration details for the web data source. See [`data_source_configuration.web_configuration` Block](#data_source_configurationweb_configuration-block) for details.
 
-### `managed_knowledge_base_connector_configuration` block
+### `data_source_configuration.confluence_configuration` Block
+
+For more details, see the [Amazon BedrockAgent Confluence documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html).
+
+The `confluence_configuration` configuration block supports the following arguments:
+
+* `crawler_configuration` - (Optional) Configuration for Confluence content. See [`data_source_configuration.confluence_configuration.crawler_configuration` Block](#data_source_configurationconfluence_configurationcrawler_configuration-block) for details.
+* `source_configuration` - (Optional) Endpoint information to connect to your Confluence data source. See [`data_source_configuration.confluence_configuration.source_configuration` Block](#data_source_configurationconfluence_configurationsource_configuration-block) for details.
+
+### `data_source_configuration.confluence_configuration.crawler_configuration` Block
+
+The `crawler_configuration` configuration block supports the following arguments:
+
+* `filter_configuration` - (Optional) Object configuration used to filter crawled content. See [`data_source_configuration.confluence_configuration.crawler_configuration.filter_configuration` Block](#data_source_configurationconfluence_configurationcrawler_configurationfilter_configuration-block) for details.
+
+### `data_source_configuration.confluence_configuration.crawler_configuration.filter_configuration` Block
+
+The `filter_configuration` configuration block supports the following arguments:
+
+* `pattern_object_filter` - (Optional) Configuration for filtering objects or content types of the data source. See [`data_source_configuration.confluence_configuration.crawler_configuration.filter_configuration.pattern_object_filter` Block](#data_source_configurationconfluence_configurationcrawler_configurationfilter_configurationpattern_object_filter-block) for details.
+* `type` - (Required) Type of filtering to apply to objects or content of the data source. For example, the `PATTERN` type uses regular expression patterns to filter content.
+
+### `data_source_configuration.confluence_configuration.crawler_configuration.filter_configuration.pattern_object_filter` Block
+
+The `pattern_object_filter` configuration block supports the following arguments:
+
+* `filters` - (Required) Filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters. See [`data_source_configuration.confluence_configuration.crawler_configuration.filter_configuration.pattern_object_filter.filters` Block](#data_source_configurationconfluence_configurationcrawler_configurationfilter_configurationpattern_object_filterfilters-block) for details.
+
+### `data_source_configuration.confluence_configuration.crawler_configuration.filter_configuration.pattern_object_filter.filters` Block
+
+The `filters` configuration block supports the following arguments:
+
+* `exclusion_filters` - (Optional) One or more exclusion regular expression patterns to exclude object types that match the pattern.
+* `inclusion_filters` - (Optional) One or more inclusion regular expression patterns to include object types that match the pattern.
+* `object_type` - (Required) Object type or content type of the data source.
+
+### `data_source_configuration.confluence_configuration.source_configuration` Block
+
+The `source_configuration` configuration block supports the following arguments:
+
+* `auth_type` - (Required) Supported authentication type to authenticate and connect to your Confluence instance. Valid values: `BASIC`, `OAUTH2_CLIENT_CREDENTIALS`.
+* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Confluence instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Confluence connection configuration. Pattern: `^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$`.
+* `host_type` - (Required) Supported host type, whether online/cloud or server/on-premises. Valid values: `SAAS`.
+* `host_url` - (Required) Confluence host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
+
+### `managed_knowledge_base_connector_configuration` Block
 
 The `managed_knowledge_base_connector_configuration` configuration block supports the following arguments:
 
 * `connector_parameters` - (Optional) JSON-encoded string containing the connector-specific parameters. The structure depends on the connector type (S3, SharePoint, Google Drive, etc.). See [Managed Knowledge Base connector parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-connectors.html) for details on each connector type.
-* `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` block](#deletion_protection_configuration-block) for details.
-* `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` block](#media_extraction_configuration-block) for details.
+* `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` Block](#deletion_protection_configuration-block) for details.
+* `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` Block](#media_extraction_configuration-block) for details.
 
-### `deletion_protection_configuration` block
+### `deletion_protection_configuration` Block
 
 The `deletion_protection_configuration` configuration block supports the following arguments:
 
 * `deletion_protection_status` - (Required) Enable or disable deletion protection for the connector. Valid values: `ENABLED`, `DISABLED`.
 * `deletion_protection_threshold` - (Optional) Maximum percentage of documents that a sync job can delete from your index.
 
-### `media_extraction_configuration` block
+### `media_extraction_configuration` Block
 
 The `media_extraction_configuration` configuration block supports the following arguments:
 
-* `audio_extraction_configuration` - (Optional) Configuration for extracting audio content. See [`audio_extraction_configuration` block](#audio_extraction_configuration-block) for details.
-* `image_extraction_configuration` - (Optional) Configuration for extracting image content. See [`image_extraction_configuration` block](#image_extraction_configuration-block) for details.
-* `video_extraction_configuration` - (Optional) Configuration for extracting video content. See [`video_extraction_configuration` block](#video_extraction_configuration-block) for details.
+* `audio_extraction_configuration` - (Optional) Configuration for extracting audio content. See [`audio_extraction_configuration` Block](#audio_extraction_configuration-block) for details.
+* `image_extraction_configuration` - (Optional) Configuration for extracting image content. See [`image_extraction_configuration` Block](#image_extraction_configuration-block) for details.
+* `video_extraction_configuration` - (Optional) Configuration for extracting video content. See [`video_extraction_configuration` Block](#video_extraction_configuration-block) for details.
 
-### `audio_extraction_configuration` block
+### `audio_extraction_configuration` Block
 
 The `audio_extraction_configuration` configuration block supports the following arguments:
 
 * `audio_extraction_status` - (Required) Whether audio extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
-### `image_extraction_configuration` block
+### `image_extraction_configuration` Block
 
 The `image_extraction_configuration` configuration block supports the following arguments:
 
 * `image_extraction_status` - (Required) Whether image extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
-### `video_extraction_configuration` block
+### `video_extraction_configuration` Block
 
 The `video_extraction_configuration` configuration block supports the following arguments:
 
 * `video_extraction_status` - (Required) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
-### `confluence_data_source_configuration` block
+### `s3_configuration` Block
 
-The `confluence_data_source_configuration` configuration block supports the following arguments:
-
-* `source_configuration` - (Required) The endpoint information to connect to your Confluence data source. See [`source_configuration` block](#confluence-source_configuration-block) for details.
-* `crawler_configuration` - (Optional) Configuration for Confluence content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
-
-For more details, see the [Amazon BedrockAgent Confluence documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html).
-
-### Confluence `source_configuration` block
-
-The `source_configuration` configuration block supports the following arguments:
-
-* `auth_type` - (Required) The supported authentication type to authenticate and connect to your Confluence instance. Valid values: `BASIC`, `OAUTH2_CLIENT_CREDENTIALS`.
-* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Confluence instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Confluence connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
-* `host_type` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `SAAS`.
-* `host_url` - (Required) The Confluence host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
-
-### `s3_data_source_configuration` block
-
-The `s3_data_source_configuration` configuration block supports the following arguments:
+The `s3_configuration` configuration block supports the following arguments:
 
 * `bucket_arn` - (Required) ARN of the bucket that contains the data source.
 * `bucket_owner_account_id` - (Optional) Bucket account owner ID for the S3 bucket.
 * `inclusion_prefixes` - (Optional) List of S3 prefixes that define the object containing the data sources. For more information, see [Organizing objects using prefixes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html).
 
-### `salesforce_data_source_configuration` block
-
-The `salesforce_data_source_configuration` configuration block supports the following arguments:
-
-* `source_configuration` - (Required) The endpoint information to connect to your Salesforce data source. See [`source_configuration` block](#salesforce-source_configuration-block) for details.
-* `crawler_configuration` - (Optional) Configuration for Salesforce content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
+### `data_source_configuration.salesforce_configuration` Block
 
 For more details, see the [Amazon BedrockAgent Salesforce documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html).
 
-### Salesforce `source_configuration` block
+The `salesforce_configuration` configuration block supports the following arguments:
 
-The `source_configuration` configuration block supports the following arguments:
+* `crawler_configuration` - (Optional) Configuration for Salesforce content. See [`data_source_configuration.salesforce_configuration.crawler_configuration` Block](#data_source_configurationsalesforce_configurationcrawler_configuration-block) for details.
+* `source_configuration` - (Optional) Endpoint information to connect to your Salesforce data source. See [`data_source_configuration.salesforce_configuration.source_configuration` Block](#data_source_configurationsalesforce_configurationsource_configuration-block) for details.
 
-* `auth_type` - (Required) The supported authentication type to authenticate and connect to your Salesforce instance. Valid values: OAUTH2_CLIENT_CREDENTIALS.
-* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Salesforce instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Salesforce connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
-* `host_url` - (Required) The Salesforce host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
-
-### `crawler_configuration` block
+### `data_source_configuration.salesforce_configuration.crawler_configuration` Block
 
 The `crawler_configuration` configuration block supports the following arguments:
 
-* `filter_configuration` - (Optional) The Salesforce standard object configuration. See [`filter_configuration` block](#filter_configuration-block) for details.
+* `filter_configuration` - (Optional) Object configuration used to filter crawled content. See [`data_source_configuration.salesforce_configuration.crawler_configuration.filter_configuration` Block](#data_source_configurationsalesforce_configurationcrawler_configurationfilter_configuration-block) for details.
 
-### `filter_configuration` block
+### `data_source_configuration.salesforce_configuration.crawler_configuration.filter_configuration` Block
 
 The `filter_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) The type of filtering that you want to apply to certain objects or content of the data source. For example, the PATTERN type is regular expression patterns you can apply to filter your content.
-* `pattern_object_filter` - (Optional) The configuration of filtering certain objects or content types of the data source. See [`pattern_object_filter` block](#pattern_object_filter-block) for details.
+* `pattern_object_filter` - (Optional) Configuration for filtering objects or content types of the data source. See [`data_source_configuration.salesforce_configuration.crawler_configuration.filter_configuration.pattern_object_filter` Block](#data_source_configurationsalesforce_configurationcrawler_configurationfilter_configurationpattern_object_filter-block) for details.
+* `type` - (Required) Type of filtering to apply to objects or content of the data source. For example, the `PATTERN` type uses regular expression patterns to filter content.
 
-### `pattern_object_filter` block
+### `data_source_configuration.salesforce_configuration.crawler_configuration.filter_configuration.pattern_object_filter` Block
 
 The `pattern_object_filter` configuration block supports the following arguments:
 
-* `filters` - (Required) The configuration of specific filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters.
+* `filters` - (Required) Filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters. See [`data_source_configuration.salesforce_configuration.crawler_configuration.filter_configuration.pattern_object_filter.filters` Block](#data_source_configurationsalesforce_configurationcrawler_configurationfilter_configurationpattern_object_filterfilters-block) for details.
 
-Each filter object should contain the following configuration:
+### `data_source_configuration.salesforce_configuration.crawler_configuration.filter_configuration.pattern_object_filter.filters` Block
 
-* `object_type` - (Required) The supported object type or content type of the data source.
-* `exclusion_filters` - (Optional) A list of one or more exclusion regular expression patterns to exclude certain object types that adhere to the pattern.
-* `inclusion_filters` - (Optional) A list of one or more inclusion regular expression patterns to include certain object types that adhere to the pattern.
+The `filters` configuration block supports the following arguments:
 
-### `share_point_data_source_configuration` block
+* `exclusion_filters` - (Optional) One or more exclusion regular expression patterns to exclude object types that match the pattern.
+* `inclusion_filters` - (Optional) One or more inclusion regular expression patterns to include object types that match the pattern.
+* `object_type` - (Required) Object type or content type of the data source.
 
-The `share_point_data_source_configuration` configuration block supports the following arguments:
+### `data_source_configuration.salesforce_configuration.source_configuration` Block
 
-* `source_configuration` - (Required) The endpoint information to connect to your SharePoint data source. See [`source_configuration` block](#sharepoint-source_configuration-block) for details.
-* `crawler_configuration` - (Optional) Configuration for SharePoint content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
+The `source_configuration` configuration block supports the following arguments:
+
+* `auth_type` - (Required) Supported authentication type to authenticate and connect to your Salesforce instance. Valid values: `OAUTH2_CLIENT_CREDENTIALS`.
+* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Salesforce instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Salesforce connection configuration. Pattern: `^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$`.
+* `host_url` - (Required) Salesforce host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
+
+### `data_source_configuration.share_point_configuration` Block
 
 For more details, see the [Amazon BedrockAgent SharePoint documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html).
 
-### SharePoint `source_configuration` block
+The `share_point_configuration` configuration block supports the following arguments:
 
-The `source_configuration` configuration block supports the following arguments:
+* `crawler_configuration` - (Optional) Configuration for SharePoint content. See [`data_source_configuration.share_point_configuration.crawler_configuration` Block](#data_source_configurationshare_point_configurationcrawler_configuration-block) for details.
+* `source_configuration` - (Optional) Endpoint information to connect to your SharePoint data source. See [`data_source_configuration.share_point_configuration.source_configuration` Block](#data_source_configurationshare_point_configurationsource_configuration-block) for details.
 
-* `auth_type` - (Required) The supported authentication type to authenticate and connect to your SharePoint site. Valid values: `OAUTH2_CLIENT_CREDENTIALS`, `OAUTH2_SHAREPOINT_APP_ONLY_CLIENT_CREDENTIALS`.
-* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your SharePoint site. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see SharePoint connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
-* `domain` - (Required) The domain of your SharePoint instance or site URL/URLs.
-* `host_type` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `ONLINE`.
-* `site_urls` - (Required) A list of one or more SharePoint site URLs.
-* `tenant_id` - (Optional) The identifier of your Microsoft 365 tenant.
-
-### `web_data_source_configuration` block
-
-The `web_data_source_configuration` configuration block supports the following arguments:
-
-* `source_configuration` - (Required) Endpoint information to connect to your web data source. See [`source_configuration` block](#web-source_configuration-block) for details.
-* `crawler_configuration` - (Optional) Configuration for web content. See [`crawler_configuration` block](#web-crawler_configuration-block) for details.
-
-### Web `source_configuration` block
-
-The `source_configuration` configuration block supports the following arguments:
-
-* `url_configuration` - (Required) The URL configuration of your web data source. See [`url_configuration` block](#url_configuration-block) for details.
-
-### `url_configuration` block
-
-The `url_configuration` configuration block supports the following arguments:
-
-* `seed_urls` - (Optional) List of one or more seed URLs to crawl. See [`seed_urls` block](#seed_urls-block) for details.
-
-### `seed_urls` block
-
-The `seed_urls` configuration block supports the following arguments:
-
-* `url` - (Optional) Seed or starting point URL. Must match the pattern `^https?://[A-Za-z0-9][^\s]*$`.
-
-### Web `crawler_configuration` block
+### `data_source_configuration.share_point_configuration.crawler_configuration` Block
 
 The `crawler_configuration` configuration block supports the following arguments:
 
-* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude certain object types that adhere to the pattern.
-* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include certain object types that adhere to the pattern.
-* `scope` - (Optional) Scope of what is crawled for your URLs.
-* `user_agent` - (Optional) String used for identifying the crawler or a bot when it accesses a web server. Default value is `bedrockbot_UUID`.
-* `crawler_limits` - (Optional) Configuration of crawl limits for the web URLs. See [`crawler_limits` block](#crawler_limits-block) for details.
+* `filter_configuration` - (Optional) Object configuration used to filter crawled content. See [`data_source_configuration.share_point_configuration.crawler_configuration.filter_configuration` Block](#data_source_configurationshare_point_configurationcrawler_configurationfilter_configuration-block) for details.
 
-### `crawler_limits` block
+### `data_source_configuration.share_point_configuration.crawler_configuration.filter_configuration` Block
+
+The `filter_configuration` configuration block supports the following arguments:
+
+* `pattern_object_filter` - (Optional) Configuration for filtering objects or content types of the data source. See [`data_source_configuration.share_point_configuration.crawler_configuration.filter_configuration.pattern_object_filter` Block](#data_source_configurationshare_point_configurationcrawler_configurationfilter_configurationpattern_object_filter-block) for details.
+* `type` - (Required) Type of filtering to apply to objects or content of the data source. For example, the `PATTERN` type uses regular expression patterns to filter content.
+
+### `data_source_configuration.share_point_configuration.crawler_configuration.filter_configuration.pattern_object_filter` Block
+
+The `pattern_object_filter` configuration block supports the following arguments:
+
+* `filters` - (Required) Filters applied to your data source content. Minimum of 1 filter and maximum of 25 filters. See [`data_source_configuration.share_point_configuration.crawler_configuration.filter_configuration.pattern_object_filter.filters` Block](#data_source_configurationshare_point_configurationcrawler_configurationfilter_configurationpattern_object_filterfilters-block) for details.
+
+### `data_source_configuration.share_point_configuration.crawler_configuration.filter_configuration.pattern_object_filter.filters` Block
+
+The `filters` configuration block supports the following arguments:
+
+* `exclusion_filters` - (Optional) One or more exclusion regular expression patterns to exclude object types that match the pattern.
+* `inclusion_filters` - (Optional) One or more inclusion regular expression patterns to include object types that match the pattern.
+* `object_type` - (Required) Object type or content type of the data source.
+
+### `data_source_configuration.share_point_configuration.source_configuration` Block
+
+The `source_configuration` configuration block supports the following arguments:
+
+* `auth_type` - (Required) Supported authentication type to authenticate and connect to your SharePoint site. Valid values: `OAUTH2_CLIENT_CREDENTIALS`, `OAUTH2_SHAREPOINT_APP_ONLY_CLIENT_CREDENTIALS`.
+* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your SharePoint site. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see SharePoint connection configuration. Pattern: `^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$`.
+* `domain` - (Required) Domain of your SharePoint instance or site URL/URLs.
+* `host_type` - (Required) Supported host type, whether online/cloud or server/on-premises. Valid values: `ONLINE`.
+* `site_urls` - (Required) One or more SharePoint site URLs.
+* `tenant_id` - (Optional) Identifier of your Microsoft 365 tenant.
+
+### `data_source_configuration.web_configuration` Block
+
+The `web_configuration` configuration block supports the following arguments:
+
+* `crawler_configuration` - (Optional) Configuration for web content. See [`data_source_configuration.web_configuration.crawler_configuration` Block](#data_source_configurationweb_configurationcrawler_configuration-block) for details.
+* `source_configuration` - (Optional) Endpoint information to connect to your web data source. See [`data_source_configuration.web_configuration.source_configuration` Block](#data_source_configurationweb_configurationsource_configuration-block) for details.
+
+### `data_source_configuration.web_configuration.crawler_configuration` Block
+
+The `crawler_configuration` configuration block supports the following arguments:
+
+* `crawler_limits` - (Optional) Configuration of crawl limits for the web URLs. See [`crawler_limits` Block](#crawler_limits-block) for details.
+* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude object types that match the pattern.
+* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include object types that match the pattern.
+* `scope` - (Optional) Scope of what is crawled for your URLs.
+* `user_agent` - (Optional) String used to identify the crawler or bot when it accesses a web server. Default value is `bedrockbot_UUID`.
+
+### `crawler_limits` Block
 
 The `crawler_limits` configuration block supports the following arguments:
 
 * `max_pages` - (Optional) Max number of web pages crawled from your source URLs, up to 25,000 pages.
 * `rate_limit` - (Optional) Max rate at which pages are crawled, up to 300 per minute per host.
 
-### `server_side_encryption_configuration` block
+### `data_source_configuration.web_configuration.source_configuration` Block
+
+The `source_configuration` configuration block supports the following arguments:
+
+* `url_configuration` - (Required) URL configuration of your web data source. See [`url_configuration` Block](#url_configuration-block) for details.
+
+### `url_configuration` Block
+
+The `url_configuration` configuration block supports the following arguments:
+
+* `seed_urls` - (Optional) List of one or more seed URLs to crawl. See [`seed_urls` Block](#seed_urls-block) for details.
+
+### `seed_urls` Block
+
+The `seed_urls` configuration block supports the following arguments:
+
+* `url` - (Optional) Seed or starting point URL. Must match the pattern `^https?://[A-Za-z0-9][^\s]*$`.
+
+### `server_side_encryption_configuration` Block
 
 The `server_side_encryption_configuration` configuration block supports the following arguments:
 
 * `kms_key_arn` - (Optional) ARN of the AWS KMS key used to encrypt the resource.
 
-### `vector_ingestion_configuration` block
+### `vector_ingestion_configuration` Block
 
 The `vector_ingestion_configuration` configuration block supports the following arguments:
 
-* `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` block](#chunking_configuration-block) for details.
-* `custom_transformation_configuration`- (Optional, Forces new resource) Configuration for custom transformation of data source documents.
-* `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` block](#parsing_configuration-block) for details.
+* `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` Block](#chunking_configuration-block) for details.
+* `custom_transformation_configuration` - (Optional, Forces new resource) Configuration for custom transformation of data source documents. See [`custom_transformation_configuration` Block](#custom_transformation_configuration-block) for details.
+* `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` Block](#parsing_configuration-block) for details.
 
-### `chunking_configuration` block
+### `chunking_configuration` Block
 
- The `chunking_configuration` configuration block supports the following arguments:
+The `chunking_configuration` configuration block supports the following arguments:
 
 * `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
-* `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires chunking_strategy as `FIXED_SIZE`. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
-* `hierarchical_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires chunking_strategy as `HIERARCHICAL`. See [`hierarchical_chunking_configuration`](#hierarchical_chunking_configuration-block) for details.
-* `semantic_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires chunking_strategy as `SEMANTIC`. See [`semantic_chunking_configuration`](#semantic_chunking_configuration-block) for details.
+* `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires `chunking_strategy` as `FIXED_SIZE`. See [`fixed_size_chunking_configuration` Block](#fixed_size_chunking_configuration-block) for details.
+* `hierarchical_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires `chunking_strategy` as `HIERARCHICAL`. See [`hierarchical_chunking_configuration` Block](#hierarchical_chunking_configuration-block) for details.
+* `semantic_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires `chunking_strategy` as `SEMANTIC`. See [`semantic_chunking_configuration` Block](#semantic_chunking_configuration-block) for details.
 
-### `fixed_size_chunking_configuration` block
+### `fixed_size_chunking_configuration` Block
 
-The `fixed_size_chunking_configuration` block supports the following arguments:
+The `fixed_size_chunking_configuration` configuration block supports the following arguments:
 
 * `max_tokens` - (Required, Forces new resource) Maximum number of tokens to include in a chunk.
 * `overlap_percentage` - (Optional, Forces new resource) Percentage of overlap between adjacent chunks of a data source.
 
-### `hierarchical_chunking_configuration` block
+### `hierarchical_chunking_configuration` Block
 
-The `hierarchical_chunking_configuration` block supports the following arguments:
+The `hierarchical_chunking_configuration` configuration block supports the following arguments:
 
-* `level_configuration` - (Required, Forces new resource) Maximum number of tokens to include in a chunk. Must contain two `level_configurations`. See [`level_configurations`](#level_configuration-block) for details.
-* `overlap_tokens` - (Required, Forces new resource) The number of tokens to repeat across chunks in the same layer.
+* `level_configuration` - (Required, Forces new resource) Token settings for each layer. Must contain two `level_configuration` blocks. See [`level_configuration` Block](#level_configuration-block) for details.
+* `overlap_tokens` - (Required, Forces new resource) Number of tokens to repeat across chunks in the same layer.
 
-### `level_configuration` block
+### `level_configuration` Block
 
-The `level_configuration` block supports the following arguments:
+The `level_configuration` configuration block supports the following arguments:
 
-* `max_tokens` - (Required) The maximum number of tokens that a chunk can contain in this layer.
+* `max_tokens` - (Required) Maximum number of tokens that a chunk can contain in this layer.
 
-### `semantic_chunking_configuration` block
+### `semantic_chunking_configuration` Block
 
-The `semantic_chunking_configuration` block supports the following arguments:
+The `semantic_chunking_configuration` configuration block supports the following arguments:
 
-* `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
-* `buffer_size` - (Required, Forces new resource) The buffer size.
-* `max_token` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+* `breakpoint_percentile_threshold` - (Required, Forces new resource) Dissimilarity threshold for splitting chunks.
+* `buffer_size` - (Required, Forces new resource) Buffer size.
+* `max_token` - (Required, Forces new resource) Maximum number of tokens a chunk can contain.
 
-### `custom_transformation_configuration` block
+### `custom_transformation_configuration` Block
 
-The `custom_transformation_configuration` block supports the following arguments:
+The `custom_transformation_configuration` configuration block supports the following arguments:
 
-* `intermediate_storage` - (Required, Forces new resource) The intermediate storage for custom transformation.
-* `transformation` - (Required) A custom processing step for documents moving through the data source ingestion pipeline.
+* `intermediate_storage` - (Required, Forces new resource) Intermediate storage for custom transformation. See [`intermediate_storage` Block](#intermediate_storage-block) for details.
+* `transformation` - (Required) Custom processing step for documents moving through the data source ingestion pipeline. See [`transformation` Block](#transformation-block) for details.
 
-### `intermediate_storage` block
+### `intermediate_storage` Block
 
-The `intermediate_storage` block supports the following arguments:
+The `intermediate_storage` configuration block supports the following arguments:
 
-* `s3_location` - (Required, Forces new resource) Configuration block for intermedia S3 storage.
+* `s3_location` - (Required, Forces new resource) Configuration block for intermediate S3 storage. See [`s3_location` Block](#s3_location-block) for details.
 
-### `s3_location` block
+### `s3_location` Block
 
-The `s3_location` block supports the following arguments:
+The `s3_location` configuration block supports the following arguments:
 
 * `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
 
-### `transformation` block
+### `transformation` Block
 
-The `transformation` block supports the following arguments:
+The `transformation` configuration block supports the following arguments:
 
 * `step_to_apply` - (Required, Forces new resource) When the service applies the transformation. Currently only `POST_CHUNKING` is supported.
-* `transformation_function` - (Required) The lambda function that processes documents.
+* `transformation_function` - (Required) Lambda function that processes documents. See [`transformation_function` Block](#transformation_function-block) for details.
 
-### `transformation_function` block
+### `transformation_function` Block
 
-The `transformation_function` block supports the following arguments:
+The `transformation_function` configuration block supports the following arguments:
 
-* `transformation_lambda_configuration` - (Required, Forces new resource) The configuration of the lambda function.
+* `transformation_lambda_configuration` - (Required, Forces new resource) Configuration of the Lambda function. See [`transformation_lambda_configuration` Block](#transformation_lambda_configuration-block) for details.
 
-### `transformation_lambda_configuration` block
+### `transformation_lambda_configuration` Block
 
-The `transformation_lambda_configuration` block supports the following arguments:
+The `transformation_lambda_configuration` configuration block supports the following arguments:
 
-* `lambda_arn` - (Required, Forces new resource) The ARN of the lambda to use for custom transformation.
+* `lambda_arn` - (Required, Forces new resource) ARN of the Lambda to use for custom transformation.
 
-### `parsing_configuration` block
+### `parsing_configuration` Block
 
 The `parsing_configuration` configuration block supports the following arguments:
 
-* `parsing_strategy` - (Required) The parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
-* `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` block](#bedrock_data_automation_configuration-block) for details.
-* `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` block](#bedrock_foundation_model_configuration-block) for details.
+* `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` Block](#bedrock_data_automation_configuration-block) for details.
+* `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` Block](#bedrock_foundation_model_configuration-block) for details.
+* `parsing_strategy` - (Required) Parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
 
-### `bedrock_data_automation_configuration` block
+### `bedrock_data_automation_configuration` Block
 
 The `bedrock_data_automation_configuration` configuration block supports the following arguments:
 
-* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid value: `MULTIMODAL`.
+* `parsing_modality` - (Optional, Forces new resource) Whether to enable parsing of multimodal data, including both text and images. Valid value: `MULTIMODAL`.
 
-### `bedrock_foundation_model_configuration` block
+### `bedrock_foundation_model_configuration` Block
 
 The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
 
-* `model_arn` - (Required, Forces new resource) The ARN of the model used to parse documents
-* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid values: `MULTIMODAL`.
-* `parsing_prompt` - (Optional, Forces new resource) Instructions for interpreting the contents of the document. See [`parsing_prompt` block](#parsing_prompt-block) for details.
+* `model_arn` - (Required, Forces new resource) ARN of the model used to parse documents.
+* `parsing_modality` - (Optional, Forces new resource) Whether to enable parsing of multimodal data, including both text and images. Valid values: `MULTIMODAL`.
+* `parsing_prompt` - (Optional, Forces new resource) Instructions for interpreting the contents of the document. See [`parsing_prompt` Block](#parsing_prompt-block) for details.
 
-### `parsing_prompt` block
+### `parsing_prompt` Block
 
 The `parsing_prompt` configuration block supports the following arguments:
 
