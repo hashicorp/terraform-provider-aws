@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 * `agent_version` - Version of the agent.
 * `created_at` - Time at which the version was created.
 * `description` - Description of the version of the agent.
-* `guardrail_configuration` - Details aout the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block)
+* `guardrail_configuration` - Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block)
 * `updated_at` - Time at which the version was last updated.
 
 ### `guardrail_configuration` Block

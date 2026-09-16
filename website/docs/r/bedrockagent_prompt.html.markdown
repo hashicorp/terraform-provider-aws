@@ -129,7 +129,7 @@ The following arguments are optional:
 
 ### `system` Block
 
-* `cache_point` - (Optional) Cache checkpoint within a tool designation. See [`cache_point` Block](#cache_point-block) for more information.
+* `cache_point` - (Optional) Cache checkpoint within the system prompt. See [`cache_point` Block](#cache_point-block) for more information.
 * `text` - (Optional) Text in the system prompt.
 
 ### `tool_configuration` Block

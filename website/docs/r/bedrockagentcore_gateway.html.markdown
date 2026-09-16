@@ -120,13 +120,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
+* `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration-block) below.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
-* `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
+* `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration-block) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
-* `policy_engine_configuration` - (Optional) Configuration for a policy engine associated with the gateway. A policy engine is a collection of policies that evaluates and authorizes agent tool calls. When associated with a gateway, the policy engine intercepts all agent requests and determines whether to allow or deny each action based on the defined policies. See [`policy_engine_configuration`](#policy_engine_configuration) below.
-* `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
+* `policy_engine_configuration` - (Optional) Configuration for a policy engine associated with the gateway. A policy engine is a collection of policies that evaluates and authorizes agent tool calls. When associated with a gateway, the policy engine intercepts all agent requests and determines whether to allow or deny each action based on the defined policies. See [`policy_engine_configuration`](#policy_engine_configuration-block) below.
+* `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration-block) below.
 * `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Omit this argument to create a gateway that routes traffic directly to HTTP targets such as AgentCore Runtime agents (see [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) `target_configuration.http`).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -135,7 +135,7 @@ The following arguments are optional:
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
+* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -144,15 +144,15 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
-* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
-* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration-block) below.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim-block) below.
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
-* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint) below.
-* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint-block) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides-block) below.
 
 ### `allowed_workload_configuration` Block
 
-* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment) below.
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment-block) below.
 * `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
 
 ### `hosting_environment` Block
@@ -162,14 +162,14 @@ The `custom_jwt_authorizer` block supports the following:
 ### `private_endpoint_overrides` Block
 
 * `domain` - (Required) Domain the override applies to.
-* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint-block) below.
 
 ### `private_endpoint` Block
 
 Exactly one of the following must be specified:
 
-* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
-* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource-block) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource-block) below.
 
 ### `managed_vpc_resource` Block
 
@@ -188,7 +188,7 @@ Exactly one of the following must be specified:
 
 The `custom_claim` block supports the following:
 
-* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value-block) below.
 * `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
 * `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
 
@@ -197,7 +197,7 @@ The `custom_claim` block supports the following:
 The `authorizing_claim_match_value` block supports the following:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
-* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value-block) below.
 
 ### `claim_match_value` Block
 
@@ -210,15 +210,15 @@ The `claim_match_value` block supports the following:
 
 The `interceptor_configuration` block supports the following:
 
-* `input_configuration` - (Optional) Input configuration for the interceptor. See [`input_configuration`](#input_configuration) below.
+* `input_configuration` - (Optional) Input configuration for the interceptor. See [`input_configuration`](#input_configuration-block) below.
 * `interception_points` - (Required) Set of interception points. Valid values: `REQUEST`, `RESPONSE`.
-* `interceptor` - (Required) Interceptor infrastructure configuration. See [`interceptor`](#interceptor) below.
+* `interceptor` - (Required) Interceptor infrastructure configuration. See [`interceptor`](#interceptor-block) below.
 
 ### `interceptor` Block
 
 The `interceptor` block supports the following:
 
-* `lambda` - (Required) Lambda function configuration for the interceptor. See [`lambda`](#lambda) below.
+* `lambda` - (Required) Lambda function configuration for the interceptor. See [`lambda`](#lambda-block) below.
 
 ### `lambda` Block
 
@@ -243,7 +243,7 @@ The `policy_engine_configuration` block supports the following:
 
 The `protocol_configuration` block supports the following:
 
-* `mcp` - (Optional) Model Context Protocol (MCP) configuration block. See [`mcp`](#mcp) below.
+* `mcp` - (Optional) Model Context Protocol (MCP) configuration block. See [`mcp`](#mcp-block) below.
 
 ### `mcp` Block
 
@@ -251,8 +251,8 @@ The `mcp` block supports the following:
 
 * `instructions` - (Optional) Instructions for the MCP protocol configuration.
 * `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`.
-* `session_configuration` - (Optional) Configuration block for session settings of the MCP gateway. See [`session_configuration`](#session_configuration) below.
-* `streaming_configuration` - (Optional) Configuration block for streaming settings of the MCP gateway. See [`streaming_configuration`](#streaming_configuration) below.
+* `session_configuration` - (Optional) Configuration block for session settings of the MCP gateway. See [`session_configuration`](#session_configuration-block) below.
+* `streaming_configuration` - (Optional) Configuration block for streaming settings of the MCP gateway. See [`streaming_configuration`](#streaming_configuration-block) below.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
 
 ### `session_configuration` Block
@@ -275,7 +275,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `gateway_id` - Unique identifier of the Gateway.
 * `gateway_url` - URL endpoint for the gateway.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `workload_identity_details` - Workload identity details for the gateway. See [`workload_identity_details`](#workload_identity_details) below.
+* `workload_identity_details` - Workload identity details for the gateway. See [`workload_identity_details`](#workload_identity_details-block) below.
 
 ### `workload_identity_details` Block
 

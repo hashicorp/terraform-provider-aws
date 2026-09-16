@@ -22,10 +22,13 @@ data "aws_budgets_budget" "test" {
 
 ## Argument Reference
 
-This data source supports the following arguments:
+The following arguments are required:
+
+* `name` - (Required) Name of the budget. Unique within an account.
+
+The following arguments are optional:
 
 * `account_id` - (Optional) ID of the target account for the budget. Defaults to the current account ID.
-* `name` - (Required) Name of the budget. Unique within an account.
 * `name_prefix` - (Optional) Prefix of the budget name. Unique within an account.
 
 ## Attribute Reference

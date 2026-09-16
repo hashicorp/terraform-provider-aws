@@ -60,11 +60,11 @@ resource "aws_bedrockagentcore_code_interpreter" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the code interpreter.
-* `network_configuration` - (Required) Network configuration for the code interpreter. See [`network_configuration`](#network_configuration) below.
+* `network_configuration` - (Required) Network configuration for the code interpreter. See [`network_configuration`](#network_configuration-block) below.
 
 The following arguments are optional:
 
-* `certificate` - (Optional) Certificates to install in the code interpreter. Between 1 and 200 blocks are supported. See [`certificate`](#certificate) below.
+* `certificate` - (Optional) Certificates to install in the code interpreter. Between 1 and 200 blocks are supported. See [`certificate`](#certificate-block) below.
 * `description` - (Optional) Description of the code interpreter.
 * `execution_role_arn` - (Optional) ARN of the IAM role that the code interpreter assumes for execution. Required when using `SANDBOX` network mode.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -74,13 +74,13 @@ The following arguments are optional:
 
 The `certificate` block supports the following:
 
-* `location` - (Required) Location from which to retrieve the certificate. See [`certificates.location`](#certificateslocation) below.
+* `location` - (Required) Location from which to retrieve the certificate. See [`certificate.location`](#certificatelocation-block) below.
 
 ### `certificate.location` Block
 
 The certificate `location` object supports the following:
 
-* `secrets_manager` - (Required) AWS Secrets Manager location of the certificate. See [`secrets_manager`](#secrets_manager) below.
+* `secrets_manager` - (Required) AWS Secrets Manager location of the certificate. See [`secrets_manager`](#secrets_manager-block) below.
 
 ### `secrets_manager` Block
 
@@ -93,7 +93,7 @@ The `secrets_manager` object supports the following:
 The `network_configuration` object supports the following:
 
 * `network_mode` - (Required) Network mode for the code interpreter. Valid values: `PUBLIC`, `SANDBOX`, `VPC`.
-* `vpc_config` - (Optional) VPC configuration. See [`vpc_config`](#vpc_config) below.
+* `vpc_config` - (Optional) VPC configuration. See [`vpc_config`](#vpc_config-block) below.
 
 ### `vpc_config` Block
 

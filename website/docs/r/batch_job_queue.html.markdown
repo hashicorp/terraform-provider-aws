@@ -89,7 +89,7 @@ This resource supports the following arguments:
 ### `job_state_time_limit_action` Block
 
 * `action` - (Required) Action to take when a job is at the head of the job queue in the specified state for the specified period of time. Valid values include `"CANCEL"`
-* `max_time_seconds` - (Optional) Approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken. Valid values include integers between `600` & `86400`
+* `max_time_seconds` - (Required) Approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken. Valid values include integers between `600` & `86400`
 * `reason` - (Required) Reason to log for the action being taken.
 * `state` - (Required) State of the job needed to trigger the action. Valid values include `"RUNNABLE"`.
 

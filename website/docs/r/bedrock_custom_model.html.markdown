@@ -63,13 +63,13 @@ This resource supports the following arguments:
 * `customization_type` - (Optional) Customization type. Valid values: `FINE_TUNING`, `CONTINUED_PRE_TRAINING`.
 * `hyperparameters` - (Required) [Parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) related to tuning the model.
 * `job_name` - (Required) Name for the customization job.
-* `output_data_config` - (Required) S3 location for the output data. See [`output_data_config`](#output_data_config) below.
+* `output_data_config` - (Required) S3 location for the output data. See [`output_data_config`](#output_data_config-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Required) ARN of an IAM role that Bedrock can assume to perform tasks on your behalf.
 * `tags` - (Optional) Map of tags to assign to the customization job and custom model. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `training_data_config` - (Required) Information about the training dataset. See [`training_data_config`](#training_data_config) below.
-* `validation_data_config` - (Optional) Information about the validation dataset. See [`validation_data_config`](#validation_data_config) below.
-* `vpc_config` - (Optional) Configuration parameters for the private VPC that contains the resources you are using for this job. See [`vpc_config`](#vpc_config) below.
+* `training_data_config` - (Required) Information about the training dataset. See [`training_data_config`](#training_data_config-block) below.
+* `validation_data_config` - (Optional) Information about the validation dataset. See [`validation_data_config`](#validation_data_config-block) below.
+* `vpc_config` - (Optional) Configuration parameters for the private VPC that contains the resources you are using for this job. See [`vpc_config`](#vpc_config-block) below.
 
 ### `output_data_config` Block
 
@@ -81,7 +81,7 @@ This resource supports the following arguments:
 
 ### `validation_data_config` Block
 
-* `validator` - (Required) Information about the validators. See [`validator`](#validator) below.
+* `validator` - (Required) Information about the validators. See [`validator`](#validator-block) below.
 
 ### `validator` Block
 

@@ -27,7 +27,7 @@ resource "aws_bedrockagentcore_token_vault_cmk" "example" {
 
 This resource supports the following arguments:
 
-* `kms_configuration` - (Required) KMS configuration for the token vault. See [`kms_configuration`](#kms_configuration) below.
+* `kms_configuration` - (Required) KMS configuration for the token vault. See [`kms_configuration`](#kms_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `token_vault_id` - (Optional) Token vault ID. Defaults to `default`.
 

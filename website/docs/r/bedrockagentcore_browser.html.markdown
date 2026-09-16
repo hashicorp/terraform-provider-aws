@@ -89,16 +89,16 @@ resource "aws_bedrockagentcore_browser" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the browser.
-* `network_configuration` - (Required) Network configuration for the browser. See [`network_configuration`](#network_configuration) below.
+* `network_configuration` - (Required) Network configuration for the browser. See [`network_configuration`](#network_configuration-block) below.
 
 The following arguments are optional:
 
-* `browser_signing` - (Optional) Browser signing configuration that enables cryptographic agent identification using HTTP message signatures. See [`browser_signing`](#browser_signing) below.
-* `certificate` - (Optional) Certificates to install in the browser. See [`certificate`](#certificate) below.
+* `browser_signing` - (Optional) Browser signing configuration that enables cryptographic agent identification using HTTP message signatures. See [`browser_signing`](#browser_signing-block) below.
+* `certificate` - (Optional) Certificates to install in the browser. See [`certificate`](#certificate-block) below.
 * `description` - (Optional) Description of the browser.
-* `enterprise_policy` - (Optional) Enterprise policy files to apply to the browser. See [`enterprise_policy`](#enterprise_policy) below.
+* `enterprise_policy` - (Optional) Enterprise policy files to apply to the browser. See [`enterprise_policy`](#enterprise_policy-block) below.
 * `execution_role_arn` - (Optional) ARN of the IAM role that the browser assumes for execution.
-* `recording` - (Optional) Recording configuration for browser sessions. See [`recording`](#recording) below.
+* `recording` - (Optional) Recording configuration for browser sessions. See [`recording`](#recording-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -107,7 +107,7 @@ The following arguments are optional:
 The `network_configuration` object supports the following:
 
 * `network_mode` - (Required) Network mode for the browser. Valid values: `PUBLIC`, `VPC`.
-* `vpc_config` - (Optional) VPC configuration when `network_mode` is `VPC`. See [`vpc_config`](#vpc_config) below.
+* `vpc_config` - (Optional) VPC configuration when `network_mode` is `VPC`. See [`vpc_config`](#vpc_config-block) below.
 
 ### `vpc_config` Block
 
@@ -121,7 +121,7 @@ The `vpc_config` object supports the following:
 The `recording` object supports the following:
 
 * `enabled` - (Optional) Whether to enable recording for browser sessions. Defaults to `false`.
-* `s3_location` - (Optional) S3 location where browser session recordings are stored. See [`s3_location`](#s3_location) below.
+* `s3_location` - (Optional) S3 location where browser session recordings are stored. See [`s3_location`](#s3_location-block) below.
 
 ### `s3_location` Block
 
@@ -140,14 +140,14 @@ The `browser_signing` object supports the following:
 
 The `enterprise_policy` block supports the following:
 
-* `location` - (Required) Location of the enterprise policy file. See [`location`](#location) below.
+* `location` - (Required) Location of the enterprise policy file. See [`location`](#location-block) below.
 * `type` - (Optional) Type of browser enterprise policy. Valid values: `MANAGED`, `RECOMMENDED`.
 
 ### `location` Block
 
 The `location` object supports the following:
 
-* `s3` - (Required) S3 location of the enterprise policy file. See [`s3`](#s3) below.
+* `s3` - (Required) S3 location of the enterprise policy file. See [`s3`](#s3-block) below.
 
 ### `s3` Block
 
@@ -161,13 +161,13 @@ The `s3` object supports the following:
 
 The `certificate` block supports the following:
 
-* `location` - (Required) Location from which to retrieve the certificate. See [`certificates.location`](#certificateslocation) below.
+* `location` - (Required) Location from which to retrieve the certificate. See [`certificate.location`](#certificatelocation-block) below.
 
 ### `certificate.location` Block
 
 The certificate `location` object supports the following:
 
-* `secrets_manager` - (Required) AWS Secrets Manager location of the certificate. See [`secrets_manager`](#secrets_manager) below.
+* `secrets_manager` - (Required) AWS Secrets Manager location of the certificate. See [`secrets_manager`](#secrets_manager-block) below.
 
 ### `secrets_manager` Block
 

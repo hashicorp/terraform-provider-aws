@@ -130,14 +130,14 @@ resource "aws_backup_selection" "example" {
 
 This resource supports the following arguments:
 
-* `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition) for details.
+* `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition-block) for details.
 * `iam_role_arn` - (Required) ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `name` - (Required) Display name of a resource selection document.
 * `not_resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to exclude from a backup plan.
 * `plan_id` - (Required) Backup plan ID to be associated with the selection of resources.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to assign to a backup plan.
-* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag) for details.
+* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag-block) for details.
 
 ### `selection_tag` Block
 
@@ -151,10 +151,10 @@ The `selection_tag` configuration block supports the following attributes:
 
 The `condition` configuration block supports the following attributes:
 
-* `string_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching". See [below](#string_equals) for details.
-* `string_like` - (Optional) Filters the values of your tagged resources for matching tag values with the use of a wildcard character (`*`) anywhere in the string. For example, `prod*` or `*rod*` matches the tag value `production`. See [below](#string_like) for details.
-* `string_not_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching". See [below](#string_not_equals) for details.
-* `string_not_like` - (Optional) Filters the values of your tagged resources for non-matching tag values with the use of a wildcard character (`*`) anywhere in the string. See [below](#string_not_like) for details.
+* `string_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching". See [below](#string_equals-block) for details.
+* `string_like` - (Optional) Filters the values of your tagged resources for matching tag values with the use of a wildcard character (`*`) anywhere in the string. For example, `prod*` or `*rod*` matches the tag value `production`. See [below](#string_like-block) for details.
+* `string_not_equals` - (Optional) Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching". See [below](#string_not_equals-block) for details.
+* `string_not_like` - (Optional) Filters the values of your tagged resources for non-matching tag values with the use of a wildcard character (`*`) anywhere in the string. See [below](#string_not_like-block) for details.
 
 ### `string_equals` Block
 

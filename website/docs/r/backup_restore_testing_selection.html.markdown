@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `iam_role_arn` - (Required) ARN of the IAM role.
 * `name` - (Required) Name of the backup restore testing selection.
 * `protected_resource_arns` - (Optional) ARNs for the protected resources.
-* `protected_resource_conditions` - (Optional) Conditions for the protected resource. See [`protected_resource_conditions`](#protected_resource_conditions) below.
+* `protected_resource_conditions` - (Optional) Conditions for the protected resource. See [`protected_resource_conditions`](#protected_resource_conditions-block) below.
 * `protected_resource_type` - (Required) Type of the protected resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restore_metadata_overrides` - (Optional) Override certain restore metadata keys. See the complete list of [restore testing inferred metadata](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing-inferred-metadata.html) .
