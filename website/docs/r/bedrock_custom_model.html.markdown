@@ -57,38 +57,53 @@ resource "aws_bedrock_custom_model" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `base_model_identifier` - (Required) ARN of the base model.
-* `custom_model_kms_key_id` - (Optional) The custom model is encrypted at rest using this key. Specify the key ARN.
+* `custom_model_kms_key_id` - (Optional) Key ARN used to encrypt the custom model at rest.
 * `custom_model_name` - (Required) Name for the custom model.
-* `customization_type` -(Optional) The customization type. Valid values: `FINE_TUNING`, `CONTINUED_PRE_TRAINING`.
+* `customization_type` - (Optional) Customization type. Valid values: `FINE_TUNING`, `CONTINUED_PRE_TRAINING`.
 * `hyperparameters` - (Required) [Parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) related to tuning the model.
-* `job_name` - (Required) A name for the customization job.
-* `output_data_config` - (Required) S3 location for the output data.
-    * `s3_uri` - (Required) The S3 URI where the output data is stored.
+* `job_name` - (Required) Name for the customization job.
+* `output_data_config` - (Required) S3 location for the output data. See [`output_data_config`](#output_data_config) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Required) ARN of an IAM role that Bedrock can assume to perform tasks on your behalf.
-* `tags` - (Optional) A map of tags to assign to the customization job and custom model. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `training_data_config` - (Required) Information about the training dataset.
-    * `s3_uri` - (Required) The S3 URI where the training data is stored.
-* `validation_data_config` - (Optional) Information about the validation dataset.
-    * `validator` - (Required) Information about the validators.
-        * `s3_uri` - (Required) The S3 URI where the validation data is stored.
-* `vpc_config` - (Optional) Configuration parameters for the private VPC that contains the resources you are using for this job.
-    * `security_group_ids` - (Required) VPC configuration security group IDs.
-    * `subnet_ids` - (Required) VPC configuration subnets.
+* `tags` - (Optional) Map of tags to assign to the customization job and custom model. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `training_data_config` - (Required) Information about the training dataset. See [`training_data_config`](#training_data_config) below.
+* `validation_data_config` - (Optional) Information about the validation dataset. See [`validation_data_config`](#validation_data_config) below.
+* `vpc_config` - (Optional) Configuration parameters for the private VPC that contains the resources you are using for this job. See [`vpc_config`](#vpc_config) below.
+
+### `output_data_config` Block
+
+* `s3_uri` - (Required) S3 URI where the output data is stored.
+
+### `training_data_config` Block
+
+* `s3_uri` - (Required) S3 URI where the training data is stored.
+
+### `validation_data_config` Block
+
+* `validator` - (Required) Information about the validators. See [`validator`](#validator) below.
+
+### `validator` Block
+
+* `s3_uri` - (Required) S3 URI where the validation data is stored.
+
+### `vpc_config` Block
+
+* `security_group_ids` - (Required) VPC configuration security group IDs.
+* `subnet_ids` - (Required) VPC configuration subnets.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `custom_model_arn` - The ARN of the output model.
-* `job_arn` - The ARN of the customization job.
-* `job_status` - The status of the customization job. A successful job transitions from `InProgress` to `Completed` when the output model is ready to use.
+* `custom_model_arn` - ARN of the output model.
+* `job_arn` - ARN of the customization job.
+* `job_status` - Status of the customization job. A successful job transitions from `InProgress` to `Completed` when the output model is ready to use.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `training_metrics` - Metrics associated with the customization job.
     * `training_loss` - Loss metric associated with the customization job.
-* `validation_metrics` - The loss metric for each validator that you provided.
-    * `validation_loss` - The validation loss associated with the validator.
+* `validation_metrics` - Loss metric for each validator that you provided.
+    * `validation_loss` - Validation loss associated with the validator.
 
 ## Timeouts
 
