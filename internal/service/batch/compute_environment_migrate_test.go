@@ -92,3 +92,55 @@ func TestComputeEnvironmentStateUpgradeV0(t *testing.T) {
 		})
 	}
 }
+
+func TestComputeEnvironmentStateUpgradeV1(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		rawState map[string]any
+		expected map[string]any
+	}{
+		{
+			name:     "empty rawState",
+			rawState: nil,
+			expected: map[string]any{},
+		},
+		{
+			// instance_type moves from a set to a list. Both are stored as an array,
+			// so the upgrade keeps the elements and their order untouched.
+			name: "instance_type is carried through unchanged",
+			rawState: map[string]any{
+				names.AttrName: "test-environment",
+				"compute_resources": []any{
+					map[string]any{
+						names.AttrInstanceType: []any{"m7i", "c7i", "r7i"},
+					},
+				},
+			},
+			expected: map[string]any{
+				names.AttrName: "test-environment",
+				"compute_resources": []any{
+					map[string]any{
+						names.AttrInstanceType: []any{"m7i", "c7i", "r7i"},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfbatch.ComputeEnvironmentStateUpgradeV1(context.Background(), test.rawState, nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if diff := cmp.Diff(test.expected, got); diff != "" {
+				t.Errorf("unexpected diff (+want, -got): %s", diff)
+			}
+		})
+	}
+}

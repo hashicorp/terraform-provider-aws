@@ -27,4 +27,5 @@ var (
 	ListTags = listTags
 
 	ComputeEnvironmentStateUpgradeV0 = computeEnvironmentStateUpgradeV0
+	ComputeEnvironmentStateUpgradeV1 = computeEnvironmentStateUpgradeV1
 )
