@@ -605,7 +605,7 @@ The `passthrough` block supports:
 * `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. See [`schema` Block](#schema-block) below.
 * `static_query_parameter_conflict_resolution` - (Optional) Controls precedence when a client request supplies a query parameter whose name matches a configured static query parameter. Valid values: `CLIENT_OVERRIDE`, `STATIC_OVERRIDE`.
 * `static_query_parameters` - (Optional) Map of static query parameters that the gateway always appends to the outbound URL when forwarding requests to the target.
-* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
+* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration-block) below.
 
 ### `stickiness_configuration` Block
 
@@ -659,7 +659,7 @@ The `provider_prefix` block supports the following:
 
 The `operation` block supports the following:
 
-* `model` - (Optional) List of models supported for this operation. See [`model` Block](#model) below.
+* `model` - (Optional) List of models supported for this operation. See [`model` Block](#model-block) below.
 * `path` - (Required) Request path for this operation (for example, `/v1/messages` or `/v1/responses`).
 * `provider_path` - (Optional) Provider path to forward requests to, if it differs from the request path. For example, `/anthropic/v1/messages` when the provider expects a different path than the client-facing `/v1/messages`.
 
