@@ -41,9 +41,7 @@ func findTag(ctx context.Context, conn *autoscaling.Client, identifier, resource
 			},
 		},
 	}
-
 	output, err := conn.DescribeTags(ctx, &input, optFns...)
-
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}

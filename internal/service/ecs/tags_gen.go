@@ -30,7 +30,6 @@ import (
 // it may also be a different identifier depending on the service.
 func findTag(ctx context.Context, conn *ecs.Client, identifier, key string, optFns ...func(*ecs.Options)) (*string, error) {
 	listTags, err := listTags(ctx, conn, identifier, optFns...)
-
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
