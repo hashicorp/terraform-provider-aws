@@ -109,6 +109,54 @@ func TestAccDirectoryServiceDataUser_disappears(t *testing.T) {
 	})
 }
 
+func TestAccDirectoryServiceDataUser_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	samAccountName := fmt.Sprintf(
+		"u%s",
+		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
+	)
+	resourceName := "aws_directoryservicedata_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectoryServiceDataServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_basic(rName, domainName, samAccountName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "email_address", fmt.Sprintf("%s@example.com", samAccountName)),
+					resource.TestCheckResourceAttr(resourceName, "given_name", "Test"),
+					resource.TestCheckResourceAttr(resourceName, "surname", "User"),
+				),
+			},
+			{
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "email_address", fmt.Sprintf("%s-updated@example.com", samAccountName)),
+					resource.TestCheckResourceAttr(resourceName, "given_name", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "surname", "Person"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DirectoryServiceDataClient(ctx)
@@ -173,5 +221,32 @@ resource "aws_directoryservicedata_user" "test" {
   surname          = "User"
 }
 `, domainName, samAccountName),
+	)
+}
+
+func testAccUserConfig_updated(rName, domainName, samAccountName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_directoryservicedata_user" "test" {
+  directory_id     = aws_directory_service_directory.test.id
+  sam_account_name = %[2]q
+  email_address    = "%[2]s-updated@example.com"
+  given_name       = "Updated"
+  surname          = "Person"
+}
+		`, domainName, samAccountName),
 	)
 }
