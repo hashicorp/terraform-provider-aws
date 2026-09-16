@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -67,7 +68,10 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/FileSystemPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, t, resourceName, &desc),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystemPolicy(), resourceName),

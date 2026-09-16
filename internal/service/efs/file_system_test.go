@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +32,8 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemConfig_basic,
+				ConfigDirectory: config.StaticDirectory("testdata/FileSystem/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
@@ -54,6 +56,8 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory:   config.StaticDirectory("testdata/FileSystem/basic/"),
+				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -74,7 +78,8 @@ func TestAccEFSFileSystem_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemConfig_basic,
+				ConfigDirectory: config.StaticDirectory("testdata/FileSystem/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystem(), resourceName),
@@ -534,10 +539,6 @@ func testAccCheckFileSystemExists(ctx context.Context, t *testing.T, n string, v
 		return nil
 	}
 }
-
-const testAccFileSystemConfig_basic = `
-resource "aws_efs_file_system" "test" {}
-`
 
 const testAccFileSystemConfig_performanceMode = `
 resource "aws_efs_file_system" "test" {
