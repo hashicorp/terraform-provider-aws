@@ -61,8 +61,8 @@ This resource supports the following arguments:
 
 ### `protected_resource_conditions` Block
 
-* `string_equals` - (Optional) List of string equals conditions for resource tags. Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching.". See [`string_equals`](#string_equals) below.
-* `string_not_equals` - (Optional) List of string not equals conditions for resource tags. Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching.". See [`string_not_equals`](#string_not_equals) below.
+* `string_equals` - (Optional) List of string equals conditions for resource tags. Filters the values of your tagged resources for only those resources that you tagged with the same value. Also called "exact matching.". See [`string_equals`](#string_equals-block) below.
+* `string_not_equals` - (Optional) List of string not equals conditions for resource tags. Filters the values of your tagged resources for only those resources that you tagged that do not have the same value. Also called "negated matching.". See [`string_not_equals`](#string_not_equals-block) below.
 
 ### `string_equals` Block
 
