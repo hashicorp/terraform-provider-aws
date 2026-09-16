@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
@@ -98,11 +97,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceHealthCheck,
 			TypeName: "aws_route53_health_check",
 			Name:     "Health Check",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "healthcheck",
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("healthcheck", names.AttrID),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceHostedZoneDNSSEC,
@@ -170,10 +166,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceZone,
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "zone_id",
-				ResourceType:        "hostedzone",
-			}),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("hostedzone", "zone_id"),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("zone_id", true)),
 			Import: inttypes.SDKv2Import{
@@ -229,10 +222,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "zone_id",
-				ResourceType:        "hostedzone",
-			}),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("hostedzone", "zone_id"),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("zone_id", true)),
 		},
 		{

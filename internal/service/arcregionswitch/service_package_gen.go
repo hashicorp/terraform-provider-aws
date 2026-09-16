@@ -7,7 +7,6 @@ package arcregionswitch
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
@@ -26,10 +25,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newPlanDataSource,
 			TypeName: "aws_arcregionswitch_plan",
 			Name:     "Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDeprecatedOverride(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDeprecatedOverride(),
 		},
 		{
 			Factory:  newRoute53HealthChecksDataSource,
@@ -46,9 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourcePlan,
 			TypeName: "aws_arcregionswitch_plan",
 			Name:     "Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDeprecatedOverride(),
 			Identity: inttypes.GlobalARNIdentity(),
 			Import: inttypes.FrameworkImport{
