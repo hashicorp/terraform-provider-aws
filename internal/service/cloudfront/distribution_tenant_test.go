@@ -247,6 +247,67 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 	})
 }
 
+func TestAccCloudFrontDistributionTenant_managedCertificateRequest(t *testing.T) {
+	ctx := acctest.Context(t)
+	var tenant awstypes.DistributionTenant
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	resourceName := "aws_cloudfront_distribution_tenant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionTenantConfig_managedCertificateRequest(rName, rootDomain, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("managed_certificate_request"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				Config: testAccDistributionTenantConfig_managedCertificateRequest(rName, rootDomain, domain),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// On import, managed_certificate_request is input-only and absent, so the
+				// Read-side suppression is intentionally skipped (it can't tell a lossy
+				// managed-cert import from an explicit-cert import). The API-injected
+				// customizations.certificate therefore surfaces and is ignored here, while
+				// an explicitly configured certificate round-trips (see _customCertificate).
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"customizations",
+					"managed_certificate_request",
+					"wait_for_deployment",
+					names.AttrStatus,
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
@@ -809,4 +870,78 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   }
 }
 `, rName, tenantDomain, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDistributionTenantConfig_managedCertificateRequest(rName, rootDomain, tenantDomain string) string {
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = true
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "www.example.com"
+    id          = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn = data.aws_acm_certificate.test.arn
+    ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution_tenant" "test" {
+  distribution_id = aws_cloudfront_multitenant_distribution.test.id
+  enabled         = true
+  domain {
+    domain = %[2]q
+  }
+  name = %[1]q
+
+  managed_certificate_request {
+    primary_domain_name   = %[2]q
+    validation_token_host = "cloudfront"
+  }
+
+  parameter {
+    name  = "origin_domain"
+    value = "www.example.com"
+  }
+}
+`, rName, tenantDomain))
 }
