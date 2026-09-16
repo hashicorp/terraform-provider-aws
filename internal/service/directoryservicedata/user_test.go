@@ -52,7 +52,7 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "given_name", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "surname", "User"),
 					resource.TestCheckResourceAttrSet(resourceName, "distinguished_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "enabled"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEnabled),
 					resource.TestCheckResourceAttrSet(resourceName, "realm"),
 					resource.TestCheckResourceAttrSet(resourceName, "sid"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),

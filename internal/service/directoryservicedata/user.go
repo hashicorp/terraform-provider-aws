@@ -80,7 +80,7 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringvalidator.LengthBetween(1, 256),
 				},
 			},
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
 			"given_name": schema.StringAttribute{
