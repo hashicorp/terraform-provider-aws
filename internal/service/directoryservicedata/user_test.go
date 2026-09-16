@@ -53,6 +53,7 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "surname", "User"),
 					resource.TestCheckResourceAttrSet(resourceName, "distinguished_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "enabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "realm"),
 					resource.TestCheckResourceAttrSet(resourceName, "sid"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
 				),
@@ -185,6 +186,9 @@ func testAccCheckUserExists(ctx context.Context, t *testing.T, name string) reso
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, name, fmt.Errorf("not found"))
+		}
+		if rs.Primary.ID == "" {
+			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, name, errors.New("empty resource ID"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).DirectoryServiceDataClient(ctx)
