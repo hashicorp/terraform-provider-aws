@@ -410,7 +410,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) error {
 	for _, m := range dbClusters.DBClusterMembers {
 		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
-			d.Set("writer", aws.ToBool(m.IsClusterWriter))
+			d.Set("writer", m.IsClusterWriter)
 		}
 	}
 
