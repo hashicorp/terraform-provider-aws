@@ -228,10 +228,7 @@ func TestAccSSMQuickSetupConfigurationManager_resourceExplorer(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				// Reproduces https://github.com/hashicorp/terraform-provider-aws/issues/44687:
-				// the ResourceExplorer Quick Setup type causes the API to return an
-				// undocumented "QSForceUpdateParam" key in configuration_definition.parameters
-				// that previously tripped Terraform's plan consistency check on every apply.
+				// Reproduces GH-44687: API injects a "QSForceUpdateParam" key.
 				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
@@ -250,8 +247,7 @@ func TestAccSSMQuickSetupConfigurationManager_resourceExplorer(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{"status_summaries"},
 			},
 			{
-				// Triggers UpdateConfigurationDefinition, the code path that surfaced
-				// the QSForceUpdateParam inconsistency.
+				// Triggers UpdateConfigurationDefinition.
 				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
@@ -527,14 +523,8 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
 `, rName, rateControlConcurrency))
 }
 
-// Confirms the IAM roles required to execute ResourceExplorer configuration manager
-// acceptance tests are present.
-//
-// These roles are AWS-managed and get created the first time a Resource Explorer
-// Quick Setup is configured via the console or CLI in the account. The test
-// configuration __could__ create customer managed roles with these same permissions,
-// but due to the complexity of the permissions involved and potential for drift
-// it was deemed preferable to rely on the AWS generated roles instead.
+// Confirms the AWS-managed IAM roles required for ResourceExplorer configuration
+// manager acceptance tests are present.
 func testAccConfigurationManagerPreCheck_resourceExplorer(ctx context.Context, t *testing.T) {
 	acctest.PreCheckHasIAMRole(ctx, t, "AWS-QuickSetup-StackSet-Local-AdministrationRole")
 	acctest.PreCheckHasIAMRole(ctx, t, "AWS-QuickSetup-StackSet-Local-ExecutionRole")

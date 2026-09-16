@@ -293,12 +293,9 @@ func (r *configurationManagerResource) Update(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-// restoreConfigurationDefinitionParameters copies the "parameters" attribute values from the
-// planned configuration definitions onto configuration definitions built from a Quick Setup API
-// response. The API can include additional AWS-managed keys (e.g. "QSForceUpdateParam") in its
-// response that were never part of the configuration. Since "parameters" is a required,
-// non-computed attribute owned entirely by the caller, letting the raw API response overwrite it
-// trips Terraform's plan consistency check.
+// restoreConfigurationDefinitionParameters restores the planned "parameters" value after
+// flattening the API response, which can inject extra keys (e.g. "QSForceUpdateParam") that
+// would otherwise trip Terraform's plan consistency check on this required attribute.
 func restoreConfigurationDefinitionParameters(ctx context.Context, planned, apiResponse fwtypes.ListNestedObjectValueOf[configurationDefinitionModel]) (fwtypes.ListNestedObjectValueOf[configurationDefinitionModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 

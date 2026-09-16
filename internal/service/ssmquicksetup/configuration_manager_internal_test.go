@@ -26,8 +26,7 @@ func TestRestoreConfigurationDefinitionParameters(t *testing.T) {
 		},
 	})
 
-	// Simulates the API response after Create/Update, which can include an
-	// AWS-injected "QSForceUpdateParam" key that was never part of the plan.
+	// API response includes an AWS-injected "QSForceUpdateParam" key.
 	apiResponse := fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*configurationDefinitionModel{
 		{
 			ID:          types.StringValue("cd-1234567890"),
@@ -60,7 +59,7 @@ func TestRestoreConfigurationDefinitionParameters(t *testing.T) {
 		t.Errorf("Parameters = %v, want %v (QSForceUpdateParam should have been dropped)", gotSlice[0].Parameters, wantParameters)
 	}
 
-	// Fields owned by the API response should be preserved.
+	// API-owned fields are preserved.
 	if got, want := gotSlice[0].ID.ValueString(), "cd-1234567890"; got != want {
 		t.Errorf("ID = %q, want %q", got, want)
 	}
@@ -99,7 +98,7 @@ func TestRestoreConfigurationDefinitionParameters_mismatchedLengths(t *testing.T
 		t.Fatalf("got %d configuration definitions, want 1", len(gotSlice))
 	}
 
-	// No planned element to restore from, so the API response value passes through unchanged.
+	// No planned element to restore from; API value passes through unchanged.
 	if got, want := gotSlice[0].ID.ValueString(), "cd-1234567890"; got != want {
 		t.Errorf("ID = %q, want %q", got, want)
 	}
