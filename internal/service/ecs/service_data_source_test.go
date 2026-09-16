@@ -135,6 +135,33 @@ func TestAccECSServiceDataSource_canaryDeployment(t *testing.T) {
 	})
 }
 
+func TestAccECSServiceDataSource_pauseLifecycleHook(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_service.test"
+	resourceName := "aws_ecs_service.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)[:16]
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_pauseLifecycleHook(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.#", dataSourceName, "deployment_configuration.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.#", dataSourceName, "deployment_configuration.0.lifecycle_hook.#"),
+					resource.TestCheckResourceAttr(dataSourceName, "deployment_configuration.0.lifecycle_hook.0.target_type", "PAUSE"),
+					resource.TestCheckResourceAttr(dataSourceName, "deployment_configuration.0.lifecycle_hook.0.timeout_configuration.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "deployment_configuration.0.lifecycle_hook.0.timeout_configuration.0.action", "ROLLBACK"),
+					resource.TestCheckResourceAttr(dataSourceName, "deployment_configuration.0.lifecycle_hook.0.timeout_configuration.0.timeout_in_minutes", "60"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSServiceDataSource_fullConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_service.test"
@@ -231,6 +258,17 @@ data "aws_ecs_service" "test" {
 func testAccServiceDataSourceConfig_canaryDeployment(rName string) string {
 	return acctest.ConfigCompose(
 		testAccServiceConfig_canaryDeployment_basic(rName, false),
+		`
+data "aws_ecs_service" "test" {
+  service_name = aws_ecs_service.test.name
+  cluster_arn  = aws_ecs_cluster.main.arn
+}
+`)
+}
+
+func testAccServiceDataSourceConfig_pauseLifecycleHook(rName string) string {
+	return acctest.ConfigCompose(
+		testAccServiceConfig_blueGreenDeployment_pauseHook(rName),
 		`
 data "aws_ecs_service" "test" {
   service_name = aws_ecs_service.test.name
