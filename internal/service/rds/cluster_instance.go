@@ -409,7 +409,7 @@ func resourceClusterInstanceFlatten(ctx context.Context, awsClient *conns.AWSCli
 	}
 
 	for _, m := range dbc.DBClusterMembers {
-		if aws.ToString(m.DBInstanceIdentifier) == aws.ToString(db.DBInstanceIdentifier) {
+		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
 			d.Set("writer", m.IsClusterWriter)
 		}
 	}
@@ -419,7 +419,6 @@ func resourceClusterInstanceFlatten(ctx context.Context, awsClient *conns.AWSCli
 		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 
-	d.SetId(aws.ToString(db.DBInstanceIdentifier))
 	d.Set(names.AttrARN, db.DBInstanceArn)
 	d.Set(names.AttrAutoMinorVersionUpgrade, db.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
