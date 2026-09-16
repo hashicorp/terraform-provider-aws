@@ -27,6 +27,7 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
+	emailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
 		"user%s",
 		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
@@ -43,12 +44,12 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(rName, domainName, samAccountName),
+				Config: testAccUserConfig_basic(rName, domainName, samAccountName, emailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "sam_account_name", samAccountName),
-					resource.TestCheckResourceAttr(resourceName, "email_address", fmt.Sprintf("%s@example.com", samAccountName)),
+					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress),
 					resource.TestCheckResourceAttr(resourceName, "given_name", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "surname", "User"),
 					resource.TestCheckResourceAttrSet(resourceName, "distinguished_name"),
@@ -75,6 +76,7 @@ func TestAccDirectoryServiceDataUser_disappears(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
+	emailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
 		"u%s",
 		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
@@ -91,7 +93,7 @@ func TestAccDirectoryServiceDataUser_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(rName, domainName, samAccountName),
+				Config: testAccUserConfig_basic(rName, domainName, samAccountName, emailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdirectoryservicedata.ResourceUser, resourceName),
@@ -118,6 +120,8 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
+	emailAddress := acctest.RandomEmailAddress(domainName)
+	updatedEmailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
 		"u%s",
 		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
@@ -134,22 +138,22 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic(rName, domainName, samAccountName),
+				Config: testAccUserConfig_basic(rName, domainName, samAccountName, emailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email_address", fmt.Sprintf("%s@example.com", samAccountName)),
+					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress),
 					resource.TestCheckResourceAttr(resourceName, "given_name", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "surname", "User"),
 				),
 			},
 			{
-				Config: testAccUserConfig_updated(rName, domainName, samAccountName),
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email_address", fmt.Sprintf("%s-updated@example.com", samAccountName)),
+					resource.TestCheckResourceAttr(resourceName, "email_address", updatedEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "given_name", "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "surname", "Person"),
 				),
@@ -201,7 +205,7 @@ func testAccCheckUserExists(ctx context.Context, t *testing.T, name string) reso
 	}
 }
 
-func testAccUserConfig_basic(rName, domainName, samAccountName string) string {
+func testAccUserConfig_basic(rName, domainName, samAccountName, emailAddress string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -220,15 +224,15 @@ resource "aws_directory_service_directory" "test" {
 resource "aws_directoryservicedata_user" "test" {
   directory_id     = aws_directory_service_directory.test.id
   sam_account_name = %[2]q
-  email_address    = "%[2]s@example.com"
+  email_address    = %[3]q
   given_name       = "Test"
   surname          = "User"
 }
-`, domainName, samAccountName),
+`, domainName, samAccountName, emailAddress),
 	)
 }
 
-func testAccUserConfig_updated(rName, domainName, samAccountName string) string {
+func testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -247,10 +251,10 @@ resource "aws_directory_service_directory" "test" {
 resource "aws_directoryservicedata_user" "test" {
   directory_id     = aws_directory_service_directory.test.id
   sam_account_name = %[2]q
-  email_address    = "%[2]s-updated@example.com"
+  email_address    = %[3]q
   given_name       = "Updated"
   surname          = "Person"
 }
-		`, domainName, samAccountName),
+		`, domainName, samAccountName, updatedEmailAddress),
 	)
 }
