@@ -56,8 +56,9 @@ func (l *clusterInstanceListResource) List(ctx context.Context, request list.Lis
 			rd.SetId(identifier)
 			rd.Set(names.AttrIdentifier, identifier)
 
-			if _, ok := dbClusters[identifier]; !ok {
-				dbc, err := findDBClusterByID(ctx, conn, aws.ToString(item.DBClusterIdentifier))
+			clusterIdentifier := aws.ToString(item.DBClusterIdentifier)
+			if _, ok := dbClusters[clusterIdentifier]; !ok {
+				dbc, err := findDBClusterByID(ctx, conn, clusterIdentifier)
 				if retry.NotFound(err) {
 					continue
 				}
@@ -66,11 +67,11 @@ func (l *clusterInstanceListResource) List(ctx context.Context, request list.Lis
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
 					return
 				}
-				dbClusters[identifier] = dbc
+				dbClusters[clusterIdentifier] = dbc
 			}
 
 			if request.IncludeResource {
-				resourceClusterInstanceFlatten(ctx, &item, rd, dbClusters[identifier])
+				resourceClusterInstanceFlatten(ctx, &item, rd, dbClusters[clusterIdentifier])
 			}
 
 			result.DisplayName = identifier
