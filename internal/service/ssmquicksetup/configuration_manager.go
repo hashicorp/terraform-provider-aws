@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmquicksetup/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -163,7 +164,16 @@ func (r *configurationManagerResource) Create(ctx context.Context, request resou
 		return
 	}
 
+	planConfigurationDefinition := data.ConfigurationDefinition
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGCM, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var diags diag.Diagnostics
+	data.ConfigurationDefinition, diags = restoreConfigurationDefinitionParameters(ctx, planConfigurationDefinition, data.ConfigurationDefinition)
+	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -266,12 +276,51 @@ func (r *configurationManagerResource) Update(ctx context.Context, request resou
 		return
 	}
 
+	planConfigurationDefinition := new.ConfigurationDefinition
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	var diags diag.Diagnostics
+	new.ConfigurationDefinition, diags = restoreConfigurationDefinitionParameters(ctx, planConfigurationDefinition, new.ConfigurationDefinition)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+// restoreConfigurationDefinitionParameters copies the "parameters" attribute values from the
+// planned configuration definitions onto configuration definitions built from a Quick Setup API
+// response. The API can include additional AWS-managed keys (e.g. "QSForceUpdateParam") in its
+// response that were never part of the configuration. Since "parameters" is a required,
+// non-computed attribute owned entirely by the caller, letting the raw API response overwrite it
+// trips Terraform's plan consistency check.
+func restoreConfigurationDefinitionParameters(ctx context.Context, planned, apiResponse fwtypes.ListNestedObjectValueOf[configurationDefinitionModel]) (fwtypes.ListNestedObjectValueOf[configurationDefinitionModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	plannedSlice, d := planned.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return apiResponse, diags
+	}
+
+	apiSlice, d := apiResponse.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return apiResponse, diags
+	}
+
+	for i, v := range apiSlice {
+		if i < len(plannedSlice) {
+			v.Parameters = plannedSlice[i].Parameters
+		}
+	}
+
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, apiSlice), diags
 }
 
 func (r *configurationManagerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
