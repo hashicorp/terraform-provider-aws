@@ -550,6 +550,24 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_availabilityZonesExceedMax(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_availabilityZonesExceedMax(rName),
+				ExpectError: regexache.MustCompile(`Attribute availability_zones supports 3 item maximum`),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_availabilityZones_caCertificateIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
@@ -4686,6 +4704,20 @@ func testAccClusterConfig_availabilityZones(rName string) string {
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL))
+}
+
+func testAccClusterConfig_availabilityZonesExceedMax(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately   = true
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2], data.aws_availability_zones.available.names[3]]
   cluster_identifier  = %[1]q
   engine              = %[2]q
   master_password     = "avoid-plaintext-passwords"
