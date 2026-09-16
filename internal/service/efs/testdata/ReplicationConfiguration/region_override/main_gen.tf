@@ -22,6 +22,6 @@ variable "region" {
 }
 
 variable "destination_region" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }

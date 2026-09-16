@@ -23,6 +23,6 @@ terraform {
 provider "aws" {}
 
 variable "destination_region" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }

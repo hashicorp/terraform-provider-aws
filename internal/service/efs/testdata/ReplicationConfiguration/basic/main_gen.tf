@@ -12,6 +12,6 @@ resource "aws_efs_replication_configuration" "test" {
 resource "aws_efs_file_system" "test" {}
 
 variable "destination_region" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }
