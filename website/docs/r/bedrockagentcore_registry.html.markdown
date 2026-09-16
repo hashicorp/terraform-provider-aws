@@ -79,12 +79,12 @@ The `authorizer_configuration` block supports the following:
 
 The `custom_jwt_authorizer` block supports the following:
 
-* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint) below.
 * `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
 
@@ -112,11 +112,11 @@ Exactly one of the following must be specified:
 ### `managed_vpc_resource` Block
 
 * `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
-* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
-* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 * `routing_domain` - (Optional) Routing domain for the endpoint.
 * `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
 * `tags` - (Optional) Tags to assign to the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 
 ### `self_managed_lattice_resource` Block
 
