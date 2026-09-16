@@ -622,7 +622,9 @@ func (r *channelResource) Create(ctx context.Context, req resource.CreateRequest
 
 	input.Tags = getTagsIn(ctx)
 
-	outputCC, err := conn.CreateChannel(ctx, &input)
+	outputCC, err := tfresource.RetryWhenIsAErrorMessageContains[*kafka.CreateChannelOutput, *awstypes.ForbiddenException](ctx, propagationTimeout, func(ctx context.Context) (*kafka.CreateChannelOutput, error) {
+		return conn.CreateChannel(ctx, &input)
+	}, "Unable to assume the channel's service execution role")
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelName)
 		return
