@@ -21,7 +21,7 @@ func TestRestoreConfigurationDefinitionParameters(t *testing.T) {
 		{
 			Type: types.StringValue("AWSQuickSetupType-ResourceExplorer"),
 			Parameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"SelectedAggregatorRegion": types.StringValue("us-east-1"),
+				"SelectedAggregatorRegion": types.StringValue("us-east-1"), //lintignore:AWSAT003
 			}),
 		},
 	})
@@ -33,7 +33,7 @@ func TestRestoreConfigurationDefinitionParameters(t *testing.T) {
 			Type:        types.StringValue("AWSQuickSetupType-ResourceExplorer"),
 			TypeVersion: types.StringValue("1.0"),
 			Parameters: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-				"SelectedAggregatorRegion": types.StringValue("us-east-1"),
+				"SelectedAggregatorRegion": types.StringValue("us-east-1"), //lintignore:AWSAT003
 				"QSForceUpdateParam":       types.StringValue("abc123"),
 			}),
 		},
@@ -53,7 +53,7 @@ func TestRestoreConfigurationDefinitionParameters(t *testing.T) {
 	}
 
 	wantParameters := fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
-		"SelectedAggregatorRegion": types.StringValue("us-east-1"),
+		"SelectedAggregatorRegion": types.StringValue("us-east-1"), //lintignore:AWSAT003
 	})
 	if !gotSlice[0].Parameters.Equal(wantParameters) {
 		t.Errorf("Parameters = %v, want %v (QSForceUpdateParam should have been dropped)", gotSlice[0].Parameters, wantParameters)
