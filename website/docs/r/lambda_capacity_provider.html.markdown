@@ -66,13 +66,13 @@ resource "aws_lambda_capacity_provider" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the Capacity Provider.
-* `permissions_config` - (Required) Configuration block for permissions settings. See [Permissions Config](#permissions_config) below.
-* `vpc_config` - (Required) Configuration block for VPC settings. See [VPC Config](#vpc_config) below.
+* `permissions_config` - (Required) Configuration block for permissions settings. See [Permissions Config](#permissions_config-block) below.
+* `vpc_config` - (Required) Configuration block for VPC settings. See [VPC Config](#vpc_config-block) below.
 
 The following arguments are optional:
 
-* `capacity_provider_scaling_config` - (Optional) Configuration block for scaling policy settings. See [Capacity Provider Scaling Config](#capacity_provider_scaling_config) below.
-* `instance_requirements` - (Optional) Configuration block for instance requirements settings. See [Instance Requirements](#instance_requirements) below.
+* `capacity_provider_scaling_config` - (Optional) Configuration block for scaling policy settings. See [Capacity Provider Scaling Config](#capacity_provider_scaling_config-block) below.
+* `instance_requirements` - (Optional) Configuration block for instance requirements settings. See [Instance Requirements](#instance_requirements-block) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the Capacity Provider.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -90,7 +90,7 @@ The following arguments are optional:
 
 * `max_vcpu_count` - (Optional) Maximum number of VCPUs for the Capacity Provider.
 * `scaling_mode` - (Required) Scaling mode for the Capacity Provider. Valid values are `"Auto"` and `"Manual"`. Defaults to `"Auto"`.
-* `scaling_policies` - (Optional) List of scaling policies. Only required if `scaling_mode` is set to `"Manual"`. See [Scaling Policies](#scaling_policies) below.
+* `scaling_policies` - (Optional) List of scaling policies. Only required if `scaling_mode` is set to `"Manual"`. See [Scaling Policies](#scaling_policies-block) below.
 
 #### `scaling_policies` Block
 
