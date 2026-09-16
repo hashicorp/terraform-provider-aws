@@ -3,8 +3,62 @@
 
 package directoryservicedata
 
-import "github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+import (
+	"context"
+
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+)
 
 func RegisterSweepers() {
 	awsv2.Register("aws_directoryservicedata_user", sweepUsers)
+}
+
+func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	dsConn := client.DSClient(ctx)
+	directoryServiceDataConn := client.DirectoryServiceDataClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	directoryPages := directoryservice.NewDescribeDirectoriesPaginator(dsConn, &directoryservice.DescribeDirectoriesInput{})
+	for directoryPages.HasMorePages() {
+		page, err := directoryPages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, directory := range page.DirectoryDescriptions {
+			directoryID := aws.ToString(directory.DirectoryId)
+
+			input := directoryservicedata.ListUsersInput{
+				DirectoryId: aws.String(directoryID),
+			}
+
+			userPages := directoryservicedata.NewListUsersPaginator(directoryServiceDataConn, &input)
+
+			for userPages.HasMorePages() {
+				page, err := userPages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, user := range page.Users {
+					sweepResources = append(
+						sweepResources,
+						sweepfw.NewSweepResource(
+							newUserResource,
+							client,
+							sweepfw.NewAttribute("directory_id", directoryID),
+							sweepfw.NewAttribute("sam_account_name", aws.ToString(user.SAMAccountName))),
+					)
+				}
+			}
+		}
+	}
+	return sweepResources, nil
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -29,8 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -457,47 +453,4 @@ func (userImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	return id, result, nil
-}
-
-func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	dsConn := client.DSClient(ctx)
-	directoryServiceDataConn := client.DirectoryServiceDataClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	directoryPages := directoryservice.NewDescribeDirectoriesPaginator(dsConn, &directoryservice.DescribeDirectoriesInput{})
-	for directoryPages.HasMorePages() {
-		page, err := directoryPages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, directory := range page.DirectoryDescriptions {
-			directoryID := aws.ToString(directory.DirectoryId)
-
-			input := directoryservicedata.ListUsersInput{
-				DirectoryId: aws.String(directoryID),
-			}
-
-			userPages := directoryservicedata.NewListUsersPaginator(directoryServiceDataConn, &input)
-
-			for userPages.HasMorePages() {
-				page, err := userPages.NextPage(ctx)
-				if err != nil {
-					return nil, smarterr.NewError(err)
-				}
-
-				for _, user := range page.Users {
-					sweepResources = append(
-						sweepResources,
-						sweepfw.NewSweepResource(
-							newUserResource,
-							client,
-							sweepfw.NewAttribute("directory_id", directoryID),
-							sweepfw.NewAttribute("sam_account_name", aws.ToString(user.SAMAccountName))),
-					)
-				}
-			}
-		}
-	}
-	return sweepResources, nil
 }
