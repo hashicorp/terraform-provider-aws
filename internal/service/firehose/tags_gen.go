@@ -40,7 +40,7 @@ func listTags(ctx context.Context, conn *firehose.Client, identifier string, opt
 		return !lastPage
 	}, optFns...)
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output), nil
