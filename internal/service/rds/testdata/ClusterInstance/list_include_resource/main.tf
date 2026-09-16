@@ -1,15 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = var.rName
-  engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = data.aws_rds_engine_version.default.version
-  master_username     = "tfacctest"
-  master_password     = "avoid-plaintext-passwords"
-  skip_final_snapshot = true
-}
-
 resource "aws_rds_cluster_instance" "test" {
   count = var.resource_count
 
@@ -19,6 +10,15 @@ resource "aws_rds_cluster_instance" "test" {
   engine_version     = aws_rds_cluster.test.engine_version
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   tags               = var.resource_tags
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = var.rName
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
 }
 
 data "aws_rds_engine_version" "default" {
