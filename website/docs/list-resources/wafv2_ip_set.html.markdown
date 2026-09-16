@@ -24,7 +24,10 @@ list "aws_wafv2_ip_set" "example" {
 
 ## Argument Reference
 
-This list resource supports the following arguments:
+The following arguments are required:
+
+* `scope` - (Required) Whether to list IP Sets for a global (`CLOUDFRONT`) or regional (`REGIONAL`) application. Valid values are `CLOUDFRONT` and `REGIONAL`. To list `CLOUDFRONT` scoped IP Sets, set the `region` to `us-east-1`.
+
+The following arguments are optional:
 
 * `region` - (Optional) Region to query. Defaults to provider region.
-* `scope` - (Required) Whether to list IP Sets for a global (`CLOUDFRONT`) or regional (`REGIONAL`) application. Valid values are `CLOUDFRONT` and `REGIONAL`. To list `CLOUDFRONT` scoped IP Sets, set the `region` to `us-east-1`.

@@ -73,7 +73,7 @@ resource "aws_wafv2_ip_set" "example" {
 
 * `id` (String) Unique identifier for the IP set.
 * `name` (String) Name of the IP set.
-* `scope` (String) Specifies whether this is for a global (`CLOUDFRONT`) or regional (`REGIONAL`) application.
+* `scope` (String) Whether this is for a global (`CLOUDFRONT`) or regional (`REGIONAL`) application.
 
 #### Optional
 
