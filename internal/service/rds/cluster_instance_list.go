@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,6 +58,10 @@ func (l *clusterInstanceListResource) List(ctx context.Context, request list.Lis
 
 			if _, ok := dbClusters[identifier]; !ok {
 				dbc, err := findDBClusterByID(ctx, conn, aws.ToString(item.DBClusterIdentifier))
+				if retry.NotFound(err) {
+					continue
+				}
+
 				if err != nil {
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
 					return
@@ -65,12 +70,7 @@ func (l *clusterInstanceListResource) List(ctx context.Context, request list.Lis
 			}
 
 			if request.IncludeResource {
-				if err := resourceClusterInstanceFlatten(ctx, &item, rd, dbClusters[identifier]); err != nil {
-					tflog.Error(ctx, "Flattening RDS Cluster Instance", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
+				resourceClusterInstanceFlatten(ctx, &item, rd, dbClusters[identifier])
 			}
 
 			result.DisplayName = identifier

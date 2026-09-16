@@ -404,10 +404,12 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
-	return sdkdiag.AppendFromErr(diags, resourceClusterInstanceFlatten(ctx, db, d, dbc))
+	resourceClusterInstanceFlatten(ctx, db, d, dbc)
+
+	return diags
 }
 
-func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) error {
+func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) {
 	for _, m := range dbClusters.DBClusterMembers {
 		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
 			d.Set("writer", m.IsClusterWriter)
@@ -452,8 +454,6 @@ func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 	setTagsOut(ctx, db.TagList)
-
-	return nil
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
