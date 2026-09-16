@@ -93,31 +93,31 @@ resource "aws_rds_custom_db_engine_version" "test" {
 
 This resource supports the following arguments:
 
+* `database_installation_files_s3_bucket_name` - (Required) Name of the Amazon S3 bucket that contains the database installation files.
+* `database_installation_files_s3_prefix` - (Required) Prefix for the Amazon S3 bucket that contains the database installation files.
+* `description` - (Optional) Description of the CEV.
+* `engine` - (Required) Name of the database engine. Valid values are `custom-oracle*`, `custom-sqlserver*`.
+* `engine_version` - (Required) Version of the database engine.
+* `filename` - (Optional) Name of the manifest file within the local filesystem. Conflicts with `manifest`.
+* `kms_key_id` - (Optional) ARN of the AWS KMS key that is used to encrypt the database installation files. Required for RDS Custom for Oracle.
+* `manifest` - (Optional) Manifest file, in JSON format, that contains the list of database installation files. Conflicts with `filename`.
+* `manifest_hash` - (Optional) Triggers updates. Must be set to a base64-encoded SHA256 hash of the manifest source specified with `filename`. The usual way to set this is filebase64sha256("manifest.json") where "manifest.json" is the local filename of the manifest source.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `database_installation_files_s3_bucket_name` - (Required) The name of the Amazon S3 bucket that contains the database installation files.
-* `database_installation_files_s3_prefix` - (Required) The prefix for the Amazon S3 bucket that contains the database installation files.
-* `description` - (Optional) The description of the CEV.
-* `engine` - (Required) The name of the database engine. Valid values are `custom-oracle*`, `custom-sqlserver*`.
-* `engine_version` - (Required) The version of the database engine.
-* `filename` - (Optional) The name of the manifest file within the local filesystem. Conflicts with `manifest`.
-* `kms_key_id` - (Optional) The ARN of the AWS KMS key that is used to encrypt the database installation files. Required for RDS Custom for Oracle.
-* `manifest` - (Optional) The manifest file, in JSON format, that contains the list of database installation files. Conflicts with `filename`.
-* `manifest_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the manifest source specified with `filename`. The usual way to set this is filebase64sha256("manifest.json") where "manifest.json" is the local filename of the manifest source.
-* `status` - (Optional) The status of the CEV. Valid values are `available`, `inactive`, `inactive-except-restore`.
-* `source_image_id` - (Optional) The ID of the AMI to create the CEV from. Required for RDS Custom for SQL Server. For RDS Custom for Oracle, you can specify an AMI ID that was used in a different Oracle CEV.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `source_image_id` - (Optional) ID of the AMI to create the CEV from. Required for RDS Custom for SQL Server. For RDS Custom for Oracle, you can specify an AMI ID that was used in a different Oracle CEV.
+* `status` - (Optional) Status of the CEV. Valid values are `available`, `inactive`, `inactive-except-restore`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the custom engine version.
-* `create_time` - The date and time that the CEV was created.
-* `db_parameter_group_family` - The name of the DB parameter group family for the CEV.
-* `image_id` - The ID of the AMI that was created with the CEV.
-* `major_engine_version` - The major version of the database engine.
-* `manifest_computed` - The returned manifest file, in JSON format, service generated and often different from input `manifest`.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `create_time` - Date and time that the CEV was created.
+* `db_parameter_group_family` - Name of the DB parameter group family for the CEV.
+* `image_id` - ID of the AMI that was created with the CEV.
+* `major_engine_version` - Major version of the database engine.
+* `manifest_computed` - Returned manifest file, in JSON format, service generated and often different from input `manifest`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
