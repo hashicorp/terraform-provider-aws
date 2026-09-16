@@ -183,6 +183,12 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading WAFv2 IPSet (%s): %s", d.Id(), err)
 	}
 
+	resourceIPSetFlatten(output, d)
+
+	return diags
+}
+
+func resourceIPSetFlatten(output *wafv2.GetIPSetOutput, d *schema.ResourceData) {
 	ipSet := output.IPSet
 	d.Set("addresses", ipSet.Addresses)
 	d.Set(names.AttrARN, ipSet.ARN)
@@ -191,8 +197,6 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ipSet.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ipSet.Name)))
-
-	return diags
 }
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
