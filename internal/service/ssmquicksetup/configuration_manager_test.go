@@ -206,6 +206,59 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 	})
 }
 
+func TestAccSSMQuickSetupConfigurationManager_resourceExplorer(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cm ssmquicksetup.GetConfigurationManagerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssmquicksetup_configuration_manager.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccConfigurationManagerPreCheck_resourceExplorer(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Reproduces GH-44687: API injects a "QSForceUpdateParam" key.
+				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
+						names.AttrType: "AWSQuickSetupType-ResourceExplorer",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "manager_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "manager_arn",
+				ImportStateVerifyIgnore:              []string{"status_summaries"},
+			},
+			{
+				// Triggers UpdateConfigurationDefinition.
+				Config: testAccConfigurationManagerConfig_resourceExplorer(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "configuration_definition.0.parameters.ReplaceExistingAggregator", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -468,6 +521,40 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
   }
 }
 `, rName, rateControlConcurrency))
+}
+
+// Confirms the AWS-managed IAM roles required for ResourceExplorer configuration
+// manager acceptance tests are present.
+func testAccConfigurationManagerPreCheck_resourceExplorer(ctx context.Context, t *testing.T) {
+	acctest.PreCheckHasIAMRole(ctx, t, "AWS-QuickSetup-StackSet-Local-AdministrationRole")
+	acctest.PreCheckHasIAMRole(ctx, t, "AWS-QuickSetup-StackSet-Local-ExecutionRole")
+}
+
+func testAccConfigurationManagerConfig_resourceExplorer(rName, replaceExistingAggregator string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_organizations_organization" "test" {}
+
+resource "aws_ssmquicksetup_configuration_manager" "test" {
+  name = %[1]q
+
+  configuration_definition {
+    type = "AWSQuickSetupType-ResourceExplorer"
+
+    local_deployment_administration_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/AWS-QuickSetup-StackSet-Local-AdministrationRole"
+    local_deployment_execution_role_name     = "AWS-QuickSetup-StackSet-Local-ExecutionRole"
+
+    parameters = {
+      SelectedAggregatorRegion  = data.aws_region.current.region
+      ReplaceExistingAggregator = %[2]q
+      TargetOrganizationalUnits = data.aws_organizations_organization.test.roots[0].id
+      TargetRegions             = data.aws_region.current.region
+    }
+  }
+}
+`, rName, replaceExistingAggregator)
 }
 
 func testAccConfigurationManagerConfig_tags1(rName, key1, value1 string) string {
