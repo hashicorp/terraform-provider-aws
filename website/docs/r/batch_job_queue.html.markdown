@@ -72,34 +72,33 @@ resource "aws_batch_job_queue" "example" {
 
 This resource supports the following arguments:
 
+* `compute_environment_order` - (Optional) Set of compute environments mapped to a job queue and their order relative to each other. The job scheduler uses this parameter to determine which compute environment runs a specific job. Compute environments must be in the VALID state before you can associate them with a job queue. You can associate up to three compute environments with a job queue.
+* `job_state_time_limit_action` - (Optional) Set of job state time limit actions mapped to a job queue. Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
+* `name` - (Required) Name of the job queue.
+* `priority` - (Required) Priority of the job queue. Job queues with a higher priority are evaluated first when associated with the same compute environment.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Specifies the name of the job queue.
-* `compute_environment_order` - (Optional) The set of compute environments mapped to a job queue and their order relative to each other. The job scheduler uses this parameter to determine which compute environment runs a specific job. Compute environments must be in the VALID state before you can associate them with a job queue. You can associate up to three compute environments with a job queue.  
-* `job_state_time_limit_action` - (Optional) The set of job state time limit actions mapped to a job queue. Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
-* `priority` - (Required) The priority of the job queue. Job queues with a higher priority
-    are evaluated first when associated with the same compute environment.
-* `scheduling_policy_arn` - (Optional) The ARN of the fair share scheduling policy. If this parameter is specified, the job queue uses a fair share scheduling policy. If this parameter isn't specified, the job queue uses a first in, first out (FIFO) scheduling policy. After a job queue is created, you can replace but can't remove the fair share scheduling policy.
-* `state` - (Required) The state of the job queue. Must be one of: `ENABLED` or `DISABLED`
+* `scheduling_policy_arn` - (Optional) ARN of the fair share scheduling policy. If this parameter is specified, the job queue uses a fair share scheduling policy. If this parameter isn't specified, the job queue uses a first in, first out (FIFO) scheduling policy. After a job queue is created, you can replace but can't remove the fair share scheduling policy.
+* `state` - (Required) State of the job queue. Must be one of: `ENABLED` or `DISABLED`
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### compute_environment_order
+### `compute_environment_order` Block
 
 * `compute_environment` - (Required) ARN of the compute environment.
-* `order` - (Required) The order of the compute environment. Compute environments are tried in ascending order. For example, if two compute environments are associated with a job queue, the compute environment with a lower order integer value is tried for job placement first.
+* `order` - (Required) Order of the compute environment. Compute environments are tried in ascending order. For example, if two compute environments are associated with a job queue, the compute environment with a lower order integer value is tried for job placement first.
 
-### job_state_time_limit_action
+### `job_state_time_limit_action` Block
 
-* `action` - (Required) The action to take when a job is at the head of the job queue in the specified state for the specified period of time. Valid values include `"CANCEL"`
-* `max_time_seconds` - The approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken. Valid values include integers between `600` & `86400`
-* `reason` - (Required) The reason to log for the action being taken.
-* `state` - (Required) The state of the job needed to trigger the action. Valid values include `"RUNNABLE"`.
+* `action` - (Required) Action to take when a job is at the head of the job queue in the specified state for the specified period of time. Valid values include `"CANCEL"`
+* `max_time_seconds` - (Optional) Approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken. Valid values include integers between `600` & `86400`
+* `reason` - (Required) Reason to log for the action being taken.
+* `state` - (Required) State of the job needed to trigger the action. Valid values include `"RUNNABLE"`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the job queue.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
