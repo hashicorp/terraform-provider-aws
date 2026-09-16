@@ -2714,9 +2714,11 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 			tfMap["lifecycle_stages"] = v
 		}
 
-		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
-			tfMap["target_type"] = string(apiObject.TargetType)
+		if v := apiObject.TargetType; v != "" {
+			tfMap["target_type"] = string(v)
+		}
 
+		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
 		if v := apiObject.TimeoutConfiguration; v != nil {
 				tfMap["timeout_configuration"] = flattenLifecycleHookTimeoutConfiguration(v)
 		}
