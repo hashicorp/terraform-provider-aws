@@ -105,9 +105,7 @@ func updateTags(ctx context.Context, conn *sqs.Client, identifier string, oldTag
 			QueueUrl: aws.String(identifier),
 			TagKeys:  removedTags.Keys(),
 		}
-
 		_, err := conn.UntagQueue(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -120,9 +118,7 @@ func updateTags(ctx context.Context, conn *sqs.Client, identifier string, oldTag
 			QueueUrl: aws.String(identifier),
 			Tags:     svcTags(updatedTags),
 		}
-
 		_, err := conn.TagQueue(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

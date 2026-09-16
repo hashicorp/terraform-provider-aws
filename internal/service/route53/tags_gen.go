@@ -139,9 +139,7 @@ func updateTags(ctx context.Context, conn *route53.Client, identifier, resourceT
 	if len(removedTags) > 0 {
 		input.RemoveTagKeys = removedTags.Keys()
 	}
-
 	_, err := conn.ChangeTagsForResource(ctx, &input, optFns...)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

@@ -114,9 +114,7 @@ func updateTags(ctx context.Context, conn *cloudfront.Client, identifier string,
 			Resource: aws.String(identifier),
 			TagKeys:  &awstypes.TagKeys{Items: removedTags.Keys()},
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -129,9 +127,7 @@ func updateTags(ctx context.Context, conn *cloudfront.Client, identifier string,
 			Resource: aws.String(identifier),
 			Tags:     &awstypes.Tags{Items: svcTags(updatedTags)},
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

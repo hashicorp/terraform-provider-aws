@@ -84,9 +84,7 @@ func updateTags(ctx context.Context, conn *datapipeline.Client, identifier strin
 			PipelineId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
-
 		_, err := conn.RemoveTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -99,9 +97,7 @@ func updateTags(ctx context.Context, conn *datapipeline.Client, identifier strin
 			PipelineId: aws.String(identifier),
 			Tags:       svcTags(updatedTags),
 		}
-
 		_, err := conn.AddTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

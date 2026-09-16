@@ -66,9 +66,7 @@ func updateTags(ctx context.Context, conn *mwaa.Client, identifier string, oldTa
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -81,9 +79,7 @@ func updateTags(ctx context.Context, conn *mwaa.Client, identifier string, oldTa
 			ResourceArn: aws.String(identifier),
 			Tags:        svcTags(updatedTags),
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

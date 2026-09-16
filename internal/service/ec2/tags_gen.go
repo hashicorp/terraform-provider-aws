@@ -177,9 +177,7 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 			Resources: []string{identifier},
 			Tags:      svcTags(removedTags),
 		}
-
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -192,9 +190,7 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 			Resources: []string{identifier},
 			Tags:      svcTags(updatedTags),
 		}
-
 		_, err := conn.CreateTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

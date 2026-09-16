@@ -36,9 +36,7 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -51,9 +49,7 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 			ResourceArn: aws.String(identifier),
 			Tags:        svcTags(updatedTags),
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

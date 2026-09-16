@@ -114,9 +114,7 @@ func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTag
 			CertificateArn: aws.String(identifier),
 			Tags:           svcTags(removedTags),
 		}
-
 		_, err := conn.RemoveTagsFromCertificate(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -129,9 +127,7 @@ func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTag
 			CertificateArn: aws.String(identifier),
 			Tags:           svcTags(updatedTags),
 		}
-
 		_, err := conn.AddTagsToCertificate(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

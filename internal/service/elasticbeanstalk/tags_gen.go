@@ -128,9 +128,7 @@ func updateTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier s
 	if len(removedTags) > 0 {
 		input.TagsToRemove = removedTags.Keys()
 	}
-
 	_, err := conn.UpdateTagsForResource(ctx, &input, optFns...)
-
 	if err != nil {
 		return smarterr.NewError(err)
 	}

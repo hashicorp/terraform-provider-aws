@@ -130,14 +130,12 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			ResourceName: aws.String(identifier),
 			TagKeys:      removedTags.Keys(),
 		}
-
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
 			func(ctx context.Context) (any, error) {
 				return conn.RemoveTagsFromResource(ctx, &input, optFns...)
 			},
 			"not in available state",
 		)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -150,14 +148,12 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			ResourceName: aws.String(identifier),
 			Tags:         svcTags(updatedTags),
 		}
-
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
 			func(ctx context.Context) (any, error) {
 				return conn.AddTagsToResource(ctx, &input, optFns...)
 			},
 			"not in available state",
 		)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

@@ -117,9 +117,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 			AccountId:   aws.String(resourceType),
 			TagKeys:     removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -133,9 +131,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 			AccountId:   aws.String(resourceType),
 			Tags:        svcTags(updatedTags),
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

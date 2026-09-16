@@ -255,9 +255,7 @@ func updateTags(ctx context.Context, conn *autoscaling.Client, identifier, resou
 		input := autoscaling.DeleteTagsInput{
 			Tags: svcTags(removedTags),
 		}
-
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -269,9 +267,7 @@ func updateTags(ctx context.Context, conn *autoscaling.Client, identifier, resou
 		input := autoscaling.CreateOrUpdateTagsInput{
 			Tags: svcTags(updatedTags),
 		}
-
 		_, err := conn.CreateOrUpdateTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

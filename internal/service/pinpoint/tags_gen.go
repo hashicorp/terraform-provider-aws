@@ -97,9 +97,7 @@ func updateTags(ctx context.Context, conn *pinpoint.Client, identifier string, o
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -112,9 +110,7 @@ func updateTags(ctx context.Context, conn *pinpoint.Client, identifier string, o
 			ResourceArn: aws.String(identifier),
 			TagsModel:   &awstypes.TagsModel{Tags: svcTags(updatedTags.IgnoreAWS())},
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

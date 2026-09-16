@@ -122,9 +122,7 @@ func updateTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string,
 			ResourceId: aws.String(identifier),
 			TagKeyList: removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -137,9 +135,7 @@ func updateTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string,
 			ResourceId: aws.String(identifier),
 			TagList:    svcTags(updatedTags),
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

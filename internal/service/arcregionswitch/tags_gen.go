@@ -96,9 +96,7 @@ func updateTags(ctx context.Context, conn *arcregionswitch.Client, identifier st
 			Arn:             aws.String(identifier),
 			ResourceTagKeys: removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -111,9 +109,7 @@ func updateTags(ctx context.Context, conn *arcregionswitch.Client, identifier st
 			Arn:  aws.String(identifier),
 			Tags: svcTags(updatedTags),
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

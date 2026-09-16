@@ -125,9 +125,7 @@ func updateTags(ctx context.Context, conn *firehose.Client, identifier string, o
 			DeliveryStreamName: aws.String(identifier),
 			TagKeys:            removedTags.Keys(),
 		}
-
 		_, err := conn.UntagDeliveryStream(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -140,9 +138,7 @@ func updateTags(ctx context.Context, conn *firehose.Client, identifier string, o
 			DeliveryStreamName: aws.String(identifier),
 			Tags:               svcTags(updatedTags),
 		}
-
 		_, err := conn.TagDeliveryStream(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

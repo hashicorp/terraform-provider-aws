@@ -122,9 +122,7 @@ func updateTags(ctx context.Context, conn *storagegateway.Client, identifier str
 			ResourceARN: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
-
 		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -137,9 +135,7 @@ func updateTags(ctx context.Context, conn *storagegateway.Client, identifier str
 			ResourceARN: aws.String(identifier),
 			Tags:        svcTags(updatedTags),
 		}
-
 		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

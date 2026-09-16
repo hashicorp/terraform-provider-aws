@@ -114,9 +114,7 @@ func updateTags(ctx context.Context, conn *workspaces.Client, identifier string,
 			ResourceId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
-
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -129,9 +127,7 @@ func updateTags(ctx context.Context, conn *workspaces.Client, identifier string,
 			ResourceId: aws.String(identifier),
 			Tags:       svcTags(updatedTags),
 		}
-
 		_, err := conn.CreateTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

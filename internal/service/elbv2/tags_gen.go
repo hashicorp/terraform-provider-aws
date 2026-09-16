@@ -123,9 +123,7 @@ func updateTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identi
 			ResourceArns: []string{identifier},
 			TagKeys:      removedTags.Keys(),
 		}
-
 		_, err := conn.RemoveTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -138,9 +136,7 @@ func updateTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identi
 			ResourceArns: []string{identifier},
 			Tags:         svcTags(updatedTags),
 		}
-
 		_, err := conn.AddTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

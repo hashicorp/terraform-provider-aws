@@ -94,9 +94,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			TagKeys:      removedTags.Keys(),
 		}
-
 		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -110,9 +108,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			Tags:         svcTags(updatedTags),
 		}
-
 		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

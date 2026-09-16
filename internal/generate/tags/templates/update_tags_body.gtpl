@@ -18,7 +18,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	removedTags := oldTags.Removed(newTags)
 	{{- if .UpdateTagsIgnoreSystem }}
 	removedTags = removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
-	{{- end }}
+	{{ end -}}
 	updatedTags := oldTags.Updated(newTags)
 	{{- if .UpdateTagsIgnoreSystem }}
 	updatedTags = updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
@@ -61,16 +61,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
-	{{ if .RetryTagOps }}
+	{{ if .RetryTagOps -}}
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
 		func(ctx context.Context) (any, error) {
 			return conn.{{ .TagOp }}(ctx, &input, optFns...)
 		},
 		"{{ .RetryErrorMessage }}",
 	)
-	{{ else }}
+	{{ else -}}
 	_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
-	{{- end }}
+	{{ end -}}
 
 	if err != nil {
 		return smarterr.NewError(err)
@@ -111,16 +111,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
-		{{ if .RetryTagOps }}
+		{{ if .RetryTagOps -}}
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
 			func(ctx context.Context) (any, error) {
 				return conn.{{ .UntagOp }}(ctx, &input, optFns...)
 			},
 			"{{ .RetryErrorMessage }}",
 		)
-		{{ else }}
+		{{ else -}}
 		_, err := conn.{{ .UntagOp }}(ctx, &input, optFns...)
-		{{- end }}
+		{{ end -}}
 
 		if err != nil {
 			return smarterr.NewError(err)
@@ -159,17 +159,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .TagInTagsElem }}:       {{ .TagsFunc }}(updatedTags),
 			{{- end }}
 		}
-
-		{{ if .RetryTagOps }}
+		{{ if .RetryTagOps -}}
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
 			func(ctx context.Context) (any, error) {
 				return conn.{{ .TagOp }}(ctx, &input, optFns...)
 			},
 			"{{ .RetryErrorMessage }}",
 		)
-		{{ else }}
+		{{ else -}}
 		_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
-		{{- end }}
+		{{ end -}}
 
 		if err != nil {
 			return smarterr.NewError(err)

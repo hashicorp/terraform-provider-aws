@@ -108,9 +108,7 @@ func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier strin
 			StreamARN:  aws.String(identifier),
 			TagKeyList: removedTags.Keys(),
 		}
-
 		_, err := conn.UntagStream(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -123,9 +121,7 @@ func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier strin
 			StreamARN: aws.String(identifier),
 			Tags:      svcTags(updatedTags),
 		}
-
 		_, err := conn.TagStream(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

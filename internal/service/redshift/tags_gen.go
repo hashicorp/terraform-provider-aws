@@ -84,9 +84,7 @@ func updateTags(ctx context.Context, conn *redshift.Client, identifier string, o
 			ResourceName: aws.String(identifier),
 			TagKeys:      removedTags.Keys(),
 		}
-
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -99,9 +97,7 @@ func updateTags(ctx context.Context, conn *redshift.Client, identifier string, o
 			ResourceName: aws.String(identifier),
 			Tags:         svcTags(updatedTags),
 		}
-
 		_, err := conn.CreateTags(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

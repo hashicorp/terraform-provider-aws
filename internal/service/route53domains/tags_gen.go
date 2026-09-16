@@ -123,9 +123,7 @@ func updateTags(ctx context.Context, conn *route53domains.Client, identifier str
 			DomainName:   aws.String(identifier),
 			TagsToDelete: removedTags.Keys(),
 		}
-
 		_, err := conn.DeleteTagsForDomain(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -138,9 +136,7 @@ func updateTags(ctx context.Context, conn *route53domains.Client, identifier str
 			DomainName:   aws.String(identifier),
 			TagsToUpdate: svcTags(updatedTags),
 		}
-
 		_, err := conn.UpdateTagsForDomain(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}

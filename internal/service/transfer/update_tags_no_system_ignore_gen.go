@@ -31,9 +31,7 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 			Arn:     aws.String(identifier),
 			TagKeys: removedTags.Keys(),
 		}
-
 		_, err := conn.UntagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -45,9 +43,7 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 			Arn:  aws.String(identifier),
 			Tags: svcTags(updatedTags),
 		}
-
 		_, err := conn.TagResource(ctx, &input, optFns...)
-
 		if err != nil {
 			return smarterr.NewError(err)
 		}
