@@ -13,3 +13,7 @@ resource/aws_efs_file_system: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_efs_file_system_policy: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_efs_mount_target: Add Resource Identity support
+```
