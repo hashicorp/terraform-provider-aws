@@ -189,3 +189,58 @@ func TestAccEFSMountTarget_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+func TestAccEFSMountTarget_List_accessPointID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName1 := "aws_efs_mount_target.test[0]"
+	resourceName2 := "aws_efs_mount_target.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_access_point_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_access_point_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_efs_mount_target.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_efs_mount_target.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectNoResourceObject("aws_efs_mount_target.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_efs_mount_target.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_efs_mount_target.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectNoResourceObject("aws_efs_mount_target.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+				},
+			},
+		},
+	})
+}
