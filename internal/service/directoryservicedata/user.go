@@ -14,11 +14,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -35,7 +37,7 @@ import (
 // @FrameworkResource("aws_directoryservicedata_user", name="User")
 // @IdentityAttribute("directory_id")
 // @IdentityAttribute("sam_account_name")
-// @ImportIDHandler("userImportID")
+// @ImportIDHandler("userImportID", setIDAttribute=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
 // @Testing(domainTfVar="directoryDomain")
@@ -390,7 +392,10 @@ func findUserByTwoPartKey(ctx context.Context, conn *directoryservicedata.Client
 	}
 
 	out, err := conn.DescribeUser(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	// Once the parent Directory Service directory is deleted, DescribeUser
+	// can no longer resolve authorization and returns AccessDeniedException
+	// instead of ResourceNotFoundException.
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
@@ -439,7 +444,8 @@ type complexArgumentModel struct {
 }
 
 var (
-	_ inttypes.ImportIDParser = userImportID{}
+	_ inttypes.ImportIDParser           = userImportID{}
+	_ inttypes.FrameworkImportIDCreator = userImportID{}
 )
 
 type userImportID struct{}
@@ -456,4 +462,18 @@ func (userImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	return id, result, nil
+}
+
+func (userImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var directoryID, samAccountName types.String
+	state.GetAttribute(ctx, path.Root("directory_id"), &directoryID)
+	state.GetAttribute(ctx, path.Root("sam_account_name"), &samAccountName)
+
+	id, _ := intflex.FlattenResourceId(
+		[]string{directoryID.ValueString(), samAccountName.ValueString()},
+		userResourceIDPartCount,
+		false,
+	)
+
+	return id
 }
