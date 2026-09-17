@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `ena_queue_count` argument
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `ena_queue_count` attribute
+```
