@@ -20,6 +20,7 @@ func TestAccEC2CapacityReservationDataSource_id(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckCapacityReservation(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityReservationDataSourceConfig_id,
@@ -51,6 +52,7 @@ func TestAccEC2CapacityReservationDataSource_filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckCapacityReservation(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityReservationDataSourceConfig_filter,

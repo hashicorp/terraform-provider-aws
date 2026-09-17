@@ -6,12 +6,16 @@ package ec2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -135,13 +139,7 @@ func (d *capacityReservationDataSource) Read(ctx context.Context, request dataso
 	conn := d.Meta().EC2Client(ctx)
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
-	input := ec2.DescribeCapacityReservationsInput{
-		Filters: newCustomFilterListFramework(ctx, data.Filters),
-	}
-
-	if !data.ID.IsNull() {
-		input.CapacityReservationIds = []string{fwflex.StringValueFromFramework(ctx, data.ID)}
-	}
+	input := capacityReservationDataSourceInput(ctx, data.ID, newCustomFilterListFramework(ctx, data.Filters))
 
 	output, err := findCapacityReservation(ctx, conn, &input)
 	if err != nil {
@@ -160,6 +158,40 @@ func (d *capacityReservationDataSource) Read(ctx context.Context, request dataso
 	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func capacityReservationDataSourceInput(ctx context.Context, id types.String, filters []awstypes.Filter) ec2.DescribeCapacityReservationsInput {
+	input := ec2.DescribeCapacityReservationsInput{
+		Filters: make([]awstypes.Filter, 0, len(filters)+1),
+	}
+
+	for _, filter := range filters {
+		if aws.ToString(filter.Name) == "reservation-type" {
+			continue
+		}
+
+		input.Filters = append(input.Filters, filter)
+	}
+
+	input.Filters = append(input.Filters, awstypes.Filter{
+		Name:   aws.String("reservation-type"),
+		Values: enum.Slice(awstypes.CapacityReservationTypeDefault),
+	})
+
+	if !id.IsNull() {
+		input.CapacityReservationIds = []string{fwflex.StringValueFromFramework(ctx, id)}
+	}
+
+	return input
+}
+
+func (d *capacityReservationDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.AtLeastOneOf(
+			path.MatchRoot(names.AttrID),
+			path.MatchRoot(names.AttrFilter),
+		),
+	}
 }
 
 type capacityReservationDataSourceModel struct {
