@@ -78,6 +78,7 @@ The `attachment` block supports the following:
 
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.
+* `ena_queue_count` - (Optional) Number of ENA queues to allocate to the network interface attachment. The value must be a power of two and is limited by the instance type. The instance must be stopped before updating this argument. Removing this argument resets the attachment to the default ENA queue count. For more information, see [ENA queues](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-queues.html).
 * `network_card_index` - (Optional) Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by [some instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards). The default is 0.
 
 ### ENA SRD Specification
