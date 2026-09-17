@@ -51,7 +51,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       # long-running test
-      - uses: YakDriver/check-smarterr-config@f08b27e3600382ef775b7d271f1cf8690f3479af # v0.5.0
+      - uses: YakDriver/check-smarterr-config@95df6d72d779a31494ca9d35ef264aed66a02ab3 # v0.6.0
         name: Check smarterr config
         with:
           base-dir: './internal'

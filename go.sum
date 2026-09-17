@@ -14,8 +14,8 @@ github.com/YakDriver/go-version v0.2.0 h1:0jlIXRn7IFMUg8mGiyPKfEzYzCOiknlCrVNjik
 github.com/YakDriver/go-version v0.2.0/go.mod h1:+Zt/moP5cBKVefqwqk6XtB6pf6LvWuMZufsLN20JB4Y=
 github.com/YakDriver/regexache v0.25.0 h1:uggvmj09EhXQgaXYmdGsKuDARbmdOIqICiO+PIwhlTA=
 github.com/YakDriver/regexache v0.25.0/go.mod h1:4xOFrfggN3UAGlhcvNpM/kuedpJL+48DrUs0CcCxPv8=
-github.com/YakDriver/smarterr v0.9.0 h1:0n2w5DY38mO3l9ad9OExAJ/CngjkUglo/ow6zWAmhB8=
-github.com/YakDriver/smarterr v0.9.0/go.mod h1:+FGdMIFM77gDDVuSPu+9mrBpP7nuKNbDUGxKehrbAio=
+github.com/YakDriver/smarterr v0.10.0 h1:iMWnZPWv/42act2lKDpNXl51mxj+wlfAVEMQ/19traQ=
+github.com/YakDriver/smarterr v0.10.0/go.mod h1:+FGdMIFM77gDDVuSPu+9mrBpP7nuKNbDUGxKehrbAio=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
