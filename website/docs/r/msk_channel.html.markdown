@@ -125,7 +125,7 @@ The following arguments are optional:
 * `logging_info` - (Optional) Destinations to which the channel publishes operational logs. Changing this forces a new resource to be created. See [`logging_info` Block](#logging_info-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `s3_destination` - (Optional) Amazon S3 destination for the channel. Exactly one of `iceberg_destination` or `s3_destination` is required. With the exception of `data_freshness_in_seconds`, changing an argument in this block forces a new resource to be created. See [`s3_destination` Block](#s3_destination-block) below.
-* `tags` - (Optional) Map of tags to assign to the channel. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `topic_configuration` Block
 
