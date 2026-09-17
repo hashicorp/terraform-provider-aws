@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New List Resource:** `aws_efs_mount_target` ([#50057](https://github.com/hashicorp/terraform-provider-aws/issues/50057))
 * **New List Resource:** `aws_iam_openid_connect_provider` ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024))
 
 ENHANCEMENTS:
