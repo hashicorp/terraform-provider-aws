@@ -23,6 +23,7 @@ data "aws_lex_bot" "order_flowers_bot" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the bot. The name is case sensitive.
 * `version` - (Optional) Version or alias of the bot.
 

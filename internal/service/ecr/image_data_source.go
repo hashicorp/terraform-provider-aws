@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -12,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,58 +28,60 @@ func dataSourceImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRead,
 
-		Schema: map[string]*schema.Schema{
-			"image_digest": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
-				ConflictsWith: []string{names.AttrMostRecent},
-			},
-			"image_pushed_at": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"image_size_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"image_tag": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
-				ConflictsWith: []string{names.AttrMostRecent},
-			},
-			"image_tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"image_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
-				ConflictsWith: []string{"image_digest", "image_tag"},
-			},
-			"registry_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrRepositoryName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"image_digest": {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+					ConflictsWith: []string{names.AttrMostRecent},
+				},
+				"image_pushed_at": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"image_size_in_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"image_tag": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+					ConflictsWith: []string{names.AttrMostRecent},
+				},
+				"image_tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"image_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+					ConflictsWith: []string{"image_digest", "image_tag"},
+				},
+				"registry_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrRepositoryName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -170,8 +174,7 @@ func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 
 		if errs.IsA[*types.ImageNotFoundException](err) || errs.IsA[*types.RepositoryNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

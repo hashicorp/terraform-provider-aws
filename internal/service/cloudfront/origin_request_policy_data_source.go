@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -20,105 +22,111 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginRequestPolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cookies_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookie_behavior": {
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						"cookies": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cookies_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie_behavior": {
+								Computed: true,
+								Type:     schema.TypeString,
+							},
+							"cookies": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"headers_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"header_behavior": {
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						"headers": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"headers_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"header_behavior": {
+								Computed: true,
+								Type:     schema.TypeString,
+							},
+							"headers": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{names.AttrID, names.AttrName},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{names.AttrID, names.AttrName},
-			},
-			"query_strings_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"query_string_behavior": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"query_strings": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
+				},
+				"query_strings_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"query_string_behavior": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"query_strings": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -162,11 +170,11 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(originRequestPolicyID)
-
+	d.Set(names.AttrARN, originRequestPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
-		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
+		if err := d.Set("cookies_config", []any{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
 		}
 	} else {
@@ -174,7 +182,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("etag", output.ETag)
 	if apiObject.HeadersConfig != nil {
-		if err := d.Set("headers_config", []interface{}{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
+		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
 		}
 	} else {
@@ -182,7 +190,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
-		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
+		if err := d.Set("query_strings_config", []any{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
 		}
 	} else {

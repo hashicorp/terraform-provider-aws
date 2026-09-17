@@ -23,6 +23,7 @@ data "aws_backup_framework" "example" {
 This data source supports the following arguments:
 
 * `name` - (Required) Backup framework name.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -37,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Framework consists of one or more controls. Each control governs a resource, such as backup plans, backup selections, backup vaults, or recovery points. You can also turn AWS Config recording on or off for each resource. The statuses are: `ACTIVE`, `PARTIALLY_ACTIVE`, `INACTIVE`, `UNAVAILABLE`. For more information refer to the [AWS documentation for Framework Status](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DescribeFramework.html#Backup-DescribeFramework-response-FrameworkStatus)
 * `tags` - Metadata that helps organize the frameworks you create.
 
-### Control Attributes
+### `control` Block
 
 `control` has the following attributes:
 
@@ -45,17 +46,17 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of a control.
 * `scope` - Scope of a control. The control scope defines what the control will evaluate. Three examples of control scopes are: a specific backup plan, all backup plans with a specific tag, or all backup plans. Detailed below.
 
-### Input Parameter Attributes
+### `input_parameter` Block
 
 `input_parameter` has the following attributes:
 
 * `name` - Name of a parameter, for example, BackupPlanFrequency.
 * `value` - Value of parameter, for example, hourly.
 
-### Scope Attributes
+### `scope` Block
 
 `scope` has the following attributes:
 
-* `compliance_resource_ids` - The ID of the only AWS resource that you want your control scope to contain.
-* `compliance_resource_types` - Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
+* `compliance_resource_ids` - ID of the only AWS resource that you want your control scope to contain.
+* `compliance_resource_types` - Whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - Tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.

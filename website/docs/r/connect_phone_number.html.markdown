@@ -53,11 +53,12 @@ resource "aws_connect_phone_number" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `country_code` - (Required, Forces new resource) The ISO country code. For a list of Valid values, refer to [PhoneNumberCountryCode](https://docs.aws.amazon.com/connect/latest/APIReference/API_SearchAvailablePhoneNumbers.html#connect-SearchAvailablePhoneNumbers-request-PhoneNumberCountryCode).
 * `description` - (Optional, Forces new resource) The description of the phone number.
 * `prefix` - (Optional, Forces new resource) The prefix of the phone number that is used to filter available phone numbers. If provided, it must contain `+` as part of the country code. Do not specify this argument when importing the resource.
 * `tags` - (Optional) Tags to apply to the Phone Number. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `target_arn` - (Required) The Amazon Resource Name (ARN) for Amazon Connect instances that phone numbers are claimed to.
+* `target_arn` - (Required) ARN for Amazon Connect instances that phone numbers are claimed to.
 * `type` - (Required, Forces new resource) The type of phone number. Valid Values: `TOLL_FREE` | `DID`.
 
 ## Attribute Reference
@@ -86,6 +87,31 @@ The `status` configuration block supports the following attributes:
 * `delete` - (Default `2m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_connect_phone_number.example
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+resource "aws_connect_phone_number" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the connect phone number.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Phone Numbers using its `id`. For example:
 

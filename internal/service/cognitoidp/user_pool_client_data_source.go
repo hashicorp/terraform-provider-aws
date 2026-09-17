@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -20,169 +22,187 @@ func dataSourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolClientRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_token_validity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"allowed_oauth_flows": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_token_validity": {
+					Type:     schema.TypeInt,
+					Computed: true,
 				},
-			},
-			"allowed_oauth_flows_user_pool_client": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"allowed_oauth_scopes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"allowed_oauth_flows": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"analytics_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrApplicationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"application_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrExternalID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrRoleARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_data_shared": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"allowed_oauth_flows_user_pool_client": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"allowed_oauth_scopes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"analytics_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrApplicationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"application_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrExternalID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRoleARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_data_shared": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"callback_urls": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"callback_urls": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrClientID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrClientSecret: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"default_redirect_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_token_revocation": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_propagate_additional_user_context_data": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"explicit_auth_flows": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrClientID: {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			"generate_secret": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"id_token_validity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"logout_urls": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrClientSecret: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"prevent_user_existence_errors": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_attributes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"default_redirect_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"refresh_token_validity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"supported_identity_providers": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"enable_token_revocation": {
+					Type:     schema.TypeBool,
+					Computed: true,
 				},
-			},
-			"token_validity_units": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_token": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"id_token": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"refresh_token": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"enable_propagate_additional_user_context_data": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"explicit_auth_flows": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"generate_secret": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"id_token_validity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"logout_urls": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"prevent_user_existence_errors": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_attributes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"refresh_token_rotation": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"feature": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"retry_grace_period_seconds": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"write_attributes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"refresh_token_validity": {
+					Type:     schema.TypeInt,
+					Computed: true,
 				},
-			},
+				"supported_identity_providers": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"token_validity_units": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_token": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"id_token": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"refresh_token": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"write_attributes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }
 
-func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -212,6 +232,9 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrName, userPoolClient.ClientName)
 	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
 	d.Set("read_attributes", userPoolClient.ReadAttributes)
+	if err := d.Set("refresh_token_rotation", flattenUserPoolClientRefreshTokenRotation(userPoolClient.RefreshTokenRotation)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting refresh_token_rotation: %s", err)
+	}
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("supported_identity_providers", userPoolClient.SupportedIdentityProviders)
 	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
@@ -224,12 +247,12 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []interface{} {
+func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"user_data_shared": apiObject.UserDataShared,
 	}
 
@@ -249,10 +272,10 @@ func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigura
 		tfMap[names.AttrRoleARN] = aws.ToString(apiObject.RoleArn)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []interface{} {
+func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -262,11 +285,28 @@ func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidi
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"access_token":  apiObject.AccessToken,
 		"id_token":      apiObject.IdToken,
 		"refresh_token": apiObject.RefreshToken,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
+}
+
+func flattenUserPoolClientRefreshTokenRotation(apiObject *awstypes.RefreshTokenRotationType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	if apiObject.Feature == "" && apiObject.RetryGracePeriodSeconds == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"feature":                    apiObject.Feature,
+		"retry_grace_period_seconds": apiObject.RetryGracePeriodSeconds,
+	}
+
+	return []any{tfMap}
 }

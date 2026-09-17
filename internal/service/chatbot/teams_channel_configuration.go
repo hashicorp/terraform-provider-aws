@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package chatbot
 
@@ -18,23 +20,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Teams Channel Configuration")
+// @FrameworkResource("aws_chatbot_teams_channel_configuration", name="Teams Channel Configuration")
 // @Tags(identifierAttribute="chat_configuration_arn")
 func newTeamsChannelConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &teamsChannelConfigurationResource{}
@@ -47,12 +50,8 @@ func newTeamsChannelConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type teamsChannelConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[teamsChannelConfigurationResourceModel]
 	framework.WithTimeouts
-}
-
-func (r *teamsChannelConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_chatbot_teams_channel_configuration"
 }
 
 func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -73,9 +72,9 @@ func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request 
 				Required: true,
 			},
 			"guardrail_policy_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
@@ -92,12 +91,12 @@ func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"sns_topic_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+			"sns_topic_arns": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -187,7 +186,7 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 
 	output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, data.TeamID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -203,6 +202,8 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -221,7 +222,13 @@ func (r *teamsChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	if teamsChannelConfigurationHasChanges(ctx, new, old) {
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := &chatbot.UpdateMicrosoftTeamsChannelConfigurationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -266,7 +273,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]any{
 		"team_id":                data.TeamID.ValueString(),
 		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
@@ -275,7 +282,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return conn.DeleteMicrosoftTeamsChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -292,10 +299,6 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
 		return
 	}
-}
-
-func (r *teamsChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *teamsChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -321,8 +324,7 @@ func findTeamsChannelConfigurations(ctx context.Context, conn *chatbot.Client, i
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -348,11 +350,11 @@ const (
 	teamsChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTeamsChannelConfiguration(conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -367,7 +369,7 @@ func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{teamsChannelConfigurationAvailable},
-		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
+		Refresh:    statusTeamsChannelConfiguration(conn, teamID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -386,7 +388,7 @@ func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{teamsChannelConfigurationAvailable},
 		Target:     []string{},
-		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
+		Refresh:    statusTeamsChannelConfiguration(conn, teamID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -402,34 +404,20 @@ func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type teamsChannelConfigurationResourceModel struct {
-	ChannelID                 types.String                     `tfsdk:"channel_id"`
-	ChannelName               types.String                     `tfsdk:"channel_name"`
-	ChatConfigurationARN      types.String                     `tfsdk:"chat_configuration_arn"`
-	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
-	GuardrailPolicyARNs       types.List                       `tfsdk:"guardrail_policy_arns"`
-	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
-	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
-	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
-	Tags                      tftags.Map                       `tfsdk:"tags"`
-	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
-	TeamID                    types.String                     `tfsdk:"team_id"`
-	TeamName                  types.String                     `tfsdk:"team_name"`
-	TenantID                  types.String                     `tfsdk:"tenant_id"`
-	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
-	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
-}
-
-func teamsChannelConfigurationHasChanges(_ context.Context, plan, state teamsChannelConfigurationResourceModel) bool {
-	return !plan.ChannelID.Equal(state.ChannelID) ||
-		!plan.ChannelName.Equal(state.ChannelName) ||
-		!plan.ChatConfigurationARN.Equal(state.ChatConfigurationARN) ||
-		!plan.ConfigurationName.Equal(state.ConfigurationName) ||
-		!plan.GuardrailPolicyARNs.Equal(state.GuardrailPolicyARNs) ||
-		!plan.IAMRoleARN.Equal(state.IAMRoleARN) ||
-		!plan.LoggingLevel.Equal(state.LoggingLevel) ||
-		!plan.SNSTopicARNs.Equal(state.SNSTopicARNs) ||
-		!plan.TeamID.Equal(state.TeamID) ||
-		!plan.TeamName.Equal(state.TeamName) ||
-		!plan.TenantID.Equal(state.TenantID) ||
-		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
+	framework.WithRegionModel
+	ChannelID                 types.String                      `tfsdk:"channel_id"`
+	ChannelName               types.String                      `tfsdk:"channel_name"`
+	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
+	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
+	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`
+	IAMRoleARN                types.String                      `tfsdk:"iam_role_arn"`
+	LoggingLevel              fwtypes.StringEnum[loggingLevel]  `tfsdk:"logging_level"`
+	SNSTopicARNs              fwtypes.SetValueOf[types.String]  `tfsdk:"sns_topic_arns"`
+	Tags                      tftags.Map                        `tfsdk:"tags"`
+	TagsAll                   tftags.Map                        `tfsdk:"tags_all"`
+	TeamID                    types.String                      `tfsdk:"team_id"`
+	TeamName                  types.String                      `tfsdk:"team_name"`
+	TenantID                  types.String                      `tfsdk:"tenant_id"`
+	Timeouts                  timeouts.Value                    `tfsdk:"timeouts"`
+	UserAuthorizationRequired types.Bool                        `tfsdk:"user_authorization_required"`
 }

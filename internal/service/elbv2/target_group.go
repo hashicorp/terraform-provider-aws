@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,6 +43,9 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TargetGroup")
 // @Testing(importIgnore="lambda_multi_value_headers_enabled;proxy_protocol_v2")
+// @Testing(plannableImportAction="NoOp")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
@@ -48,358 +53,364 @@ func resourceTargetGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceTargetGroupUpdate,
 		DeleteWithoutTimeout: resourceTargetGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
 			customizeDiffTargetGroupTargetTypeLambda,
 			customizeDiffTargetGroupTargetTypeNotLambda,
-			verify.SetTagsDiff,
 		),
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_termination": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"deregistration_delay": {
-				Type:         nullable.TypeNullableInt,
-				Optional:     true,
-				Default:      300,
-				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 3600),
-			},
-			names.AttrHealthCheck: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"healthy_threshold": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-						names.AttrInterval: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      30,
-							ValidateFunc: validation.IntBetween(5, 300),
-						},
-						"matcher": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 1024),
-								verify.StringHasPrefix("/"),
-							),
-						},
-						names.AttrPort: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          healthCheckPortTrafficPort,
-							ValidateFunc:     validTargetGroupHealthCheckPort,
-							DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
-						},
-						names.AttrProtocol: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  awstypes.ProtocolEnumHttp,
-							StateFunc: func(v interface{}) string {
-								return strings.ToUpper(v.(string))
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"arn_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_termination": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"deregistration_delay": {
+					Type:         nullable.TypeNullableInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 3600),
+				},
+				names.AttrHealthCheck: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
 							},
-							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
-							DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
-						},
-						names.AttrTimeout: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(2, 120),
-						},
-						"unhealthy_threshold": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3,
-							ValidateFunc: validation.IntBetween(2, 10),
+							"healthy_threshold": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      3,
+								ValidateFunc: validation.IntBetween(2, 10),
+							},
+							names.AttrInterval: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      30,
+								ValidateFunc: validation.IntBetween(5, 300),
+							},
+							"matcher": {
+								Type:     schema.TypeString,
+								Computed: true,
+								Optional: true,
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+									validation.All(
+										validation.StringLenBetween(1, 1024),
+										verify.StringHasPrefix("/"),
+									),
+									validation.StringIsEmpty,
+								),
+							},
+							names.AttrPort: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          healthCheckPortTrafficPort,
+								ValidateFunc:     validTargetGroupHealthCheckPort,
+								DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
+							},
+							names.AttrProtocol: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  awstypes.ProtocolEnumHttp,
+								StateFunc: func(v any) string {
+									return strings.ToUpper(v.(string))
+								},
+								ValidateFunc:     validation.StringInSlice(enum.Slice(healthCheckProtocolEnumValues()...), true),
+								DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
+							},
+							names.AttrTimeout: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(2, 120),
+							},
+							"unhealthy_threshold": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      3,
+								ValidateFunc: validation.IntBetween(2, 10),
+							},
 						},
 					},
 				},
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TargetGroupIpAddressTypeEnum](),
-			},
-			"lambda_multi_value_headers_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"load_balancing_algorithm_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(loadBalancingAlgorithmType_Values(), false),
-			},
-			"load_balancing_anomaly_mitigation": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(loadBalancingAnomalyMitigationType_Values(), false),
-			},
-			"load_balancing_cross_zone_enabled": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(loadBalancingCrossZoneEnabled_Values(), false),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validTargetGroupName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validTargetGroupNamePrefix,
-			},
-			names.AttrPort: {
-				Type:             schema.TypeInt,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validation.IntBetween(1, 65535),
-				DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
-			},
-			"preserve_client_ip": {
-				Type:             nullable.TypeNullableBool,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrProtocol: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtocolEnum](),
-				DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
-			},
-			"protocol_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					return strings.ToUpper(v.(string))
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TargetGroupIpAddressTypeEnum](),
 				},
-				ValidateFunc: validation.StringInSlice(protocolVersionEnumValues(), true),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Don't suppress on creation, so that warnings are actually called
-					if d.Id() == "" {
-						return false
-					}
-					if awstypes.TargetTypeEnum(d.Get("target_type").(string)) == awstypes.TargetTypeEnumLambda {
+				"lambda_multi_value_headers_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"load_balancer_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"load_balancing_algorithm_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(loadBalancingAlgorithmType_Values(), false),
+				},
+				"load_balancing_anomaly_mitigation": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(loadBalancingAnomalyMitigationType_Values(), false),
+				},
+				"load_balancing_cross_zone_enabled": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(loadBalancingCrossZoneEnabled_Values(), false),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validTargetGroupName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validTargetGroupNamePrefix,
+				},
+				names.AttrPort: {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateFunc:     validation.IntBetween(1, 65535),
+					DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
+				},
+				"preserve_client_ip": {
+					Type:             nullable.TypeNullableBool,
+					Optional:         true,
+					Computed:         true,
+					DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+					ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrProtocol: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtocolEnum](),
+					DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
+				},
+				"protocol_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						return strings.ToUpper(v.(string))
+					},
+					ValidateFunc: validation.StringInSlice(protocolVersionEnumValues(), true),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Don't suppress on creation, so that warnings are actually called
+						if d.Id() == "" {
+							return false
+						}
+						if awstypes.TargetTypeEnum(d.Get("target_type").(string)) == awstypes.TargetTypeEnumLambda {
+							return true
+						}
+						switch awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)) {
+						case awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps:
+							return false
+						}
 						return true
-					}
-					switch awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)) {
-					case awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps:
-						return false
-					}
-					return true
+					},
 				},
-			},
-			"proxy_protocol_v2": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"slow_start": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(0, 0),
-					validation.IntBetween(30, 900),
-				),
-			},
-			"stickiness": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookie_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      86400,
-							ValidateFunc: validation.IntBetween(0, 604800),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)) {
-								case awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumUdp, awstypes.ProtocolEnumTcpUdp, awstypes.ProtocolEnumTls, awstypes.ProtocolEnumGeneve:
-									return true
-								}
-								return false
+				"proxy_protocol_v2": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"slow_start": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(0, 0),
+						validation.IntBetween(30, 900),
+					),
+				},
+				"stickiness": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      86400,
+								ValidateFunc: validation.IntBetween(0, 604800),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									switch awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)) {
+									case awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumUdp, awstypes.ProtocolEnumTcpUdp, awstypes.ProtocolEnumTls, awstypes.ProtocolEnumGeneve:
+										return true
+									}
+									return false
+								},
+							},
+							"cookie_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(stickinessType_Values(), false),
 							},
 						},
-						"cookie_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(stickinessType_Values(), false),
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_control_port": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 65535),
+				},
+				"target_failover": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"on_deregistration": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(targetFailover_Values(), false),
+							},
+							"on_unhealthy": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(targetFailover_Values(), false),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_failover": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"on_deregistration": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(targetFailover_Values(), false),
-						},
-						"on_unhealthy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(targetFailover_Values(), false),
-						},
-					},
-				},
-			},
-			"target_group_health": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dns_failover": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"minimum_healthy_targets_count": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "off",
-										ValidateFunc: validTargetGroupHealthInput,
+				"target_group_health": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_failover": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"minimum_healthy_targets_count": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "off",
+											ValidateFunc: validTargetGroupHealthInput,
+										},
+										"minimum_healthy_targets_percentage": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "off",
+											ValidateFunc: validTargetGroupHealthPercentageInput,
+										},
 									},
-									"minimum_healthy_targets_percentage": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "off",
-										ValidateFunc: validTargetGroupHealthPercentageInput,
+								},
+							},
+							"unhealthy_state_routing": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"minimum_healthy_targets_count": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Default:  1,
+										},
+										"minimum_healthy_targets_percentage": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "off",
+											ValidateFunc: validTargetGroupHealthPercentageInput,
+										},
 									},
 								},
 							},
 						},
-						"unhealthy_state_routing": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"minimum_healthy_targets_count": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  1,
-									},
-									"minimum_healthy_targets_percentage": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "off",
-										ValidateFunc: validTargetGroupHealthPercentageInput,
-									},
-								},
+					},
+				},
+				"target_health_state": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_unhealthy_connection_termination": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"unhealthy_draining_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntBetween(0, 360000),
 							},
 						},
 					},
 				},
-			},
-			"target_health_state": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_unhealthy_connection_termination": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"unhealthy_draining_interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntBetween(0, 360000),
-						},
-					},
+				"target_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.TargetTypeEnumInstance,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TargetTypeEnum](),
 				},
-			},
-			"target_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.TargetTypeEnumInstance,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TargetTypeEnum](),
-			},
-			names.AttrVPCID: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
-			},
+				names.AttrVPCID: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
+				},
+			}
 		},
 	}
 }
@@ -414,7 +425,7 @@ func suppressIfTargetType(t awstypes.TargetTypeEnum) schema.SchemaDiffSuppressFu
 	}
 }
 
-func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -422,10 +433,10 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	exist, err := findTargetGroupByName(ctx, conn, name)
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", name, err)
 	}
 
@@ -460,8 +471,8 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		input.HealthCheckEnabled = aws.Bool(tfMap[names.AttrEnabled].(bool))
 		input.HealthCheckIntervalSeconds = aws.Int32(int32(tfMap[names.AttrInterval].(int)))
@@ -496,6 +507,11 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.HealthCheckProtocol = healthCheckProtocol
 		}
 	}
+	if targetType == awstypes.TargetTypeEnumInstance || targetType == awstypes.TargetTypeEnumIp {
+		if v, ok := d.GetOk("target_control_port"); ok {
+			input.TargetControlPort = aws.Int32(int32(v.(int)))
+		}
+	}
 
 	output, err := conn.CreateTargetGroup(ctx, input)
 
@@ -521,7 +537,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.TargetGroups[0].TargetGroupArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, elbv2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findTargetGroupByARN(ctx, conn, d.Id())
 	})
 
@@ -533,20 +549,20 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	switch targetType {
 	case awstypes.TargetTypeEnumInstance, awstypes.TargetTypeEnumIp:
-		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		if v, ok := d.GetOk("stickiness"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]any)[0].(map[string]any), protocol)...)
 		}
 
-		if v, ok := d.GetOk("target_failover"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandTargetGroupTargetFailoverAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		if v, ok := d.GetOk("target_failover"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandTargetGroupTargetFailoverAttributes(v.([]any)[0].(map[string]any), protocol)...)
 		}
 
-		if v, ok := d.GetOk("target_group_health"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		if v, ok := d.GetOk("target_group_health"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]any)[0].(map[string]any), protocol)...)
 		}
 
-		if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		if v, ok := d.GetOk("target_health_state"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]any)[0].(map[string]any), protocol)...)
 		}
 	}
 
@@ -570,7 +586,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 		}
 
@@ -582,13 +598,13 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroup, err := findTargetGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -602,15 +618,24 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		targetGroupRuntimeValidation(d, &diags)
 	}
 
+	if err := resourceTargetGroupFlatten(ctx, meta.(*conns.AWSClient), targetGroup, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceTargetGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, targetGroup *awstypes.TargetGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
+		return fmt.Errorf("setting health_check: %w", err)
 	}
 	d.Set(names.AttrIPAddressType, targetGroup.IpAddressType)
 	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(targetGroup.TargetGroupName)))
+	d.Set("target_control_port", targetGroup.TargetControlPort)
 	targetType := targetGroup.TargetType
 	d.Set("target_type", targetType)
 
@@ -629,34 +654,34 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
 
-	attributes, err := findTargetGroupAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findTargetGroupAttributesByARN(ctx, awsClient.ELBV2Client(ctx), d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
+		return fmt.Errorf("reading ELBv2 Target Group (%s) attributes: %w", d.Id(), err)
 	}
 
-	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
+	if err := d.Set("stickiness", []any{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
+		return fmt.Errorf("setting stickiness: %w", err)
 	}
 
-	if err := d.Set("target_failover", []interface{}{flattenTargetGroupTargetFailoverAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_failover: %s", err)
+	if err := d.Set("target_failover", []any{flattenTargetGroupTargetFailoverAttributes(attributes, protocol)}); err != nil {
+		return fmt.Errorf("setting target_failover: %w", err)
 	}
 
-	if err := d.Set("target_group_health", []interface{}{flattenTargetGroupHealthAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_group_health: %s", err)
+	if err := d.Set("target_group_health", []any{flattenTargetGroupHealthAttributes(attributes, protocol)}); err != nil {
+		return fmt.Errorf("setting target_group_health: %w", err)
 	}
 
-	if err := d.Set("target_health_state", []interface{}{flattenTargetGroupTargetHealthStateAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
+	if err := d.Set("target_health_state", []any{flattenTargetGroupTargetHealthStateAttributes(attributes, protocol)}); err != nil {
+		return fmt.Errorf("setting target_health_state: %w", err)
 	}
 
 	targetGroupAttributes.flatten(d, targetType, attributes)
 
-	return diags
+	return nil
 }
 
-func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -664,8 +689,8 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	targetType := awstypes.TargetTypeEnum(d.Get("target_type").(string))
 
 	if d.HasChange(names.AttrHealthCheck) {
-		if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 
 			input := &elasticloadbalancingv2.ModifyTargetGroupInput{
 				TargetGroupArn: aws.String(d.Id()),
@@ -720,8 +745,8 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	switch targetType {
 	case awstypes.TargetTypeEnumInstance, awstypes.TargetTypeEnumIp:
 		if d.HasChange("stickiness") {
-			if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			if v, ok := d.GetOk("stickiness"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]any)[0].(map[string]any), protocol)...)
 			} else {
 				attributes = append(attributes, awstypes.TargetGroupAttribute{
 					Key:   aws.String(targetGroupAttributeStickinessEnabled),
@@ -731,20 +756,20 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("target_failover") {
-			if v, ok := d.GetOk("target_failover"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				attributes = append(attributes, expandTargetGroupTargetFailoverAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			if v, ok := d.GetOk("target_failover"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				attributes = append(attributes, expandTargetGroupTargetFailoverAttributes(v.([]any)[0].(map[string]any), protocol)...)
 			}
 		}
 
 		if d.HasChange("target_group_health") {
-			if v, ok := d.GetOk("target_group_health"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			if v, ok := d.GetOk("target_group_health"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]any)[0].(map[string]any), protocol)...)
 			}
 		}
 
 		if d.HasChange("target_health_state") {
-			if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			if v, ok := d.GetOk("target_health_state"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]any)[0].(map[string]any), protocol)...)
 			}
 		}
 	}
@@ -767,7 +792,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -775,7 +800,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteTargetGroup(ctx, &elasticloadbalancingv2.DeleteTargetGroupInput{
 			TargetGroupArn: aws.String(d.Id()),
 		})
@@ -945,9 +970,7 @@ func findTargetGroupByARN(ctx context.Context, conn *elasticloadbalancingv2.Clie
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupArn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -966,9 +989,7 @@ func findTargetGroupByName(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -993,8 +1014,7 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 
 		if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1017,8 +1037,7 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 
 	if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1027,13 +1046,13 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil
 }
 
-func validTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
+func validTargetGroupHealthCheckPort(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == healthCheckPortTrafficPort {
@@ -1068,8 +1087,8 @@ func TargetGroupSuffixFromARN(arn *string) string {
 
 func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	healthCheck := make(map[string]any)
-	if healthChecks := diff.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
-		healthCheck = healthChecks[0].(map[string]interface{})
+	if healthChecks := diff.Get(names.AttrHealthCheck).([]any); len(healthChecks) == 1 {
+		healthCheck = healthChecks[0].(map[string]any)
 	}
 
 	healthCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
@@ -1119,8 +1138,8 @@ func customizeDiffTargetGroupTargetTypeLambda(_ context.Context, diff *schema.Re
 		return nil
 	}
 
-	if healthChecks := diff.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
-		healthCheck := healthChecks[0].(map[string]interface{})
+	if healthChecks := diff.Get(names.AttrHealthCheck).([]any); len(healthChecks) == 1 {
+		healthCheck := healthChecks[0].(map[string]any)
 		healtCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
 		healthCheckProtocol := awstypes.ProtocolEnum(healthCheck[names.AttrProtocol].(string))
 
@@ -1172,8 +1191,8 @@ func customizeDiffTargetGroupTargetTypeNotLambda(_ context.Context, diff *schema
 	return nil
 }
 
-func flattenTargetGroupHealthCheck(apiObject *awstypes.TargetGroup) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTargetGroupHealthCheck(apiObject *awstypes.TargetGroup) []any {
+	tfMap := map[string]any{}
 	if apiObject.HealthCheckEnabled != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(apiObject.HealthCheckEnabled)
 	}
@@ -1208,10 +1227,10 @@ func flattenTargetGroupHealthCheck(apiObject *awstypes.TargetGroup) []interface{
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
+func expandTargetGroupStickinessAttributes(tfMap map[string]any, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1252,12 +1271,12 @@ func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protoco
 	return apiObjects
 }
 
-func flattenTargetGroupStickinessAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupStickinessAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	var stickinessType string
 	for _, apiObject := range apiObjects {
@@ -1288,7 +1307,7 @@ func flattenTargetGroupStickinessAttributes(apiObjects []awstypes.TargetGroupAtt
 	return tfMap
 }
 
-func expandTargetGroupTargetFailoverAttributes(tfMap map[string]interface{}, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
+func expandTargetGroupTargetFailoverAttributes(tfMap map[string]any, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1311,12 +1330,12 @@ func expandTargetGroupTargetFailoverAttributes(tfMap map[string]interface{}, pro
 	return apiObjects
 }
 
-func flattenTargetGroupTargetFailoverAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupTargetFailoverAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch protocol {
 	case awstypes.ProtocolEnumGeneve:
@@ -1333,7 +1352,7 @@ func flattenTargetGroupTargetFailoverAttributes(apiObjects []awstypes.TargetGrou
 	return tfMap
 }
 
-func expandTargetGroupTargetHealthStateAttributes(tfMap map[string]interface{}, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
+func expandTargetGroupTargetHealthStateAttributes(tfMap map[string]any, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1357,12 +1376,12 @@ func expandTargetGroupTargetHealthStateAttributes(tfMap map[string]interface{}, 
 	return apiObjects
 }
 
-func flattenTargetGroupTargetHealthStateAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupTargetHealthStateAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch protocol {
 	case awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumTls:
@@ -1379,7 +1398,7 @@ func flattenTargetGroupTargetHealthStateAttributes(apiObjects []awstypes.TargetG
 	return tfMap
 }
 
-func expandTargetGroupHealthAttributes(tfMap map[string]interface{}, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
+func expandTargetGroupHealthAttributes(tfMap map[string]any, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1390,8 +1409,8 @@ func expandTargetGroupHealthAttributes(tfMap map[string]interface{}, protocol aw
 	switch protocol {
 	case awstypes.ProtocolEnumGeneve:
 	default:
-		if v, ok := tfMap["dns_failover"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			tfMap := v[0].(map[string]interface{})
+		if v, ok := tfMap["dns_failover"].([]any); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]any)
 			apiObjects = append(apiObjects,
 				awstypes.TargetGroupAttribute{
 					Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsCount),
@@ -1404,8 +1423,8 @@ func expandTargetGroupHealthAttributes(tfMap map[string]interface{}, protocol aw
 			)
 		}
 
-		if v, ok := tfMap["unhealthy_state_routing"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			tfMap := v[0].(map[string]interface{})
+		if v, ok := tfMap["unhealthy_state_routing"].([]any); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]any)
 			apiObjects = append(apiObjects,
 				awstypes.TargetGroupAttribute{
 					Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsCount),
@@ -1422,14 +1441,14 @@ func expandTargetGroupHealthAttributes(tfMap map[string]interface{}, protocol aw
 	return apiObjects
 }
 
-func flattenTargetGroupHealthAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupHealthAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	dnsFailoverMap := make(map[string]interface{})
-	unhealthyStateRoutingMap := make(map[string]interface{})
+	tfMap := map[string]any{}
+	dnsFailoverMap := make(map[string]any)
+	unhealthyStateRoutingMap := make(map[string]any)
 
 	// Supported on Application Load Balancers and Network Load Balancers.
 	switch protocol {
@@ -1449,8 +1468,8 @@ func flattenTargetGroupHealthAttributes(apiObjects []awstypes.TargetGroupAttribu
 		}
 	}
 
-	tfMap["dns_failover"] = []interface{}{dnsFailoverMap}
-	tfMap["unhealthy_state_routing"] = []interface{}{unhealthyStateRoutingMap}
+	tfMap["dns_failover"] = []any{dnsFailoverMap}
+	tfMap["unhealthy_state_routing"] = []any{unhealthyStateRoutingMap}
 
 	return tfMap
 }
@@ -1490,8 +1509,8 @@ func targetGroupRuntimeValidation(d *schema.ResourceData, diags *diag.Diagnostic
 			))
 		}
 
-		if healthChecks := d.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
-			healthCheck := healthChecks[0].(map[string]interface{})
+		if healthChecks := d.Get(names.AttrHealthCheck).([]any); len(healthChecks) == 1 {
+			healthCheck := healthChecks[0].(map[string]any)
 			path := cty.GetAttrPath(names.AttrHealthCheck)
 
 			if healthCheckProtocol := healthCheck[names.AttrProtocol].(string); healthCheckProtocol != "" {

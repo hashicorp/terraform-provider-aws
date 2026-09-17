@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
@@ -12,31 +15,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Environment Blueprint")
-func newDataSourceEnvironmentBlueprint(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceEnvironmentBlueprint{}, nil
+// @FrameworkDataSource("aws_datazone_environment_blueprint", name="Environment Blueprint")
+func newEnvironmentBlueprintDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &environmentBlueprintDataSource{}, nil
 }
 
 const (
 	DSNameEnvironmentBlueprint = "Environment Blueprint Data Source"
 )
 
-type dataSourceEnvironmentBlueprint struct {
-	framework.DataSourceWithConfigure
+type environmentBlueprintDataSource struct {
+	framework.DataSourceWithModel[environmentBlueprintDataSourceModel]
 }
 
-func (d *dataSourceEnvironmentBlueprint) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_datazone_environment_blueprint"
-}
-
-func (d *dataSourceEnvironmentBlueprint) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *environmentBlueprintDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"blueprint_provider": schema.StringAttribute{
@@ -59,21 +58,18 @@ func (d *dataSourceEnvironmentBlueprint) Schema(ctx context.Context, req datasou
 	}
 }
 
-func (d *dataSourceEnvironmentBlueprint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *environmentBlueprintDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data environmentBlueprintDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findEnvironmentBlueprintByName(ctx, conn, data.DomainId.ValueString(), data.Name.ValueString(), data.Managed.ValueBool())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameEnvironmentBlueprint, data.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
@@ -82,47 +78,50 @@ func (d *dataSourceEnvironmentBlueprint) Read(ctx context.Context, req datasourc
 	data.ID = flex.StringToFramework(ctx, out.Id)
 	data.Name = flex.StringToFramework(ctx, out.Name)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client, domainId, name string, managed bool) (*awstypes.EnvironmentBlueprintSummary, error) {
-	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, nil)
-}
-
-func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client, domainId, name string, managed bool, nextToken *string) (*awstypes.EnvironmentBlueprintSummary, error) {
-	in := &datazone.ListEnvironmentBlueprintsInput{
+	input := datazone.ListEnvironmentBlueprintsInput{
 		DomainIdentifier: aws.String(domainId),
 		Managed:          aws.Bool(managed),
 	}
 
-	if nextToken != nil {
-		in.NextToken = aws.String(*nextToken)
-	}
+	results := make([]awstypes.EnvironmentBlueprintSummary, 0, 1)
+	for page, err := range listEnvironmentBlueprints(ctx, conn, &input) {
+		if err != nil {
+			return nil, err
+		}
 
-	out, err := conn.ListEnvironmentBlueprints(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	for i := range out.Items {
-		blueprint := out.Items[i]
-		if name == aws.ToString(blueprint.Name) {
-			return &blueprint, nil
+		for _, item := range page {
+			if name == aws.ToString(item.Name) {
+				results = append(results, item)
+			}
 		}
 	}
 
-	if out.NextToken == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
+	return tfresource.AssertSingleValueResult(results)
+}
 
-	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, out.NextToken)
+func listEnvironmentBlueprints(ctx context.Context, conn *datazone.Client, input *datazone.ListEnvironmentBlueprintsInput) iter.Seq2[[]awstypes.EnvironmentBlueprintSummary, error] {
+	return func(yield func([]awstypes.EnvironmentBlueprintSummary, error) bool) {
+		pages := datazone.NewListEnvironmentBlueprintsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+
+			if !yield(page.Items, nil) {
+				return
+			}
+		}
+	}
 }
 
 type environmentBlueprintDataSourceModel struct {
+	framework.WithRegionModel
 	BlueprintProvider types.String `tfsdk:"blueprint_provider"`
 	Description       types.String `tfsdk:"description"`
 	DomainId          types.String `tfsdk:"domain_id"`

@@ -20,11 +20,13 @@ data "aws_ecr_repositories" "example" {}
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `names` - A list if AWS Elastic Container Registries for the region.

@@ -20,7 +20,10 @@ data "aws_bedrock_custom_model" "test" {
 
 ## Argument Reference
 
-* `model_id` – (Required) Name or ARN of the custom model.
+This data source supports the following arguments:
+
+* `model_id` - (Required) Name or ARN of the custom model.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -33,18 +36,17 @@ This data source exports the following attributes in addition to the arguments a
 * `job_name` - Job name associated with this model.
 * `job_tags` - Key-value mapping of tags for the fine-tuning job.
 * `model_arn` - ARN associated with this model.
-* `model_kms_key_arn` - The custom model is encrypted at rest using this key.
+* `model_kms_key_arn` - Key used to encrypt the custom model at rest.
 * `model_name` - Model name associated with this model.
 * `model_tags` - Key-value mapping of tags for the model.
 * `output_data_config` - Output data configuration associated with this custom model.
-    * `s3_uri` - The S3 URI where the output data is stored.
+    * `s3_uri` - S3 URI where the output data is stored.
 * `training_data_config` - Information about the training dataset.
-    * `s3_uri` - The S3 URI where the training data is stored.
+    * `s3_uri` - S3 URI where the training data is stored.
 * `training_metrics` - Metrics associated with the customization job.
     * `training_loss` - Loss metric associated with the customization job.
 * `validation_data_config` - Information about the validation dataset.
     * `validator` - Information about the validators.
-        * `s3_uri` - The S3 URI where the validation data is stored..
-* `validation_metrics` - The loss metric for each validator that you provided.
-    * `validation_loss` - The validation loss associated with the validator.
-  
+        * `s3_uri` - S3 URI where the validation data is stored.
+* `validation_metrics` - Loss metric for each validator that you provided.
+    * `validation_loss` - Validation loss associated with the validator.

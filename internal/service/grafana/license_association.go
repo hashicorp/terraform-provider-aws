@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package grafana
 
@@ -12,14 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_grafana_license_association", name="License Association")
@@ -38,37 +39,39 @@ func resourceLicenseAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"free_trial_expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grafana_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
-			},
-			"license_expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"license_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LicenseType](),
-			},
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"free_trial_expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"grafana_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsUUID,
+				},
+				"license_expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"license_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LicenseType](),
+				},
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -97,13 +100,13 @@ func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceLicenseAssociationRead(ctx, d, meta)...)
 }
 
-func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	workspace, err := findLicensedWorkspaceByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana License Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -130,7 +133,7 @@ func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -173,7 +176,7 @@ func waitLicenseAssociationCreated(ctx context.Context, conn *grafana.Client, id
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusUpgrading),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 

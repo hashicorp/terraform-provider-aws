@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,9 +25,9 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 	datasource3Name := "data.aws_route_table.by_subnet"
 	datasource4Name := "data.aws_route_table.by_id"
 	datasource5Name := "data.aws_route_table.by_gateway"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,7 +36,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 				Config: testAccVPCRouteTableDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By tags.
-					acctest.MatchResourceAttrRegionalARN(datasource1Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasource1Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource1Name, names.AttrID, rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource1Name, names.AttrOwnerID, rtResourceName, names.AttrOwnerID),
@@ -49,7 +48,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource1Name, "associations", "gateway_id", igwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasource1Name, "tags.Name", rName),
 					// By filter.
-					acctest.MatchResourceAttrRegionalARN(datasource2Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasource2Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource2Name, names.AttrID, rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource2Name, names.AttrOwnerID, rtResourceName, names.AttrOwnerID),
@@ -61,7 +60,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource2Name, "associations", "gateway_id", igwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasource2Name, "tags.Name", rName),
 					// By subnet ID.
-					acctest.MatchResourceAttrRegionalARN(datasource3Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasource3Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource3Name, names.AttrID, rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource3Name, names.AttrOwnerID, rtResourceName, names.AttrOwnerID),
@@ -73,7 +72,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource3Name, "associations", "gateway_id", igwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasource3Name, "tags.Name", rName),
 					// By route table ID.
-					acctest.MatchResourceAttrRegionalARN(datasource4Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasource4Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource4Name, names.AttrID, rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource4Name, "route_table_id", rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource4Name, names.AttrOwnerID, rtResourceName, names.AttrOwnerID),
@@ -85,7 +84,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource4Name, "associations", "gateway_id", igwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasource4Name, "tags.Name", rName),
 					// By gateway ID.
-					acctest.MatchResourceAttrRegionalARN(datasource5Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasource5Name, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource5Name, names.AttrID, rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource5Name, "route_table_id", rtResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource5Name, names.AttrOwnerID, rtResourceName, names.AttrOwnerID),
@@ -105,9 +104,9 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 func TestAccVPCRouteTableDataSource_main(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_route_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

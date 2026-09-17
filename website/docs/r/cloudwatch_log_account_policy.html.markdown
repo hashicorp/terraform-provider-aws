@@ -62,12 +62,30 @@ resource "aws_cloudwatch_log_account_policy" "subscription_filter" {
 }
 ```
 
+### Field Index Policy
+
+```terraform
+resource "aws_cloudwatch_log_account_policy" "field_index" {
+  policy_name = "field-index"
+  policy_type = "FIELD_INDEX_POLICY"
+  policy_document = jsonencode(
+    {
+      Fields = [
+        "field1",
+        "field2"
+      ]
+    }
+  )
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_document` - (Required) Text of the account policy. Refer to the [AWS docs](https://docs.aws.amazon.com/cli/latest/reference/logs/put-account-policy.html) for more information.
-* `policy_type` - (Required) Type of account policy. Either `DATA_PROTECTION_POLICY` or `SUBSCRIPTION_FILTER_POLICY`. You can have one account policy per type in an account.
+* `policy_type` - (Required) Type of account policy. One of `DATA_PROTECTION_POLICY`, `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY` or `TRANSFORMER_POLICY`. You can have one account policy per type in an account.
 * `policy_name` - (Required) Name of the account policy.
 * `scope` - (Optional) Currently defaults to and only accepts the value: `ALL`.
 * `selection_criteria` - (Optional) - Criteria for applying a subscription filter policy to a selection of log groups. The only allowable criteria selector is `LogGroupName NOT IN []`.
@@ -78,7 +96,35 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `policy_name` and `policy_type` fields separated by `:`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_account_policy.example
+  identity = {
+    policy_name = "my-account-policy"
+    policy_type = "SUBSCRIPTION_FILTER_POLICY"
+  }
+}
+
+resource "aws_cloudwatch_log_account_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `policy_name` (String) Name of the account policy.
+* `policy_type` (String) Type of account policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Account Policies using `policy_name` and `policy_type` separated by a colon (`:`). For example:
 
 ```terraform
 import {
@@ -87,7 +133,7 @@ import {
 }
 ```
 
-Using `terraform import`, import this resource using the `policy_name` and `policy_type` separated by `:`. For example:
+Using `terraform import`, import Account Policies using `policy_name` and `policy_type` separated by a colon (`:`). For example:
 
 ```console
 % terraform import aws_cloudwatch_log_account_policy.example "my-account-policy:SUBSCRIPTION_FILTER_POLICY"

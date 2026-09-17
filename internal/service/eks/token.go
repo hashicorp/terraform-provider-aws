@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 /*
 This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/token/token.go
@@ -422,8 +425,8 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 }
 
 func hasSignedClusterIDHeader(paramsLower *url.Values) bool {
-	signedHeaders := strings.Split(paramsLower.Get("x-amz-signedheaders"), ";")
-	for _, hdr := range signedHeaders {
+	signedHeaders := strings.SplitSeq(paramsLower.Get("x-amz-signedheaders"), ";")
+	for hdr := range signedHeaders {
 		if strings.EqualFold(hdr, clusterIDHeader) {
 			return true
 		}

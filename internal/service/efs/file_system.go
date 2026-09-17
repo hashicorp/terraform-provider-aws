@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -13,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,147 +43,147 @@ func resourceFileSystem() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"creation_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"lifecycle_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"transition_to_archive": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TransitionToArchiveRules](),
-						},
-						"transition_to_ia": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TransitionToIARules](),
-						},
-						"transition_to_primary_storage_class": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TransitionToPrimaryStorageClassRules](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				"creation_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"lifecycle_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"transition_to_archive": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TransitionToArchiveRules](),
+							},
+							"transition_to_ia": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TransitionToIARules](),
+							},
+							"transition_to_primary_storage_class": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TransitionToPrimaryStorageClassRules](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"number_of_mount_targets": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"performance_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PerformanceMode](),
-			},
-			"protection": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"replication_overwrite": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								awstypes.ReplicationOverwriteProtectionEnabled,
-								awstypes.ReplicationOverwriteProtectionDisabled,
-							), false),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"number_of_mount_targets": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"performance_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PerformanceMode](),
+				},
+				"protection": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"replication_overwrite": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.StringInSlice(enum.Slice(
+									awstypes.ReplicationOverwriteProtectionEnabled,
+									awstypes.ReplicationOverwriteProtectionDisabled,
+								), false),
+							},
 						},
 					},
 				},
-			},
-			"provisioned_throughput_in_mibps": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-			},
-			"size_in_bytes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrValue: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"value_in_ia": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"value_in_standard": {
-							Type:     schema.TypeInt,
-							Computed: true,
+				"provisioned_throughput_in_mibps": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+				},
+				"size_in_bytes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrValue: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"value_in_ia": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"value_in_standard": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ThroughputModeBursting,
-				ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"throughput_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ThroughputModeBursting,
+					ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
+				},
+			}
 		},
 	}
 }
 
-func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -189,7 +191,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		creationToken = id.UniqueId()
+		creationToken = create.UniqueId(ctx)
 	}
 	throughputMode := awstypes.ThroughputMode(d.Get("throughput_mode").(string))
 	input := &efs.CreateFileSystemInput{
@@ -239,7 +241,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
 		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandLifecyclePolicies(v.([]interface{})),
+			LifecyclePolicies: expandLifecyclePolicies(v.([]any)),
 		}
 
 		_, err := conn.PutLifecycleConfiguration(ctx, input)
@@ -249,8 +251,8 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("protection"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]any)[0].(map[string]any))
 
 		_, err := conn.UpdateFileSystemProtection(ctx, input)
 
@@ -262,13 +264,13 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fs, err := findFileSystemByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -315,7 +317,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -344,7 +346,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("lifecycle_policy") {
 		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+			LifecyclePolicies: expandLifecyclePolicies(d.Get("lifecycle_policy").([]any)),
 		}
 
 		// Prevent the following error during removal:
@@ -362,8 +364,8 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChanges("protection") {
-		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("protection"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]any)[0].(map[string]any))
 
 			_, err := conn.UpdateFileSystemProtection(ctx, input)
 
@@ -376,7 +378,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -419,8 +421,7 @@ func findFileSystems(ctx context.Context, conn *efs.Client, input *efs.DescribeF
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -451,19 +452,18 @@ func findFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awst
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFileSystemLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -482,7 +482,7 @@ func waitFileSystemAvailable(ctx context.Context, conn *efs.Client, fileSystemID
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating, awstypes.LifeCycleStateUpdating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -504,7 +504,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID s
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:     []string{},
-		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -519,11 +519,11 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID s
 	return nil, err
 }
 
-func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []interface{} {
-	var tfList []interface{}
+func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap["transition_to_archive"] = apiObject.TransitionToArchive
 		tfMap["transition_to_ia"] = apiObject.TransitionToIA
@@ -535,11 +535,11 @@ func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []interface
 	return tfList
 }
 
-func expandLifecyclePolicies(tfList []interface{}) []awstypes.LifecyclePolicy {
+func expandLifecyclePolicies(tfList []any) []awstypes.LifecyclePolicy {
 	var apiObjects []awstypes.LifecyclePolicy
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -564,12 +564,12 @@ func expandLifecyclePolicies(tfList []interface{}) []awstypes.LifecyclePolicy {
 	return apiObjects
 }
 
-func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []interface{} {
+func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrValue: apiObject.Value,
 	}
 
@@ -581,10 +581,10 @@ func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []interface{} {
 		m["value_in_standard"] = aws.ToInt64(apiObject.ValueInStandard)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string]any) *efs.UpdateFileSystemProtectionInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -600,14 +600,18 @@ func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string
 	return apiObject
 }
 
-func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtectionDescription) []interface{} {
+func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtectionDescription) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["replication_overwrite"] = apiObject.ReplicationOverwriteProtection
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
+}
+
+func fileSystemARN(ctx context.Context, c *conns.AWSClient, fsID string) string {
+	return c.RegionalARN(ctx, "elasticfilesystem", "file-system/"+fsID)
 }

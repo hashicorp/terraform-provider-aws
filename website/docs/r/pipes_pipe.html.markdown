@@ -196,15 +196,17 @@ resource "aws_pipes_pipe" "example" {
 The following arguments are required:
 
 * `role_arn` - (Required) ARN of the role that allows the pipe to send data to the target.
-* `source` - (Required) Source resource of the pipe. This field typically requires an ARN (Amazon Resource Name). However, when using a self-managed Kafka cluster, you should use a different format. Instead of an ARN, use 'smk://' followed by the bootstrap server's address.
+* `source` - (Required) Source resource of the pipe. This field typically requires an ARN. However, when using a self-managed Kafka cluster, you should use a different format. Instead of an ARN, use 'smk://' followed by the bootstrap server's address.
 * `target` - (Required) Target resource of the pipe (typically an ARN).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the pipe. At most 512 characters.
 * `desired_state` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichment_parameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt pipe data. The identifier can be the key ARN, KeyId, key alias, or key alias ARN. If not set, EventBridge uses an AWS owned key to encrypt pipe data.
 * `log_configuration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -241,7 +243,7 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 
 #### log_configuration.firehose_log_destination Configuration Block
 
-* `delivery_stream_arn` - (Required) Amazon Resource Name (ARN) of the Kinesis Data Firehose delivery stream to which EventBridge delivers the pipe log records.
+* `delivery_stream_arn` - (Required) ARN of the Kinesis Data Firehose delivery stream to which EventBridge delivers the pipe log records.
 
 #### log_configuration.s3_log_destination Configuration Block
 
@@ -267,7 +269,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 * `filter` - (Optional) An array of up to 5 event patterns. Detailed below.
 
-##### source_parameters.filter_criteria.filter Configuration Block
+#### source_parameters.filter_criteria.filter Configuration Block
 
 * `pattern` - (Required) The event pattern. At most 4096 characters.
 
@@ -278,7 +280,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `maximum_batching_window_in_seconds` - (Optional) The maximum length of a time to wait for events. Maximum value of 300.
 * `queue_name` - (Required) The name of the destination queue to consume. Maximum length of 1000.
 
-##### source_parameters.activemq_broker_parameters.credentials Configuration Block
+#### source_parameters.activemq_broker_parameters.credentials Configuration Block
 
 * `basic_auth` - (Required) The ARN of the Secrets Manager secret containing the basic auth credentials.
 
@@ -293,7 +295,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `parallelization_factor` - (Optional)The number of batches to process concurrently from each shard. The default value is 1. Maximum value of 10.
 * `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
 
-##### source_parameters.dynamodb_stream_parameters.dead_letter_config Configuration Block
+#### source_parameters.dynamodb_stream_parameters.dead_letter_config Configuration Block
 
 * `arn` - (Optional) The ARN of the Amazon SQS queue specified as the target for the dead-letter queue.
 
@@ -309,7 +311,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `starting_position` - (Required) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST, AT_TIMESTAMP.
 * `starting_position_timestamp` - (Optional) With StartingPosition set to AT_TIMESTAMP, the time from which to start reading, in Unix time seconds.
 
-##### source_parameters.kinesis_stream_parameters.dead_letter_config Configuration Block
+#### source_parameters.kinesis_stream_parameters.dead_letter_config Configuration Block
 
 * `arn` - (Optional) The ARN of the Amazon SQS queue specified as the target for the dead-letter queue.
 
@@ -322,7 +324,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
 * `topic_name` - (Required) The name of the topic that the pipe will read from. Maximum length of 249.
 
-##### source_parameters.managed_streaming_kafka_parameters.credentials Configuration Block
+#### source_parameters.managed_streaming_kafka_parameters.credentials Configuration Block
 
 * `client_certificate_tls_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_512_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
@@ -335,7 +337,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `queue_name` - (Required) The name of the destination queue to consume. Maximum length of 1000.
 * `virtual_host` - (Optional) The name of the virtual host associated with the source broker. Maximum length of 200.
 
-##### source_parameters.rabbitmq_broker_parameters.credentials Configuration Block
+#### source_parameters.rabbitmq_broker_parameters.credentials Configuration Block
 
 * `basic_auth` - (Required) The ARN of the Secrets Manager secret containing the credentials.
 
@@ -351,14 +353,14 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `topic_name` - (Required) The name of the topic that the pipe will read from. Maximum length of 249.
 * `vpc` - (Optional) This structure specifies the VPC subnets and security groups for the stream, and whether a public IP address is to be used. Detailed below.
 
-##### source_parameters.self_managed_kafka_parameters.credentials Configuration Block
+#### source_parameters.self_managed_kafka_parameters.credentials Configuration Block
 
 * `basic_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `client_certificate_tls_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_256_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_512_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 
-##### source_parameters.self_managed_kafka_parameters.vpc Configuration Block
+#### source_parameters.self_managed_kafka_parameters.vpc Configuration Block
 
 * `security_groups` - (Optional) List of security groups associated with the stream. These security groups must all be in the same VPC. You can specify as many as five security groups. If you do not specify a security group, the default security group for the VPC is used.
 * `subnets` - (Optional) List of the subnets associated with the stream. These subnets must all be in the same VPC. You can specify as many as 16 subnets.
@@ -381,7 +383,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `lambda_function_parameters` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshift_data_parameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker AI pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
@@ -390,38 +392,38 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `array_properties` - (Optional) The array properties for the submitted job, such as the size of the array. The array size can be between 2 and 10,000. If you specify array properties for a job, it becomes an array job. This parameter is used only if the target is an AWS Batch job. Detailed below.
 * `container_overrides` - (Optional) The overrides that are sent to a container. Detailed below.
 * `depends_on` - (Optional) A list of dependencies for the job. A job can depend upon a maximum of 20 jobs. You can specify a SEQUENTIAL type dependency without specifying a job ID for array jobs so that each child array job completes sequentially, starting at index 0. You can also specify an N_TO_N type dependency with a job ID for array jobs. In that case, each index child of this job must wait for the corresponding index child of each dependency to complete before it can begin. Detailed below.
-* `job_definition` - (Required) The job definition used by this job. This value can be one of name, name:revision, or the Amazon Resource Name (ARN) for the job definition. If name is specified without a revision then the latest active revision is used.
+* `job_definition` - (Required) Job definition used by this job. This value can be one of name, name:revision, or the ARN for the job definition. If name is specified without a revision then the latest active revision is used.
 * `job_name` - (Required) The name of the job. It can be up to 128 letters long.
 * `parameters` - (Optional) Additional parameters passed to the job that replace parameter substitution placeholders that are set in the job definition. Parameters are specified as a key and value pair mapping. Parameters included here override any corresponding parameter defaults from the job definition. Detailed below.
 * `retry_strategy` - (Optional) The retry strategy to use for failed jobs. When a retry strategy is specified here, it overrides the retry strategy defined in the job definition. Detailed below.
 
-##### target_parameters.batch_job_parameters.array_properties Configuration Block
+#### target_parameters.batch_job_parameters.array_properties Configuration Block
 
 * `size` - (Optional) The size of the array, if this is an array batch job. Minimum value of 2. Maximum value of 10,000.
 
-##### target_parameters.batch_job_parameters.container_overrides Configuration Block
+#### target_parameters.batch_job_parameters.container_overrides Configuration Block
 
 * `command` - (Optional) List of commands to send to the container that overrides the default command from the Docker image or the task definition.
 * `environment` - (Optional) The environment variables to send to the container. You can add new environment variables, which are added to the container at launch, or you can override the existing environment variables from the Docker image or the task definition. Environment variables cannot start with " AWS Batch ". This naming convention is reserved for variables that AWS Batch sets. Detailed below.
 * `instance_type` - (Optional) The instance type to use for a multi-node parallel job. This parameter isn't applicable to single-node container jobs or jobs that run on Fargate resources, and shouldn't be provided.
 * `resource_requirement` - (Optional) The type and amount of resources to assign to a container. This overrides the settings in the job definition. The supported resources include GPU, MEMORY, and VCPU. Detailed below.
 
-###### target_parameters.batch_job_parameters.container_overrides.environment Configuration Block
+#### target_parameters.batch_job_parameters.container_overrides.environment Configuration Block
 
 * `name` - (Optional) The name of the key-value pair. For environment variables, this is the name of the environment variable.
 * `value` - (Optional) The value of the key-value pair. For environment variables, this is the value of the environment variable.
 
-###### target_parameters.batch_job_parameters.container_overrides.resource_requirement Configuration Block
+#### target_parameters.batch_job_parameters.container_overrides.resource_requirement Configuration Block
 
 * `type` - (Optional) The type of resource to assign to a container. The supported resources include GPU, MEMORY, and VCPU.
 * `value` - (Optional) The quantity of the specified resource to reserve for the container. [The values vary based on the type specified](https://docs.aws.amazon.com/eventbridge/latest/pipes-reference/API_BatchResourceRequirement.html).
 
-##### target_parameters.batch_job_parameters.depends_on Configuration Block
+#### target_parameters.batch_job_parameters.depends_on Configuration Block
 
 * `job_id` - (Optional) The job ID of the AWS Batch job that's associated with this dependency.
 * `type` - (Optional) The type of the job dependency. Valid Values: N_TO_N, SEQUENTIAL.
 
-##### target_parameters.batch_job_parameters.retry_strategy Configuration Block
+#### target_parameters.batch_job_parameters.retry_strategy Configuration Block
 
 * `attempts` - (Optional) The number of times to move a job to the RUNNABLE status. If the value of attempts is greater than one, the job is retried on failure the same number of attempts as the value. Maximum value of 10.
 
@@ -448,33 +450,33 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `task_count` - (Optional) The number of tasks to create based on TaskDefinition. The default is 1.
 * `task_definition_arn` - (Optional) The ARN of the task definition to use if the event target is an Amazon ECS task.
 
-##### target_parameters.ecs_task_parameters.capacity_provider_strategy Configuration Block
+#### target_parameters.ecs_task_parameters.capacity_provider_strategy Configuration Block
 
 * `base` - (Optional) The base value designates how many tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined. If no value is specified, the default value of 0 is used. Maximum value of 100,000.
 * `capacity_provider` - (Optional) The short name of the capacity provider. Maximum value of 255.
 * `weight` - (Optional) The weight value designates the relative percentage of the total number of tasks launched that should use the specified capacity provider. The weight value is taken into consideration after the base value, if defined, is satisfied. Maximum value of 1,000.
 
-##### target_parameters.ecs_task_parameters.network_configuration Configuration Block
+#### target_parameters.ecs_task_parameters.network_configuration Configuration Block
 
 * `aws_vpc_configuration` - (Optional) Use this structure to specify the VPC subnets and security groups for the task, and whether a public IP address is to be used. This structure is relevant only for ECS tasks that use the awsvpc network mode. Detailed below.
 
-###### target_parameters.ecs_task_parameters.network_configuration.aws_vpc_configuration Configuration Block
+#### target_parameters.ecs_task_parameters.network_configuration.aws_vpc_configuration Configuration Block
 
 * `assign_public_ip` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. You can specify ENABLED only when LaunchType in EcsParameters is set to FARGATE. Valid Values: ENABLED, DISABLED.
 * `security_groups` - (Optional) Specifies the security groups associated with the task. These security groups must all be in the same VPC. You can specify as many as five security groups. If you do not specify a security group, the default security group for the VPC is used.
 * `subnets` - (Optional) Specifies the subnets associated with the task. These subnets must all be in the same VPC. You can specify as many as 16 subnets.
 
-##### target_parameters.ecs_task_parameters.overrides Configuration Block
+#### target_parameters.ecs_task_parameters.overrides Configuration Block
 
 * `container_override` - (Optional) One or more container overrides that are sent to a task. Detailed below.
 * `cpu` - (Optional) The cpu override for the task.
 * `ephemeral_storage` - (Optional) The ephemeral storage setting override for the task.  Detailed below.
-* `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the task execution IAM role override for the task.
+* `execution_role_arn` - (Optional) ARN of the task execution IAM role override for the task.
 * `inference_accelerator_override` - (Optional) List of Elastic Inference accelerator overrides for the task. Detailed below.
 * `memory` - (Optional) The memory override for the task.
-* `task_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role that containers in this task can assume. All containers in this task are granted the permissions that are specified in this role.
+* `task_role_arn` - (Optional) ARN of the IAM role that containers in this task can assume. All containers in this task are granted the permissions that are specified in this role.
 
-###### target_parameters.ecs_task_parameters.overrides.container_override Configuration Block
+#### target_parameters.ecs_task_parameters.overrides.container_override Configuration Block
 
 * `command` - (Optional) List of commands to send to the container that overrides the default command from the Docker image or the task definition. You must also specify a container name.
 * `cpu` - (Optional) The number of cpu units reserved for the container, instead of the default value from the task definition. You must also specify a container name.
@@ -485,36 +487,36 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `name` - (Optional) The name of the container that receives the override. This parameter is required if any override is specified.
 * `resource_requirement` - (Optional) The type and amount of a resource to assign to a container, instead of the default value from the task definition. The only supported resource is a GPU. Detailed below.
 
-###### target_parameters.ecs_task_parameters.overrides.container_override.environment Configuration Block
+#### target_parameters.ecs_task_parameters.overrides.container_override.environment Configuration Block
 
 * `name` - (Optional) The name of the key-value pair. For environment variables, this is the name of the environment variable.
 * `value` - (Optional) The value of the key-value pair. For environment variables, this is the value of the environment variable.
 
-###### target_parameters.ecs_task_parameters.overrides.container_override.environment_file Configuration Block
+#### target_parameters.ecs_task_parameters.overrides.container_override.environment_file Configuration Block
 
 * `type` - (Optional) The file type to use. The only supported value is s3.
-* `value` - (Optional) The Amazon Resource Name (ARN) of the Amazon S3 object containing the environment variable file.
+* `value` - (Optional) ARN of the Amazon S3 object containing the environment variable file.
 
-###### target_parameters.ecs_task_parameters.overrides.container_override.resource_requirement Configuration Block
+#### target_parameters.ecs_task_parameters.overrides.container_override.resource_requirement Configuration Block
 
 * `type` - (Optional) The type of resource to assign to a container. The supported values are GPU or InferenceAccelerator.
 * `value` - (Optional) The value for the specified resource type. If the GPU type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on. If the InferenceAccelerator type is used, the value matches the deviceName for an InferenceAccelerator specified in a task definition.
 
-###### target_parameters.ecs_task_parameters.overrides.ephemeral_storage Configuration Block
+#### target_parameters.ecs_task_parameters.overrides.ephemeral_storage Configuration Block
 
 * `size_in_gib` - (Required) The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is 21 GiB and the maximum supported value is 200 GiB.
 
-###### target_parameters.ecs_task_parameters.overrides.inference_accelerator_override Configuration Block
+#### target_parameters.ecs_task_parameters.overrides.inference_accelerator_override Configuration Block
 
 * `device_name` - (Optional) The Elastic Inference accelerator device name to override for the task. This parameter must match a deviceName specified in the task definition.
 * `device_type` - (Optional) The Elastic Inference accelerator type to use.
 
-##### target_parameters.ecs_task_parameters.placement_constraint Configuration Block
+#### target_parameters.ecs_task_parameters.placement_constraint Configuration Block
 
 * `expression` - (Optional) A cluster query language expression to apply to the constraint. You cannot specify an expression if the constraint type is distinctInstance. Maximum length of 2,000.
 * `type` - (Optional) The type of constraint. Use distinctInstance to ensure that each task in a particular group is running on a different container instance. Use memberOf to restrict the selection to a group of valid candidates. Valid Values: distinctInstance, memberOf.
 
-##### target_parameters.ecs_task_parameters.placement_strategy Configuration Block
+#### target_parameters.ecs_task_parameters.placement_strategy Configuration Block
 
 * `field` - (Optional) The field to apply the placement strategy against. For the spread placement strategy, valid values are instanceId (or host, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as attribute:ecs.availability-zone. For the binpack placement strategy, valid values are cpu and memory. For the random placement strategy, this field is not used. Maximum length of 255.
 * `type` - (Optional) The type of placement strategy. The random placement strategy randomly places tasks on available candidates. The spread placement strategy spreads placement across available candidates evenly based on the field parameter. The binpack strategy places tasks on available candidates that have the least available amount of the resource that is specified with the field parameter. For example, if you binpack on memory, a task is placed on the instance with the least amount of remaining memory (but still enough to run the task). Valid Values: random, spread, binpack.
@@ -523,7 +525,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 * `detail_type` - (Optional) A free-form string, with a maximum of 128 characters, used to decide what fields to expect in the event detail.
 * `endpoint_id` - (Optional) The URL subdomain of the endpoint. For example, if the URL for Endpoint is https://abcde.veo.endpoints.event.amazonaws.com, then the EndpointId is abcde.veo.
-* `resources` - (Optional) List of AWS resources, identified by Amazon Resource Name (ARN), which the event primarily concerns. Any number, including zero, may be present.
+* `resources` - (Optional) List of AWS resources, identified by ARN, which the event primarily concerns. Any number, including zero, may be present.
 * `source` - (Optional) The source of the event. Maximum length of 256.
 * `time` - (Optional) The time stamp of the event, per RFC3339. If no time stamp is provided, the time stamp of the PutEvents call is used. This is the JSON path to the field in the event e.g. $.detail.timestamp
 
@@ -552,12 +554,12 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 #### target_parameters.sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution. Detailed below.
+* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution. Detailed below.
 
-##### target_parameters.sagemaker_pipeline_parameters.parameters Configuration Block
+#### target_parameters.sagemaker_pipeline_parameters.parameters Configuration Block
 
-* `name` - (Optional) Name of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 256.
-* `value` - (Optional) Value of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 1024.
+* `name` - (Optional) Name of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 256.
+* `value` - (Optional) Value of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 1024.
 
 #### target_parameters.sqs_queue_parameters Configuration Block
 

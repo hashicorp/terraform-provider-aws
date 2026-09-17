@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,98 +40,98 @@ func resourcePipeline() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parallelism_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_parallel_execution_steps": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(1),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parallelism_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_parallel_execution_steps": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
 						},
 					},
 				},
-			},
-			"pipeline_definition": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1048576),
-					validation.StringIsJSON,
-				),
-			},
-			"pipeline_definition_s3_location": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
-				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"object_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"version_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"pipeline_definition": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1048576),
+						validation.StringIsJSON,
+					),
+				},
+				"pipeline_definition_s3_location": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ExactlyOneOf: []string{"pipeline_definition", "pipeline_definition_s3_location"},
+					MaxItems:     1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"object_key": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"version_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"pipeline_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 3072),
-			},
-			"pipeline_display_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"pipeline_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"pipeline_description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 3072),
+				},
+				"pipeline_display_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"pipeline_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("pipeline_name").(string)
 	input := &sagemaker.CreatePipelineInput{
-		ClientRequestToken:  aws.String(id.UniqueId()),
+		ClientRequestToken:  aws.String(create.UniqueId(ctx)),
 		PipelineDisplayName: aws.String(d.Get("pipeline_display_name").(string)),
 		PipelineName:        aws.String(name),
 		RoleArn:             aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -137,7 +139,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("parallelism_configuration"); ok {
-		input.ParallelismConfiguration = expandParallelismConfiguration(v.([]interface{}))
+		input.ParallelismConfiguration = expandParallelismConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("pipeline_definition"); ok {
@@ -145,7 +147,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("pipeline_definition_s3_location"); ok {
-		input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(v.([]interface{}))
+		input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(v.([]any))
 	}
 
 	if v, ok := d.GetOk("pipeline_description"); ok {
@@ -155,7 +157,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreatePipeline(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Pipeline (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Pipeline (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -163,20 +165,20 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	pipeline, err := findPipelineByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Pipeline (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SageMaker AI Pipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Pipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Pipeline (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, pipeline.PipelineArn)
@@ -192,7 +194,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -202,7 +204,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("parallelism_configuration") {
-			input.ParallelismConfiguration = expandParallelismConfiguration(d.Get("parallelism_configuration").([]interface{}))
+			input.ParallelismConfiguration = expandParallelismConfiguration(d.Get("parallelism_configuration").([]any))
 		}
 
 		if d.HasChange("pipeline_definition") {
@@ -210,7 +212,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("pipeline_definition_s3_location") {
-			input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(d.Get("pipeline_definition_s3_location").([]interface{}))
+			input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(d.Get("pipeline_definition_s3_location").([]any))
 		}
 
 		if d.HasChange("pipeline_description") {
@@ -228,20 +230,20 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdatePipeline(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Pipeline (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Pipeline (%s): %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Pipeline: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(ctx, &sagemaker.DeletePipelineInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		PipelineName:       aws.String(d.Id()),
 	})
 
@@ -250,7 +252,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Pipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Pipeline (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -265,8 +267,7 @@ func findPipelineByName(ctx context.Context, conn *sagemaker.Client, name string
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -275,18 +276,18 @@ func findPipelineByName(ctx context.Context, conn *sagemaker.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandPipelineDefinitionS3Location(l []interface{}) *awstypes.PipelineDefinitionS3Location {
+func expandPipelineDefinitionS3Location(l []any) *awstypes.PipelineDefinitionS3Location {
 	if len(l) == 0 || l[0] == nil {
 		return &awstypes.PipelineDefinitionS3Location{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.PipelineDefinitionS3Location{
 		Bucket:    aws.String(m[names.AttrBucket].(string)),
@@ -300,12 +301,12 @@ func expandPipelineDefinitionS3Location(l []interface{}) *awstypes.PipelineDefin
 	return config
 }
 
-func expandParallelismConfiguration(l []interface{}) *awstypes.ParallelismConfiguration {
+func expandParallelismConfiguration(l []any) *awstypes.ParallelismConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return &awstypes.ParallelismConfiguration{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.ParallelismConfiguration{
 		MaxParallelExecutionSteps: aws.Int32(int32(m["max_parallel_execution_steps"].(int))),
@@ -314,14 +315,14 @@ func expandParallelismConfiguration(l []interface{}) *awstypes.ParallelismConfig
 	return config
 }
 
-func flattenParallelismConfiguration(config *awstypes.ParallelismConfiguration) []map[string]interface{} {
+func flattenParallelismConfiguration(config *awstypes.ParallelismConfiguration) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"max_parallel_execution_steps": aws.ToInt32(config.MaxParallelExecutionSteps),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

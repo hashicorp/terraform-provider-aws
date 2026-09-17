@@ -20,12 +20,15 @@ data "aws_ec2_network_insights_analysis" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `network_insights_analysis_id` - (Optional) ID of the Network Insights Analysis to select.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
 The arguments of this data source act as filters for querying the available
 Network Insights Analyzes. The given filters must match exactly one Network Insights Analysis
 whose data will be exported as attributes.
-
-* `network_insights_analysis_id` - (Optional) ID of the Network Insights Analysis to select.
-* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
 

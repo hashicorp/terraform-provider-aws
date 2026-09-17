@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspaces
 
@@ -23,67 +25,69 @@ func dataSourceBundle() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceBundleRead,
 
-		Schema: map[string]*schema.Schema{
-			"bundle_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrOwner, names.AttrName},
-			},
-			"compute_type": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bundle_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrOwner, names.AttrName},
+				},
+				"compute_type": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"bundle_id"},
-			},
-			names.AttrOwner: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"bundle_id"},
-			},
-			"root_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"bundle_id"},
+				},
+				names.AttrOwner: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"bundle_id"},
+				},
+				"root_storage": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"user_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"user_storage": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
@@ -112,9 +116,9 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(bundle.BundleId))
 	d.Set("bundle_id", bundle.BundleId)
-	tfMap := make([]map[string]interface{}, 1)
+	tfMap := make([]map[string]any, 1)
 	if bundle.ComputeType != nil {
-		tfMap[0] = map[string]interface{}{
+		tfMap[0] = map[string]any{
 			names.AttrName: string(bundle.ComputeType.Name),
 		}
 	}
@@ -124,18 +128,18 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, bundle.Description)
 	d.Set(names.AttrName, bundle.Name)
 	d.Set(names.AttrOwner, bundle.Owner)
-	tfMap = make([]map[string]interface{}, 1)
+	tfMap = make([]map[string]any, 1)
 	if bundle.RootStorage != nil {
-		tfMap[0] = map[string]interface{}{
+		tfMap[0] = map[string]any{
 			"capacity": aws.ToString(bundle.RootStorage.Capacity),
 		}
 	}
 	if err := d.Set("root_storage", tfMap); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting root_storage: %s", err)
 	}
-	tfMap = make([]map[string]interface{}, 1)
+	tfMap = make([]map[string]any, 1)
 	if bundle.UserStorage != nil {
-		tfMap[0] = map[string]interface{}{
+		tfMap[0] = map[string]any{
 			"capacity": aws.ToString(bundle.UserStorage.Capacity),
 		}
 	}

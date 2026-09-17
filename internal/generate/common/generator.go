@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -13,12 +13,8 @@ import (
 	"path"
 	"strings"
 	"text/template"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/hashicorp/cli"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 type Generator struct {
@@ -39,19 +35,19 @@ func (g *Generator) UI() cli.Ui {
 	return g.ui
 }
 
-func (g *Generator) Infof(format string, a ...interface{}) {
+func (g *Generator) Infof(format string, a ...any) {
 	g.ui.Info(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Warnf(format string, a ...interface{}) {
+func (g *Generator) Warnf(format string, a ...any) {
 	g.ui.Warn(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Errorf(format string, a ...interface{}) {
+func (g *Generator) Errorf(format string, a ...any) {
 	g.ui.Error(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Fatalf(format string, a ...interface{}) {
+func (g *Generator) Fatalf(format string, a ...any) {
 	g.Errorf(format, a...)
 	os.Exit(1)
 }
@@ -83,6 +79,15 @@ func (g *Generator) NewGoFileDestination(filename string) Destination {
 func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	return &fileDestination{
 		filename: filename,
+	}
+}
+
+func (g *Generator) NewFileDestinationWithFormatter(filename string, formatter func([]byte) ([]byte, error)) Destination {
+	return &fileDestination{
+		filename: filename,
+		baseDestination: baseDestination{
+			formatter: formatter,
+		},
 	}
 }
 
@@ -170,16 +175,9 @@ func (d *baseDestination) BufferTemplate(templateName, templateBody string, temp
 
 func parseTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) ([]byte, error) {
 	funcMap := template.FuncMap{
-		// FirstUpper returns a string with the first character as upper case.
-		"FirstUpper": func(s string) string {
-			if s == "" {
-				return ""
-			}
-			r, n := utf8.DecodeRuneInString(s)
-			return string(unicode.ToUpper(r)) + s[n:]
-		},
-		// Title returns a string with the first character of each word as upper case.
-		"Title": cases.Title(language.Und, cases.NoLower).String,
+		"FirstLower": FirstLower,
+		"FirstUpper": FirstUpper,
+		"Title":      Title,
 	}
 	for _, v := range funcMaps {
 		maps.Copy(funcMap, v) // Extras overwrite defaults.

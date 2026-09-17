@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the distribution configuration.
 * `tags` - (Optional) Key-value map of resource tags for the distribution configuration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -58,20 +59,23 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `ami_distribution_configuration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `ami_distribution_configuration` - (Optional) Configuration block with AMI distribution settings. Detailed below.
 * `container_distribution_configuration` - (Optional) Configuration block with container distribution settings. Detailed below.
 * `fast_launch_configuration` - (Optional) Set of Windows faster-launching configurations to use for AMI distribution. Detailed below.
 * `launch_template_configuration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
-* `license_configuration_arns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
+* `license_configuration_arns` - (Optional) Set of ARNs of License Manager License Configurations.
 * `s3_export_configuration` - (Optional) Configuration block with S3 export settings. Detailed below.
+* `ssm_parameter_configuration` - (Optional) Configuration block with SSM parameter configuration to use as AMI id output. Detailed below.
 
 ### ami_distribution_configuration
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ami_tags` - (Optional) Key-value map of tags to apply to the distributed AMI.
 * `description` - (Optional) Description to apply to the distributed AMI.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key to encrypt the distributed AMI.
+* `kms_key_id` - (Optional) ARN of the KMS Key to encrypt the distributed AMI.
 * `launch_permission` - (Optional) Configuration block of EC2 launch permissions to apply to the distributed AMI. Detailed below.
 * `name` - (Optional) Name to apply to the distributed AMI.
 * `target_account_ids` - (Optional) Set of AWS Account identifiers to distribute the AMI.
@@ -80,6 +84,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `organization_arns` - (Optional) Set of AWS Organization ARNs to assign.
 * `organizational_unit_arns` - (Optional) Set of AWS Organizational Unit ARNs to assign.
 * `user_groups` - (Optional) Set of EC2 launch permission user groups to assign. Use `all` to distribute a public AMI.
@@ -127,18 +132,46 @@ The following arguments are optional:
 * `s3_bucket` - (Required) The name of the S3 bucket to store the exported image in. The bucket needs to exist before the export configuration is created.
 * `s3_prefix` - (Optional) The prefix for the exported image.
 
+### ssm_parameter_configuration
+
+* `parameter_name` - (Required) Name of the SSM parameter that will store the AMI ID after distribution.
+* `ami_account_id` - (Optional) AWS account ID that will own the parameter in the given region. This account must be specified as a target account in the distribution settings.
+* `data_type` - (Optional) Data type of the SSM parameter. Valid values are `text` and `aws:ec2:image`. AWS recommends using `aws:ec2:image`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
+* `id` - ARN of the distribution configuration.
+* `arn` - (Required) ARN of the distribution configuration.
 * `date_created` - Date the distribution configuration was created.
 * `date_updated` - Date the distribution configuration was updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_distribution_configuration.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example"
+  }
+}
+
+resource "aws_imagebuilder_distribution_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Image Builder distribution configuration.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_distribution_configurations` resources using the ARN. For example:
 
 ```terraform
 import {
@@ -147,7 +180,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_distribution_configurations` resources using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -21,7 +21,8 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {
-			acctest.CtBasic: testAccDirectoryDataSource_basic,
+			acctest.CtBasic:        testAccDirectoryDataSource_basic,
+			"accessEndpointConfig": testAccDirectoryDataSource_accessEndpointConfig,
 		},
 		"Image": {
 			acctest.CtBasic: testAccImageDataSource_basic,

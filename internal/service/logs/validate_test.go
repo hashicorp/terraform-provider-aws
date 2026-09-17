@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -152,7 +152,7 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 	}
 }
 
-func TestValidStreamName(t *testing.T) {
+func TestValidLogStreamName(t *testing.T) {
 	t.Parallel()
 
 	validNames := []string{
@@ -162,19 +162,19 @@ func TestValidStreamName(t *testing.T) {
 		"logstream/1234",
 	}
 	for _, v := range validNames {
-		_, errors := tflogs.ValidStreamName(v, names.AttrName)
+		_, errors := tflogs.ValidLogStreamName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
 		}
 	}
 
 	invalidNames := []string{
-		sdkacctest.RandString(513),
+		acctest.RandString(t, 513),
 		"",
 		"stringwith:colon",
 	}
 	for _, v := range invalidNames {
-		_, errors := tflogs.ValidStreamName(v, names.AttrName)
+		_, errors := tflogs.ValidLogStreamName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
 		}

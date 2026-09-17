@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -29,7 +29,7 @@ func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.Tes
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(given, expectedPolicy)
 		if err != nil {
-			return fmt.Errorf("Comparing AWS Policies failed: %s", err)
+			return fmt.Errorf("Comparing AWS Policies failed: %w", err)
 		}
 
 		if !areEquivalent {

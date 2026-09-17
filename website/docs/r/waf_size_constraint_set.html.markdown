@@ -35,8 +35,6 @@ This resource supports the following arguments:
 * `name` - (Required) Name or description of the Size Constraint Set.
 * `size_constraints` - (Optional) Parts of web requests that you want to inspect the size of.
 
-## Nested Blocks
-
 ### `size_constraints`
 
 #### Arguments
@@ -59,7 +57,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the WAF Size Constraint Set.
-* `arn` - Amazon Resource Name (ARN).
+* `arn` - ARN.
 
 ## Import
 

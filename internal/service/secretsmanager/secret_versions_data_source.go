@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package secretsmanager
 
@@ -8,10 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -20,53 +20,51 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_secretsmanager_secret_versions, name="Secret Versions")
-func newDataSourceSecretVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSecretVersions{}, nil
+// @FrameworkDataSource("aws_secretsmanager_secret_versions", name="Secret Versions")
+func newSecretVersionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &secretVersionsDataSource{}, nil
 }
 
 const (
 	DSNameSecretVersions = "Secret Versions Data Source"
 )
 
-type dataSourceSecretVersions struct {
-	framework.DataSourceWithConfigure
+type secretVersionsDataSource struct {
+	framework.DataSourceWithModel[secretVersionsDataSourceModel]
 }
 
-func (d *dataSourceSecretVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_secretsmanager_secret_versions"
-}
-
-func (d *dataSourceSecretVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *secretVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(20, 2048),
-				},
+				Computed:           true,
+				DeprecationMessage: "arn is deprecated. Use secret_arn instead.",
 			},
 			names.AttrName: schema.StringAttribute{
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "name is deprecated. Use secret_name instead.",
 			},
 			"include_deprecated": schema.BoolAttribute{
 				Optional: true,
 			},
+			"secret_arn": schema.StringAttribute{
+				Computed: true,
+			},
 			"secret_id": schema.StringAttribute{
 				Required: true,
 			},
-			"versions": schema.ListAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsVersionsData](ctx),
+			"secret_name": schema.StringAttribute{
+				Computed: true,
 			},
+			"versions": framework.DataSourceComputedListOfObjectAttribute[dsVersionsData](ctx),
 		},
 	}
 }
 
-func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *secretVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SecretsManagerClient(ctx)
 
-	var data dsSecretVersionsData
+	var data secretVersionsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -82,7 +80,7 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.Arn.String(), err),
+				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.SecretID.String(), err),
 				err.Error(),
 			)
 			return
@@ -102,21 +100,26 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.SecretARN = data.ARN
+	data.SecretName = data.Name
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dsSecretVersionsData struct {
-	Arn               types.String                                    `tfsdk:"arn"`
+type secretVersionsDataSourceModel struct {
+	framework.WithRegionModel
+	ARN               types.String                                    `tfsdk:"arn"`
 	Name              types.String                                    `tfsdk:"name"`
 	IncludeDeprecated types.Bool                                      `tfsdk:"include_deprecated"`
+	SecretARN         types.String                                    `tfsdk:"secret_arn"`
 	SecretID          types.String                                    `tfsdk:"secret_id"`
+	SecretName        types.String                                    `tfsdk:"secret_name"`
 	Versions          fwtypes.ListNestedObjectValueOf[dsVersionsData] `tfsdk:"versions"`
 }
 
 type dsVersionsData struct {
 	CreatedDate      timetypes.RFC3339                 `tfsdk:"created_time"`
-	LastAccessedDate types.String                      `tfsdk:"last_accessed_date"`
+	LastAccessedDate timetypes.RFC3339                 `tfsdk:"last_accessed_date"`
 	VersionID        types.String                      `tfsdk:"version_id"`
 	VersionStages    fwtypes.ListValueOf[types.String] `tfsdk:"version_stages"`
 }

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_transfer_server: Add `protocol_details` argument
-```

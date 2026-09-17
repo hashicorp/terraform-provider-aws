@@ -1,11 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,46 +16,50 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_asset_type", name="Asset Type")
-func newResourceAssetType(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAssetType{}
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("name")
+// @ImportIDHandler("assetTypeImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetAssetTypeOutput")
+// @Testing(importStateIdAttributes="domain_identifier;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
+func newAssetTypeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &assetTypeResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
-	return &resourceAssetType{}, nil
+	return &assetTypeResource{}, nil
 }
 
 const (
 	ResNameAssetType = "Asset Type"
 )
 
-type resourceAssetType struct {
-	framework.ResourceWithConfigure
+type assetTypeResource struct {
+	framework.ResourceWithModel[assetTypeResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
-func (r *resourceAssetType) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_asset_type"
-}
-
-func (r *resourceAssetType) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *assetTypeResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -131,16 +136,17 @@ func (r *resourceAssetType) Schema(ctx context.Context, _ resource.SchemaRequest
 	}
 }
 
-func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceAssetTypeData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var plan assetTypeResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	in := datazone.CreateAssetTypeInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, &in)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &plan, &in))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -151,80 +157,63 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 		in.FormsInput = map[string]awstypes.FormEntryInput{}
 	}
 
-	out, err := conn.CreateAssetType(ctx, &in)
+	_, err := conn.CreateAssetType(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetAssetTypeOutput, error) {
 		return findAssetTypeByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Name.ValueString())
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	output := outputRaw.(*datazone.GetAssetTypeOutput)
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, flex.WithIgnoredFieldNamesAppend("OwningProjectId"))...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan, flex.WithIgnoredFieldNamesAppend("OwningProjectId")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceAssetType) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *assetTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceAssetTypeData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var state assetTypeResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	out, err := findAssetTypeByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameAssetType, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceAssetType) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *assetTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceAssetTypeData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var state assetTypeResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -240,24 +229,9 @@ func (r *resourceAssetType) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameAssetType, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
-}
-
-func (r *resourceAssetType) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "domain_identifier,name"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
 }
 
 func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id string) (*datazone.GetAssetTypeOutput, error) {
@@ -269,8 +243,7 @@ func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id 
 	out, err := conn.GetAssetType(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -279,13 +252,34 @@ func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-type resourceAssetTypeData struct {
+var (
+	_ inttypes.ImportIDParser = assetTypeImportID{}
+)
+
+type assetTypeImportID struct{}
+
+func (assetTypeImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, name, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<name>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrName:      name,
+	}
+
+	return id, result, nil
+}
+
+type assetTypeResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt        timetypes.RFC3339                                          `tfsdk:"created_at"`
 	CreatedBy        types.String                                               `tfsdk:"created_by"`
 	Description      types.String                                               `tfsdk:"description"`

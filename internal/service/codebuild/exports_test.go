@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
@@ -19,4 +19,13 @@ var (
 	FindSourceCredentialsByARN = findSourceCredentialsByARN
 	FindSourceCredentials      = findSourceCredentials
 	FindWebhookByProjectName   = findWebhookByProjectName
+
+	ExpandProjectEnvironment  = expandProjectEnvironment
+	FlattenProjectEnvironment = flattenProjectEnvironment
 )
+
+// StartBuildActionModel is exported for testing.
+type StartBuildActionModel = startBuildActionModel
+
+// EnvironmentVariableModel is exported for testing.
+type EnvironmentVariableModel = environmentVariableModel

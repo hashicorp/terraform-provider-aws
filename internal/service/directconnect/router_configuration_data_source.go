@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -22,61 +24,63 @@ func dataSourceRouterConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouterConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			"customer_router_config": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"router": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"platform": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"router_type_identifier": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"software": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vendor": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"xslt_template_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"xslt_template_name_for_mac_sec": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"customer_router_config": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"router": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"platform": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"router_type_identifier": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"software": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"vendor": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"xslt_template_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"xslt_template_name_for_mac_sec": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"router_type_identifier": {
-				Type: schema.TypeString,
-				// even though the API Reference shows this as optional, the API call will fail without this argument
-				Required: true,
-			},
-			"virtual_interface_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"virtual_interface_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"router_type_identifier": {
+					Type: schema.TypeString,
+					// even though the API Reference shows this as optional, the API call will fail without this argument
+					Required: true,
+				},
+				"virtual_interface_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"virtual_interface_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -114,14 +118,14 @@ func findRouterConfigurationByTwoPartKey(ctx context.Context, conn *directconnec
 	}
 
 	if output == nil || output.Router == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func flattenRouter(apiObject *awstypes.RouterType) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenRouter(apiObject *awstypes.RouterType) []any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Platform; v != nil {
 		tfMap["platform"] = aws.ToString(v)
@@ -147,5 +151,5 @@ func flattenRouter(apiObject *awstypes.RouterType) []interface{} {
 		tfMap["xslt_template_name_for_mac_sec"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -12,6 +12,9 @@ const (
 )
 
 const (
+	connectionStatusSuccessful = "successful"
+	connectionStatusTesting    = "testing"
+
 	endpointStatusDeleting = "deleting"
 
 	replicationInstanceStatusAvailable = "available"
@@ -90,7 +93,24 @@ func engineName_Values() []string {
 		engineNameRedis,
 		engineNameRedshift,
 		engineNameRedshiftServerless,
-		engineNameS3,
+		engineNameSQLServer,
+		engineNameSybase,
+	}
+}
+
+func dataProviderEngine_Values() []string {
+	return []string{
+		engineNameAurora,
+		engineNameAuroraPostgresql,
+		engineNameDB2,
+		engineNameDB2zOS,
+		engineNameDocDB,
+		engineNameMariadb,
+		engineNameMongodb,
+		engineNameMySQL,
+		engineNameOracle,
+		engineNamePostgres,
+		engineNameRedshift,
 		engineNameSQLServer,
 		engineNameSybase,
 	}
@@ -118,18 +138,6 @@ func mongoDBAuthMechanismValue_Values() []string {
 const (
 	mongoDBAuthSourceAdmin = "admin"
 )
-
-const (
-	s3SettingsCompressionTypeGzip = "GZIP"
-	s3SettingsCompressionTypeNone = "NONE"
-)
-
-func s3SettingsCompressionType_Values() []string {
-	return []string{
-		s3SettingsCompressionTypeGzip,
-		s3SettingsCompressionTypeNone,
-	}
-}
 
 const (
 	encryptionModeSseKMS = "SSE_KMS"
@@ -167,12 +175,21 @@ const (
 const (
 	networkTypeDual = "DUAL"
 	networkTypeIPv4 = "IPV4"
+	networkTypeIPv6 = "IPV6"
 )
 
 func networkType_Values() []string {
 	return []string{
 		networkTypeDual,
 		networkTypeIPv4,
+	}
+}
+
+func instanceProfileNetworkType_Values() []string {
+	return []string{
+		networkTypeIPv4,
+		networkTypeIPv6,
+		networkTypeDual,
 	}
 }
 

@@ -62,6 +62,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### Multiple Program Settings
 
 * `program_number` - (Required) Unique program number.
@@ -90,21 +92,54 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the MultiplexProgram.
-* `example_attribute` - Concise description.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30s`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_medialive_multiplex_program.example
+  identity = {
+    multiplex_id = "12345678"
+    program_name = "example_program"
+  }
+}
+
+resource "aws_medialive_multiplex_program" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `multiplex_id` (String) ID of the Multiplex.
+* `program_name` (String) Unique program name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
 
 ```terraform
 import {
   to = aws_medialive_multiplex_program.example
-  id = "example_program/1234567"
+  id = "example_program/12345678"
 }
 ```
 
 Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
 
 ```console
-% terraform import aws_medialive_multiplex_program.example example_program/1234567
+% terraform import aws_medialive_multiplex_program.example example_program/12345678
 ```

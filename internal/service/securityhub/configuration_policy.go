@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -15,19 +17,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_configuration_policy", name="Configuration Policy")
+// @IdentityAttribute("id")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// Alternate account not working
+// @Testing(identityTest=false)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationMemberAccount")
 func resourceConfigurationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyCreate,
@@ -35,139 +44,137 @@ func resourceConfigurationPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceConfigurationPolicyUpdate,
 		DeleteWithoutTimeout: resourceConfigurationPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			customParameterResource := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bool": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeBool,
-									},
-								},
-							},
-						},
-						"double": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeFloat,
-									},
-								},
-							},
-						},
-						"enum": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-								},
-							},
-						},
-						"enum_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							"bool": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeBool,
 										},
 									},
 								},
 							},
-						},
-						"int": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required:     true,
-										Type:         schema.TypeInt,
-										ValidateFunc: validation.IntAtMost(math.MaxInt32),
+							"double": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeFloat,
+										},
 									},
 								},
 							},
-						},
-						"int_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
+							"enum": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeString,
+										},
+									},
+								},
+							},
+							"enum_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"int": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required:     true,
 											Type:         schema.TypeInt,
 											ValidateFunc: validation.IntAtMost(math.MaxInt32),
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"string": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-								},
-							},
-						},
-						"string_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+							"int_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type:         schema.TypeInt,
+												ValidateFunc: validation.IntAtMost(math.MaxInt32),
+											},
 										},
 									},
 								},
 							},
-						},
-						"value_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
-						},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"string": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeString,
+										},
+									},
+								},
+							},
+							"string_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"value_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
+							},
+						}
 					},
 				}
 			}
@@ -265,17 +272,17 @@ func resourceConfigurationPolicy() *schema.Resource {
 	}
 }
 
-func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &securityhub.CreateConfigurationPolicyInput{
+	input := securityhub.CreateConfigurationPolicyInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("configuration_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		policy := expandPolicyMemberSecurityHub(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("configuration_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		policy := expandPolicyMemberSecurityHub(v.([]any)[0].(map[string]any))
 		if err := validatePolicyMemberSecurityHub(policy); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -286,7 +293,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateConfigurationPolicy(ctx, input)
+	output, err := conn.CreateConfigurationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", name, err)
@@ -297,13 +304,13 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceConfigurationPolicyRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	output, err := findConfigurationPolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -314,7 +321,7 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set(names.AttrARN, output.Arn)
-	if err := d.Set("configuration_policy", []interface{}{flattenPolicy(output.ConfigurationPolicy)}); err != nil {
+	if err := d.Set("configuration_policy", []any{flattenPolicy(output.ConfigurationPolicy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration_policy: %s", err)
 	}
 	d.Set(names.AttrDescription, output.Description)
@@ -323,17 +330,17 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.UpdateConfigurationPolicyInput{
+	input := securityhub.UpdateConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		policy := expandPolicyMemberSecurityHub(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("configuration_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		policy := expandPolicyMemberSecurityHub(v.([]any)[0].(map[string]any))
 		if err := validatePolicyMemberSecurityHub(policy); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -344,7 +351,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateConfigurationPolicy(ctx, input)
+	_, err := conn.UpdateConfigurationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
@@ -353,14 +360,15 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceConfigurationPolicyRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Configuration Policy: %s", d.Id())
-	_, err := conn.DeleteConfigurationPolicy(ctx, &securityhub.DeleteConfigurationPolicyInput{
+	input := securityhub.DeleteConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationPolicy(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
 		return diags
@@ -374,11 +382,11 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func findConfigurationPolicyByID(ctx context.Context, conn *securityhub.Client, id string) (*securityhub.GetConfigurationPolicyOutput, error) {
-	input := &securityhub.GetConfigurationPolicyInput{
+	input := securityhub.GetConfigurationPolicyInput{
 		Identifier: aws.String(id),
 	}
 
-	return findConfigurationPolicy(ctx, conn, input)
+	return findConfigurationPolicy(ctx, conn, &input)
 }
 
 func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyInput) (*securityhub.GetConfigurationPolicyOutput, error) {
@@ -386,8 +394,7 @@ func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, inpu
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -396,7 +403,7 @@ func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -424,7 +431,7 @@ func validatePolicyMemberSecurityHub(apiPolicy *types.PolicyMemberSecurityHub) e
 	return nil
 }
 
-func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMemberSecurityHub { // nosemgrep:ci.securityhub-in-func-name
+func expandPolicyMemberSecurityHub(tfMap map[string]any) *types.PolicyMemberSecurityHub { // nosemgrep:ci.securityhub-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -448,11 +455,11 @@ func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMe
 	}
 }
 
-func expandSecurityControlsConfiguration(tfListRaw interface{}) *types.SecurityControlsConfiguration {
+func expandSecurityControlsConfiguration(tfListRaw any) *types.SecurityControlsConfiguration {
 	var apiObject *types.SecurityControlsConfiguration
 
-	if v, ok := tfListRaw.([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		tfMap := v[0].(map[string]interface{})
+	if v, ok := tfListRaw.([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
 		apiObject = &types.SecurityControlsConfiguration{}
 
 		if v, ok := tfMap["disabled_control_identifiers"].(*schema.Set); ok && v.Len() > 0 {
@@ -463,9 +470,9 @@ func expandSecurityControlsConfiguration(tfListRaw interface{}) *types.SecurityC
 			apiObject.EnabledSecurityControlIdentifiers = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["security_control_custom_parameter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["security_control_custom_parameter"].([]any); ok && len(v) > 0 {
 			for _, tfMapRaw := range v {
-				tfMap, ok := tfMapRaw.(map[string]interface{})
+				tfMap, ok := tfMapRaw.(map[string]any)
 				if !ok {
 					continue
 				}
@@ -480,7 +487,7 @@ func expandSecurityControlsConfiguration(tfListRaw interface{}) *types.SecurityC
 	return apiObject
 }
 
-func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.SecurityControlCustomParameter {
+func expandSecurityControlCustomParameter(tfMap map[string]any) types.SecurityControlCustomParameter {
 	apiObject := types.SecurityControlCustomParameter{
 		Parameters: make(map[string]types.ParameterConfiguration),
 	}
@@ -491,7 +498,7 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 
 	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		for _, tfMapRaw := range v.List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
 				continue
 			}
@@ -504,62 +511,62 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 
 			var parameterValue types.ParameterValue
 
-			if v, ok := tfMap["bool"].([]interface{}); ok && len(v) > 0 { // block defined
+			if v, ok := tfMap["bool"].([]any); ok && len(v) > 0 { // block defined
 				parameterValue = &types.ParameterValueMemberBoolean{}
 				if v[0] != nil { // block defined with non-defaults
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberBoolean{Value: val.(bool)}
 				}
-			} else if v, ok := tfMap["double"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["double"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberDouble{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberDouble{Value: val.(float64)}
 				}
-			} else if v, ok := tfMap["enum"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["enum"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberEnum{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberEnum{Value: val.(string)}
 				}
-			} else if v, ok := tfMap["string"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["string"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberString{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberString{Value: val.(string)}
 				}
-			} else if v, ok := tfMap["int"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["int"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberInteger{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberInteger{Value: int32(val.(int))}
 				}
-			} else if v, ok := tfMap["int_list"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["int_list"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberIntegerList{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					var vals []int32
-					for _, s := range val.([]interface{}) {
+					for _, s := range val.([]any) {
 						vals = append(vals, int32(s.(int)))
 					}
 					parameterValue = &types.ParameterValueMemberIntegerList{Value: vals}
 				}
-			} else if v, ok := tfMap["enum_list"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["enum_list"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberEnumList{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					var vals []string
-					for _, s := range val.([]interface{}) {
+					for _, s := range val.([]any) {
 						vals = append(vals, s.(string))
 					}
 					parameterValue = &types.ParameterValueMemberEnumList{Value: vals}
 				}
-			} else if v, ok := tfMap["string_list"].([]interface{}); ok && len(v) > 0 {
+			} else if v, ok := tfMap["string_list"].([]any); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberStringList{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})[names.AttrValue]
+					val := v[0].(map[string]any)[names.AttrValue]
 					var vals []string
-					for _, s := range val.([]interface{}) {
+					for _, s := range val.([]any) {
 						vals = append(vals, s.(string))
 					}
 					parameterValue = &types.ParameterValueMemberStringList{Value: vals}
@@ -577,7 +584,7 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 	return apiObject
 }
 
-func flattenPolicy(apiObject types.Policy) map[string]interface{} {
+func flattenPolicy(apiObject types.Policy) map[string]any {
 	switch apiObject := apiObject.(type) {
 	case *types.PolicyMemberSecurityHub:
 		return flattenPolicyMemberSecurityHub(apiObject)
@@ -586,12 +593,12 @@ func flattenPolicy(apiObject types.Policy) map[string]interface{} {
 	return nil
 }
 
-func flattenPolicyMemberSecurityHub(apiObject *types.PolicyMemberSecurityHub) map[string]interface{} { // nosemgrep:ci.securityhub-in-func-name
+func flattenPolicyMemberSecurityHub(apiObject *types.PolicyMemberSecurityHub) map[string]any { // nosemgrep:ci.securityhub-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"enabled_standard_arns":           apiObject.Value.EnabledStandardIdentifiers,
 		"security_controls_configuration": flattenSecurityControlsConfiguration(apiObject.Value.SecurityControlsConfiguration),
 	}
@@ -603,17 +610,17 @@ func flattenPolicyMemberSecurityHub(apiObject *types.PolicyMemberSecurityHub) ma
 	return tfMap
 }
 
-func flattenSecurityControlsConfiguration(apiObject *types.SecurityControlsConfiguration) []interface{} {
+func flattenSecurityControlsConfiguration(apiObject *types.SecurityControlsConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"disabled_control_identifiers": apiObject.DisabledSecurityControlIdentifiers,
 		"enabled_control_identifiers":  apiObject.EnabledSecurityControlIdentifiers,
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObject.SecurityControlCustomParameters {
 		tfList = append(tfList, flattenSecurityControlCustomParameter(apiObject))
@@ -621,70 +628,70 @@ func flattenSecurityControlsConfiguration(apiObject *types.SecurityControlsConfi
 
 	tfMap["security_control_custom_parameter"] = tfList
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSecurityControlCustomParameter(apiObject types.SecurityControlCustomParameter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenSecurityControlCustomParameter(apiObject types.SecurityControlCustomParameter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityControlId; v != nil {
 		tfMap["security_control_id"] = aws.ToString(v)
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for name, apiObject := range apiObject.Parameters {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrName: name,
 			"value_type":   apiObject.ValueType,
 		}
 
 		switch apiObject := apiObject.Value.(type) {
 		case *types.ParameterValueMemberBoolean:
-			tfMap["bool"] = []interface{}{
-				map[string]interface{}{
+			tfMap["bool"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberDouble:
-			tfMap["double"] = []interface{}{
-				map[string]interface{}{
+			tfMap["double"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberEnum:
-			tfMap["enum"] = []interface{}{
-				map[string]interface{}{
+			tfMap["enum"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberEnumList:
-			tfMap["enum_list"] = []interface{}{
-				map[string]interface{}{
+			tfMap["enum_list"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberInteger:
-			tfMap["int"] = []interface{}{
-				map[string]interface{}{
+			tfMap["int"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberIntegerList:
-			tfMap["int_list"] = []interface{}{
-				map[string]interface{}{
+			tfMap["int_list"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberString:
-			tfMap["string"] = []interface{}{
-				map[string]interface{}{
+			tfMap["string"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberStringList:
-			tfMap["string_list"] = []interface{}{
-				map[string]interface{}{
+			tfMap["string_list"] = []any{
+				map[string]any{
 					names.AttrValue: apiObject.Value,
 				},
 			}

@@ -1,26 +1,34 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint"
 description: |-
-  Provides a SageMaker Endpoint resource.
+  Provides a SageMaker AI Endpoint resource.
 ---
 
 # Resource: aws_sagemaker_endpoint
 
-Provides a SageMaker Endpoint resource.
+Provides a SageMaker AI Endpoint resource.
+
+~> **Note:** `aws_sagemaker_endpoint` resources cannot recognize changes to an `aws_sagemaker_endpoint_configuration` resource unless the Endpoint Configuration's `name` attribute, changes. Endpoint Configuration names should be randomized by either specifying `name_prefix` or specifying no name. This will automatically change the name when the Endpoint Configuration is modified. The Endpoint Configuration's lifecycle meta-argument `lifecycle.create_before_destroy` should also be set to `true` to prevent conflicts.
 
 ## Example Usage
 
 Basic usage:
 
 ```terraform
-resource "aws_sagemaker_endpoint" "e" {
-  name                 = "my-endpoint"
-  endpoint_config_name = aws_sagemaker_endpoint_configuration.ec.name
+resource "aws_sagemaker_endpoint" "example" {
+  name                 = "example-endpoint"
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.example.name
+}
 
-  tags = {
-    Name = "foo"
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  name_prefix = "example-endpoint-config"
+
+  # Endpoint Configuration parameters
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 ```
@@ -29,6 +37,7 @@ resource "aws_sagemaker_endpoint" "e" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
@@ -36,9 +45,9 @@ This resource supports the following arguments:
 
 ### Deployment Config
 
-* `blue_green_update_policy` - (Optional) Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. SageMaker flips traffic to the new fleet according to the specified traffic routing configuration. Only one update policy should be used in the deployment configuration. If no update policy is specified, SageMaker uses a blue/green deployment strategy with all at once traffic shifting by default. See [Blue Green Update Config](#blue-green-update-config).
+* `blue_green_update_policy` - (Optional) Update policy for a blue/green deployment. If this update policy is specified, SageMaker AI creates a new fleet during the deployment while maintaining the old fleet. SageMaker AI flips traffic to the new fleet according to the specified traffic routing configuration. Only one update policy should be used in the deployment configuration. If no update policy is specified, SageMaker AI uses a blue/green deployment strategy with all at once traffic shifting by default. See [Blue Green Update Config](#blue-green-update-config).
 * `auto_rollback_configuration` - (Optional) Automatic rollback configuration for handling endpoint deployment failures and recovery. See [Auto Rollback Configuration](#auto-rollback-configuration).
-* `rolling_update_policy` - (Optional) Specifies a rolling deployment strategy for updating a SageMaker endpoint. See [Rolling Update Policy](#rolling-update-policy).
+* `rolling_update_policy` - (Optional) Specifies a rolling deployment strategy for updating a SageMaker AI endpoint. See [Rolling Update Policy](#rolling-update-policy).
 
 #### Blue Green Update Config
 
@@ -51,40 +60,40 @@ This resource supports the following arguments:
 * `maximum_batch_size` - (Required) Batch size for each rolling step to provision capacity and turn on traffic on the new endpoint fleet, and terminate capacity on the old endpoint fleet. Value must be between 5% to 50% of the variant's total instance count. See [Maximum Batch Size](#maximum-batch-size).
 * `maximum_execution_timeout_in_seconds` - (Optional) The time limit for the total deployment. Exceeding this limit causes a timeout. Valid values are between `600` and `14400`.
 * `rollback_maximum_batch_size` - (Optional) Batch size for rollback to the old endpoint fleet. Each rolling step to provision capacity and turn on traffic on the old endpoint fleet, and terminate capacity on the new endpoint fleet. If this field is absent, the default value will be set to 100% of total capacity which means to bring up the whole capacity of the old fleet at once during rollback. See [Rollback Maximum Batch Size](#rollback-maximum-batch-size).
-* `wait_interval_in_seconds` - (Required) The length of the baking period, during which SageMaker monitors alarms for each batch on the new fleet. Valid values are between `0` and `3600`.
+* `wait_interval_in_seconds` - (Required) The length of the baking period, during which SageMaker AI monitors alarms for each batch on the new fleet. Valid values are between `0` and `3600`.
 
-##### Traffic Routing Configuration
+#### Traffic Routing Configuration
 
 * `type` - (Required) Traffic routing strategy type. Valid values are: `ALL_AT_ONCE`, `CANARY`, and `LINEAR`.
 * `wait_interval_in_seconds` - (Required) The waiting time (in seconds) between incremental steps to turn on traffic on the new endpoint fleet. Valid values are between `0` and `3600`.
 * `canary_size` - (Optional) Batch size for the first step to turn on traffic on the new endpoint fleet. Value must be less than or equal to 50% of the variant's total instance count. See [Canary Size](#canary-size).
 * `linear_step_size` - (Optional) Batch size for each step to turn on traffic on the new endpoint fleet. Value must be 10-50% of the variant's total instance count. See [Linear Step Size](#linear-step-size).
 
-###### Maximum Batch Size
+#### Maximum Batch Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
-###### Rollback Maximum Batch Size
+#### Rollback Maximum Batch Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
-###### Canary Size
+#### Canary Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
-###### Linear Step Size
+#### Linear Step Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
 #### Auto Rollback Configuration
 
-* `alarms` - (Required) List of CloudWatch alarms in your account that are configured to monitor metrics on an endpoint. If any alarms are tripped during a deployment, SageMaker rolls back the deployment. See [Alarms](#alarms).
+* `alarms` - (Required) List of CloudWatch alarms in your account that are configured to monitor metrics on an endpoint. If any alarms are tripped during a deployment, SageMaker AI rolls back the deployment. See [Alarms](#alarms).
 
-##### Alarms
+#### Alarms
 
 * `alarm_name` - (Required) The name of a CloudWatch alarm in your account.
 
@@ -92,8 +101,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
-* `name` - The name of the endpoint.
+* `arn` - ARN assigned by AWS to this endpoint.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

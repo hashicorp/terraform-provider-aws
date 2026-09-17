@@ -6,7 +6,7 @@ description: |-
   Terraform data source for managing an AWS Security Hub Standards Control Associations.
 ---
 
-# Resource: aws_securityhub_standards_control_associations
+# Data Source: aws_securityhub_standards_control_associations
 
 Terraform data source for managing an AWS Security Hub Standards Control Associations.
 
@@ -26,6 +26,9 @@ data "aws_securityhub_standards_control_associations" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_control_id` - (Required) The identifier of the control (identified with `SecurityControlId`, `SecurityControlArn`, or a mix of both parameters).
 
 ## Attribute Reference

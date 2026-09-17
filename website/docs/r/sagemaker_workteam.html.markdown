@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_workteam"
 description: |-
-  Provides a SageMaker Workteam resource.
+  Provides a SageMaker AI Workteam resource.
 ---
 
 # Resource: aws_sagemaker_workteam
 
-Provides a SageMaker Workteam resource.
+Provides a SageMaker AI Workteam resource.
 
 ## Example Usage
 
@@ -50,6 +50,7 @@ resource "aws_sagemaker_workteam" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description of the work team.
 * `workforce_name` - (Optional) The name of the workforce.
 * `workteam_name` - (Required) The name of the Workteam (must be unique).
@@ -85,7 +86,7 @@ This resource supports the following arguments:
 
 * `iam_policy_constraints` - (Required) Use this parameter to specify the allowed request source. Possible sources are either SourceIp or VpcSourceIp. see [IAM Policy Constraints](#iam-policy-constraints) details below.
 
-##### IAM Policy Constraints
+#### IAM Policy Constraints
 
 * `source_ip` - (Optional) When SourceIp is Enabled the worker's IP address when a task is rendered in the worker portal is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. This IP address is checked by Amazon S3 and must match in order for the Amazon S3 resource to be rendered in the worker portal. Valid values are `Enabled` or `Disabled`
 * `vpc_source_ip` - (Optional) When VpcSourceIp is Enabled the worker's IP address when a task is rendered in private worker portal inside the VPC is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. To render the task successfully Amazon S3 checks that the presigned URL is being accessed over an Amazon S3 VPC Endpoint, and that the worker's IP address matches the IP address in the IAM policy. To learn more about configuring private worker portal, see [Use Amazon VPC mode from a private worker portal](https://docs.aws.amazon.com/sagemaker/latest/dg/samurai-vpc-worker-portal.html). Valid values are `Enabled` or `Disabled`
@@ -94,14 +95,14 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workteam.
+* `arn` - ARN assigned by AWS to this Workteam.
 * `id` - The name of the Workteam.
 * `subdomain` - The subdomain for your OIDC Identity Provider.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workteams using the `workteam_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Workteams using the `workteam_name`. For example:
 
 ```terraform
 import {
@@ -110,7 +111,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Workteams using the `workteam_name`. For example:
+Using `terraform import`, import SageMaker AI Workteams using the `workteam_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_workteam.example example

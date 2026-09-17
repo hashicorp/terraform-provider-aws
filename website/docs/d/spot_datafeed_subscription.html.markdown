@@ -10,13 +10,19 @@ description: |-
 
 ~> There is only a single spot data feed subscription per account.
 
-Terraform data source for accessing an AWS EC2 (Elastic Compute Cloud) spot data feed subscription.
+Terraform data source for accessing an AWS EC2 spot data feed subscription.
 
 ## Example Usage
 
 ```terraform
 data "aws_spot_datafeed_subscription" "default" {}
 ```
+
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

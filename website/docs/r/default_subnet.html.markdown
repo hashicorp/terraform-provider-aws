@@ -31,6 +31,8 @@ resource "aws_default_subnet" "default_az1" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](subnet.html):
 
 * `availability_zone` is required
@@ -48,6 +50,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `availability_zone_id` - The AZ ID of the subnet
 * `cidr_block` - The IPv4 CIDR block assigned to the subnet
 * `vpc_id` - The ID of the VPC the subnet is in
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

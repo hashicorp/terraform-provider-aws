@@ -26,6 +26,7 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bot_name` - (Required) The name of the bot.
 * `bot_version` - (Required) The version of the bot.
 * `conversation_logs` - (Optional) The settings that determine how Amazon Lex uses conversation logs for the alias. Attributes are documented under [conversation_logs](#conversation_logs).
@@ -36,7 +37,7 @@ This resource supports the following arguments:
 
 Contains information about conversation log settings.
 
-* `iam_role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role used to write your logs to CloudWatch Logs or an S3 bucket. Must be between 20 and 2048 characters in length.
+* `iam_role_arn` - (Required) ARN of the IAM role used to write your logs to CloudWatch Logs or an S3 bucket. Must be between 20 and 2048 characters in length.
 * `log_settings` - (Optional) The settings for your conversation logs. You can log text, audio, or both. Attributes are documented under [log_settings](#log_settings).
 
 ### log_settings
@@ -44,9 +45,9 @@ Contains information about conversation log settings.
 The settings for conversation logs.
 
 * `destination` - (Required) The destination where logs are delivered. Options are `CLOUDWATCH_LOGS` or `S3`.
-* `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) of the key used to encrypt audio logs in an S3 bucket. This can only be specified when `destination` is set to `S3`. Must be between 20 and 2048 characters in length.
+* `kms_key_arn` - (Optional) ARN of the key used to encrypt audio logs in an S3 bucket. This can only be specified when `destination` is set to `S3`. Must be between 20 and 2048 characters in length.
 * `log_type` - (Required) The type of logging that is enabled. Options are `AUDIO` or `TEXT`.
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket where the logs are delivered. Must be less than or equal to 2048 characters in length.
+* `resource_arn` - (Required) ARN of the CloudWatch Logs log group or S3 bucket where the logs are delivered. Must be less than or equal to 2048 characters in length.
 * `resource_prefix` - (Computed) The prefix of the S3 object key for `AUDIO` logs or the log stream name for `TEXT` logs.
 
 ## Attribute Reference

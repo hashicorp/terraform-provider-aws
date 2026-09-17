@@ -22,16 +22,19 @@ data "aws_opensearchserverless_collection" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are optional:
 
-* `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
-* `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) ID of the collection.
+* `name` - (Optional) Name of the collection.
+
+~> Exactly one of `id` or `name` is required.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the collection.
+* `arn` - ARN of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `created_date` - Date the Collection was created.
 * `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.

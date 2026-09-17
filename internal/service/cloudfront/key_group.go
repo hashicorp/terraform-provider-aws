@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,35 +35,37 @@ func resourceKeyGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"items": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				attrItems: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.KeyGroupConfig{
-		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
+		Items: flex.ExpandStringValueSet(d.Get(attrItems).(*schema.Set)),
 		Name:  aws.String(name),
 	}
 
@@ -84,13 +88,13 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKeyGroupRead(ctx, d, meta)...)
 }
 
-func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	output, err := findKeyGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Key Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -103,18 +107,18 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 	keyGroupConfig := output.KeyGroup.KeyGroupConfig
 	d.Set(names.AttrComment, keyGroupConfig.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("items", keyGroupConfig.Items)
+	d.Set(attrItems, keyGroupConfig.Items)
 	d.Set(names.AttrName, keyGroupConfig.Name)
 
 	return diags
 }
 
-func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	apiObject := &awstypes.KeyGroupConfig{
-		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
+		Items: flex.ExpandStringValueSet(d.Get(attrItems).(*schema.Set)),
 		Name:  aws.String(d.Get(names.AttrName).(string)),
 	}
 
@@ -137,7 +141,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKeyGroupRead(ctx, d, meta)...)
 }
 
-func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -168,8 +172,7 @@ func findKeyGroupByID(ctx context.Context, conn *cloudfront.Client, id string) (
 
 	if errs.IsA[*awstypes.NoSuchResource](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -178,7 +181,7 @@ func findKeyGroupByID(ctx context.Context, conn *cloudfront.Client, id string) (
 	}
 
 	if output == nil || output.KeyGroup == nil || output.KeyGroup.KeyGroupConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_kendra_query_suggestions_block_list
 
-Use the `aws_kendra_index_block_list` resource to manage an AWS Kendra block list used for query suggestions for an index.
+Use the `aws_kendra_query_suggestions_block_list` resource to manage an AWS Kendra block list used for query suggestions for an index.
 
 ## Example Usage
 
@@ -47,6 +47,7 @@ The `source_s3_path` configuration block supports the following arguments:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description for a block list.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
 

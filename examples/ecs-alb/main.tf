@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -72,7 +72,7 @@ resource "aws_launch_configuration" "app" {
   instance_type        = var.instance_type
   iam_instance_profile = aws_iam_instance_profile.app.name
   user_data = templatefile("${path.module}/cloud-config.yml", {
-    aws_region         = data.aws_region.current.name
+    aws_region         = data.aws_region.current.region
     ecs_cluster_name   = aws_ecs_cluster.main.name
     ecs_log_level      = "info"
     ecs_agent_version  = "latest"
@@ -155,7 +155,7 @@ resource "aws_ecs_task_definition" "ghost" {
   container_definitions = templatefile("${path.module}/task-definition.json", {
     image_url        = "ghost:latest"
     container_name   = "ghost"
-    log_group_region = data.aws_region.current.name
+    log_group_region = data.aws_region.current.region
     log_group_name   = aws_cloudwatch_log_group.app.name
   })
 }
@@ -289,9 +289,11 @@ resource "aws_alb_listener" "front_end" {
 ## CloudWatch Logs
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name = "tf-ecs-group/ecs-agent"
+  name              = "tf-ecs-group/ecs-agent"
+  retention_in_days = 1
 }
 
 resource "aws_cloudwatch_log_group" "app" {
-  name = "tf-ecs-group/app-ghost"
+  name              = "tf-ecs-group/app-ghost"
+  retention_in_days = 1
 }

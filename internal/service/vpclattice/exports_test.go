@@ -1,27 +1,42 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
 
 // Exports for use in tests only.
 var (
-	FindAccessLogSubscriptionByID            = findAccessLogSubscriptionByID
-	FindListenerByTwoPartKey                 = findListenerByTwoPartKey
-	FindServiceByID                          = findServiceByID
-	FindServiceNetworkByID                   = findServiceNetworkByID
-	FindServiceNetworkServiceAssociationByID = findServiceNetworkServiceAssociationByID
-	FindServiceNetworkVPCAssociationByID     = findServiceNetworkVPCAssociationByID
-	FindTargetByThreePartKey                 = findTargetByThreePartKey
+	ResourceAccessLogSubscription             = resourceAccessLogSubscription
+	ResourceAuthPolicy                        = resourceAuthPolicy
+	ResourceDomainVerification                = newDomainVerificationResource
+	ResourceListener                          = resourceListener
+	ResourceListenerRule                      = resourceListenerRule
+	ResourceResourceConfiguration             = newResourceConfigurationResource
+	ResourceResourceGateway                   = newResourceGatewayResource
+	ResourceResourcePolicy                    = resourceResourcePolicy
+	ResourceService                           = resourceService
+	ResourceServiceNetwork                    = resourceServiceNetwork
+	ResourceServiceNetworkResourceAssociation = newServiceNetworkResourceAssociationResource
+	ResourceServiceNetworkServiceAssociation  = resourceServiceNetworkServiceAssociation
+	ResourceServiceNetworkVPCAssociation      = resourceServiceNetworkVPCAssociation
+	ResourceTargetGroup                       = resourceTargetGroup
+	ResourceTargetGroupAttachment             = resourceTargetGroupAttachment
 
-	IDFromIDOrARN                               = idFromIDOrARN
-	SuppressEquivalentCloudWatchLogsLogGroupARN = suppressEquivalentCloudWatchLogsLogGroupARN
-	SuppressEquivalentIDOrARN                   = suppressEquivalentIDOrARN
+	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
+	FindAuthPolicyByID                        = findAuthPolicyByID
+	FindDomainVerificationByID                = findDomainVerificationByID
+	FindListenerByTwoPartKey                  = findListenerByTwoPartKey
+	FindListenerRuleByThreePartKey            = findListenerRuleByThreePartKey
+	FindResourceConfigurationByID             = findResourceConfigurationByID
+	FindResourceGatewayByID                   = findResourceGatewayByID
+	FindResourcePolicyByID                    = findResourcePolicyByID
+	FindServiceByID                           = findServiceByID
+	FindServiceNetworkByID                    = findServiceNetworkByID
+	FindServiceNetworkResourceAssociationByID = findServiceNetworkResourceAssociationByID
+	FindServiceNetworkServiceAssociationByID  = findServiceNetworkServiceAssociationByID
+	FindServiceNetworkVPCAssociationByID      = findServiceNetworkVPCAssociationByID
+	FindTargetByThreePartKey                  = findTargetByThreePartKey
+	FindTargetGroupByID                       = findTargetGroupByID
 
-	ResourceAccessLogSubscription            = resourceAccessLogSubscription
-	ResourceListener                         = resourceListener
-	ResourceService                          = resourceService
-	ResourceServiceNetwork                   = resourceServiceNetwork
-	ResourceServiceNetworkServiceAssociation = resourceServiceNetworkServiceAssociation
-	ResourceServiceNetworkVPCAssociation     = resourceServiceNetworkVPCAssociation
-	ResourceTargetGroupAttachment            = resourceTargetGroupAttachment
+	IDFromIDOrARN             = idFromIDOrARN
+	SuppressEquivalentIDOrARN = suppressEquivalentIDOrARN
 )

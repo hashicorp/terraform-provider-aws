@@ -1,23 +1,29 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,7 +32,9 @@ import (
 
 // @SDKResource("aws_cloudwatch_log_destination", name="Destination")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Destination")
+// @Testing(preIdentityVersion="v6.51.0")
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
@@ -34,39 +42,35 @@ func resourceDestination() *schema.Resource {
 		UpdateWithoutTimeout: resourceDestinationUpdate,
 		DeleteWithoutTimeout: resourceDestinationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringLenBetween(1, 512),
+						validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringLenBetween(1, 512),
-					validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -74,27 +78,26 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.PutDestinationInput{
+	input := cloudwatchlogs.PutDestinationInput{
 		DestinationName: aws.String(name),
 		RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 		TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.PutDestination(ctx, input)
+	output, err := tfresource.RetryWhenIsA[*cloudwatchlogs.PutDestinationOutput, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (*cloudwatchlogs.PutDestinationOutput, error) {
+		return conn.PutDestination(ctx, &input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Destination (%s): %s", name, err)
 	}
 
-	destination := outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination
+	destination := output.Destination
 	d.SetId(aws.ToString(destination.DestinationName))
 
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
@@ -106,14 +109,13 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDestinationRead(ctx, d, meta)...)
 }
 
-func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	destination, err := findDestinationByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,20 +133,19 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cloudwatchlogs.PutDestinationInput{
+		input := cloudwatchlogs.PutDestinationInput{
 			DestinationName: aws.String(d.Id()),
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
-			return conn.PutDestination(ctx, input)
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.PutDestination(ctx, &input)
 		})
 
 		if err != nil {
@@ -155,17 +156,17 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDestinationRead(ctx, d, meta)...)
 }
 
-func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
-	_, err := conn.DeleteDestination(ctx, &cloudwatchlogs.DeleteDestinationInput{
+	input := cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDestination(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -176,25 +177,43 @@ func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.Destination, error) {
-	input := &cloudwatchlogs.DescribeDestinationsInput{
+func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.Destination, error) {
+	input := cloudwatchlogs.DescribeDestinationsInput{
 		DestinationNamePrefix: aws.String(name),
 	}
 
-	pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	return findDestination(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.Destination) bool {
+		return aws.ToString(v.DestinationName) == name
+	}), tfslices.WithReturnFirstMatch[awstypes.Destination]())
+}
 
-		if err != nil {
-			return nil, err
-		}
+func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) (*awstypes.Destination, error) {
+	output, err := findDestinations(ctx, conn, input, optFns...)
 
-		for _, v := range page.Destinations {
-			if aws.ToString(v.DestinationName) == name {
-				return &v, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
+	return tfslices.CollectAndConcatWithError(listDestinationPages(ctx, conn, input), optFns...)
+}
+
+func listDestinationPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {
+	return func(yield func([]awstypes.Destination, error) bool) {
+		pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Destinations: %w", err))
+				return
+			}
+
+			if !yield(page.Destinations, nil) {
+				return
 			}
 		}
 	}
-
-	return nil, tfresource.NewEmptyResultError(input)
 }

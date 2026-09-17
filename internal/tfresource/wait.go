@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -7,7 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 type WaitOpts struct {
@@ -17,34 +18,41 @@ type WaitOpts struct {
 	PollInterval              time.Duration // Override MinTimeout/backoff and only poll this often.
 }
 
+type targetState string
+
 const (
-	targetStateError = "ERROR"
-	targetStateFalse = "FALSE"
-	targetStateTrue  = "TRUE"
+	targetStateError targetState = "ERROR"
+	targetStateFalse targetState = "FALSE"
+	targetStateTrue  targetState = "TRUE"
+)
+
+const (
+	// Required so that we're not returning a zero-value from the `refresh` function
+	dummy string = "x"
 )
 
 // WaitUntil waits for the function `f` to return `true`.
 // If `f` returns an error, return immediately with that error.
 // If `timeout` is exceeded before `f` returns `true`, return an error.
-// Waits between calls to `f` using exponential backoff, except when waiting for the target state to reoccur.
-func WaitUntil(ctx context.Context, timeout time.Duration, f func() (bool, error), opts WaitOpts) error {
-	refresh := func() (interface{}, string, error) {
-		done, err := f()
+// Waits between calls to `f` using exponential backoff.
+func WaitUntil(ctx context.Context, timeout time.Duration, f func(context.Context) (bool, error), opts WaitOpts) error {
+	refresh := func(ctx context.Context) (any, targetState, error) {
+		done, err := f(ctx)
 
 		if err != nil {
 			return nil, targetStateError, err
 		}
 
 		if done {
-			return "", targetStateTrue, nil
+			return dummy, targetStateTrue, nil
 		}
 
-		return "", targetStateFalse, nil
+		return dummy, targetStateFalse, nil
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{targetStateFalse},
-		Target:                    []string{targetStateTrue},
+	stateConf := &retry.StateChangeConfOf[any, targetState]{
+		Pending:                   enum.EnumSlice(targetStateFalse),
+		Target:                    enum.EnumSlice(targetStateTrue),
 		Refresh:                   refresh,
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: opts.ContinuousTargetOccurence,

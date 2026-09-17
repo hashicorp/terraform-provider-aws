@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -14,7 +14,7 @@ import (
 func TestAccKMSCiphertextDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -33,7 +33,7 @@ func TestAccKMSCiphertextDataSource_basic(t *testing.T) {
 func TestAccKMSCiphertextDataSource_validate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,7 +52,7 @@ func TestAccKMSCiphertextDataSource_validate(t *testing.T) {
 func TestAccKMSCiphertextDataSource_Validate_withContext(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,8 +70,10 @@ func TestAccKMSCiphertextDataSource_Validate_withContext(t *testing.T) {
 
 const testAccCiphertextDataSourceConfig_basic = `
 resource "aws_kms_key" "test" {
-  description = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
-  is_enabled  = true
+  description             = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_ciphertext" "test" {
@@ -83,8 +85,10 @@ data "aws_kms_ciphertext" "test" {
 
 const testAccCiphertextDataSourceConfig_validate = `
 resource "aws_kms_key" "test" {
-  description = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
-  is_enabled  = true
+  description             = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_ciphertext" "test" {
@@ -96,8 +100,10 @@ data "aws_kms_ciphertext" "test" {
 
 const testAccCiphertextDataSourceConfig_validateContext = `
 resource "aws_kms_key" "test" {
-  description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
-  is_enabled  = true
+  description             = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_ciphertext" "test" {

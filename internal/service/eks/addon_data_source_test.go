@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,16 +15,16 @@ import (
 
 func TestAccEKSAddonDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy(ctx),
+		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonDataSourceConfig_basic(rName, addonName),
@@ -46,21 +45,20 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 
 func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion := "v1.18.3-eksbuild.2"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy(ctx),
+		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, string(awstypes.ResolveConflictsOverwrite)),
+				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, configurationValues, awstypes.ResolveConflictsOverwrite),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
@@ -94,14 +92,20 @@ data "aws_eks_addon" "test" {
 `, rName, addonName))
 }
 
-func testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
+func testAccAddonDataSourceConfig_configurationValues(rName, addonName, configurationValues string, resolveConflicts awstypes.ResolveConflicts) string {
 	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
-  cluster_name         = aws_eks_cluster.test.name
-  addon_name           = %[2]q
-  addon_version        = %[3]q
-  configuration_values = %[4]q
-  resolve_conflicts    = %[5]q
+  cluster_name                = aws_eks_cluster.test.name
+  addon_name                  = %[2]q
+  addon_version               = data.aws_eks_addon_version.test.version
+  configuration_values        = %[3]q
+  resolve_conflicts_on_create = %[4]q
+}
+
+data "aws_eks_addon_version" "test" {
+  addon_name         = %[2]q
+  kubernetes_version = aws_eks_cluster.test.version
+  most_recent        = true
 }
 
 data "aws_eks_addon" "test" {
@@ -113,5 +117,5 @@ data "aws_eks_addon" "test" {
     aws_eks_cluster.test,
   ]
 }
-`, rName, addonName, addonVersion, configurationValues, resolveConflicts))
+`, rName, addonName, configurationValues, resolveConflicts))
 }

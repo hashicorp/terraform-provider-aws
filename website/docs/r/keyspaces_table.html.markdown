@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_specification` - (Optional) Specifies the read/write throughput capacity mode for the table.
 * `client_side_timestamps` - (Optional) Enables client-side timestamps for the table. By default, the setting is disabled.
 * `comment` - (Optional) A description of the table.
@@ -67,7 +68,7 @@ The `comment` object takes the following arguments:
 
 The `encryption_specification` object takes the following arguments:
 
-* `kms_key_identifier` - (Optional) The Amazon Resource Name (ARN) of the customer managed KMS key.
+* `kms_key_identifier` - (Optional) ARN of the customer managed KMS key.
 * `type` - (Optional) The encryption option specified for the table. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_MANAGED_KMS_KEY`. The default value is `AWS_OWNED_KMS_KEY`.
 
 The `point_in_time_recovery` object takes the following arguments:

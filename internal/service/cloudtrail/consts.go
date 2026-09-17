@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail
@@ -22,22 +22,32 @@ func resourceType_Values() []string {
 }
 
 const (
-	fieldEventCategory = "eventCategory"
-	fieldEventName     = "eventName"
-	fieldEventSource   = "eventSource"
-	fieldReadOnly      = "readOnly"
-	fieldResourcesARN  = "resources.ARN"
-	fieldResourcesType = "resources.type"
+	fieldErrorCode                    = "errorCode"
+	fieldEventCategory                = "eventCategory"
+	fieldEventName                    = "eventName"
+	fieldEventSource                  = "eventSource"
+	fieldEventType                    = "eventType"
+	fieldReadOnly                     = "readOnly"
+	fieldResourcesARN                 = "resources.ARN"
+	fieldResourcesType                = "resources.type"
+	fieldSessionCredentialFromConsole = "sessionCredentialFromConsole"
+	fieldUserIdentityARN              = "userIdentity.arn"
+	fieldVPCEndpointID                = "vpcEndpointId"
 )
 
 func field_Values() []string {
 	return []string{
+		fieldErrorCode,
 		fieldEventCategory,
 		fieldEventName,
 		fieldEventSource,
+		fieldEventType,
 		fieldReadOnly,
 		fieldResourcesARN,
 		fieldResourcesType,
+		fieldSessionCredentialFromConsole,
+		fieldUserIdentityARN,
+		fieldVPCEndpointID,
 	}
 }
 

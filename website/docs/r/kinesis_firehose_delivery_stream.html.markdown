@@ -10,7 +10,7 @@ description: |-
 
 Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 , Amazon Redshift and Snowflake.
 
-For more details, see the [Amazon Kinesis Firehose Documentation][1].
+For more details, see the [Amazon Kinesis Firehose Documentation](https://aws.amazon.com/documentation/firehose/).
 
 ## Example Usage
 
@@ -90,7 +90,7 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role          = aws_iam_role.lambda_iam.arn
   handler       = "exports.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 ```
 
@@ -574,7 +574,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
   iceberg_configuration {
     role_arn           = aws_iam_role.firehose_role.arn
-    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
     buffering_size     = 10
     buffering_interval = 400
 
@@ -629,7 +629,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
-### HTTP Endpoint (e.g., New Relic) Destination
+### HTTP Endpoint (e.g., New Relic, Datadog) Destination
+
+The HTTP endpoint destination can be used with any vendor that exposes a compatible HTTP intake, including [New Relic](https://docs.newrelic.com/docs/infrastructure/amazon-integrations/connect/aws-firehose/) and [Datadog](https://docs.datadoghq.com/integrations/amazon_kinesis_data_firehose/). Refer to each vendor's documentation for the correct intake URL and authentication requirements.
 
 ```terraform
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
@@ -703,14 +705,13 @@ resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" 
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. See [`kinesis_source_configuration` block](#kinesis_source_configuration-block) below for details.
+* `kinesis_source_configuration` - (Optional) Stream and role ARNs for a Kinesis data stream used as the source for a delivery stream. See [`kinesis_source_configuration` block](#kinesis_source_configuration-block) below for details.
 * `msk_source_configuration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. See [`msk_source_configuration` block](#msk_source_configuration-block) below for details.
 * `server_side_encryption` - (Optional) Encrypt at rest options. See [`server_side_encryption` block](#server_side_encryption-block) below for details.
-
-  **NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
+* `destination` - (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. See [`extended_s3_configuration` block](#extended_s3_configuration-block) below for details.
 * `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  See [`http_endpoint_configuration` block](#http_endpoint_configuration-block) below for details.
@@ -720,6 +721,8 @@ This resource supports the following arguments:
 * `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. See [`redshift_configuration` block](#redshift_configuration-block) below for details.
 * `snowflake_configuration` - (Optional) Configuration options when `destination` is `snowflake`. See [`snowflake_configuration` block](#snowflake_configuration-block) below for details.
 * `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. See [`splunk_configuration` block](#splunk_configuration-block) below for details.
+
+**NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
 
 ### `kinesis_source_configuration` block
 
@@ -735,6 +738,7 @@ The `msk_source_configuration` configuration block supports the following argume
 * `authentication_configuration` - (Required) The authentication configuration of the Amazon MSK cluster. See [`authentication_configuration` block](#authentication_configuration-block) below for details.
 * `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
 * `topic_name` - (Required) The topic name within the Amazon MSK cluster.
+* `read_from_timestamp` - (Optional) The start date and time in UTC for the offset position within your MSK topic from where Firehose begins to read. By default, this is set to timestamp when Firehose becomes Active. If you want to create a Firehose stream with Earliest start position set the `read_from_timestamp` parameter to Epoch (1970-01-01T00:00:00Z).
 
 ### `authentication_configuration` block
 
@@ -749,7 +753,7 @@ The `server_side_encryption` configuration block supports the following argument
 
 * `enabled` - (Optional) Whether to enable encryption at rest. Default is `false`.
 * `key_type`- (Optional) Type of encryption key. Default is `AWS_OWNED_CMK`. Valid values are `AWS_OWNED_CMK` and `CUSTOMER_MANAGED_CMK`
-* `key_arn` - (Optional) Amazon Resource Name (ARN) of the encryption key. Required when `key_type` is `CUSTOMER_MANAGED_CMK`.
+* `key_arn` - (Optional) ARN of the encryption key. Required when `key_type` is `CUSTOMER_MANAGED_CMK`.
 
 ### `extended_s3_configuration` block
 
@@ -844,7 +848,7 @@ The `opensearchserverless_configuration` configuration block supports the follow
 * `collection_endpoint` - (Required) The endpoint to use when communicating with the collection in the Serverless offering for Amazon OpenSearch Service.
 * `index_name` - (Required) The Serverless offering for Amazon OpenSearch Service index name.
 * `retry_duration` - (Optional) After an initial failure to deliver to the Serverless offering for Amazon OpenSearch Service, the total amount of time, in seconds between 0 to 7200, during which Kinesis Data Firehose retries delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to be assumed by Kinesis Data Firehose for calling the Serverless offering for Amazon OpenSearch Service Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
+* `role_arn` - (Required) ARN of the IAM role to be assumed by Kinesis Data Firehose for calling the Serverless offering for Amazon OpenSearch Service Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
 * `s3_configuration` - (Required) The S3 Configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
@@ -872,7 +876,7 @@ The `splunk_configuration` configuration block supports the following arguments:
 
 The `http_endpoint_configuration` configuration block supports the following arguments:
 
-* `url` - (Required) The HTTP endpoint URL to which Kinesis Firehose sends your data.
+* `url` - (Required) The HTTP endpoint URL to which Kinesis Firehose sends your data. Refer to the target vendor's documentation for the correct intake URL (for example, [New Relic](https://docs.newrelic.com/docs/infrastructure/amazon-integrations/connect/aws-firehose/) or [Datadog](https://docs.datadoghq.com/integrations/amazon_kinesis_data_firehose/)).
 * `name` - (Optional) The HTTP endpoint name.
 * `access_key` - (Optional) The access key required for Kinesis Firehose to authenticate with the HTTP endpoint selected as the destination.
 * `role_arn` - (Required) Kinesis Data Firehose uses this IAM role for all the permissions that the delivery stream needs. The pattern needs to be `arn:.*`.
@@ -1145,10 +1149,8 @@ The `document_id_options` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) specifying the Stream
+* `arn` - ARN specifying the Stream
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-[1]: https://aws.amazon.com/documentation/firehose/
 
 ## Timeouts
 
@@ -1160,19 +1162,40 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Firehose Delivery streams using the stream ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_kinesis_firehose_delivery_stream.foo
-  id = "arn:aws:firehose:us-east-1:XXX:deliverystream/example"
+  to = aws_kinesis_firehose_delivery_stream.example
+  identity = {
+    arn = "arn:aws:firehose:us-east-1:123456789012:deliverystream/example-delivery-stream"
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Kinesis Firehose Delivery streams using the stream ARN. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the delivery stream.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Firehose Delivery Streams using `arn`. For example:
+
+```terraform
+import {
+  to = aws_kinesis_firehose_delivery_stream.example
+  id = "arn:aws:firehose:us-east-1:123456789012:deliverystream/example-delivery-stream"
+}
+```
+
+Using `terraform import`, import Kinesis Firehose Delivery Streams using `arn`. For example:
 
 ```console
-% terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+% terraform import aws_kinesis_firehose_delivery_stream.example arn:aws:firehose:us-east-1:123456789012:deliverystream/example-delivery-stream
 ```
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

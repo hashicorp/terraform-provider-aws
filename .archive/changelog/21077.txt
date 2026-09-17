@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Add parameter `http_proxy` to provider configuration
-```

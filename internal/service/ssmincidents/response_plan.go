@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssmincidents
 
@@ -16,9 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,182 +29,184 @@ const (
 
 // @SDKResource("aws_ssmincidents_response_plan", name="Response Plan")
 // @Tags(identifierAttribute="id")
-func ResourceResponsePlan() *schema.Resource {
+func resourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResponsePlanCreate,
 		ReadWithoutTimeout:   resourceResponsePlanRead,
 		UpdateWithoutTimeout: resourceResponsePlanUpdate,
 		DeleteWithoutTimeout: resourceResponsePlanDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ssm_automation": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"document_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"document_version": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"target_account": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrParameter: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeSet,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ssm_automation": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"document_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"document_version": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"target_account": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrParameter: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeSet,
+														Required: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
-									},
-									"dynamic_parameters": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"chat_channel": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			names.AttrDisplayName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"engagements": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"incident_template": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"title": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"impact": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"dedupe_string": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"incident_tags": tftags.TagsSchema(),
-						"notification_target": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrSNSTopicARN: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"summary": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"integration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pagerduty": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"service_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"secret_id": {
-										Type:     schema.TypeString,
-										Required: true,
+										"dynamic_parameters": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"chat_channel": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Set:      schema.HashString,
+				},
+				names.AttrDisplayName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"engagements": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Set:      schema.HashString,
+				},
+				"incident_template": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"title": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"impact": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"dedupe_string": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"incident_tags": tftags.TagsSchema(),
+							"notification_target": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrSNSTopicARN: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"summary": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"integration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"pagerduty": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"service_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"secret_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
-		Actions:          expandAction(d.Get(names.AttrAction).([]interface{})),
+		Actions:          expandAction(d.Get(names.AttrAction).([]any)),
 		ChatChannel:      expandChatChannel(d.Get("chat_channel").(*schema.Set)),
 		DisplayName:      aws.String(d.Get(names.AttrDisplayName).(string)),
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
-		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
-		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
+		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]any)),
+		Integrations:     expandIntegration(d.Get("integration").([]any)),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -223,13 +226,13 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
-func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents ResponsePlan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -246,7 +249,7 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -256,7 +259,7 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChanges(names.AttrAction) {
-			input.Actions = expandAction(d.Get(names.AttrAction).([]interface{}))
+			input.Actions = expandAction(d.Get(names.AttrAction).([]any))
 		}
 
 		if d.HasChanges("chat_channel") {
@@ -273,12 +276,12 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChanges("incident_template") {
 			incidentTemplate := d.Get("incident_template")
-			template := expandIncidentTemplate(incidentTemplate.([]interface{}))
+			template := expandIncidentTemplate(incidentTemplate.([]any))
 			updateResponsePlanInputWithIncidentTemplate(input, template)
 		}
 
 		if d.HasChanges("integration") {
-			input.Integrations = expandIntegration(d.Get("integration").([]interface{}))
+			input.Integrations = expandIntegration(d.Get("integration").([]any))
 		}
 
 		_, err := client.UpdateResponsePlan(ctx, input)
@@ -291,7 +294,7 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
-func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 

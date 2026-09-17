@@ -30,6 +30,7 @@ resource "aws_auditmanager_account_registration" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delegated_admin_account` - (Optional) Identifier for the delegated administrator account.
 * `deregister_on_destroy` - (Optional) Flag to deregister AuditManager in the account upon destruction. Defaults to `false` (ie. AuditManager will remain active in the account, even if this resource is removed).
 * `kms_key` - (Optional) KMS key identifier.
@@ -42,6 +43,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Status of the account registration request.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_auditmanager_account_registration.example
+  identity = {
+    region = "us-east-1"
+  }
+}
+
+resource "aws_auditmanager_account_registration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Audit Manager Account Registration resources using the `id`. For example:
 

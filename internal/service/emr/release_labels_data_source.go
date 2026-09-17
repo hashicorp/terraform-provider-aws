@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package emr
 
@@ -22,42 +24,44 @@ func dataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,
 
-		Schema: map[string]*schema.Schema{
-			"filters": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"application": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"filters": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"release_labels": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
+				"release_labels": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	input := &emr.ListReleaseLabelsInput{}
 
-	if v, ok := d.GetOk("filters"); ok && len(v.([]interface{})) > 0 {
-		input.Filters = expandReleaseLabelsFilters(v.([]interface{}))
+	if v, ok := d.GetOk("filters"); ok && len(v.([]any)) > 0 {
+		input.Filters = expandReleaseLabelsFilters(v.([]any))
 	}
 
 	releaseLabels, err := findReleaseLabels(ctx, conn, input)
@@ -76,12 +80,12 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandReleaseLabelsFilters(filters []interface{}) *awstypes.ReleaseLabelFilter {
+func expandReleaseLabelsFilters(filters []any) *awstypes.ReleaseLabelFilter {
 	if len(filters) == 0 || filters[0] == nil {
 		return nil
 	}
 
-	m := filters[0].(map[string]interface{})
+	m := filters[0].(map[string]any)
 	app := &awstypes.ReleaseLabelFilter{}
 
 	if v, ok := m["application"].(string); ok && v != "" {

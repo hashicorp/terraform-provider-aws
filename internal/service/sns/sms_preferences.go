@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sns
 
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -17,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
+func validateMonthlySpend(v any, k string) (ws []string, errors []error) {
 	vInt := v.(int)
 	if vInt < 0 {
 		errors = append(errors, fmt.Errorf("setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
@@ -25,7 +28,7 @@ func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors []error) {
+func validateDeliverySamplingRate(v any, k string) (ws []string, errors []error) {
 	vInt, _ := strconv.Atoi(v.(string))
 	if vInt < 0 || vInt > 100 {
 		errors = append(errors, fmt.Errorf("setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
@@ -123,7 +126,7 @@ var (
 	}, smsPreferencesSchema).WithMissingSetToNil("*")
 )
 
-// @SDKResource("aws_sns_sms_preferences")
+// @SDKResource("aws_sns_sms_preferences", name="SMS Preferences")
 func resourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMSPreferencesSet,
@@ -131,11 +134,11 @@ func resourceSMSPreferences() *schema.Resource {
 		UpdateWithoutTimeout: resourceSMSPreferencesSet,
 		DeleteWithoutTimeout: resourceSMSPreferencesDelete,
 
-		Schema: smsPreferencesSchema,
+		Schema: maps.Clone(smsPreferencesSchema),
 	}
 }
 
-func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -159,7 +162,7 @@ func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -172,7 +175,7 @@ func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta
 	return sdkdiag.AppendFromErr(diags, SMSPreferencesAttributeMap.APIAttributesToResourceData(output.Attributes, d))
 }
 
-func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -14,14 +16,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,86 +38,86 @@ func resourceProject() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"project_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"project_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,31}$`),
-						"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"project_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"service_catalog_provisioning_details": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"path_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"product_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"provisioning_artifact_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"provisioning_parameter": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"project_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"project_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 32),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,31}$`),
+							"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"project_description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"service_catalog_provisioning_details": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"path_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"product_id": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"provisioning_artifact_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"provisioning_parameter": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("project_name").(string)
 	input := &sagemaker.CreateProjectInput{
 		ProjectName:                       aws.String(name),
-		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
+		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]any)),
 		Tags:                              getTagsIn(ctx),
 	}
 
@@ -124,36 +125,36 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ProjectDescription = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateProject(ctx, input)
 	}, ErrCodeValidationException)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI project: %s", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitProjectCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Project (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	project, err := findProjectByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Project (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Project (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Project (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Project (%s): %s", d.Id(), err)
 	}
 
 	d.Set("project_name", project.ProjectName)
@@ -168,7 +169,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -182,28 +183,28 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("service_catalog_provisioning_details") {
-			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]interface{}))
+			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]any))
 		}
 
 		_, err := conn.UpdateProject(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Project (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Project (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitProjectUpdated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to be updated: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Project (%s) to be updated: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Project: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Project: %s", d.Id())
 	_, err := conn.DeleteProject(ctx, &sagemaker.DeleteProjectInput{
 		ProjectName: aws.String(d.Id()),
 	})
@@ -214,11 +215,11 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Project (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Project (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitProjectDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Project (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -233,8 +234,7 @@ func findProjectByName(ctx context.Context, conn *sagemaker.Client, name string)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -243,25 +243,24 @@ func findProjectByName(ctx context.Context, conn *sagemaker.Client, name string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ProjectStatus; status == awstypes.ProjectStatusDeleteCompleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *awstypes.ServiceCatalogProvisioningDetails {
+func expandProjectServiceCatalogProvisioningDetails(l []any) *awstypes.ServiceCatalogProvisioningDetails {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	scpd := &awstypes.ServiceCatalogProvisioningDetails{
 		ProductId: aws.String(m["product_id"].(string)),
@@ -275,19 +274,19 @@ func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *awstypes.S
 		scpd.ProvisioningArtifactId = aws.String(v)
 	}
 
-	if v, ok := m["provisioning_parameter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["provisioning_parameter"].([]any); ok && len(v) > 0 {
 		scpd.ProvisioningParameters = expandProjectProvisioningParameters(v)
 	}
 
 	return scpd
 }
 
-func expandProjectServiceCatalogProvisioningDetailsUpdate(l []interface{}) *awstypes.ServiceCatalogProvisioningUpdateDetails {
+func expandProjectServiceCatalogProvisioningDetailsUpdate(l []any) *awstypes.ServiceCatalogProvisioningUpdateDetails {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	scpd := &awstypes.ServiceCatalogProvisioningUpdateDetails{}
 
@@ -295,14 +294,14 @@ func expandProjectServiceCatalogProvisioningDetailsUpdate(l []interface{}) *awst
 		scpd.ProvisioningArtifactId = aws.String(v)
 	}
 
-	if v, ok := m["provisioning_parameter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["provisioning_parameter"].([]any); ok && len(v) > 0 {
 		scpd.ProvisioningParameters = expandProjectProvisioningParameters(v)
 	}
 
 	return scpd
 }
 
-func expandProjectProvisioningParameters(l []interface{}) []awstypes.ProvisioningParameter {
+func expandProjectProvisioningParameters(l []any) []awstypes.ProvisioningParameter {
 	if len(l) == 0 {
 		return nil
 	}
@@ -310,7 +309,7 @@ func expandProjectProvisioningParameters(l []interface{}) []awstypes.Provisionin
 	params := make([]awstypes.ProvisioningParameter, 0, len(l))
 
 	for _, lRaw := range l {
-		data := lRaw.(map[string]interface{})
+		data := lRaw.(map[string]any)
 
 		scpd := awstypes.ProvisioningParameter{
 			Key: aws.String(data[names.AttrKey].(string)),
@@ -326,12 +325,12 @@ func expandProjectProvisioningParameters(l []interface{}) []awstypes.Provisionin
 	return params
 }
 
-func flattenProjectServiceCatalogProvisioningDetails(scpd *awstypes.ServiceCatalogProvisioningDetails) []map[string]interface{} {
+func flattenProjectServiceCatalogProvisioningDetails(scpd *awstypes.ServiceCatalogProvisioningDetails) []map[string]any {
 	if scpd == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"product_id": aws.ToString(scpd.ProductId),
 	}
 
@@ -347,14 +346,14 @@ func flattenProjectServiceCatalogProvisioningDetails(scpd *awstypes.ServiceCatal
 		m["provisioning_parameter"] = flattenProjectProvisioningParameters(scpd.ProvisioningParameters)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenProjectProvisioningParameters(scpd []awstypes.ProvisioningParameter) []map[string]interface{} {
-	params := make([]map[string]interface{}, 0, len(scpd))
+func flattenProjectProvisioningParameters(scpd []awstypes.ProvisioningParameter) []map[string]any {
+	params := make([]map[string]any, 0, len(scpd))
 
 	for _, lRaw := range scpd {
-		param := make(map[string]interface{})
+		param := make(map[string]any)
 		param[names.AttrKey] = aws.ToString(lRaw.Key)
 
 		if lRaw.Value != nil {

@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_prometheus_scraper_logging_configuration
+```
+
+```release-note:enhancement
+resource/aws_prometheus_scraper: Add Resource Identity support
+```
+
+```release-note:new-list-resource
+aws_prometheus_scraper
+```
+
+```release-note:new-list-resource
+aws_prometheus_scraper_logging_configuration
+```

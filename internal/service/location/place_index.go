@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package location
 
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,59 +35,60 @@ func ResourcePlaceIndex() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_source": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"data_source_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"intended_use": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.IntendedUse("SingleUse"),
-							ValidateDiagFunc: enum.Validate[awstypes.IntendedUse](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_source": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"data_source_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"intended_use": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.IntendedUse("SingleUse"),
+								ValidateDiagFunc: enum.Validate[awstypes.IntendedUse](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1000),
-			},
-			"index_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1000),
+				},
+				"index_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -98,8 +100,8 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.DataSource = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -125,7 +127,7 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePlaceIndexRead(ctx, d, meta)...)
 }
 
-func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -153,7 +155,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {
-		d.Set("data_source_configuration", []interface{}{flattenDataSourceConfiguration(output.DataSourceConfiguration)})
+		d.Set("data_source_configuration", []any{flattenDataSourceConfiguration(output.DataSourceConfiguration)})
 	} else {
 		d.Set("data_source_configuration", nil)
 	}
@@ -169,7 +171,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -180,8 +182,8 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			PricingPlan: awstypes.PricingPlan("RequestBasedUsage"),
 		}
 
-		if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -198,7 +200,7 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePlaceIndexRead(ctx, d, meta)...)
 }
 
-func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -219,7 +221,7 @@ func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func expandDataSourceConfiguration(tfMap map[string]interface{}) *awstypes.DataSourceConfiguration {
+func expandDataSourceConfiguration(tfMap map[string]any) *awstypes.DataSourceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -233,12 +235,12 @@ func expandDataSourceConfiguration(tfMap map[string]interface{}) *awstypes.DataS
 	return apiObject
 }
 
-func flattenDataSourceConfiguration(apiObject *awstypes.DataSourceConfiguration) map[string]interface{} {
+func flattenDataSourceConfiguration(apiObject *awstypes.DataSourceConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"intended_use": string(apiObject.IntendedUse),
 	}
 

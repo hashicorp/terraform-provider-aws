@@ -33,6 +33,8 @@ resource "aws_default_vpc_dhcp_options" "default" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_vpc_dhcp_options` differ slightly from `aws_vpc_dhcp_options`  resources.
 Namely, the `domain_name`, `domain_name_servers` and `ntp_servers` arguments are computed.
 The following arguments are still supported:

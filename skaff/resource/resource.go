@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resource
@@ -22,9 +22,6 @@ import (
 //go:embed resource.gtpl
 var resourceTmpl string
 
-//go:embed resourcefw.gtpl
-var resourceFrameworkTmpl string
-
 //go:embed resourcetest.gtpl
 var resourceTestTmpl string
 
@@ -33,7 +30,9 @@ var websiteTmpl string
 
 type TemplateData struct {
 	Resource             string
+	ResourceAWS          string
 	ResourceLower        string
+	ResourceLowerCamel   string
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
@@ -43,12 +42,12 @@ type TemplateData struct {
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
+	ARNNamespace         string
 }
 
-func Create(resName, snakeName string, comments, force, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -79,7 +78,9 @@ func Create(resName, snakeName string, comments, force, pluginFramework, tags bo
 
 	templateData := TemplateData{
 		Resource:             resName,
+		ResourceAWS:          convert.ToAWSCapitalization(resName),
 		ResourceLower:        strings.ToLower(resName),
+		ResourceLowerCamel:   convert.ToLowercasePrefix(resName),
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
@@ -89,17 +90,13 @@ func Create(resName, snakeName string, comments, force, pluginFramework, tags bo
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		PluginFramework:      pluginFramework,
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
+		ARNNamespace:         service.ARNNamespace(),
 	}
 
-	tmpl := resourceTmpl
-	if pluginFramework {
-		tmpl = resourceFrameworkTmpl
-	}
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 

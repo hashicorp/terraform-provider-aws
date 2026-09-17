@@ -40,14 +40,17 @@ output "id" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Key Pairs. The given filters must match exactly one Key Pair
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_pair_id` - (Optional) Key Pair ID.
 * `key_name` - (Optional) Key Pair name.
 * `include_public_key` - (Optional) Whether to include the public key material in the response.
 * `filter` -  (Optional) Custom filter block as described below.
+
+The arguments of this data source act as filters for querying the available
+Key Pairs. The given filters must match exactly one Key Pair
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 

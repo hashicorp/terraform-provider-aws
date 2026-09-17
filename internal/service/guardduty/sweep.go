@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -33,7 +33,7 @@ func sweepDetectors(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.GuardDutyClient(ctx)
@@ -81,7 +81,7 @@ func sweepPublishingDestinations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.GuardDutyClient(ctx)
@@ -116,7 +116,7 @@ func sweepPublishingDestinations(region string) error {
 				}
 
 				if err != nil {
-					return fmt.Errorf("error retrieving GuardDuty Publishing Destinations: %s", err)
+					return err
 				}
 
 				for _, destination_element := range page.Destinations {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -11,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,49 +29,51 @@ func dataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReservedOfferingRead,
 
-		Schema: map[string]*schema.Schema{
-			"currency_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"offering_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"offering_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"Partial Upfront",
-					"All Upfront",
-					"No Upfront",
-				}, false),
-			},
-			"product_description": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"currency_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_class": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"fixed_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"offering_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"offering_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"Partial Upfront",
+						"All Upfront",
+						"No Upfront",
+					}, false),
+				},
+				"product_description": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -81,8 +85,12 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 		ProductDescription: aws.String(d.Get("product_description").(string)),
 	}
 
-	offering, err := findReservedDBInstancesOffering(ctx, conn, input, tfslices.PredicateTrue[*types.ReservedDBInstancesOffering]())
-
+	// A filter is necessary because the API returns all products where the product description contains
+	// the input product description. Sending "mysql" will return "mysql" *and* "aurora-mysql" offerings,
+	// causing an error: multiple RDS Reserved Instance Offerings matched
+	offering, err := findReservedDBInstancesOffering(ctx, conn, input, func(v *types.ReservedDBInstancesOffering) bool {
+		return aws.ToString(v.ProductDescription) == d.Get("product_description").(string) && aws.ToString(v.DBInstanceClass) == d.Get("db_instance_class").(string)
+	})
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS Reserved Instance Offering", err))
 	}
@@ -103,7 +111,6 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 
 func findReservedDBInstancesOffering(ctx context.Context, conn *rds.Client, input *rds.DescribeReservedDBInstancesOfferingsInput, filter tfslices.Predicate[*types.ReservedDBInstancesOffering]) (*types.ReservedDBInstancesOffering, error) {
 	output, err := findReservedDBInstancesOfferings(ctx, conn, input, filter)
-
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +127,7 @@ func findReservedDBInstancesOfferings(ctx context.Context, conn *rds.Client, inp
 
 		if errs.IsA[*types.ReservedDBInstancesOfferingNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

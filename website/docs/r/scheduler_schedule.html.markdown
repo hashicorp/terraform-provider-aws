@@ -72,12 +72,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `action_after_completion` - (Optional) Action that applies to the schedule after completing invocation of the target. Valid values are `NONE` and `DELETE`. Defaults to `NONE`.
 * `description` - (Optional) Brief description of the schedule.
 * `end_date` - (Optional) The date, in UTC, before which the schedule can invoke its target. Depending on the schedule's recurrence expression, invocations might stop on, or before, the end date you specify. EventBridge Scheduler ignores the end date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `group_name` - (Optional, Forces new resource) Name of the schedule group to associate with this schedule. When omitted, the `default` schedule group is used.
 * `kms_key_arn` - (Optional) ARN for the customer managed KMS key that EventBridge Scheduler will use to encrypt and decrypt your data.
 * `name` - (Optional, Forces new resource) Name of the schedule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `schedule_expression_timezone` - (Optional) Timezone in which the scheduling expression is evaluated. Defaults to `UTC`. Example: `Australia/Sydney`.
 * `start_date` - (Optional) The date, in UTC, after which the schedule can begin invoking its target. Depending on the schedule's recurrence expression, invocations might occur on, or after, the start date you specify. EventBridge Scheduler ignores the start date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `state` - (Optional) Specifies whether the schedule is enabled or disabled. One of: `ENABLED` (default), `DISABLED`.
@@ -96,13 +98,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dead_letter_config` - (Optional) Information about an Amazon SQS queue that EventBridge Scheduler uses as a dead-letter queue for your schedule. If specified, EventBridge Scheduler delivers failed events that could not be successfully delivered to a target to the queue. Detailed below.
 * `ecs_parameters` - (Optional) Templated target type for the Amazon ECS [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API operation. Detailed below.
 * `eventbridge_parameters` - (Optional) Templated target type for the EventBridge [`PutEvents`](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) API operation. Detailed below.
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `kinesis_parameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
 * `retry_policy` - (Optional) Information about the retry policy settings. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker AI [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS [`SendMessage`](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html) API operation. Detailed below.
 
 #### dead_letter_config Configuration Block
@@ -117,6 +120,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_provider_strategy` - (Optional) Up to `6` capacity provider strategies to use for the task. Detailed below.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task. For more information, see [Tagging Your Amazon ECS Resources](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-using-tags.html) in the Amazon ECS Developer Guide.
 * `enable_execute_command` - (Optional) Specifies whether to enable the execute command functionality for the containers in this task.
@@ -131,24 +135,24 @@ The following arguments are optional:
 * `tags` - (Optional) The metadata that you apply to the task. Each tag consists of a key and an optional value. For more information, see [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) in the Amazon ECS API Reference.
 * `task_count` - (Optional) The number of tasks to create. Ranges from `1` (default) to `10`.
 
-##### capacity_provider_strategy Configuration Block
+#### capacity_provider_strategy Configuration Block
 
 * `base` - (Optional) How many tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined. Ranges from `0` (default) to `100000`.
 * `capacity_provider` - (Required) Short name of the capacity provider.
 * `weight` - (Optional) Designates the relative percentage of the total number of tasks launched that should use the specified capacity provider. The weight value is taken into consideration after the base value, if defined, is satisfied. Ranges from from `0` to `1000`.
 
-##### network_configuration Configuration Block
+#### network_configuration Configuration Block
 
 * `assign_public_ip` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. This attribute is a boolean type, where `true` maps to `ENABLED` and `false` to `DISABLED`. You can specify `true` only when the `launch_type` is set to `FARGATE`.
 * `security_groups` - (Optional) Set of 1 to 5 Security Group ID-s to be associated with the task. These security groups must all be in the same VPC.
 * `subnets` - (Optional) Set of 1 to 16 subnets to be associated with the task. These subnets must all be in the same VPC.
 
-##### placement_constraints Configuration Block
+#### placement_constraints Configuration Block
 
 * `expression` - (Optional) A cluster query language expression to apply to the constraint. You cannot specify an expression if the constraint type is `distinctInstance`. For more information, see [Cluster query language](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html) in the Amazon ECS Developer Guide.
 * `type` - (Required) The type of constraint. One of: `distinctInstance`, `memberOf`.
 
-##### placement_strategy Configuration Block
+#### placement_strategy Configuration Block
 
 * `field` - (Optional) The field to apply the placement strategy against.
 * `type` - (Required) The type of placement strategy. One of: `random`, `spread`, `binpack`.
@@ -169,12 +173,12 @@ The following arguments are optional:
 
 #### sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker Model Building Pipeline. Detailed below.
+* `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker AI Model Building Pipeline. Detailed below.
 
-##### pipeline_parameter Configuration Block
+#### pipeline_parameter Configuration Block
 
-* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
-* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+* `name` - (Required) Name of parameter to start execution of a SageMaker AI Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker AI Model Building Pipeline.
 
 #### sqs_parameters Configuration Block
 
@@ -188,6 +192,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the schedule.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_scheduler_schedule.example
+  identity = {
+    group_name = "my-schedule-group"
+    name       = "my-schedule"
+  }
+}
+
+resource "aws_scheduler_schedule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `group_name` - (String) Name of the schedule group.
+* `name` - (String) Name of the schedule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedules using the combination `group_name/name`. For example:
 

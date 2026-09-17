@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_kms_public_key: Add `public_key_pem` attribute
-```

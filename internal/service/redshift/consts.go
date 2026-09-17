@@ -1,12 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
 
 import (
 	"time"
-
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -32,12 +30,19 @@ const (
 )
 
 const (
+	clusterRestoreStatusStarting  = "starting"
+	clusterRestoreStatusRestoring = "restoring"
+	clusterRestoreStatusCompleted = "completed"
+	clusterRestoreStatusFailed    = "failed"
+)
+
+const (
 	clusterTypeMultiNode  = "multi-node"
 	clusterTypeSingleNode = "single-node"
 )
 
 const (
-	clusterAvailabilityZoneRelocationStatusEnabled          = names.AttrEnabled
+	clusterAvailabilityZoneRelocationStatusEnabled          = "enabled"
 	clusterAvailabilityZoneRelocationStatusDisabled         = "disabled"
 	clusterAvailabilityZoneRelocationStatusPendingEnabling  = "pending_enabling"
 	clusterAvailabilityZoneRelocationStatusPendingDisabling = "pending_disabling"
@@ -45,7 +50,7 @@ const (
 
 func clusterAvailabilityZoneRelocationStatus_TerminalValues() []string {
 	return []string{
-		names.AttrEnabled,
+		clusterAvailabilityZoneRelocationStatusEnabled,
 		clusterAvailabilityZoneRelocationStatusDisabled,
 	}
 }

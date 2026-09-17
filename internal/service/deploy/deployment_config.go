@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package deploy
 
@@ -12,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,153 +35,155 @@ func resourceDeploymentConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_platform": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.ComputePlatformServer,
-				ValidateDiagFunc: enum.Validate[types.ComputePlatform](),
-			},
-			"deployment_config_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_config_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"minimum_healthy_hosts": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_platform": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.ComputePlatformServer,
+					ValidateDiagFunc: enum.Validate[types.ComputePlatform](),
+				},
+				"deployment_config_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_config_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"minimum_healthy_hosts": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"traffic_routing_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"time_based_canary": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrInterval: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"percentage": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"time_based_linear": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrInterval: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"percentage": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
+				"traffic_routing_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"time_based_canary": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrInterval: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"percentage": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          types.TrafficRoutingTypeAllAtOnce,
-							ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+							"time_based_linear": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrInterval: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"percentage": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          types.TrafficRoutingTypeAllAtOnce,
+								ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+							},
 						},
 					},
 				},
-			},
-			"zonal_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"first_zone_monitor_duration_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						"minimum_healthy_hosts_per_zone": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
+				"zonal_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"first_zone_monitor_duration_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							"minimum_healthy_hosts_per_zone": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"monitor_duration_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
+							"monitor_duration_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -203,13 +207,13 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceDeploymentConfigRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	deploymentConfig, err := findDeploymentConfigByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -223,8 +227,8 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "deploymentconfig:" + deploymentConfigName,
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -244,14 +248,15 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeDeploy Deployment Config: %s", d.Id())
-	_, err := conn.DeleteDeploymentConfig(ctx, &codedeploy.DeleteDeploymentConfigInput{
+	input := codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeploymentConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Config (%s): %s", d.Id(), err)
@@ -269,8 +274,7 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 
 	if errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -279,7 +283,7 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 	}
 
 	if output == nil || output.DeploymentConfigInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeploymentConfigInfo, nil
@@ -291,7 +295,7 @@ func expandMinimumHealthyHosts(d *schema.ResourceData) *types.MinimumHealthyHost
 		return nil
 	}
 
-	tfMap := v.([]interface{})[0].(map[string]interface{})
+	tfMap := v.([]any)[0].(map[string]any)
 
 	apiObject := &types.MinimumHealthyHosts{
 		Type:  types.MinimumHealthyHostsType(tfMap[names.AttrType].(string)),
@@ -307,14 +311,14 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 		return nil
 	}
 
-	tfMap := v.([]interface{})[0].(map[string]interface{})
+	tfMap := v.([]any)[0].(map[string]any)
 	apiObject := &types.TrafficRoutingConfig{}
 
-	if v, ok := tfMap["time_based_canary"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.TimeBasedCanary = expandTimeBasedCanary(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["time_based_canary"]; ok && len(v.([]any)) > 0 {
+		apiObject.TimeBasedCanary = expandTimeBasedCanary(v.([]any)[0].(map[string]any))
 	}
-	if v, ok := tfMap["time_based_linear"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.TimeBasedLinear = expandTimeBasedLinear(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["time_based_linear"]; ok && len(v.([]any)) > 0 {
+		apiObject.TimeBasedLinear = expandTimeBasedLinear(v.([]any)[0].(map[string]any))
 	}
 	if v, ok := tfMap[names.AttrType]; ok {
 		apiObject.Type = types.TrafficRoutingType(v.(string))
@@ -323,7 +327,7 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 	return apiObject
 }
 
-func expandTimeBasedCanary(tfMap map[string]interface{}) *types.TimeBasedCanary {
+func expandTimeBasedCanary(tfMap map[string]any) *types.TimeBasedCanary {
 	apiObject := &types.TimeBasedCanary{}
 
 	if v, ok := tfMap[names.AttrInterval]; ok {
@@ -336,7 +340,7 @@ func expandTimeBasedCanary(tfMap map[string]interface{}) *types.TimeBasedCanary 
 	return apiObject
 }
 
-func expandTimeBasedLinear(tfMap map[string]interface{}) *types.TimeBasedLinear {
+func expandTimeBasedLinear(tfMap map[string]any) *types.TimeBasedLinear {
 	apiObject := &types.TimeBasedLinear{}
 
 	if v, ok := tfMap[names.AttrInterval]; ok {
@@ -355,14 +359,14 @@ func expandZonalConfig(d *schema.ResourceData) *types.ZonalConfig {
 		return nil
 	}
 
-	tfMap := v.([]interface{})[0].(map[string]interface{})
+	tfMap := v.([]any)[0].(map[string]any)
 	apiObject := &types.ZonalConfig{}
 
 	if v, ok := tfMap["first_zone_monitor_duration_in_seconds"].(int); ok {
 		apiObject.FirstZoneMonitorDurationInSeconds = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["minimum_healthy_hosts_per_zone"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.MinimumHealthyHostsPerZone = expandMinimumHealthyHostsPerZone(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["minimum_healthy_hosts_per_zone"]; ok && len(v.([]any)) > 0 {
+		apiObject.MinimumHealthyHostsPerZone = expandMinimumHealthyHostsPerZone(v.([]any)[0].(map[string]any))
 	}
 	if v, ok := tfMap["monitor_duration_in_seconds"].(int); ok {
 		apiObject.MonitorDurationInSeconds = aws.Int64(int64(v))
@@ -371,7 +375,7 @@ func expandZonalConfig(d *schema.ResourceData) *types.ZonalConfig {
 	return apiObject
 }
 
-func expandMinimumHealthyHostsPerZone(tfMap map[string]interface{}) *types.MinimumHealthyHostsPerZone {
+func expandMinimumHealthyHostsPerZone(tfMap map[string]any) *types.MinimumHealthyHostsPerZone {
 	if tfMap == nil {
 		return nil
 	}
@@ -384,28 +388,28 @@ func expandMinimumHealthyHostsPerZone(tfMap map[string]interface{}) *types.Minim
 	return apiObject
 }
 
-func flattenMinimumHealthHosts(apiObject *types.MinimumHealthyHosts) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenMinimumHealthHosts(apiObject *types.MinimumHealthyHosts) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return tfList
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap[names.AttrType] = apiObject.Type
 	tfMap[names.AttrValue] = apiObject.Value
 
 	return append(tfList, tfMap)
 }
 
-func flattenTrafficRoutingConfig(apiObject *types.TrafficRoutingConfig) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenTrafficRoutingConfig(apiObject *types.TrafficRoutingConfig) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return tfList
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["time_based_canary"] = flattenTimeBasedCanary(apiObject.TimeBasedCanary)
 	tfMap["time_based_linear"] = flattenTimeBasedLinear(apiObject.TimeBasedLinear)
 	tfMap[names.AttrType] = apiObject.Type
@@ -413,42 +417,42 @@ func flattenTrafficRoutingConfig(apiObject *types.TrafficRoutingConfig) []interf
 	return append(tfList, tfMap)
 }
 
-func flattenTimeBasedCanary(apiObject *types.TimeBasedCanary) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenTimeBasedCanary(apiObject *types.TimeBasedCanary) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return tfList
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap[names.AttrInterval] = apiObject.CanaryInterval
 	tfMap["percentage"] = apiObject.CanaryPercentage
 
 	return append(tfList, tfMap)
 }
 
-func flattenTimeBasedLinear(apiObject *types.TimeBasedLinear) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenTimeBasedLinear(apiObject *types.TimeBasedLinear) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return tfList
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap[names.AttrInterval] = apiObject.LinearInterval
 	tfMap["percentage"] = apiObject.LinearPercentage
 
 	return append(tfList, tfMap)
 }
 
-func flattenZonalConfig(apiObject *types.ZonalConfig) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenZonalConfig(apiObject *types.ZonalConfig) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["first_zone_monitor_duration_in_seconds"] = aws.ToInt64(apiObject.FirstZoneMonitorDurationInSeconds)
 	tfMap["minimum_healthy_hosts_per_zone"] = flattenMinimumHealthHostsPerZone(apiObject.MinimumHealthyHostsPerZone)
 	tfMap["monitor_duration_in_seconds"] = aws.ToInt64(apiObject.MonitorDurationInSeconds)
@@ -456,14 +460,14 @@ func flattenZonalConfig(apiObject *types.ZonalConfig) []interface{} {
 	return append(tfList, tfMap)
 }
 
-func flattenMinimumHealthHostsPerZone(apiObject *types.MinimumHealthyHostsPerZone) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenMinimumHealthHostsPerZone(apiObject *types.MinimumHealthyHostsPerZone) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap[names.AttrType] = apiObject.Type
 	tfMap[names.AttrValue] = apiObject.Value
 

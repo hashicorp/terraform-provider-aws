@@ -25,8 +25,9 @@ resource "aws_grafana_workspace_api_key" "key" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `key_name` - (Required) Specifies the name of the API key. Key names must be unique to the workspace.
 - `key_role` - (Required) Specifies the permission level of the API key. Valid values are `VIEWER`, `EDITOR`, or `ADMIN`.
 - `seconds_to_live` - (Required) Specifies the time in seconds until the API key expires. Keys can be valid for up to 30 days.

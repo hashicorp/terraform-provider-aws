@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cognito_identity_provider: Fix updating `idp_identifiers` crash.
-```

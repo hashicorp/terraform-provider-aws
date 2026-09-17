@@ -51,14 +51,17 @@ data "aws_eip" "by_tags" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Elastic IPs in the current region. The given filters must match exactly one
-Elastic IP whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `id` - (Optional) Allocation ID of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `public_ip`
 * `public_ip` - (Optional) Public IP of the specific EIP to retrieve.
-* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP.
+
+The arguments of this data source act as filters for querying the available
+Elastic IPs in the current region. The given filters must match exactly one
+Elastic IP whose data will be exported as attributes.
 
 ## Attribute Reference
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package emr
 
@@ -8,12 +10,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"slices"
 	"strings"
 	"time"
-	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
@@ -21,7 +23,6 @@ import (
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -53,185 +55,185 @@ func resourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			instanceFleetConfigSchema := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_type_configs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bid_price": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-									},
-									"bid_price_as_percentage_of_on_demand_price": {
-										Type:     schema.TypeFloat,
-										Optional: true,
-										ForceNew: true,
-										Default:  100,
-									},
-									"configurations": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"classification": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrProperties: {
-													Type:     schema.TypeMap,
-													Optional: true,
-													ForceNew: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"ebs_config": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrIOPS: {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrSize: {
-													Type:     schema.TypeInt,
-													Required: true,
-													ForceNew: true,
-												},
-												names.AttrType: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validEBSVolumeType(),
-												},
-												"volumes_per_instance": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  1,
-												},
-											},
-										},
-										Set: resourceClusterEBSHashConfig,
-									},
-									names.AttrInstanceType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"weighted_capacity": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-							Set: resourceInstanceTypeHashConfig,
-						},
-						"launch_specifications": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"on_demand_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"allocation_strategy": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+							"instance_type_configs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bid_price": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"bid_price_as_percentage_of_on_demand_price": {
+											Type:     schema.TypeFloat,
+											Optional: true,
+											ForceNew: true,
+											Default:  100,
+										},
+										"configurations": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"classification": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrProperties: {
+														Type:     schema.TypeMap,
+														Optional: true,
+														ForceNew: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
-									},
-									"spot_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"allocation_strategy": {
-													Type:             schema.TypeString,
-													ForceNew:         true,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
-												},
-												"block_duration_minutes": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													ForceNew: true,
-													Default:  0,
-												},
-												"timeout_action": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
-												},
-												"timeout_duration_minutes": {
-													Type:     schema.TypeInt,
-													ForceNew: true,
-													Required: true,
+										"ebs_config": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrIOPS: {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrSize: {
+														Type:     schema.TypeInt,
+														Required: true,
+														ForceNew: true,
+													},
+													names.AttrType: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validEBSVolumeType(),
+													},
+													"volumes_per_instance": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+														Default:  1,
+													},
 												},
 											},
+											Set: resourceClusterEBSHashConfig,
+										},
+										names.AttrInstanceType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"weighted_capacity": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  1,
 										},
 									},
 								},
+								Set: resourceInstanceTypeHashConfig,
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"provisioned_on_demand_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"provisioned_spot_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"target_on_demand_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  0,
-						},
-						"target_spot_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  0,
-						},
+							"launch_specifications": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"on_demand_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"allocation_strategy": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
+													},
+												},
+											},
+										},
+										"spot_specification": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"allocation_strategy": {
+														Type:             schema.TypeString,
+														ForceNew:         true,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
+													},
+													"block_duration_minutes": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+														Default:  0,
+													},
+													"timeout_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
+													},
+													"timeout_duration_minutes": {
+														Type:     schema.TypeInt,
+														ForceNew: true,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"provisioned_on_demand_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"provisioned_spot_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"target_on_demand_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  0,
+							},
+							"target_spot_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  0,
+							},
+						}
 					},
 				}
 			}
@@ -244,7 +246,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc:          validation.StringIsJSON,
 					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 					DiffSuppressOnRefresh: true,
-					StateFunc: func(v interface{}) string {
+					StateFunc: func(v any) string {
 						json, _ := structure.NormalizeJsonString(v)
 						return json
 					},
@@ -318,7 +320,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc:          validation.StringIsJSON,
 					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 					DiffSuppressOnRefresh: true,
-					StateFunc: func(v interface{}) string {
+					StateFunc: func(v any) string {
 						json, _ := structure.NormalizeJsonString(v)
 						return json
 					},
@@ -650,6 +652,11 @@ func resourceCluster() *schema.Resource {
 					ForceNew: true,
 					Required: true,
 				},
+				"os_release_label": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
 				"placement_group_config": {
 					Type:       schema.TypeList,
 					ForceNew:   true,
@@ -778,7 +785,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -809,8 +816,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		UnhealthyNodeReplacement:    aws.Bool(unhealthyNodeReplacement),
 	}
 
-	if l := d.Get("master_instance_group").([]interface{}); len(l) > 0 && l[0] != nil {
-		m := l[0].(map[string]interface{})
+	if l := d.Get("master_instance_group").([]any); len(l) > 0 && l[0] != nil {
+		m := l[0].(map[string]any)
 
 		instanceGroup := awstypes.InstanceGroupConfig{
 			InstanceCount: aws.Int32(int32(m[names.AttrInstanceCount].(int))),
@@ -830,8 +837,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
 
-	if l := d.Get("core_instance_group").([]interface{}); len(l) > 0 && l[0] != nil {
-		m := l[0].(map[string]interface{})
+	if l := d.Get("core_instance_group").([]any); len(l) > 0 && l[0] != nil {
+		m := l[0].(map[string]any)
 
 		instanceGroup := awstypes.InstanceGroupConfig{
 			InstanceCount: aws.Int32(int32(m[names.AttrInstanceCount].(int))),
@@ -861,20 +868,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
 
-	if l := d.Get("master_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := expandInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeMaster)
+	if l := d.Get("master_instance_fleet").([]any); len(l) > 0 && l[0] != nil {
+		instanceFleetConfig := expandInstanceFleetConfig(l[0].(map[string]any), awstypes.InstanceFleetTypeMaster)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, *instanceFleetConfig)
 	}
 
-	if l := d.Get("core_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := expandInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeCore)
+	if l := d.Get("core_instance_fleet").([]any); len(l) > 0 && l[0] != nil {
+		instanceFleetConfig := expandInstanceFleetConfig(l[0].(map[string]any), awstypes.InstanceFleetTypeCore)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, *instanceFleetConfig)
 	}
 
 	var instanceProfile string
 	if a, ok := d.GetOk("ec2_attributes"); ok {
-		ec2Attributes := a.([]interface{})
-		attributes := ec2Attributes[0].(map[string]interface{})
+		ec2Attributes := a.([]any)
+		attributes := ec2Attributes[0].(map[string]any)
 
 		if v, ok := attributes["key_name"]; ok {
 			instanceConfig.Ec2KeyName = aws.String(v.(string))
@@ -919,11 +926,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	name := d.Get(names.AttrName).(string)
-	input := &emr.RunJobFlowInput{
-		Instances:    instanceConfig,
-		Name:         aws.String(name),
-		Applications: expandApplications(applications),
-
+	input := emr.RunJobFlowInput{
+		Applications:      expandApplications(applications),
+		Instances:         instanceConfig,
+		Name:              aws.String(name),
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get(names.AttrServiceRole).(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
@@ -938,48 +944,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AdditionalInfo = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("log_encryption_kms_key_id"); ok {
-		input.LogEncryptionKmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("log_uri"); ok {
-		input.LogUri = aws.String(v.(string))
+	if v, ok := d.GetOk("auto_termination_policy"); ok && len(v.([]any)) > 0 {
+		input.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]any))
 	}
 
 	if v, ok := d.GetOk("autoscaling_role"); ok {
 		input.AutoScalingRole = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("scale_down_behavior"); ok {
-		input.ScaleDownBehavior = awstypes.ScaleDownBehavior(v.(string))
-	}
-
-	if v, ok := d.GetOk("security_configuration"); ok {
-		input.SecurityConfiguration = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ebs_root_volume_size"); ok {
-		input.EbsRootVolumeSize = aws.Int32(int32(v.(int)))
-	}
-
-	if v, ok := d.GetOk("custom_ami_id"); ok {
-		input.CustomAmiId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("step_concurrency_level"); ok {
-		input.StepConcurrencyLevel = aws.Int32(int32(v.(int)))
-	}
-
-	if instanceProfile != "" {
-		input.JobFlowRole = aws.String(instanceProfile)
-	}
-
 	if v, ok := d.GetOk("bootstrap_action"); ok {
-		input.BootstrapActions = expandBootstrapActions(v.([]interface{}))
+		input.BootstrapActions = expandBootstrapActions(v.([]any))
 	}
-	if v, ok := d.GetOk("step"); ok {
-		input.Steps = expandStepConfigs(v.([]interface{}))
-	}
+
 	if v, ok := d.GetOk("configurations"); ok {
 		input.Configurations = expandConfigures(v.(string))
 	}
@@ -995,20 +971,57 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("kerberos_attributes"); ok {
-		input.KerberosAttributes = expandKerberosAttributes(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("custom_ami_id"); ok {
+		input.CustomAmiId = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("auto_termination_policy"); ok && len(v.([]interface{})) > 0 {
-		input.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
+
+	if v, ok := d.GetOk("ebs_root_volume_size"); ok {
+		input.EbsRootVolumeSize = aws.Int32(int32(v.(int)))
+	}
+
+	if instanceProfile != "" {
+		input.JobFlowRole = aws.String(instanceProfile)
+	}
+
+	if v, ok := d.GetOk("kerberos_attributes"); ok {
+		input.KerberosAttributes = expandKerberosAttributes(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("log_encryption_kms_key_id"); ok {
+		input.LogEncryptionKmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_uri"); ok {
+		input.LogUri = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("os_release_label"); ok {
+		input.OSReleaseLabel = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("placement_group_config"); ok {
-		input.PlacementGroupConfigs = expandPlacementGroupConfigs(v.([]interface{}))
+		input.PlacementGroupConfigs = expandPlacementGroupConfigs(v.([]any))
+	}
+
+	if v, ok := d.GetOk("scale_down_behavior"); ok {
+		input.ScaleDownBehavior = awstypes.ScaleDownBehavior(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_configuration"); ok {
+		input.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("step"); ok {
+		input.Steps = expandStepConfigs(v.([]any))
+	}
+
+	if v, ok := d.GetOk("step_concurrency_level"); ok {
+		input.StepConcurrencyLevel = aws.Int32(int32(v.(int)))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.RunJobFlow(ctx, input)
+		func(ctx context.Context) (any, error) {
+			return conn.RunJobFlow(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Invalid InstanceProfile:") {
@@ -1057,13 +1070,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	cluster, err := findClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1120,6 +1133,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrServiceRole, cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)
+	d.Set("os_release_label", cluster.OSReleaseLabel)
 	d.Set("release_label", cluster.ReleaseLabel)
 	d.Set("log_encryption_kms_key_id", cluster.LogEncryptionKmsKeyId)
 	d.Set("log_uri", cluster.LogUri)
@@ -1193,7 +1207,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	autoTerminationPolicy, err := findAutoTerminationPolicyByClusterID(ctx, conn, d.Id())
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("auto_termination_policy", nil)
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) auto-termination policy: %s", d.Id(), err)
@@ -1210,7 +1224,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -1229,9 +1243,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChange("auto_termination_policy") {
 		_, n := d.GetChange("auto_termination_policy")
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]any)) > 0 {
 			input := &emr.PutAutoTerminationPolicyInput{
-				AutoTerminationPolicy: expandAutoTerminationPolicy(n.([]interface{})),
+				AutoTerminationPolicy: expandAutoTerminationPolicy(n.([]any)),
 				ClusterId:             aws.String(d.Id()),
 			}
 
@@ -1318,7 +1332,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			const (
 				timeout = 1 * time.Minute
 			)
-			_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+			_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 				return findCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 			})
 
@@ -1360,8 +1374,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		nSet := n.(*schema.Set).List()
 		for _, currInstanceGroup := range oSet {
 			for _, nextInstanceGroup := range nSet {
-				oInstanceGroup := currInstanceGroup.(map[string]interface{})
-				nInstanceGroup := nextInstanceGroup.(map[string]interface{})
+				oInstanceGroup := currInstanceGroup.(map[string]any)
+				nInstanceGroup := nextInstanceGroup.(map[string]any)
 
 				if oInstanceGroup["instance_role"].(string) != nInstanceGroup["instance_role"].(string) || oInstanceGroup[names.AttrName].(string) != nInstanceGroup[names.AttrName].(string) {
 					continue
@@ -1413,7 +1427,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -1446,15 +1460,12 @@ func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstype
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	if output.Status.State == awstypes.ClusterStateTerminated || output.Status.State == awstypes.ClusterStateTerminatedWithErrors {
 		return nil, &retry.NotFoundError{
-			Message:     string(output.Status.State),
-			LastRequest: input,
+			Message: string(output.Status.State),
 		}
 	}
 
@@ -1466,8 +1477,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 
 	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1476,20 +1486,20 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	}
 
 	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil
 }
 
-func statusCluster(ctx context.Context, conn *emr.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCluster(conn *emr.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
 		}
 		output, err := findCluster(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1508,7 +1518,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateBootstrapping, awstypes.ClusterStateStarting),
 		Target:     enum.Slice(awstypes.ClusterStateRunning, awstypes.ClusterStateWaiting),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1518,7 +1528,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1534,7 +1544,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateTerminating),
 		Target:     enum.Slice(awstypes.ClusterStateTerminated, awstypes.ClusterStateTerminatedWithErrors),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1544,7 +1554,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1570,8 +1580,7 @@ func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.List
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1594,8 +1603,7 @@ func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListSte
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1627,8 +1635,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 		tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") ||
 		tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1637,13 +1644,13 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	}
 
 	if output == nil || output.AutoTerminationPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AutoTerminationPolicy, nil
 }
 
-func expandApplications(tfList []interface{}) []awstypes.Application {
+func expandApplications(tfList []any) []awstypes.Application {
 	apiObjects := make([]awstypes.Application, 0, len(tfList))
 
 	for _, v := range flex.ExpandStringList(tfList) {
@@ -1655,15 +1662,15 @@ func expandApplications(tfList []interface{}) []awstypes.Application {
 	return apiObjects
 }
 
-func flattenApplications(apiObjects []awstypes.Application) []interface{} {
-	return tfslices.ApplyToAll(apiObjects, func(app awstypes.Application) interface{} {
+func flattenApplications(apiObjects []awstypes.Application) []any {
+	return tfslices.ApplyToAll(apiObjects, func(app awstypes.Application) any {
 		return aws.ToString(app.Name)
 	})
 }
 
-func flattenEC2InstanceAttributes(apiObject *awstypes.Ec2InstanceAttributes) []interface{} {
-	tfList := make([]interface{}, 0)
-	tfMap := map[string]interface{}{}
+func flattenEC2InstanceAttributes(apiObject *awstypes.Ec2InstanceAttributes) []any {
+	tfList := make([]any, 0)
+	tfMap := map[string]any{}
 
 	if apiObject.Ec2KeyName != nil {
 		tfMap["key_name"] = aws.ToString(apiObject.Ec2KeyName)
@@ -1700,11 +1707,125 @@ func flattenEC2InstanceAttributes(apiObject *awstypes.Ec2InstanceAttributes) []i
 	return tfList
 }
 
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeAutoScalingPolicy github.com/aws/aws-sdk-go-v2/service/emr.awsAwsjson11_serializeDocumentAutoScalingPolicy
-func serializeAutoScalingPolicy(v *awstypes.AutoScalingPolicy, value smithyjson.Value) error
+// Preserve the AWS JSON representation used in state: omit nil members and empty
+// enums, but retain non-nil empty collections and pointers to zero values.
+func serializeAutoScalingPolicy(v *awstypes.AutoScalingPolicy, value smithyjson.Value) error {
+	o := value.Object()
+	defer o.Close()
+
+	if v.Constraints != nil {
+		c := o.Key("Constraints").Object()
+		if v.Constraints.MaxCapacity != nil {
+			c.Key("MaxCapacity").Integer(*v.Constraints.MaxCapacity)
+		}
+		if v.Constraints.MinCapacity != nil {
+			c.Key("MinCapacity").Integer(*v.Constraints.MinCapacity)
+		}
+		c.Close()
+	}
+	if v.Rules != nil {
+		a := o.Key("Rules").Array()
+		for i := range v.Rules {
+			serializeScalingRule(&v.Rules[i], a.Value())
+		}
+		a.Close()
+	}
+
+	return nil
+}
+
+func serializeScalingRule(v *awstypes.ScalingRule, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.Action != nil {
+		a := o.Key("Action").Object()
+		if v.Action.Market != "" {
+			a.Key("Market").String(string(v.Action.Market))
+		}
+		if v := v.Action.SimpleScalingPolicyConfiguration; v != nil {
+			c := a.Key("SimpleScalingPolicyConfiguration").Object()
+			if v.AdjustmentType != "" {
+				c.Key("AdjustmentType").String(string(v.AdjustmentType))
+			}
+			if v.CoolDown != nil {
+				c.Key("CoolDown").Integer(*v.CoolDown)
+			}
+			if v.ScalingAdjustment != nil {
+				c.Key("ScalingAdjustment").Integer(*v.ScalingAdjustment)
+			}
+			c.Close()
+		}
+		a.Close()
+	}
+	if v.Description != nil {
+		o.Key("Description").String(*v.Description)
+	}
+	if v.Name != nil {
+		o.Key("Name").String(*v.Name)
+	}
+	if v.Trigger != nil {
+		t := o.Key("Trigger").Object()
+		if v.Trigger.CloudWatchAlarmDefinition != nil {
+			serializeCloudWatchAlarmDefinition(v.Trigger.CloudWatchAlarmDefinition, t.Key("CloudWatchAlarmDefinition"))
+		}
+		t.Close()
+	}
+}
+
+func serializeCloudWatchAlarmDefinition(v *awstypes.CloudWatchAlarmDefinition, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.ComparisonOperator != "" {
+		o.Key("ComparisonOperator").String(string(v.ComparisonOperator))
+	}
+	if v.Dimensions != nil {
+		a := o.Key("Dimensions").Array()
+		for _, v := range v.Dimensions {
+			d := a.Value().Object()
+			if v.Key != nil {
+				d.Key("Key").String(*v.Key)
+			}
+			if v.Value != nil {
+				d.Key("Value").String(*v.Value)
+			}
+			d.Close()
+		}
+		a.Close()
+	}
+	if v.EvaluationPeriods != nil {
+		o.Key("EvaluationPeriods").Integer(*v.EvaluationPeriods)
+	}
+	if v.MetricName != nil {
+		o.Key("MetricName").String(*v.MetricName)
+	}
+	if v.Namespace != nil {
+		o.Key("Namespace").String(*v.Namespace)
+	}
+	if v.Period != nil {
+		o.Key("Period").Integer(*v.Period)
+	}
+	if v.Statistic != "" {
+		o.Key("Statistic").String(string(v.Statistic))
+	}
+	if v.Threshold != nil {
+		t := o.Key("Threshold")
+		switch {
+		case math.IsNaN(*v.Threshold):
+			t.String("NaN")
+		case math.IsInf(*v.Threshold, 1):
+			t.String("Infinity")
+		case math.IsInf(*v.Threshold, -1):
+			t.String("-Infinity")
+		default:
+			t.Double(*v.Threshold)
+		}
+	}
+	if v.Unit != "" {
+		o.Key("Unit").String(string(v.Unit))
+	}
+}
 
 func flattenAutoScalingPolicyDescription(apiObject *awstypes.AutoScalingPolicyDescription) (string, error) {
 	if apiObject == nil {
@@ -1736,9 +1857,9 @@ func flattenAutoScalingPolicyDescription(apiObject *awstypes.AutoScalingPolicyDe
 	return jsonEncoder.String(), nil
 }
 
-func flattenCoreInstanceGroup(apiObject *awstypes.InstanceGroup) ([]interface{}, error) {
+func flattenCoreInstanceGroup(apiObject *awstypes.InstanceGroup) ([]any, error) {
 	if apiObject == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	autoscalingPolicy, err := flattenAutoScalingPolicyDescription(apiObject.AutoScalingPolicy)
@@ -1746,7 +1867,7 @@ func flattenCoreInstanceGroup(apiObject *awstypes.InstanceGroup) ([]interface{},
 		return nil, err
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"autoscaling_policy":    autoscalingPolicy,
 		"bid_price":             aws.ToString(apiObject.BidPrice),
 		"ebs_config":            flattenEBSConfig(apiObject.EbsBlockDevices),
@@ -1756,15 +1877,15 @@ func flattenCoreInstanceGroup(apiObject *awstypes.InstanceGroup) ([]interface{},
 		names.AttrName:          aws.ToString(apiObject.Name),
 	}
 
-	return []interface{}{tfMap}, nil
+	return []any{tfMap}, nil
 }
 
-func flattenMasterInstanceGroup(apiObject *awstypes.InstanceGroup) []interface{} {
+func flattenMasterInstanceGroup(apiObject *awstypes.InstanceGroup) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"bid_price":             aws.ToString(apiObject.BidPrice),
 		"ebs_config":            flattenEBSConfig(apiObject.EbsBlockDevices),
 		names.AttrID:            aws.ToString(apiObject.Id),
@@ -1773,11 +1894,11 @@ func flattenMasterInstanceGroup(apiObject *awstypes.InstanceGroup) []interface{}
 		names.AttrName:          aws.ToString(apiObject.Name),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKerberosAttributes(d *schema.ResourceData, apiObject *awstypes.KerberosAttributes) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenKerberosAttributes(d *schema.ResourceData, apiObject *awstypes.KerberosAttributes) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil || apiObject.Realm == nil {
 		return tfList
@@ -1789,7 +1910,7 @@ func flattenKerberosAttributes(d *schema.ResourceData, apiObject *awstypes.Kerbe
 	// * cross_realm_trust_principal_password
 	// * kdc_admin_password
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"kdc_admin_password": d.Get("kerberos_attributes.0.kdc_admin_password").(string),
 		"realm":              aws.ToString(apiObject.Realm),
 	}
@@ -1811,12 +1932,12 @@ func flattenKerberosAttributes(d *schema.ResourceData, apiObject *awstypes.Kerbe
 	return tfList
 }
 
-func flattenHadoopStepConfig(apiObject *awstypes.HadoopStepConfig) map[string]interface{} {
+func flattenHadoopStepConfig(apiObject *awstypes.HadoopStepConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"args":               apiObject.Args,
 		"jar":                aws.ToString(apiObject.Jar),
 		"main_class":         aws.ToString(apiObject.MainClass),
@@ -1826,8 +1947,8 @@ func flattenHadoopStepConfig(apiObject *awstypes.HadoopStepConfig) map[string]in
 	return tfMap
 }
 
-func flattenStepSummaries(apiObjects []awstypes.StepSummary) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenStepSummaries(apiObjects []awstypes.StepSummary) []any {
+	tfList := make([]any, 0)
 
 	if len(apiObjects) == 0 {
 		return tfList
@@ -1840,14 +1961,14 @@ func flattenStepSummaries(apiObjects []awstypes.StepSummary) []interface{} {
 	return tfList
 }
 
-func flattenStepSummary(apiObject *awstypes.StepSummary) map[string]interface{} {
+func flattenStepSummary(apiObject *awstypes.StepSummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"action_on_failure": apiObject.ActionOnFailure,
-		"hadoop_jar_step":   []map[string]interface{}{flattenHadoopStepConfig(apiObject.Config)},
+		"hadoop_jar_step":   []map[string]any{flattenHadoopStepConfig(apiObject.Config)},
 		names.AttrName:      aws.ToString(apiObject.Name),
 	}
 
@@ -1856,10 +1977,10 @@ func flattenStepSummary(apiObject *awstypes.StepSummary) map[string]interface{} 
 
 func flattenEBSConfig(apiObjects []awstypes.EbsBlockDevice) *schema.Set {
 	uniqueEBS := make(map[int]int)
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		if apiObject.VolumeSpecification.Iops != nil {
 			tfMap[names.AttrIOPS] = int(aws.ToInt32(apiObject.VolumeSpecification.Iops))
@@ -1881,17 +2002,17 @@ func flattenEBSConfig(apiObjects []awstypes.EbsBlockDevice) *schema.Set {
 	}
 
 	for _, tfMapRaw := range tfList {
-		tfMapRaw.(map[string]interface{})["volumes_per_instance"] = uniqueEBS[resourceClusterEBSHashConfig(tfMapRaw)]
+		tfMapRaw.(map[string]any)["volumes_per_instance"] = uniqueEBS[resourceClusterEBSHashConfig(tfMapRaw)]
 	}
 
 	return schema.NewSet(resourceClusterEBSHashConfig, tfList)
 }
 
-func flattenBootstrapArguments(apiObjects []awstypes.Command) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenBootstrapArguments(apiObjects []awstypes.Command) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		tfMap[names.AttrPath] = aws.ToString(apiObject.ScriptPath)
@@ -1909,17 +2030,17 @@ func coreInstanceGroup(grps []awstypes.InstanceGroup) (*awstypes.InstanceGroup, 
 	}))
 }
 
-func expandBootstrapActions(tfList []interface{}) []awstypes.BootstrapActionConfig {
+func expandBootstrapActions(tfList []any) []awstypes.BootstrapActionConfig {
 	apiObjects := []awstypes.BootstrapActionConfig{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.BootstrapActionConfig{
 			Name: aws.String(tfMap[names.AttrName].(string)),
 			ScriptBootstrapAction: &awstypes.ScriptBootstrapActionConfig{
 				Path: aws.String(tfMap[names.AttrPath].(string)),
-				Args: flex.ExpandStringValueListEmpty(tfMap["args"].([]interface{})),
+				Args: flex.ExpandStringValueListEmpty(tfMap["args"].([]any)),
 			},
 		}
 
@@ -1929,13 +2050,13 @@ func expandBootstrapActions(tfList []interface{}) []awstypes.BootstrapActionConf
 	return apiObjects
 }
 
-func expandHadoopJarStepConfig(tfMap map[string]interface{}) *awstypes.HadoopJarStepConfig {
+func expandHadoopJarStepConfig(tfMap map[string]any) *awstypes.HadoopJarStepConfig {
 	apiObject := &awstypes.HadoopJarStepConfig{
 		Jar: aws.String(tfMap["jar"].(string)),
 	}
 
 	if v, ok := tfMap["args"]; ok {
-		apiObject.Args = flex.ExpandStringValueList(v.([]interface{}))
+		apiObject.Args = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := tfMap["main_class"]; ok {
@@ -1943,13 +2064,13 @@ func expandHadoopJarStepConfig(tfMap map[string]interface{}) *awstypes.HadoopJar
 	}
 
 	if v, ok := tfMap[names.AttrProperties]; ok {
-		apiObject.Properties = expandKeyValues(v.(map[string]interface{}))
+		apiObject.Properties = expandKeyValues(v.(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandKeyValues(tfMap map[string]interface{}) []awstypes.KeyValue {
+func expandKeyValues(tfMap map[string]any) []awstypes.KeyValue {
 	apiObjects := make([]awstypes.KeyValue, 0)
 
 	for k, v := range tfMap {
@@ -1964,7 +2085,7 @@ func expandKeyValues(tfMap map[string]interface{}) []awstypes.KeyValue {
 	return apiObjects
 }
 
-func expandKerberosAttributes(tfMap map[string]interface{}) *awstypes.KerberosAttributes {
+func expandKerberosAttributes(tfMap map[string]any) *awstypes.KerberosAttributes {
 	apiObject := &awstypes.KerberosAttributes{
 		KdcAdminPassword: aws.String(tfMap["kdc_admin_password"].(string)),
 		Realm:            aws.String(tfMap["realm"].(string)),
@@ -1983,34 +2104,34 @@ func expandKerberosAttributes(tfMap map[string]interface{}) *awstypes.KerberosAt
 	return apiObject
 }
 
-func expandStepConfig(tfMap map[string]interface{}) awstypes.StepConfig {
+func expandStepConfig(tfMap map[string]any) awstypes.StepConfig {
 	apiObject := awstypes.StepConfig{
 		ActionOnFailure: awstypes.ActionOnFailure(tfMap["action_on_failure"].(string)),
-		HadoopJarStep:   expandHadoopJarStepConfig(tfMap["hadoop_jar_step"].([]interface{})[0].(map[string]interface{})),
+		HadoopJarStep:   expandHadoopJarStepConfig(tfMap["hadoop_jar_step"].([]any)[0].(map[string]any)),
 		Name:            aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	return apiObject
 }
 
-func expandStepConfigs(tfList []interface{}) []awstypes.StepConfig {
+func expandStepConfigs(tfList []any) []awstypes.StepConfig {
 	apiObjects := []awstypes.StepConfig{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, expandStepConfig(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandEBSConfig(tfMap map[string]interface{}, apiObject *awstypes.InstanceGroupConfig) {
+func expandEBSConfig(tfMap map[string]any, apiObject *awstypes.InstanceGroupConfig) {
 	if v, ok := tfMap["ebs_config"]; ok {
 		ebsConfig := &awstypes.EbsConfiguration{}
 		ebsBlockDeviceConfigs := make([]awstypes.EbsBlockDeviceConfig, 0)
 
 		for _, v := range v.(*schema.Set).List() {
-			tfMap := v.(map[string]interface{})
+			tfMap := v.(map[string]any)
 			ebsBlockDeviceConfig := awstypes.EbsBlockDeviceConfig{
 				VolumesPerInstance: aws.Int32(int32(tfMap["volumes_per_instance"].(int))),
 				VolumeSpecification: &awstypes.VolumeSpecification{
@@ -2045,11 +2166,32 @@ func expandConfigurationJSON(tfString string) ([]awstypes.Configuration, error) 
 	return apiObjects, nil
 }
 
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeConfigurations github.com/aws/aws-sdk-go-v2/service/emr.awsAwsjson11_serializeDocumentConfigurationList
-func serializeConfigurations(v []awstypes.Configuration, value smithyjson.Value) error
+func serializeConfigurations(v []awstypes.Configuration, value smithyjson.Value) error {
+	a := value.Array()
+	defer a.Close()
+
+	for _, v := range v {
+		o := a.Value().Object()
+		if v.Classification != nil {
+			o.Key("Classification").String(*v.Classification)
+		}
+		if v.Configurations != nil {
+			if err := serializeConfigurations(v.Configurations, o.Key("Configurations")); err != nil {
+				return err
+			}
+		}
+		if v.Properties != nil {
+			p := o.Key("Properties").Object()
+			for k, s := range v.Properties {
+				p.Key(k).String(s)
+			}
+			p.Close()
+		}
+		o.Close()
+	}
+
+	return nil
+}
 
 func flattenConfigurationJSON(apiObjects []awstypes.Configuration) (string, error) {
 	jsonEncoder := smithyjson.NewEncoder()
@@ -2082,7 +2224,7 @@ func expandConfigures(tfString string) []awstypes.Configuration {
 	return apiObjects
 }
 
-func readHTTPJSON(url string, target interface{}) error {
+func readHTTPJSON(url string, target any) error {
 	r, err := http.Get(url)
 	if err != nil {
 		return err
@@ -2092,7 +2234,7 @@ func readHTTPJSON(url string, target interface{}) error {
 	return tfjson.DecodeFromReader(r.Body, target)
 }
 
-func readLocalJSON(localFile string, target interface{}) error {
+func readLocalJSON(localFile string, target any) error {
 	file, err := os.Open(localFile)
 	if err != nil {
 		return err
@@ -2102,7 +2244,7 @@ func readLocalJSON(localFile string, target interface{}) error {
 	return tfjson.DecodeFromReader(file, target)
 }
 
-func readBodyJSON(body string, target interface{}) error {
+func readBodyJSON(body string, target any) error {
 	return tfjson.DecodeFromString(body, target)
 }
 
@@ -2134,7 +2276,7 @@ func findCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Clien
 	}
 
 	if instanceGroup.AutoScalingPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return instanceGroup.AutoScalingPolicy, nil
@@ -2148,7 +2290,7 @@ func findInstanceGroupsByClusterID(ctx context.Context, conn *emr.Client, cluste
 	return findInstanceGroups(ctx, conn, input, tfslices.PredicateTrue[*awstypes.InstanceGroup]())
 }
 
-func expandInstanceFleetConfig(tfMap map[string]interface{}, instanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {
+func expandInstanceFleetConfig(tfMap map[string]any, instanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {
 	apiObject := &awstypes.InstanceFleetConfig{
 		InstanceFleetType:      instanceFleetType,
 		Name:                   aws.String(tfMap[names.AttrName].(string)),
@@ -2160,8 +2302,8 @@ func expandInstanceFleetConfig(tfMap map[string]interface{}, instanceFleetType a
 		apiObject.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
 	}
 
-	if v, ok := tfMap["launch_specifications"].([]interface{}); ok && len(v) == 1 && v[0] != nil {
-		apiObject.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["launch_specifications"].([]any); ok && len(v) == 1 && v[0] != nil {
+		apiObject.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]any))
 	}
 
 	return apiObject
@@ -2181,12 +2323,12 @@ func instanceFleetForRole(instanceFleets []awstypes.InstanceFleet, instanceRoleT
 	}))
 }
 
-func flattenInstanceFleet(apiObject *awstypes.InstanceFleet) []interface{} {
+func flattenInstanceFleet(apiObject *awstypes.InstanceFleet) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrID:                     aws.ToString(apiObject.Id),
 		names.AttrName:                   aws.ToString(apiObject.Name),
 		"target_on_demand_capacity":      aws.ToInt32(apiObject.TargetOnDemandCapacity),
@@ -2197,14 +2339,14 @@ func flattenInstanceFleet(apiObject *awstypes.InstanceFleet) []interface{} {
 		"launch_specifications":          flattenInstanceFleetProvisioningSpecifications(apiObject.LaunchSpecifications),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecification) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecification) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		if apiObject.BidPrice != nil {
 			tfMap["bid_price"] = aws.ToString(apiObject.BidPrice)
@@ -2224,39 +2366,39 @@ func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecifi
 	return tfList
 }
 
-func flattenInstanceFleetProvisioningSpecifications(apiObject *awstypes.InstanceFleetProvisioningSpecifications) []interface{} {
+func flattenInstanceFleetProvisioningSpecifications(apiObject *awstypes.InstanceFleetProvisioningSpecifications) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"on_demand_specification": flattenOnDemandProvisioningSpecification(apiObject.OnDemandSpecification),
 		"spot_specification":      flattenSpotProvisioningSpecification(apiObject.SpotSpecification),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenOnDemandProvisioningSpecification(apiObject *awstypes.OnDemandProvisioningSpecification) []interface{} {
+func flattenOnDemandProvisioningSpecification(apiObject *awstypes.OnDemandProvisioningSpecification) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
 		"allocation_strategy": strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSpotProvisioningSpecification(apiObject *awstypes.SpotProvisioningSpecification) []interface{} {
+func flattenSpotProvisioningSpecification(apiObject *awstypes.SpotProvisioningSpecification) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"timeout_action":           apiObject.TimeoutAction,
 		"timeout_duration_minutes": aws.ToInt32(apiObject.TimeoutDurationMinutes),
 	}
@@ -2269,15 +2411,15 @@ func flattenSpotProvisioningSpecification(apiObject *awstypes.SpotProvisioningSp
 	// The value needs to be normalized to avoid perpetual difference in the Terraform plan
 	tfMap["allocation_strategy"] = strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // TODO
-func expandEBSConfiguration(ebsConfigurations []interface{}) *awstypes.EbsConfiguration {
+func expandEBSConfiguration(ebsConfigurations []any) *awstypes.EbsConfiguration {
 	ebsConfig := &awstypes.EbsConfiguration{}
 	ebsConfigs := make([]awstypes.EbsBlockDeviceConfig, 0)
 	for _, ebsConfiguration := range ebsConfigurations {
-		cfg := ebsConfiguration.(map[string]interface{})
+		cfg := ebsConfiguration.(map[string]any)
 		ebsBlockDeviceConfig := awstypes.EbsBlockDeviceConfig{
 			VolumesPerInstance: aws.Int32(int32(cfg["volumes_per_instance"].(int))),
 			VolumeSpecification: &awstypes.VolumeSpecification{
@@ -2297,11 +2439,11 @@ func expandEBSConfiguration(ebsConfigurations []interface{}) *awstypes.EbsConfig
 	return ebsConfig
 }
 
-func expandInstanceTypeConfigs(tfList []interface{}) []awstypes.InstanceTypeConfig {
+func expandInstanceTypeConfigs(tfList []any) []awstypes.InstanceTypeConfig {
 	apiObjects := []awstypes.InstanceTypeConfig{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.InstanceTypeConfig{
 			InstanceType: aws.String(tfMap[names.AttrInstanceType].(string)),
 		}
@@ -2332,17 +2474,17 @@ func expandInstanceTypeConfigs(tfList []interface{}) []awstypes.InstanceTypeConf
 	return apiObjects
 }
 
-func expandLaunchSpecification(tfMap map[string]interface{}) *awstypes.InstanceFleetProvisioningSpecifications {
+func expandLaunchSpecification(tfMap map[string]any) *awstypes.InstanceFleetProvisioningSpecifications {
 	apiObject := &awstypes.InstanceFleetProvisioningSpecifications{}
 
-	if v := tfMap["on_demand_specification"].([]interface{}); len(v) > 0 {
+	if v := tfMap["on_demand_specification"].([]any); len(v) > 0 {
 		apiObject.OnDemandSpecification = &awstypes.OnDemandProvisioningSpecification{
-			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(v[0].(map[string]interface{})["allocation_strategy"].(string)),
+			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(v[0].(map[string]any)["allocation_strategy"].(string)),
 		}
 	}
 
-	if v := tfMap["spot_specification"].([]interface{}); len(v) > 0 {
-		tfMap := v[0].(map[string]interface{})
+	if v := tfMap["spot_specification"].([]any); len(v) > 0 {
+		tfMap := v[0].(map[string]any)
 		spotProvisioning := &awstypes.SpotProvisioningSpecification{
 			TimeoutAction:          awstypes.SpotProvisioningTimeoutAction(tfMap["timeout_action"].(string)),
 			TimeoutDurationMinutes: aws.Int32(int32(tfMap["timeout_duration_minutes"].(int))),
@@ -2360,22 +2502,22 @@ func expandLaunchSpecification(tfMap map[string]interface{}) *awstypes.InstanceF
 	return apiObject
 }
 
-func expandConfigurations(tfList []interface{}) []awstypes.Configuration {
+func expandConfigurations(tfList []any) []awstypes.Configuration {
 	apiObjects := []awstypes.Configuration{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.Configuration{}
 
 		if v, ok := tfMap["classification"].(string); ok {
 			apiObject.Classification = aws.String(v)
 		}
 
-		if v, ok := tfMap["configurations"].([]interface{}); ok {
+		if v, ok := tfMap["configurations"].([]any); ok {
 			apiObject.Configurations = expandConfigurations(v)
 		}
 
-		if v, ok := tfMap[names.AttrProperties].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrProperties].(map[string]any); ok && len(v) > 0 {
 			apiObject.Properties = flex.ExpandStringValueMap(v)
 		}
 
@@ -2385,28 +2527,28 @@ func expandConfigurations(tfList []interface{}) []awstypes.Configuration {
 	return apiObjects
 }
 
-func resourceInstanceTypeHashConfig(v interface{}) int {
+func resourceInstanceTypeHashConfig(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType].(string)))
+	m := v.(map[string]any)
+	fmt.Fprintf(&buf, "%s-", m[names.AttrInstanceType].(string))
 	if v, ok := m["bid_price"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := m["weighted_capacity"]; ok && v.(int) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		fmt.Fprintf(&buf, "%d-", v.(int))
 	}
 	if v, ok := m["bid_price_as_percentage_of_on_demand_price"]; ok && v.(float64) != 0 {
-		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))
+		fmt.Fprintf(&buf, "%f-", v.(float64))
 	}
 	return create.StringHashcode(buf.String())
 }
 
-func expandAutoTerminationPolicy(tfList []interface{}) *awstypes.AutoTerminationPolicy {
+func expandAutoTerminationPolicy(tfList []any) *awstypes.AutoTerminationPolicy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AutoTerminationPolicy{}
 
 	if v, ok := tfMap["idle_timeout"].(int); ok && v > 0 {
@@ -2416,14 +2558,14 @@ func expandAutoTerminationPolicy(tfList []interface{}) *awstypes.AutoTermination
 	return apiObject
 }
 
-func flattenAutoTerminationPolicy(apiObject *awstypes.AutoTerminationPolicy) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenAutoTerminationPolicy(apiObject *awstypes.AutoTerminationPolicy) []any {
+	tfList := make([]any, 0)
 
 	if apiObject == nil {
 		return tfList
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.IdleTimeout != nil {
 		tfMap["idle_timeout"] = aws.ToInt64(apiObject.IdleTimeout)
@@ -2434,11 +2576,11 @@ func flattenAutoTerminationPolicy(apiObject *awstypes.AutoTerminationPolicy) []i
 	return tfList
 }
 
-func expandPlacementGroupConfigs(tfList []interface{}) []awstypes.PlacementGroupConfig {
+func expandPlacementGroupConfigs(tfList []any) []awstypes.PlacementGroupConfig {
 	apiObjects := []awstypes.PlacementGroupConfig{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.PlacementGroupConfig{
 			InstanceRole: awstypes.InstanceRoleType(tfMap["instance_role"].(string)),
 		}
@@ -2453,15 +2595,15 @@ func expandPlacementGroupConfigs(tfList []interface{}) []awstypes.PlacementGroup
 	return apiObjects
 }
 
-func flattenPlacementGroupConfigs(apiObjects []awstypes.PlacementGroupConfig) []interface{} {
+func flattenPlacementGroupConfigs(apiObjects []awstypes.PlacementGroupConfig) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap["instance_role"] = apiObject.InstanceRole
 		tfMap["placement_strategy"] = apiObject.PlacementStrategy

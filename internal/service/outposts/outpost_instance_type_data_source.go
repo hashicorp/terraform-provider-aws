@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package outposts
 
 import (
 	"context"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -21,29 +24,31 @@ func dataSourceOutpostInstanceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostInstanceTypeRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrInstanceType: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"preferred_instance_types"},
-			},
-			"preferred_instance_types": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrInstanceType},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrInstanceType: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"preferred_instance_types"},
+				},
+				"preferred_instance_types": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrInstanceType},
+					Elem:          &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
 
-func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 
@@ -77,17 +82,14 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 
 	// Check requested instance type
 	if v, ok := d.GetOk(names.AttrInstanceType); ok {
-		for _, foundInstanceType := range foundInstanceTypes {
-			if foundInstanceType == v.(string) {
-				resultInstanceType = v.(string)
-				break
-			}
+		if slices.Contains(foundInstanceTypes, v.(string)) {
+			resultInstanceType = v.(string)
 		}
 	}
 
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
-	if l := d.Get("preferred_instance_types").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_instance_types").([]any); len(l) > 0 {
 		for _, elem := range l {
 			preferredInstanceType, ok := elem.(string)
 
@@ -95,11 +97,8 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 				continue
 			}
 
-			for _, foundInstanceType := range foundInstanceTypes {
-				if foundInstanceType == preferredInstanceType {
-					resultInstanceType = preferredInstanceType
-					break
-				}
+			if slices.Contains(foundInstanceTypes, preferredInstanceType) {
+				resultInstanceType = preferredInstanceType
 			}
 
 			if resultInstanceType != "" {

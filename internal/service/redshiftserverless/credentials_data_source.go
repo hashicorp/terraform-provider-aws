@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -21,39 +23,41 @@ func dataSourceCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCredentialsRead,
 
-		Schema: map[string]*schema.Schema{
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"db_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"db_user": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"duration_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      900,
-				ValidateFunc: validation.IntBetween(900, 3600),
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"db_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_password": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"db_user": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"duration_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      900,
+					ValidateFunc: validation.IntBetween(900, 3600),
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCredentialsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 

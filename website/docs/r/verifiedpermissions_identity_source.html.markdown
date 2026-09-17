@@ -75,6 +75,9 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_store_id` - (Required) Specifies the ID of the policy store in which you want to store this identity source.
 * `configuration`- (Required) Specifies the details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration) below.
 * `principal_entity_type`- (Optional) Specifies the namespace and data type of the principals generated for identities authenticated by the new identity source.
@@ -86,7 +89,7 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 
 #### Cognito User Pool Configuration
 
-* `user_pool_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Cognito user pool that contains the identities to be authorized.
+* `user_pool_arn` - (Required) ARN of the Amazon Cognito user pool that contains the identities to be authorized.
 * `client_ids` - (Optional) The unique application client IDs that are associated with the specified Amazon Cognito user pool.
 * `group_configuration` - (Optional) The type of entity that a policy store maps to groups from an Amazon Cognito user pool identity source. See [Group Configuration](#group-configuration) below.
 
@@ -114,7 +117,7 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 #### Identity Token Only
 
 * `client_ids` - (Optional) The ID token audience, or client ID, claim values that you want to accept in your policy store from an OIDC identity provider.
-* `group_entity_type` - (Optional) The claim that determines the principal in OIDC access tokens.
+* `principal_id_claim` - (Optional) The claim that determines the principal in OIDC identity tokens.
 
 #### Open ID Group Configuration
 

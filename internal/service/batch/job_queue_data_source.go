@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package batch
 
@@ -23,81 +25,83 @@ func dataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_environment_order": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_environment": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"order": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_environment_order": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_environment": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"order": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"job_state_time_limit_action": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"max_time_seconds": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"reason": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"job_state_time_limit_action": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"max_time_seconds": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"reason": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"scheduling_policy_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"scheduling_policy_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -117,9 +121,9 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrStatus, jobQueue.Status)
 	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 	for _, apiObject := range jobQueue.ComputeEnvironmentOrder {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap["compute_environment"] = aws.ToString(apiObject.ComputeEnvironment)
 		tfMap["order"] = aws.ToInt32(apiObject.Order)
 		tfList = append(tfList, tfMap)
@@ -128,9 +132,9 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	tfList = make([]interface{}, 0)
+	tfList = make([]any, 0)
 	for _, apiObject := range jobQueue.JobStateTimeLimitActions {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap[names.AttrAction] = apiObject.Action
 		tfMap["max_time_seconds"] = aws.ToInt32(apiObject.MaxTimeSeconds)
 		tfMap["reason"] = aws.ToString(apiObject.Reason)

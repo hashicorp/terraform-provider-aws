@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,58 +36,60 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"repository_filter": {
-							Type:     schema.TypeSet,
-							MinItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrFilter: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 256),
-											validation.StringMatch(regexache.MustCompile(`^[0-9a-z*](?:[0-9a-z_./*-]?[0-9a-z*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
-										),
-									},
-									"filter_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ScanningRepositoryFilterType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"repository_filter": {
+								Type:     schema.TypeSet,
+								MinItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrFilter: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 256),
+												validation.StringMatch(regexache.MustCompile(`^[0-9a-z*](?:[0-9a-z_./*-]?[0-9a-z*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
+											),
+										},
+										"filter_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ScanningRepositoryFilterType](),
+										},
 									},
 								},
 							},
-						},
-						"scan_frequency": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ScanFrequency](),
+							"scan_frequency": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ScanFrequency](),
+							},
 						},
 					},
 				},
-			},
-			"scan_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ScanType](),
-			},
+				"scan_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ScanType](),
+				},
+			}
 		},
 	}
 }
 
-func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -100,19 +105,19 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceRegistryScanningConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	output, err := findRegistryScanningConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Registry Scanning Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,7 +136,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -158,7 +163,7 @@ func findRegistryScanningConfiguration(ctx context.Context, conn *ecr.Client) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -166,20 +171,20 @@ func findRegistryScanningConfiguration(ctx context.Context, conn *ecr.Client) (*
 
 // Helper functions
 
-func expandScanningRegistryRules(l []interface{}) []types.RegistryScanningRule {
+func expandScanningRegistryRules(l []any) []types.RegistryScanningRule {
 	rules := make([]types.RegistryScanningRule, 0)
 
 	for _, rule := range l {
 		if rule == nil {
 			continue
 		}
-		rules = append(rules, expandScanningRegistryRule(rule.(map[string]interface{})))
+		rules = append(rules, expandScanningRegistryRule(rule.(map[string]any)))
 	}
 
 	return rules
 }
 
-func expandScanningRegistryRule(m map[string]interface{}) types.RegistryScanningRule {
+func expandScanningRegistryRule(m map[string]any) types.RegistryScanningRule {
 	if m == nil {
 		return types.RegistryScanningRule{}
 	}
@@ -192,7 +197,7 @@ func expandScanningRegistryRule(m map[string]interface{}) types.RegistryScanning
 	return rule
 }
 
-func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []types.ScanningRepositoryFilter {
+func expandScanningRegistryRuleRepositoryFilters(l []any) []types.ScanningRepositoryFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -203,7 +208,7 @@ func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []types.Scanni
 		if f == nil {
 			continue
 		}
-		m := f.(map[string]interface{})
+		m := f.(map[string]any)
 		filters = append(filters, types.ScanningRepositoryFilter{
 			Filter:     aws.String(m[names.AttrFilter].(string)),
 			FilterType: types.ScanningRepositoryFilterType((m["filter_type"].(string))),
@@ -213,10 +218,10 @@ func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []types.Scanni
 	return filters
 }
 
-func flattenScanningConfigurationRules(r []types.RegistryScanningRule) interface{} {
-	out := make([]map[string]interface{}, len(r))
+func flattenScanningConfigurationRules(r []types.RegistryScanningRule) any {
+	out := make([]map[string]any, len(r))
 	for i, rule := range r {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["scan_frequency"] = rule.ScanFrequency
 		m["repository_filter"] = flattenScanningConfigurationFilters(rule.RepositoryFilters)
 		out[i] = m
@@ -224,14 +229,14 @@ func flattenScanningConfigurationRules(r []types.RegistryScanningRule) interface
 	return out
 }
 
-func flattenScanningConfigurationFilters(l []types.ScanningRepositoryFilter) []interface{} {
+func flattenScanningConfigurationFilters(l []types.ScanningRepositoryFilter) []any {
 	if len(l) == 0 {
 		return nil
 	}
 
-	out := make([]interface{}, len(l))
+	out := make([]any, len(l))
 	for i, filter := range l {
-		out[i] = map[string]interface{}{
+		out[i] = map[string]any{
 			names.AttrFilter: aws.ToString(filter.Filter),
 			"filter_type":    filter.FilterType,
 		}

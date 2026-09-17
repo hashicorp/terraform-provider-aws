@@ -54,6 +54,7 @@ resource "aws_kms_key" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key. If this argument is not provided, then the AWS owned encryption key will be used to encrypt the data in the workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/encryption-at-rest-Amazon-Service-Prometheus.html)
 * `logging_configuration` - (Optional) Logging configuration for the workspace. See [Logging Configuration](#logging-configuration) below for details.
@@ -63,13 +64,13 @@ This resource supports the following arguments:
 
 The `logging_configuration` block supports the following arguments:
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist.
+* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist. The ARN must end with `:*`
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the workspace.
+* `arn` - ARN of the workspace.
 * `id` - Identifier of the workspace
 * `prometheus_endpoint` - Prometheus endpoint available for this workspace.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -1,0 +1,38 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Swiss Shepherd Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - .ci/swissshepherd.hcl
+      - .github/workflows/swissshepherd.yml
+      - website/docs/**
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+permissions:
+  contents: read # required for checkout
+
+jobs:
+  swissshepherd:
+    name: documentation checks
+    runs-on: custom-ubuntu-22.04-large
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: github.com/YakDriver/swissshepherd
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - run: make swissshepherd

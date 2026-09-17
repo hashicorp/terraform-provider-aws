@@ -22,6 +22,8 @@ data "aws_iam_instance_profiles" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `role_name` - (Required) IAM role name.
 
 ## Attribute Reference

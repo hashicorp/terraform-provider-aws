@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lambda
 
@@ -21,84 +23,86 @@ func dataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionURLRead,
 
-		Schema: map[string]*schema.Schema{
-			"authorization_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cors": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_credentials": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"allow_headers": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_methods": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_origins": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"expose_headers": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"max_age": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authorization_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cors": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_credentials": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"allow_headers": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allow_methods": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allow_origins": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"expose_headers": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"max_age": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFunctionARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"function_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"url_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFunctionARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"function_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"function_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"invoke_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"url_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -115,7 +119,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(id)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
-		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
+		if err := d.Set("cors", []any{flattenCors(output.Cors)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {

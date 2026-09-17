@@ -72,6 +72,7 @@ resource "aws_connect_queue" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the Queue.
 * `hours_of_operation_id` - (Required) Specifies the identifier of the Hours of Operation.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -92,7 +93,7 @@ A `outbound_caller_config` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Queue.
+* `arn` - ARN of the Queue.
 * `queue_id` - The identifier for the Queue.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

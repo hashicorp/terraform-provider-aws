@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -19,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Accelerator")
+// @FrameworkDataSource("aws_globalaccelerator_accelerator", name="Accelerator")
 func newAcceleratorDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &acceleratorDataSource{}
 
@@ -27,11 +29,7 @@ func newAcceleratorDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type acceleratorDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*acceleratorDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_globalaccelerator_accelerator"
+	framework.DataSourceWithModel[acceleratorDataSourceModel]
 }
 
 func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -62,7 +60,6 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrIPAddressType: schema.StringAttribute{

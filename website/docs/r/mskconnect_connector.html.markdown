@@ -84,10 +84,11 @@ The following arguments are required:
 * `kafkaconnect_version` - (Required) The version of Kafka Connect. It has to be compatible with both the Apache Kafka cluster's version and the plugins.
 * `name` - (Required) The name of the connector.
 * `plugin` - (Required) Specifies which plugins to use for the connector. See [`plugin` Block](#plugin-block) for details.
-* `service_execution_role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role used by the connector to access the Amazon Web Services resources that it needs. The types of resources depends on the logic of the connector. For example, a connector that has Amazon S3 as a destination must have permissions that allow it to write to the S3 destination bucket.
+* `service_execution_role_arn` - (Required) ARN of the IAM role used by the connector to access the Amazon Web Services resources that it needs. The types of resources depends on the logic of the connector. For example, a connector that has Amazon S3 as a destination must have permissions that allow it to write to the S3 destination bucket.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A summary description of the connector.
 * `log_delivery` - (Optional) Details about log delivery. See [`log_delivery` Block](#log_delivery-block) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -207,21 +208,21 @@ The `plugin` configuration block supports the following argumens:
 
 The `custom_plugin` configuration block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the custom plugin.
+* `arn` - (Required) ARN of the custom plugin.
 * `revision` - (Required) The revision of the custom plugin.
 
 ### `worker_configuration` Block
 
 The `worker_configuration` configuration block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the worker configuration.
+* `arn` - (Required) ARN of the worker configuration.
 * `revision` - (Required) The revision of the worker configuration.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the connector.
+* `arn` - ARN of the connector.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - The current version of the connector.
 

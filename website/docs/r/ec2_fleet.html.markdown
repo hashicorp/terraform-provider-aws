@@ -32,6 +32,7 @@ resource "aws_ec2_fleet" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `context` - (Optional) Reserved.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`. Supported only for fleets of type `maintain`.
 * `launch_template_config` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
@@ -95,7 +96,7 @@ resource "aws_ec2_fleet" "example" {
 * `subnet_id` - (Optional) ID of the subnet in which to launch the instances.
 * `weighted_capacity` - (Optional) Number of units provided by the specified instance type.
 
-##### instance_requirements
+#### instance_requirements
 
 The attributes for the instance types. For a list of currently supported values, please see ['InstanceRequirementsRequest'](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_InstanceRequirementsRequest.html).
 
@@ -122,7 +123,7 @@ This configuration block supports the following:
     * `max` - (Optional) The maximum baseline bandwidth, in Mbps. To specify no maximum limit, omit this parameter..
 * `burstable_performance` - (Optional) Indicates whether burstable performance T instance types are `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) The CPU manufacturers to include. Default is any manufacturer.
-    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 * `excluded_instance_types` - (Optional) The instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
     If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package amp
 
@@ -22,11 +24,7 @@ func newDefaultScraperConfigurationDataSource(context.Context) (datasource.DataS
 }
 
 type defaultScraperConfigurationDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*defaultScraperConfigurationDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_prometheus_default_scraper_configuration"
+	framework.DataSourceWithModel[defaultScraperConfigurationDataSourceModel]
 }
 
 func (d *defaultScraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -62,20 +60,21 @@ func (d *defaultScraperConfigurationDataSource) Read(ctx context.Context, reques
 }
 
 func findDefaultScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, error) {
-	input := &amp.GetDefaultScraperConfigurationInput{}
-	output, err := conn.GetDefaultScraperConfiguration(ctx, input)
+	input := amp.GetDefaultScraperConfigurationInput{}
+	output, err := conn.GetDefaultScraperConfiguration(ctx, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Configuration, err
 }
 
 type defaultScraperConfigurationDataSourceModel struct {
+	framework.WithRegionModel
 	Configuration types.String `tfsdk:"configuration"`
 }

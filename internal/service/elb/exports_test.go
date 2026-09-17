@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb
@@ -15,7 +15,6 @@ var (
 	ResourceProxyProtocolPolicy       = resourceProxyProtocolPolicy
 	ResourceSSLNegotiationPolicy      = resourceSSLNegotiationPolicy
 
-	AccountIDPerRegionMap                           = accountIDPerRegionMap
 	AppCookieStickinessPolicyParseResourceID        = appCookieStickinessPolicyParseResourceID
 	BackendServerPolicyParseResourceID              = backendServerPolicyParseResourceID
 	FindLoadBalancerAttachmentByTwoPartKey          = findLoadBalancerAttachmentByTwoPartKey
@@ -30,5 +29,11 @@ var (
 	ListenerPolicyParseResourceID                   = listenerPolicyParseResourceID
 	PolicyParseResourceID                           = policyParseResourceID
 	ProxyProtocolPolicyParseResourceID              = proxyProtocolPolicyParseResourceID
+	ServiceAccountPerRegionMap                      = serviceAccountPerRegionMap
 	SSLNegotiationPolicyParseResourceID             = sslNegotiationPolicyParseResourceID
+
+	ValidAccessLogsInterval = validAccessLogsInterval
+	ValidHeathCheckTarget   = validHeathCheckTarget
+	ValidName               = validName
+	ValidNamePrefix         = validNamePrefix
 )

@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -135,6 +135,11 @@ resource "aws_instance" "web" {
   # environment it's more common to have a separate private subnet for
   # backend instances.
   subnet_id = aws_subnet.default.id
+
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
 
   # We run a remote provisioner on the instance after creating it.
   # In this case, we just install nginx and start it. By default,

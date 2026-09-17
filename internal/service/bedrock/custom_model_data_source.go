@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -19,17 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Custom Model")
+// @FrameworkDataSource("aws_bedrock_custom_model", name="Custom Model")
 func newCustomModelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &customModelDataSource{}, nil
 }
 
 type customModelDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*customModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_custom_model"
+	framework.DataSourceWithModel[customModelDataSourceModel]
 }
 
 func (d *customModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -149,6 +147,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 }
 
 type customModelDataSourceModel struct {
+	framework.WithRegionModel
 	BaseModelARN         fwtypes.ARN                                                `tfsdk:"base_model_arn"`
 	CreationTime         timetypes.RFC3339                                          `tfsdk:"creation_time"`
 	HyperParameters      fwtypes.MapOfString                                        `tfsdk:"hyperparameters"`

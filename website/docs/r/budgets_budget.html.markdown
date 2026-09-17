@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_budgets_budget
 
-Provides a budgets budget resource. Budgets use the cost visualization provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage.
+Manages a budgets budget resource. Budgets use the cost visualization provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage. For more detailed documentation about each argument, refer to the [AWS official documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
 ## Example Usage
 
@@ -143,7 +143,7 @@ resource "aws_budgets_budget" "ri_utilization" {
 }
 ```
 
-Create a Cost Filter using Resource Tags
+Create a cost filter using resource tags
 
 ```terraform
 resource "aws_budgets_budget" "cost" {
@@ -151,13 +151,15 @@ resource "aws_budgets_budget" "cost" {
   cost_filter {
     name = "TagKeyValue"
     values = [
-      "TagKey$TagValue",
+      # Format "TagKey$TagValue",
+      "aws:createdBy$Terraform",
+      "user:business-unit$human_resources",
     ]
   }
 }
 ```
 
-Create a cost_filter using resource tags, obtaining the tag value from a terraform variable
+Create a cost filter using resource tags, obtaining the tag value from a Terraform variable
 
 ```terraform
 resource "aws_budgets_budget" "cost" {
@@ -171,110 +173,285 @@ resource "aws_budgets_budget" "cost" {
 }
 ```
 
-## Argument Reference
+Create a budget with a simple dimension filter for unblended costs
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
+```terraform
+resource "aws_budgets_budget" "simple" {
+  name         = "budget-ec2-filter"
+  budget_type  = "COST"
+  limit_amount = "500"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  metrics = ["UnblendedCost"]
+  filter_expression {
+    dimensions {
+      key    = "SERVICE"
+      values = ["Amazon Elastic Compute Cloud - Compute"]
+    }
+  }
+}
+```
+
+Create a budget with AND filter for blended costs
+
+```terraform
+resource "aws_budgets_budget" "and_example" {
+  name         = "budget-and-filter"
+  budget_type  = "COST"
+  limit_amount = "1200"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  metrics = ["BlendedCost"]
+  # Each `and` block is one operand. AND requires at least 2 operands.
+  filter_expression {
+    and {
+      dimensions {
+        key    = "SERVICE"
+        values = ["Amazon Elastic Compute Cloud - Compute"]
+      }
+    }
+    and {
+      tags {
+        key    = "Environment"
+        values = ["Production"]
+      }
+    }
+  }
+}
+```
+
+Create a budget with OR filter for amortized costs
+
+```terraform
+resource "aws_budgets_budget" "or_example" {
+  name         = "budget-or-filter"
+  budget_type  = "COST"
+  limit_amount = "2000"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  metrics = ["AmortizedCost"]
+  # Each `or` block is one operand. OR requires at least 2 operands.
+  filter_expression {
+    or {
+      dimensions {
+        key    = "SERVICE"
+        values = ["Amazon Elastic Compute Cloud - Compute"]
+      }
+    }
+    or {
+      dimensions {
+        key    = "SERVICE"
+        values = ["Amazon Relational Database Service"]
+      }
+    }
+  }
+}
+```
+
+Create a budget with NOT filter for net unblended costs
+
+```terraform
+resource "aws_budgets_budget" "not_example" {
+  name         = "budget-not-filter"
+  budget_type  = "COST"
+  limit_amount = "1000"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  metrics = ["NetUnblendedCost"]
+  filter_expression {
+    not {
+      dimensions {
+        key    = "REGION"
+        values = ["us-west-2"]
+      }
+    }
+  }
+}
+```
+
+Create a budget with a compound filter for net amortized costs
+
+```terraform
+resource "aws_budgets_budget" "compound_example" {
+  name         = "budget-compound-filter"
+  budget_type  = "COST"
+  limit_amount = "1500"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  metrics = ["NetAmortizedCost"]
+  filter_expression {
+    # First OR operand: an AND expression
+    or {
+      and {
+        dimensions {
+          key    = "SERVICE"
+          values = ["Amazon Elastic Compute Cloud - Compute"]
+        }
+      }
+      and {
+        tags {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+      and {
+        cost_categories {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+    }
+    # Second OR operand: a NOT expression
+    or {
+      not {
+        dimensions {
+          key    = "REGION"
+          values = ["us-west-2"]
+        }
+      }
+    }
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = ["test@example.com"]
+  }
+}
+```
+
+## Argument Reference
 
 The following arguments are required:
 
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
-* `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
-* `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
-* `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
+* `time_unit` - (Required) Length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
 
 The following arguments are optional:
 
-* `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
-* `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
-* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
-* `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
-* `name` - (Optional) The name of a budget. Unique within accounts.
-* `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
-* `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
-* `planned_limit` - (Optional) Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `account_id` - (Optional) ID of the target account for budget. Uses the current user's account ID by default if omitted.
+* `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto_adjust_data-block) which determines the budget amount for an auto-adjusting budget.
+* `billing_view_arn` - (Optional) ARN of the billing view.
+* `cost_filter` - (Optional) List of [CostFilter](#cost_filter-block) name/values pair to apply to budget. Conflicts with `filter_expression`.
+* `cost_types` - (Optional) Object containing [CostTypes](#cost_types-block) that defines the types of cost included in a budget, such as tax and subscriptions.
+* `filter_expression` - (Optional) Object containing [Filter Expression](#filter_expression-block) to apply to budget. Conflicts with `cost_filter` and requires `metrics`.
+* `limit_amount` - (Optional) Amount of cost or usage being measured for a budget.
+* `limit_unit` - (Optional) Unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+* `metrics` - (Optional) List containing definition for how the budget data is aggregated. Valid values are `UnblendedCost`, `BlendedCost`, `AmortizedCost`, `NetUnblendedCost`, `NetAmortizedCost`, `UsageQuantity`, `NormalizedUsageAmount`, and `Hours`. Conflicts with `cost_types` and requires `filter_expression`.
+* `name` - (Optional) Name of a budget. Unique within accounts.
+* `name_prefix` - (Optional) Prefix of the name of a budget. Unique within accounts.
+* `notification` - (Optional) Object containing [Budget Notifications](#notification-block). Can be used multiple times to define more than one budget notification.
+* `planned_limit` - (Optional) Object containing [Planned Budget Limits](#planned_limit-block). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
-* `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+* `time_period_end` - (Optional) End of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
+* `time_period_start` - (Optional) Start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+
+### `auto_adjust_data` Block
+
+The parameters that determine the budget amount for an auto-adjusting budget.
+
+* `auto_adjust_type` - (Required) Whether your budget auto-adjusts based on historical or forecasted data. Valid values: `FORECAST`, `HISTORICAL`.
+* `historical_options` - (Optional) Configuration block of [Historical Options](#historical_options-block). Required for `auto_adjust_type` of `HISTORICAL`. Defines the historical data that your auto-adjusting budget is based on.
+
+### `historical_options` Block
+
+* `budget_adjustment_period` - (Required) Number of budget periods included in the moving-average calculation that determines your auto-adjusted budget amount.
+
+### `cost_types` Block
+
+Valid keys for `cost_types` parameter. Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CostTypes.html) for further detail.
+
+* `include_credit` - (Optional) Whether to include credits in the cost budget. Defaults to `true`.
+* `include_discount` - (Optional) Whether a budget includes discounts. Defaults to `true`.
+* `include_other_subscription` - (Optional) Whether to include other subscription costs in the cost budget. Defaults to `true`.
+* `include_recurring` - (Optional) Whether to include recurring costs in the cost budget. Defaults to `true`.
+* `include_refund` - (Optional) Whether to include refunds in the cost budget. Defaults to `true`.
+* `include_subscription` - (Optional) Whether to include subscriptions in the cost budget. Defaults to `true`.
+* `include_support` - (Optional) Whether to include support costs in the cost budget. Defaults to `true`.
+* `include_tax` - (Optional) Whether to include tax in the cost budget. Defaults to `true`.
+* `include_upfront` - (Optional) Whether to include upfront costs in the cost budget. Defaults to `true`.
+* `use_amortized` - (Optional) Whether a budget uses the amortized rate. Defaults to `false`.
+* `use_blended` - (Optional) Whether to use blended costs in the cost budget. Defaults to `false`.
+
+### `cost_filter` Block
+
+Valid keys for `cost_filter` parameter. Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create-filters.html) for further detail.
+
+* `name` - (Required) Name of the cost filter. Valid values are `AZ`, `BillingEntity`, `CostCategory`, `InstanceType`, `InvoicingEntity`, `LegalEntityName`, `LinkedAccount`, `Operation`, `PurchaseType`, `Region`, `Service`, `TagKeyValue`, `UsageType`, and `UsageTypeGroup`.
+* `values` - (Required) List of values used for filtering.
+
+### `notification` Block
+
+Valid keys for `notification` parameter.
+
+* `comparison_operator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
+* `notification_type` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`.
+* `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
+* `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
+* `threshold` - (Required) Threshold when the notification should be sent.
+* `threshold_type` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
+
+### `planned_limit` Block
+
+Valid keys for `planned_limit` parameter.
+
+* `amount` - (Required) Amount of cost or usage being measured for a budget.
+* `start_time` - (Required) Start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `unit` - (Required) Unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+
+### `filter_expression` Block
+
+The `filter_expression` block maps directly to the [AWS Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Expression.html) object. Each expression block must have **exactly one root** — you can set one of `and`, `or`, `not`, `dimensions`, `tags`, or `cost_categories`, but not multiple at the same level. Refer to [AWS Expression documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Expression.html) for further detail.
+
+~> **Important:** `and` and `or` require **at least 2 operands**. Each operand is a separate `and` or `or` block within the parent. Do not place multiple leaf filters (e.g., `dimensions` and `tags`) inside a single `and`/`or` block — instead, use one block per leaf. The maximum expression nesting depth allowed by the AWS API is 2.
+
+* `and` - (Optional) List of filter expressions to combine with AND logic. Each `and` block is one operand and must itself contain exactly one root.
+* `cost_categories` - (Optional) [Cost Categories](#cost_categories-block) block.
+* `dimensions` - (Optional) [Dimensions](#dimensions-block) block.
+* `not` - (Optional) Single filter expression to negate. Must contain exactly one root.
+* `or` - (Optional) List of filter expressions to combine with OR logic. Each `or` block is one operand and must itself contain exactly one root.
+* `tags` - (Optional) [Tags](#tags-block) block.
+
+### `dimensions` Block
+
+* `key` - (Required) Dimension to filter on. Valid values include `AZ`, `INSTANCE_TYPE`, `LINKED_ACCOUNT`, `OPERATION`, `PURCHASE_TYPE`, `REGION`, `SERVICE`, `USAGE_TYPE`, `USAGE_TYPE_GROUP`, `RECORD_TYPE`, `OPERATING_SYSTEM`, `TENANCY`, `SCOPE`, `PLATFORM`, `SUBSCRIPTION_ID`, `LEGAL_ENTITY_NAME`, `DEPLOYMENT_OPTION`, `DATABASE_ENGINE`, `CACHE_ENGINE`, `INSTANCE_TYPE_FAMILY`, `BILLING_ENTITY`, `RESERVATION_ID`, `RESOURCE_ID`, `RIGHTSIZING_TYPE`, `SAVINGS_PLANS_TYPE`, `SAVINGS_PLAN_ARN`, `PAYMENT_OPTION`, and `AGREEMENT_END_DATE_TIME_AFTER`, `AGREEMENT_END_DATE_TIME_BEFORE`.
+* `match_options` - (Optional) Match options for the dimension filter. Valid values are `EQUALS`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `GREATER_THAN_OR_EQUAL`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`. Note: `ABSENT` is not supported due to AWS API contradictions (it requires values to be absent but also cannot have values set).
+* `values` - (Required) List of values to match against the dimension. At least one value is required.
+
+### `tags` Block
+
+* `key` - (Optional) Tag key to filter on.
+* `match_options` - (Optional) Match options for the tag filter. Valid values are `EQUALS`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `GREATER_THAN_OR_EQUAL`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`. Note: `ABSENT` is not supported due to AWS API contradictions (it requires values to be absent but also cannot have values set).
+* `values` - (Optional) List of tag values to match. At least one value is required.
+
+### `cost_categories` Block
+
+* `key` - (Optional) Cost category key to filter on.
+* `match_options` - (Optional) Match options for the cost category filter. Valid values are `EQUALS`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `GREATER_THAN_OR_EQUAL`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`. Note: `ABSENT` is not supported due to AWS API contradictions (it requires values to be absent but also cannot have values set).
+* `values` - (Optional) List of cost category values to match. At least one value is required.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the budget.
+* `arn` - ARN of the budget.
 * `id` - id of resource.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### Auto Adjust Data
+### `auto_adjust_data` Block
 
-The parameters that determine the budget amount for an auto-adjusting budget.
+* `last_auto_adjust_time` - Last time that your budget was auto-adjusted.
 
-* `auto_adjust_type` (Required) - The string that defines whether your budget auto-adjusts based on historical or forecasted data. Valid values: `FORECAST`,`HISTORICAL`
-* `historical_options` (Optional) - Configuration block of [Historical Options](#historical-options). Required for `auto_adjust_type` of `HISTORICAL` Configuration block that defines the historical data that your auto-adjusting budget is based on.
-* `last_auto_adjust_time` (Optional) - The last time that your budget was auto-adjusted.
+### `historical_options` Block
 
-### Historical Options
-
-* `budget_adjustment_period` (Required) - The number of budget periods included in the moving-average calculation that determines your auto-adjusted budget amount.
-* `lookback_available_periods` (Optional) - The integer that describes how many budget periods in your BudgetAdjustmentPeriod are included in the calculation of your current budget limit. If the first budget period in your BudgetAdjustmentPeriod has no cost data, then that budget period isn’t included in the average that determines your budget limit. You can’t set your own LookBackAvailablePeriods. The value is automatically calculated from the `budget_adjustment_period` and your historical cost data.
-
-### Cost Types
-
-Valid keys for `cost_types` parameter.
-
-* `include_credit` - A boolean value whether to include credits in the cost budget. Defaults to `true`
-* `include_discount` - Whether a budget includes discounts. Defaults to `true`
-* `include_other_subscription` - A boolean value whether to include other subscription costs in the cost budget. Defaults to `true`
-* `include_recurring` - A boolean value whether to include recurring costs in the cost budget. Defaults to `true`
-* `include_refund` - A boolean value whether to include refunds in the cost budget. Defaults to `true`
-* `include_subscription` - A boolean value whether to include subscriptions in the cost budget. Defaults to `true`
-* `include_support` - A boolean value whether to include support costs in the cost budget. Defaults to `true`
-* `include_tax` - A boolean value whether to include tax in the cost budget. Defaults to `true`
-* `include_upfront` - A boolean value whether to include upfront costs in the cost budget. Defaults to `true`
-* `use_amortized` - Whether a budget uses the amortized rate. Defaults to `false`
-* `use_blended` - A boolean value whether to use blended costs in the cost budget. Defaults to `false`
-
-Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CostTypes.html) for further detail.
-
-### Cost Filter
-
-Based on your choice of budget type, you can choose one or more of the available budget filters.
-
-* `PurchaseType`
-* `UsageTypeGroup`
-* `Service`
-* `Operation`
-* `UsageType`
-* `BillingEntity`
-* `CostCategory`
-* `LinkedAccount`
-* `TagKeyValue`
-* `LegalEntityName`
-* `InvoicingEntity`
-* `AZ`
-* `Region`
-* `InstanceType`
-
-Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create-filters.html) for further detail.
-
-### Budget Notification
-
-Valid keys for `notification` parameter.
-
-* `comparison_operator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
-* `threshold` - (Required) Threshold when the notification should be sent.
-* `threshold_type` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
-* `notification_type` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`
-* `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
-* `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
-
-### Planned Budget Limits
-
-Valid keys for `planned_limit` parameter.
-
-* `start_time` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
-* `amount` - (Required) The amount of cost or usage being measured for a budget.
-* `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+* `lookback_available_periods` - Integer that describes how many budget periods in your BudgetAdjustmentPeriod are included in the calculation of your current budget limit. If the first budget period in your BudgetAdjustmentPeriod has no cost data, then that budget period isn’t included in the average that determines your budget limit. You can’t set your own LookBackAvailablePeriods. The value is automatically calculated from the `budget_adjustment_period` and your historical cost data.
 
 ## Import
 

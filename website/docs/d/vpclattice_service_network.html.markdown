@@ -22,8 +22,9 @@ data "aws_vpclattice_service_network" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_network_identifier` - (Required) Identifier of the service network.
 
 ## Attribute Reference
@@ -38,3 +39,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the service network.
 * `number_of_associated_services` - Number of services associated with this service network.
 * `number_of_associated_vpcs` - Number of VPCs associated with this service network.
+* `tags` - Map of tags assigned to the resource.

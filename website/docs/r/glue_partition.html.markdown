@@ -14,9 +14,9 @@ Provides a Glue Partition Resource.
 
 ```terraform
 resource "aws_glue_partition" "example" {
-  database_name = "some-database"
-  table_name    = "some-table"
-  values        = ["some-value"]
+  database_name    = "some-database"
+  table_name       = "some-table"
+  partition_values = ["some-value"]
 }
 ```
 
@@ -24,14 +24,16 @@ resource "aws_glue_partition" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 * `partition_values` - (Required) The values that define the partition.
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `storage_descriptor` - (Optional) A [storage descriptor](#storage_descriptor) object containing information about the physical storage of this table. You can refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor) for a full explanation of this object.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
 
-##### storage_descriptor
+#### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `columns` - (Optional) A list of the [Columns](#column) in the table.
 * `location` - (Optional) The physical location of the table. By default this takes the form of the warehouse location, followed by the database location in the warehouse, followed by the table name.
 * `input_format` - (Optional) The input format: SequenceFileInputFormat (binary), or TextInputFormat, or a custom format.
@@ -45,24 +47,24 @@ This resource supports the following arguments:
 * `skewed_info` - (Optional) Information about values that appear very frequently in a column (skewed values).
 * `stored_as_sub_directories` - (Optional) True if the table data is stored in subdirectories, or False if not.
 
-##### column
+#### column
 
 * `name` - (Required) The name of the Column.
 * `type` - (Optional) The datatype of data in the Column.
 * `comment` - (Optional) Free-form text comment.
 
-##### ser_de_info
+#### ser_de_info
 
 * `name` - (Optional) Name of the SerDe.
 * `parameters` - (Optional) A map of initialization parameters for the SerDe, in key-value form.
 * `serialization_library` - (Optional) Usually the class that implements the SerDe. An example is: org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe.
 
-##### sort_columns
+#### sort_columns
 
 * `column` - (Required) The name of the column.
 * `sort_order` - (Required) Indicates that the column is sorted in ascending order (== 1), or in descending order (==0).
 
-##### skewed_info
+#### skewed_info
 
 * `skewed_column_names` - (Optional) A list of names of columns that contain skewed values.
 * `skewed_column_value_location_maps` - (Optional) A list of values that appear so frequently as to be considered skewed.

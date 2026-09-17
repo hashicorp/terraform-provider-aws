@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +36,7 @@ func testAccBlockPublicAccessConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_emr_block_public_access_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
@@ -44,12 +44,12 @@ func testAccBlockPublicAccessConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBlockPublicAccessConfigurationConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
+					testAccCheckBlockPublicAccessConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "0"),
 				),
@@ -62,7 +62,7 @@ func testAccBlockPublicAccessConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccBlockPublicAccessConfigurationConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
+					testAccCheckBlockPublicAccessConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "0"),
 				),
@@ -80,7 +80,7 @@ func testAccBlockPublicAccessConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_emr_block_public_access_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
@@ -88,15 +88,23 @@ func testAccBlockPublicAccessConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBlockPublicAccessConfigurationConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceBlockPublicAccessConfiguration(), resourceName),
+					testAccCheckBlockPublicAccessConfigurationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceBlockPublicAccessConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -106,7 +114,7 @@ func testAccBlockPublicAccessConfiguration_default(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_emr_block_public_access_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
@@ -114,12 +122,12 @@ func testAccBlockPublicAccessConfiguration_default(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: blockPublicAccessConfigurationConfig_defaultString,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
+					testAccCheckBlockPublicAccessConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.min_range", "22"),
@@ -139,7 +147,7 @@ func testAccBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_emr_block_public_access_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
@@ -147,12 +155,12 @@ func testAccBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: blockPublicAccessConfigurationConfig_enabledMultiRangeString,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
+					testAccCheckBlockPublicAccessConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.min_range", "22"),
@@ -170,9 +178,9 @@ func testAccBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 	})
 }
 
-func testAccCheckBlockPublicAccessConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBlockPublicAccessConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_block_public_access_configuration" {
@@ -181,7 +189,7 @@ func testAccCheckBlockPublicAccessConfigurationDestroy(ctx context.Context) reso
 
 			output, err := tfemr.FindBlockPublicAccessConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -204,14 +212,14 @@ func testAccCheckBlockPublicAccessConfigurationDestroy(ctx context.Context) reso
 	}
 }
 
-func testAccCheckBlockPublicAccessConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckBlockPublicAccessConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		_, err := tfemr.FindBlockPublicAccessConfiguration(ctx, conn)
 
@@ -220,7 +228,7 @@ func testAccCheckBlockPublicAccessConfigurationExists(ctx context.Context, n str
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 	input := &emr.GetBlockPublicAccessConfigurationInput{}
 	_, err := conn.GetBlockPublicAccessConfiguration(ctx, input)

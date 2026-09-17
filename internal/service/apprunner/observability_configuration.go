@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -12,76 +14,72 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apprunner_observability_configuration", name="Observability Configuration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 func resourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
 		ReadWithoutTimeout:   resourceObservabilityConfigurationRead,
 		UpdateWithoutTimeout: resourceObservabilityConfigurationUpdate,
 		DeleteWithoutTimeout: resourceObservabilityConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"latest": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"observability_configuration_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"observability_configuration_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"trace_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vendor": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.TracingVendor](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"latest": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"observability_configuration_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"observability_configuration_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"trace_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"vendor": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.TracingVendor](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -92,8 +90,8 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 		Tags:                           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TraceConfiguration = expandTraceConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TraceConfiguration = expandTraceConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateObservabilityConfiguration(ctx, input)
@@ -111,14 +109,14 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceObservabilityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	config, err := findObservabilityConfigurationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -140,20 +138,21 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceObservabilityConfigurationRead(ctx, d, meta)
 }
 
-func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Observability Configuration: %s", d.Id())
-	_, err := conn.DeleteObservabilityConfiguration(ctx, &apprunner.DeleteObservabilityConfigurationInput{
+	input := apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteObservabilityConfiguration(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -179,8 +178,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -189,24 +187,23 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusInactive {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output.ObservabilityConfiguration, nil
 }
 
-func statusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusObservabilityConfiguration(conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findObservabilityConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -225,7 +222,7 @@ func waitObservabilityConfigurationCreated(ctx context.Context, conn *apprunner.
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.ObservabilityConfigurationStatusActive),
-		Refresh: statusObservabilityConfiguration(ctx, conn, arn),
+		Refresh: statusObservabilityConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -245,7 +242,7 @@ func waitObservabilityConfigurationDeleted(ctx context.Context, conn *apprunner.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ObservabilityConfigurationStatusActive),
 		Target:  []string{},
-		Refresh: statusObservabilityConfiguration(ctx, conn, arn),
+		Refresh: statusObservabilityConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -258,12 +255,12 @@ func waitObservabilityConfigurationDeleted(ctx context.Context, conn *apprunner.
 	return nil, err
 }
 
-func expandTraceConfiguration(l []interface{}) *types.TraceConfiguration {
+func expandTraceConfiguration(l []any) *types.TraceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configuration := &types.TraceConfiguration{}
 
@@ -274,14 +271,14 @@ func expandTraceConfiguration(l []interface{}) *types.TraceConfiguration {
 	return configuration
 }
 
-func flattenTraceConfiguration(traceConfiguration *types.TraceConfiguration) []interface{} {
+func flattenTraceConfiguration(traceConfiguration *types.TraceConfiguration) []any {
 	if traceConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"vendor": string(traceConfiguration.Vendor),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

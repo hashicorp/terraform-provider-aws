@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigatewayv2
 
@@ -7,13 +9,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,12 +23,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_integration", name="Integration")
+// @IdentityAttribute("api_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("integrationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetIntegrationOutput")
+// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(importStateIdFunc="testAccIntegrationImportStateIdFunc")
+// @CustomImport
 func resourceIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationCreate,
@@ -38,151 +50,153 @@ func resourceIntegration() *schema.Resource {
 			StateContext: resourceIntegrationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrConnectionID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ConnectionTypeInternet,
-				ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
-			},
-			"content_handling_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ContentHandlingStrategy](),
-			},
-			"credentials_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"integration_method": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validHTTPMethod(),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Default HTTP method for Lambda integration is POST.
-					if v := d.Get("integration_type").(string); (v == string(awstypes.IntegrationTypeAws) || v == string(awstypes.IntegrationTypeAwsProxy)) && old == "POST" && new == "" {
-						return true
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrConnectionID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"connection_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ConnectionTypeInternet,
+					ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
+				},
+				"content_handling_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ContentHandlingStrategy](),
+				},
+				"credentials_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"integration_method": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validHTTPMethod(),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Default HTTP method for Lambda integration is POST.
+						if v := d.Get("integration_type").(string); (v == string(awstypes.IntegrationTypeAws) || v == string(awstypes.IntegrationTypeAwsProxy)) && old == "POST" && new == "" {
+							return true
+						}
 
-					return false
+						return false
+					},
 				},
-			},
-			"integration_response_selection_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"integration_subtype": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"integration_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IntegrationType](),
-			},
-			"integration_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"passthrough_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PassthroughBehaviorWhenNoMatch,
-				ValidateDiagFunc: enum.Validate[awstypes.PassthroughBehavior](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Not set for HTTP APIs.
-					if old == "" && new == string(awstypes.PassthroughBehaviorWhenNoMatch) {
-						return true
-					}
-					return false
+				"integration_response_selection_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"payload_format_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1.0",
-				ValidateFunc: validation.StringInSlice([]string{
-					"1.0",
-					"2.0",
-				}, false),
-			},
-			"request_parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				// Length between [1-512].
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"request_templates": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				// Length between [0-32768].
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"response_parameters": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mappings": {
-							Type:     schema.TypeMap,
-							Required: true,
-							// Length between [1-512].
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrStatusCode: {
-							Type:     schema.TypeString,
-							Required: true,
+				"integration_subtype": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"integration_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IntegrationType](),
+				},
+				"integration_uri": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"passthrough_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.PassthroughBehaviorWhenNoMatch,
+					ValidateDiagFunc: enum.Validate[awstypes.PassthroughBehavior](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Not set for HTTP APIs.
+						if old == "" && new == string(awstypes.PassthroughBehaviorWhenNoMatch) {
+							return true
+						}
+						return false
+					},
+				},
+				"payload_format_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "1.0",
+					ValidateFunc: validation.StringInSlice([]string{
+						"1.0",
+						"2.0",
+					}, false),
+				},
+				"request_parameters": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					// Length between [1-512].
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
+				"request_templates": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					// Length between [0-32768].
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
+				"response_parameters": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"mappings": {
+								Type:     schema.TypeMap,
+								Required: true,
+								// Length between [1-512].
+								Elem: &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrStatusCode: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"template_selection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"timeout_milliseconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"tls_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"server_name_to_verify": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"template_selection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"timeout_milliseconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"tls_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"server_name_to_verify": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
 
-func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -232,11 +246,11 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("request_parameters"); ok {
-		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("request_templates"); ok {
-		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && v.(*schema.Set).Len() > 0 {
@@ -252,7 +266,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("tls_config"); ok {
-		input.TlsConfig = expandTLSConfig(v.([]interface{}))
+		input.TlsConfig = expandTLSConfig(v.([]any))
 	}
 
 	output, err := conn.CreateIntegration(ctx, input)
@@ -266,13 +280,13 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findIntegrationByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -308,7 +322,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -362,27 +376,23 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := flex.DiffStringValueMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := flex.DiffStringValueMaps(o.(map[string]any), n.(map[string]any))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {
 			del[k] = ""
 		}
 		variables := del
-		for k, v := range add {
-			variables[k] = v
-		}
+		maps.Copy(variables, add)
 		// Also specify any request parameters that are unchanged as for AWS service integrations some parameters are always required:
 		// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html
-		for k, v := range nop {
-			variables[k] = v
-		}
+		maps.Copy(variables, nop)
 
 		input.RequestParameters = variables
 	}
 
 	if d.HasChange("request_templates") {
-		input.RequestTemplates = flex.ExpandStringValueMap(d.Get("request_templates").(map[string]interface{}))
+		input.RequestTemplates = flex.ExpandStringValueMap(d.Get("request_templates").(map[string]any))
 	}
 
 	if d.HasChange("response_parameters") {
@@ -395,7 +405,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		// Parameters are removed by setting the associated value to {}.
 		for _, tfMapRaw := range del {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -419,7 +429,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("tls_config") {
-		input.TlsConfig = expandTLSConfig(d.Get("tls_config").([]interface{}))
+		input.TlsConfig = expandTLSConfig(d.Get("tls_config").([]any))
 	}
 
 	_, err := conn.UpdateIntegration(ctx, input)
@@ -431,15 +441,16 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration: %s", d.Id())
-	_, err := conn.DeleteIntegration(ctx, &apigatewayv2.DeleteIntegrationInput{
+	input := apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -452,15 +463,19 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", d.Id())
+func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
 	}
 
-	apiID := parts[0]
-	integrationID := parts[1]
+	apiID := d.Get("api_id").(string)
+	integrationID := d.Id()
 
+	// Region may be overridden in the import block.
+	// Ensure the appropriate value is in context before initializing the client.
+	if v, ok := d.GetOk(names.AttrRegion); ok {
+		ctx = conns.NewResourceContext(ctx, names.APIGatewayV2, "aws_apigatewayv2_integration", "Integration", v.(string))
+	}
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findIntegrationByTwoPartKey(ctx, conn, apiID, integrationID)
@@ -473,10 +488,29 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 		return nil, fmt.Errorf("API Gateway v2 Integration (%s) was created via quick create", integrationID)
 	}
 
-	d.SetId(integrationID)
-	d.Set("api_id", apiID)
-
 	return []*schema.ResourceData{d}, nil
+}
+
+var _ inttypes.SDKv2ImportID = integrationImportID{}
+
+type integrationImportID struct{}
+
+func (integrationImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (integrationImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", id)
+	}
+
+	// "abc123/xyz789" -> api_id="abc123", id="xyz789"
+	result := map[string]any{
+		"api_id": parts[0],
+	}
+
+	return parts[1], result, nil
 }
 
 func findIntegrationByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, integrationID string) (*apigatewayv2.GetIntegrationOutput, error) {
@@ -493,8 +527,7 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -503,19 +536,45 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
+func findIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetIntegrationsInput) ([]awstypes.Integration, error) {
+	var output []awstypes.Integration
+
+	err := getIntegrationsPages(ctx, conn, input, func(page *apigatewayv2.GetIntegrationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func expandTLSConfig(vConfig []any) *awstypes.TlsConfigInput {
 	config := &awstypes.TlsConfigInput{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
 		return config
 	}
-	mConfig := vConfig[0].(map[string]interface{})
+	mConfig := vConfig[0].(map[string]any)
 
 	if vServerNameToVerify, ok := mConfig["server_name_to_verify"].(string); ok && vServerNameToVerify != "" {
 		config.ServerNameToVerify = aws.String(vServerNameToVerify)
@@ -524,17 +583,17 @@ func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
 	return config
 }
 
-func flattenTLSConfig(config *awstypes.TlsConfig) []interface{} {
+func flattenTLSConfig(config *awstypes.TlsConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"server_name_to_verify": aws.ToString(config.ServerNameToVerify),
 	}}
 }
 
-func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[string]string {
+func expandIntegrationResponseParameters(tfList []any) map[string]map[string]string {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -542,14 +601,14 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 	responseParameters := map[string]map[string]string{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
 		if vStatusCode, ok := tfMap[names.AttrStatusCode].(string); ok && vStatusCode != "" {
-			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
+			if v, ok := tfMap["mappings"].(map[string]any); ok && len(v) > 0 {
 				responseParameters[vStatusCode] = flex.ExpandStringValueMap(v)
 			}
 		}
@@ -558,19 +617,19 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 	return responseParameters
 }
 
-func flattenIntegrationResponseParameters(responseParameters map[string]map[string]string) []interface{} {
+func flattenIntegrationResponseParameters(responseParameters map[string]map[string]string) []any {
 	if len(responseParameters) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for statusCode, mappings := range responseParameters {
 		if len(mappings) == 0 {
 			continue
 		}
 
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		tfMap[names.AttrStatusCode] = statusCode
 		tfMap["mappings"] = mappings

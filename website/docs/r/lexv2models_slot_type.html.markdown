@@ -86,6 +86,7 @@ All of the bots, slot types, and slots used by the intent must have the same loc
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the slot type.
 * `composite_slot_type_setting` - (Optional) Specifications for a composite slot type.
 See [`composite_slot_type_setting` argument reference](#composite_slot_type_setting-argument-reference) below.
@@ -121,7 +122,7 @@ See [`grammar_slot_type_setting` argument reference](#grammar_slot_type_setting-
 * `source` - (Optional) Source of the grammar used to create the slot type.
 See [`source` argument reference](#source-argument-reference) below.
 
-##### `source` Argument Reference
+#### `source` Argument Reference
 
 * `s3_bucket_name` - (Required) Name of the Amazon S3 bucket that contains the grammar source.
 * `s3_object_key` - (Required) Path to the grammar in the Amazon S3 bucket.
@@ -150,7 +151,7 @@ Valid values are `OriginalValue`, `TopResolution`, and `Concatenation`.
 You can use this to enable using slot values as a custom vocabulary for recognizing user utterances.
 See [`advanced_recognition_setting` argument reference](#advanced_recognition_setting-argument-reference) below.
 * `regex_filter` - (Optional) Used to validate the value of the slot.
-See [`regex_filter` argument reference](#regexfilter-argument-reference) below.
+See [`regex_filter` argument reference](#regex_filter-argument-reference) below.
 
 #### `advanced_recognition_setting` Argument Reference
 

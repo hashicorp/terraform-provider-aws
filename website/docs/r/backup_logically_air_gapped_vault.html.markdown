@@ -24,21 +24,22 @@ resource "aws_backup_logically_air_gapped_vault" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
+* `encryption_key_arn` - (Optional) AWS KMS key identifier (ARN) used to encrypt the backups in the logically air-gapped vault.
 * `max_retention_days` - (Required) Maximum retention period that the Logically Air Gapped Backup Vault retains recovery points.
 * `min_retention_days` - (Required) Minimum retention period that the Logically Air Gapped Backup Vault retains recovery points.
+* `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Metadata that you can assign to help organize the resources that you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the Logically Air Gapped Backup Vault.
-* `arn` - The ARN of the Logically Air Gapped Backup Vault.
-* `recovery_points` - The number of recovery points that are stored in a Logically Air Gapped Backup Vault.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the Logically Air Gapped Backup Vault.
+* `id` - Name of the Logically Air Gapped Backup Vault.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

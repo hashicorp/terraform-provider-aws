@@ -41,26 +41,20 @@ resource "aws_vpc" "test" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipam_pool_id` - (Optional) ID of the IPAM pool you would like information on.
 * `filter` - (Optional) Custom filter block as described below.
 
-### filter
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` blocks are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected VPC.
-
-The following attribute is additionally exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `address_family` - IP protocol assigned to this pool.
 * `allocation_default_netmask_length` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
@@ -76,7 +70,15 @@ The following attribute is additionally exported:
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
 * `publicly_advertisable` - Defines whether or not IPv6 pool space is publicly advertisable over the internet.
 * `source_ipam_pool_id` - ID of the source IPAM pool.
+* `source_resource` - Resource used to create the resource planning pool.
 * `tags` - Map of tags to assigned to the resource.
+
+### source_resource
+
+* `resource_id` - (Required) ID of the resource.
+* `resource_owner` - (Required) Owner of the resource.
+* `resource_region` - (Required) Region where the resource exists. Must match the `locale` of the parent IPAM Pool.
+* `resource_type` - (Required) Type of the resource. (`vpc`)
 
 ## Timeouts
 

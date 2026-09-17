@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -26,142 +28,156 @@ func dataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
 
-		Schema: map[string]*schema.Schema{
-			"default_character_set": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"engine_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"exportable_log_types": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrFilter: namevaluesfilters.Schema(),
-			"has_major_target": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"has_minor_target": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"include_all": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"latest": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"parameter_group_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"preferred_major_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"preferred_upgrade_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"preferred_versions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"supported_character_sets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"supported_feature_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"supported_modes": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"supported_timezones": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"supports_global_databases": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_limitless_database": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_log_exports_to_cloudwatch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_parallel_query": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_read_replica": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"valid_major_targets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"valid_minor_targets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"valid_upgrade_targets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"default_character_set": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"engine_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"exportable_log_types": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrFilter: namevaluesfilters.Schema(),
+				"has_major_target": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"has_minor_target": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"include_all": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"latest": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"parameter_group_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"preferred_major_targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"preferred_upgrade_targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"preferred_versions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"supported_character_sets": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"supported_feature_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"supported_modes": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"supported_timezones": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"supports_certificate_rotation_without_restart": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_global_databases": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_integrations": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_limitless_database": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_local_write_forwarding": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_log_exports_to_cloudwatch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_parallel_query": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_read_replica": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"valid_major_targets": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"valid_minor_targets": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"valid_upgrade_targets": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -229,7 +245,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	prefSearch := false
 
 	// preferred versions
-	if l := d.Get("preferred_versions").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_versions").([]any); len(l) > 0 {
 		var preferredVersions []awstypes.DBEngineVersion
 
 		for _, elem := range l {
@@ -255,7 +271,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// preferred upgrade targets
-	if l := d.Get("preferred_upgrade_targets").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_upgrade_targets").([]any); len(l) > 0 {
 		var prefUTs []awstypes.DBEngineVersion
 
 	engineVersionsLoop:
@@ -284,7 +300,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// preferred major targets
-	if l := d.Get("preferred_major_targets").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_major_targets").([]any); len(l) > 0 {
 		var prefMTs []awstypes.DBEngineVersion
 
 	majorsLoop:
@@ -392,8 +408,11 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supported_timezones", tfslices.ApplyToAll(found.SupportedTimezones, func(v awstypes.Timezone) string {
 		return aws.ToString(v.TimezoneName)
 	}))
+	d.Set("supports_certificate_rotation_without_restart", found.SupportsCertificateRotationWithoutRestart)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
+	d.Set("supports_integrations", found.SupportsIntegrations)
 	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
+	d.Set("supports_local_write_forwarding", found.SupportsLocalWriteForwarding)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
 	d.Set("supports_parallel_query", found.SupportsParallelQuery)
 	d.Set("supports_read_replica", found.SupportsReadReplica)

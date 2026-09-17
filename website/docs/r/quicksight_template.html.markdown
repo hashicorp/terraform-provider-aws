@@ -98,9 +98,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `definition` - (Optional) A detailed template definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `permissions` - (Optional) A set of resource permissions on the template. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_entity` - (Optional) The entity that you are using as a source when you create the template (analysis or template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -116,24 +117,24 @@ The following arguments are optional:
 
 ### source_analysis
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) ARN of the resource.
 * `data_set_references` - (Required) A list of dataset references used as placeholders in the template. See [data_set_references](#data_set_references).
 
 ### data_set_references
 
-* `data_set_arn` - (Required) Dataset Amazon Resource Name (ARN).
+* `data_set_arn` - (Required) Dataset ARN.
 * `data_set_placeholder` - (Required) Dataset placeholder.
 
 ### source_template
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) ARN of the resource.
 
 ### definition
 
 * `data_set_configuration` - (Required) A list of dataset configurations. These configurations define the required columns for each dataset used within a template. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetConfiguration.html).
 * `analysis_defaults` - (Optional) The configuration for default analysis settings. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html).
 * `calculated_fields` - (Optional) A list of calculated field definitions for the template. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html).
-* `column_configurations` - (Optional) A list of template-level column configurations. Column configurations are used to set default formatting for a column that's used throughout a template. See [AWS API Documentation for complete description](ttps://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html).
+* `column_configurations` - (Optional) A list of template-level column configurations. Column configurations are used to set default formatting for a column that's used throughout a template. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html).
 * `filter_groups` - (Optional) A list of filter definitions for a template. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterGroup.html). For more information, see [Filtering Data](https://docs.aws.amazon.com/quicksight/latest/user/filtering-visual-data.html) in Amazon QuickSight User Guide.
 * `parameters_declarations` - (Optional) A list of parameter declarations for a template. Parameters are named variables that can transfer a value for use by an action or an object. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html). For more information, see [Parameters in Amazon QuickSight](https://docs.aws.amazon.com/quicksight/latest/user/parameters-in-quicksight.html) in the Amazon QuickSight User Guide.
 * `sheets` - (Optional) A list of sheet definitions for a template. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html).
@@ -146,7 +147,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_time` - The time that the template was created.
 * `id` - A comma-delimited string joining AWS account ID and template ID.
 * `last_updated_time` - The time that the template was last updated.
-* `source_entity_arn` - Amazon Resource Name (ARN) of an analysis or template that was used to create this template.
+* `source_entity_arn` - ARN of an analysis or template that was used to create this template.
 * `status` - The template creation status.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version_number` - The version number of the template version.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ds
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,54 +48,54 @@ func resourceRegion() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"desired_number_of_domain_controllers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(2),
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"region_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidRegionName,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"desired_number_of_domain_controllers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(2),
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"region_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidRegionName,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -105,8 +107,8 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		RegionName:  aws.String(regionName),
 	}
 
-	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VPCSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VPCSettings = expandDirectoryVpcSettings(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.AddRegion(ctx, input)
@@ -140,7 +142,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
-func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -151,7 +153,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	region, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Region (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -165,7 +167,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("directory_id", region.DirectoryId)
 	d.Set("region_name", region.RegionName)
 	if region.VpcSettings != nil {
-		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettings(region.VpcSettings)}); err != nil {
+		if err := d.Set("vpc_settings", []any{flattenDirectoryVpcSettings(region.VpcSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
 		}
 	} else {
@@ -182,12 +184,12 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", directoryID, err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	return diags
 }
 
-func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -218,7 +220,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
-func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -232,9 +234,10 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		o.Region = regionName
 	}
 
-	_, err = conn.RemoveRegion(ctx, &directoryservice.RemoveRegionInput{
+	input := directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
-	}, optFn)
+	}
+	_, err = conn.RemoveRegion(ctx, &input, optFn)
 
 	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags
@@ -289,8 +292,7 @@ func findRegions(ctx context.Context, conn *directoryservice.Client, input *dire
 
 		if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -318,19 +320,18 @@ func findRegionByTwoPartKey(ctx context.Context, conn *directoryservice.Client, 
 
 	if status := output.Status; status == awstypes.DirectoryStageDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRegion(conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -346,7 +347,7 @@ func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, direc
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
 		Target:  enum.Slice(awstypes.DirectoryStageActive),
-		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
+		Refresh: statusRegion(conn, directoryID, regionName, optFns...),
 		Timeout: timeout,
 	}
 
@@ -363,7 +364,7 @@ func waitRegionDeleted(ctx context.Context, conn *directoryservice.Client, direc
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
 		Target:  []string{},
-		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
+		Refresh: statusRegion(conn, directoryID, regionName, optFns...),
 		Timeout: timeout,
 	}
 

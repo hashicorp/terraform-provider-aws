@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ds_shared_directory: Properly handle paged response objects on read
-```

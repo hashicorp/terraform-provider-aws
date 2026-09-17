@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ssm_parameter: Add `insecure_value` argument to enable dynamic use of SSM parameter values
-```

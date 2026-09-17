@@ -23,26 +23,29 @@ data "aws_db_instance" "database" {
 This data source supports the following arguments:
 
 * `db_instance_identifier` - (Optional) Name of the RDS instance.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
 ## Attribute Reference
 
-~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
-
 This data source exports the following attributes in addition to the arguments above:
+
+~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
 
 * `address` - Hostname of the RDS instance. See also `endpoint` and `port`.
 * `allocated_storage` - Allocated storage size specified in gigabytes.
-* `auto_minor_version_upgrade` - Indicates that minor version patches are applied automatically.
+* `auto_minor_version_upgrade` - Whether minor version patches are applied automatically.
 * `availability_zone` - Name of the Availability Zone the DB instance is located in.
-* `backup_retention_period` - Specifies the number of days for which automatic DB snapshots are retained.
+* `backup_retention_period` - Number of days for which automatic DB snapshots are retained.
+* `ca_cert_identifier` - Identifier of the CA certificate for the DB instance.
+* `database_insights_mode` - Mode of Database Insights that is enabled for the DB instance.
 * `db_cluster_identifier` - If the DB instance is a member of a DB cluster, contains the name of the DB cluster that the DB instance is a member of.
 * `db_instance_arn` - ARN for the DB instance.
-* `db_instance_class` - Contains the name of the compute and memory capacity class of the DB instance.
-* `db_name` - Contains the name of the initial database of this instance that was provided at create time, if one was specified when the DB instance was created. This same name is returned for the life of the DB instance.
+* `db_instance_class` - Name of the compute and memory capacity class of the DB instance.
+* `db_instance_port` - Port that the DB instance listens on.
+* `db_name` - Name of the initial database of this instance that was provided at create time, if one was specified when the DB instance was created. This same name is returned for the life of the DB instance.
 * `db_parameter_groups` - Provides the list of DB parameter groups applied to this DB instance.
 * `db_subnet_group` - Name of the subnet group associated with the DB instance.
-* `db_instance_port` - Port that the DB instance listens on.
 * `enabled_cloudwatch_logs_exports` - List of log types to export to cloudwatch.
 * `endpoint` - Connection endpoint in `address:port` format.
 * `engine` - Provides the name of the database engine to be used for this DB instance.
@@ -51,31 +54,31 @@ This data source exports the following attributes in addition to the arguments a
 * `iops` - Provisioned IOPS (I/O operations per second) value.
 * `kms_key_id` - If StorageEncrypted is true, the KMS key identifier for the encrypted DB instance.
 * `license_model` - License model information for this DB instance.
-* `master_username` - Contains the master username for the DB instance.
-* `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
-* `max_allocated_storage` - The upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
+* `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret-block).
+* `master_username` - Master username for the DB instance.
+* `max_allocated_storage` - Upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
 * `network_type` - Network type of the DB instance.
 * `option_group_memberships` - Provides the list of option group memberships for this DB instance.
 * `port` - Database endpoint port, primarily used by an Aurora DB cluster. For a conventional RDS DB instance, the `db_instance_port` is typically the preferred choice.
-* `preferred_backup_window` - Specifies the daily time range during which automated backups are created.
-* `preferred_maintenance_window` -  Specifies the weekly time range during which system maintenance can occur in UTC.
+* `preferred_backup_window` - Daily time range during which automated backups are created.
+* `preferred_maintenance_window` - Weekly time range during which system maintenance can occur in UTC.
 * `publicly_accessible` - Accessibility options for the DB instance.
+* `replicate_source_db` - Identifier of the source DB that this is a replica of.
 * `resource_id` - RDS Resource ID of this instance.
 * `storage_encrypted` - Whether the DB instance is encrypted.
 * `storage_throughput` - Storage throughput value for the DB instance.
 * `storage_type` - Storage type associated with DB instance.
 * `timezone` - Time zone of the DB instance.
+* `upgrade_rollout_order` - Order in which the instances are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 * `vpc_security_groups` - Provides a list of VPC security group elements that the DB instance belongs to.
-* `replicate_source_db` - Identifier of the source DB that this is a replica of.
-* `ca_cert_identifier` - Identifier of the CA certificate for the DB instance.
 
-### master_user_secret
+### `master_user_secret` Block
 
 The `master_user_secret` configuration block supports the following attributes:
 
-* `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
-* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
+* `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
+* `secret_arn` - ARN of the secret.
+* `secret_status` - Status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.

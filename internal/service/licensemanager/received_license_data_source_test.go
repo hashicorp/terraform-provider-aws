@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -19,7 +19,7 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -27,7 +27,7 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReceivedLicenseDataSourceConfig_arn(licenseARN),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGlobalARN(datasourceName, "beneficiary", "iam", "root"),
+					acctest.CheckResourceAttrGlobalARN(ctx, datasourceName, "beneficiary", "iam", "root"),
 					resource.TestCheckResourceAttr(datasourceName, "consumption_configuration.#", "1"),
 					acctest.CheckResourceAttrRFC3339(datasourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(datasourceName, "entitlements.#", "1"),

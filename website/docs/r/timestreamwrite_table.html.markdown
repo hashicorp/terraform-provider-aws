@@ -14,7 +14,7 @@ Provides a Timestream table resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_table" "example" {
   database_name = aws_timestreamwrite_database.example.database_name
   table_name    = "example"
@@ -23,7 +23,7 @@ resource "aws_timestreamwrite_table" "example" {
 
 ### Full usage
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_table" "example" {
   database_name = aws_timestreamwrite_database.example.database_name
   table_name    = "example"
@@ -41,7 +41,7 @@ resource "aws_timestreamwrite_table" "example" {
 
 ### Customer-defined Partition Key
 
-```hcl
+```terraform
 resource "aws_timestreamwrite_table" "example" {
   database_name = aws_timestreamwrite_database.example.database_name
   table_name    = "example"
@@ -60,7 +60,8 @@ resource "aws_timestreamwrite_table" "example" {
 
 This resource supports the following arguments:
 
-* `database_name` – (Required) The name of the Timestream database.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `database_name` - (Required) The name of the Timestream database.
 * `magnetic_store_write_properties` - (Optional) Contains properties to set on the table when enabling magnetic store writes. See [Magnetic Store Write Properties](#magnetic-store-write-properties) below for more details.
 * `retention_properties` - (Optional) The retention duration for the memory store and magnetic store. See [Retention Properties](#retention-properties) below for more details. If not provided, `magnetic_store_retention_period_in_days` default to 73000 and `memory_store_retention_period_in_hours` defaults to 6.
 * `schema` - (Optional) The schema of the table. See [Schema](#schema) below for more details.
@@ -80,7 +81,7 @@ The `magnetic_store_rejected_data_location` block supports the following argumen
 
 * `s3_configuration` - (Optional) Configuration of an S3 location to write error reports for records rejected, asynchronously, during magnetic store writes. See [S3 Configuration](#s3-configuration) below for more details.
 
-##### S3 Configuration
+#### S3 Configuration
 
 The `s3_configuration` block supports the following arguments:
 

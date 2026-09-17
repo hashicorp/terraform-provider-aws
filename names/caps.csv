@@ -76,6 +76,7 @@ Jdbc,JDBC
 Json,JSON
 Kms,KMS
 Mfa,MFA
+Microvms, MicroVMs
 Msk,MSK
 Mwaa,MWAA
 Mysql,MySQL

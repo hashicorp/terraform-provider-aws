@@ -22,6 +22,9 @@ data "aws_imagebuilder_image" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attribute Reference
@@ -47,7 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 * `platform` - Platform of the image.
 * `os_version` - Operating System version of the image.
 * `output_resources` - List of objects with resources created by the image.
-    * `amis` - Set of objects with each Amazon Machine Image (AMI) created.
+    * `amis` - Set of objects with each AMI created.
         * `account_id` - Account identifier of the AMI.
         * `description` - Description of the AMI.
         * `image` - Identifier of the AMI.

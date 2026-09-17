@@ -22,6 +22,8 @@ data "aws_organizations_organizational_unit_descendant_organizational_units" "ou
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `parent_id` - (Required) Parent ID of the organizational unit.
 
 ## Attribute Reference

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package costoptimizationhub
 
@@ -8,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -21,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Enrollment Status")
-func newResourceEnrollmentStatus(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnrollmentStatus{}
+// @FrameworkResource("aws_costoptimizationhub_enrollment_status", name="Enrollment Status")
+func newEnrollmentStatusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &enrollmentStatusResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -40,17 +41,13 @@ const (
 	ResNameEnrollmentStatus = "Enrollment Status"
 )
 
-type resourceEnrollmentStatus struct {
-	framework.ResourceWithConfigure
+type enrollmentStatusResource struct {
+	framework.ResourceWithModel[enrollmentStatusResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceEnrollmentStatus) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_costoptimizationhub_enrollment_status"
-}
-
-func (r *resourceEnrollmentStatus) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *enrollmentStatusResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -69,8 +66,8 @@ func (r *resourceEnrollmentStatus) Schema(ctx context.Context, request resource.
 	}
 }
 
-func (r *resourceEnrollmentStatus) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceEnrollmentStatusData
+func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data enrollmentStatusResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -104,14 +101,14 @@ func (r *resourceEnrollmentStatus) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID)
-	data.Status = fwflex.StringValueToFramework(ctx, aws.ToString(out.Status))
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
+	data.Status = fwflex.StringToFramework(ctx, out.Status)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceEnrollmentStatus) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceEnrollmentStatusData
+func (r *enrollmentStatusResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data enrollmentStatusResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -120,7 +117,7 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, request resource.Re
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
 	out, err := findEnrollmentStatus(ctx, conn)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -163,8 +160,8 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, request resource.Re
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceEnrollmentStatus) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceEnrollmentStatusData
+func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new enrollmentStatusResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &old)...)
 	response.Diagnostics.Append(request.State.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -199,14 +196,14 @@ func (r *resourceEnrollmentStatus) Update(ctx context.Context, request resource.
 		}
 
 		old.ID = new.ID
-		old.Status = fwflex.StringValueToFramework(ctx, *out.Status)
+		old.Status = fwflex.StringToFramework(ctx, out.Status)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &old)...)
 }
 
-func (r *resourceEnrollmentStatus) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceEnrollmentStatusData
+func (r *enrollmentStatusResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data enrollmentStatusResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -251,7 +248,7 @@ func findEnrollmentStatus(ctx context.Context, conn *costoptimizationhub.Client)
 	return out, nil
 }
 
-type resourceEnrollmentStatusData struct {
+type enrollmentStatusResourceModel struct {
 	ID                    types.String `tfsdk:"id"`
 	Status                types.String `tfsdk:"status"`
 	IncludeMemberAccounts types.Bool   `tfsdk:"include_member_accounts"`

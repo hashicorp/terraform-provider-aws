@@ -1,5 +1,5 @@
 ---
-subcategory: "Meta Data Sources"
+subcategory: "Billing"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-
@@ -60,9 +60,13 @@ resource "aws_s3_bucket_policy" "allow_billing_logging" {
 }
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.
+* `id` - ID of the AWS billing service account.

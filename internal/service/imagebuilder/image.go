@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -15,13 +17,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +32,8 @@ import (
 
 // @SDKResource("aws_imagebuilder_image", name="Image")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceImage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageCreate,
@@ -37,252 +41,262 @@ func resourceImage() *schema.Resource {
 		UpdateWithoutTimeout: resourceImageUpdate,
 		DeleteWithoutTimeout: resourceImageDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container_recipe_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"distribution_configuration_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"enhanced_image_metadata_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-			"execution_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"image_recipe_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
-			},
-			"image_scanning_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ecr_configuration": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_tags": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"container_recipe_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"distribution_configuration_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"enhanced_image_metadata_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  true,
+				},
+				"execution_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"image_recipe_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+				},
+				"image_scanning_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ecr_configuration": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_tags": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										names.AttrRepositoryName: {
+											Type:     schema.TypeString,
+											Optional: true,
 										},
 									},
-									names.AttrRepositoryName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
 								},
 							},
-						},
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"image_tests_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"image_tests_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  true,
-						},
-						"timeout_minutes": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      720,
-							ValidateFunc: validation.IntBetween(60, 1440),
-						},
-					},
-				},
-			},
-			"infrastructure_configuration_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"os_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"output_resources": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amis": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrDescription: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"image": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"containers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"image_uris": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							"image_scanning_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
 						},
 					},
 				},
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workflow": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"on_failure": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OnWorkflowFailure](),
+				"image_tests_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"image_tests_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  true,
+							},
+							"timeout_minutes": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								Default:      720,
+								ValidateFunc: validation.IntBetween(60, 1440),
+							},
 						},
-						"parallel_group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
+					},
+				},
+				"infrastructure_configuration_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrLogGroupName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
-						names.AttrParameter: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"os_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"output_resources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amis": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrDescription: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"image": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+								},
+							},
+							"containers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"image_uris": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
-						"workflow_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+					},
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workflow": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"on_failure": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OnWorkflowFailure](),
+							},
+							"parallel_group": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
+							},
+							names.AttrParameter: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+							"workflow_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImageInput{
-		ClientToken:                  aws.String(id.UniqueId()),
+		ClientToken:                  aws.String(create.UniqueId(ctx)),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -303,16 +317,20 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -334,13 +352,13 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	image, err := findImageByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -364,14 +382,14 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
 	if image.ImageScanningConfiguration != nil {
-		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
+		if err := d.Set("image_scanning_configuration", []any{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if image.ImageTestsConfiguration != nil {
-		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
+		if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
 		}
 	} else {
@@ -380,10 +398,15 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
+	if image.LoggingConfiguration != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(image.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	}
 	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
-		if err := d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)}); err != nil {
+		if err := d.Set("output_resources", []any{flattenOutputResources(image.OutputResources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting output_resources: %s", err)
 		}
 	} else {
@@ -404,7 +427,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -412,7 +435,7 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -441,8 +464,7 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -451,17 +473,17 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 	}
 
 	if output == nil || output.Image == nil || output.Image.State == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Image, nil
 }
 
-func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusImage(conn *imagebuilder.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findImageByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, string(awstypes.ImageStatusPending), nil
 		}
 
@@ -484,14 +506,14 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, ar
 			awstypes.ImageStatusTesting,
 		),
 		Target:  enum.Slice(awstypes.ImageStatusAvailable),
-		Refresh: statusImage(ctx, conn, arn),
+		Refresh: statusImage(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Image); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
 
 		return output, err
 	}
@@ -499,12 +521,12 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, ar
 	return nil, err
 }
 
-func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]interface{} {
+func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Amis; v != nil {
 		tfMap["amis"] = flattenAMIs(v)
@@ -517,8 +539,8 @@ func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]inte
 	return tfMap
 }
 
-func flattenAMI(apiObject awstypes.Ami) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenAMI(apiObject awstypes.Ami) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccountId; v != nil {
 		tfMap[names.AttrAccountID] = aws.ToString(v)
@@ -543,12 +565,12 @@ func flattenAMI(apiObject awstypes.Ami) map[string]interface{} {
 	return tfMap
 }
 
-func flattenAMIs(apiObjects []awstypes.Ami) []interface{} {
+func flattenAMIs(apiObjects []awstypes.Ami) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAMI(apiObject))
@@ -557,11 +579,11 @@ func flattenAMIs(apiObjects []awstypes.Ami) []interface{} {
 	return tfList
 }
 
-func flattenContainer(apiObject awstypes.Container) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenContainer(apiObject awstypes.Container) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ImageUris; v != nil {
-		tfMap["image_uris"] = aws.StringSlice(v)
+		tfMap["image_uris"] = v
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -571,12 +593,12 @@ func flattenContainer(apiObject awstypes.Container) map[string]interface{} {
 	return tfMap
 }
 
-func flattenContainers(apiObjects []awstypes.Container) []interface{} {
+func flattenContainers(apiObjects []awstypes.Container) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenContainer(apiObject))

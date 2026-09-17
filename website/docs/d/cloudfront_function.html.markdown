@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront Function data source.
 ---
 
-# aws_cloudfront_function
+# Data Source: aws_cloudfront_function
 
 Provides information about a CloudFront Function.
 
@@ -18,7 +18,8 @@ variable "function_name" {
 }
 
 data "aws_cloudfront_function" "existing" {
-  name = var.function_name
+  name  = var.function_name
+  stage = "LIVE"
 }
 ```
 

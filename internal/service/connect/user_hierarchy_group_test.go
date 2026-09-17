@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -9,35 +9,34 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccUserHierarchyGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.HierarchyGroup
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent-group/{hierarchy_group_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.arn", resourceName, names.AttrARN),
@@ -59,8 +58,8 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 				// Update name
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent-group/{hierarchy_group_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.arn", resourceName, names.AttrARN),
@@ -80,22 +79,22 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 func testAccUserHierarchyGroup_parentGroupId(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.HierarchyGroup
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupConfig_parentID(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent-group/{hierarchy_group_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.arn", "aws_connect_user_hierarchy_group.parent", names.AttrARN),
@@ -119,20 +118,20 @@ func testAccUserHierarchyGroup_parentGroupId(t *testing.T) {
 func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.HierarchyGroup
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 				),
@@ -145,7 +144,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 			{
 				Config: testAccUserHierarchyGroupConfig_tags(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
@@ -154,7 +153,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 			{
 				Config: testAccUserHierarchyGroupConfig_tagsUpdated(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
@@ -168,36 +167,44 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 func testAccUserHierarchyGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.HierarchyGroup
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserHierarchyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyGroup(), resourceName),
+					testAccCheckUserHierarchyGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUserHierarchyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckUserHierarchyGroupExists(ctx context.Context, n string, v *awstypes.HierarchyGroup) resource.TestCheckFunc {
+func testAccCheckUserHierarchyGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.HierarchyGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 		output, err := tfconnect.FindUserHierarchyGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["hierarchy_group_id"])
 
@@ -211,18 +218,18 @@ func testAccCheckUserHierarchyGroupExists(ctx context.Context, n string, v *awst
 	}
 }
 
-func testAccCheckUserHierarchyGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserHierarchyGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_user_hierarchy_group" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 			_, err := tfconnect.FindUserHierarchyGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["hierarchy_group_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

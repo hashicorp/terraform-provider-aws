@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -31,161 +33,167 @@ func dataSourceTargetGroup() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_termination": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"deregistration_delay": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHealthCheck: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"healthy_threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrInterval: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"matcher": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrProtocol: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTimeout: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"unhealthy_threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"arn_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_termination": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"deregistration_delay": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHealthCheck: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"healthy_threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrInterval: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"matcher": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrProtocol: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTimeout: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"unhealthy_threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"lambda_multi_value_headers_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"load_balancing_algorithm_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"load_balancing_anomaly_mitigation": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"load_balancing_cross_zone_enabled": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preserve_client_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"protocol_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proxy_protocol_v2": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"slow_start": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"stickiness": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookie_duration": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"cookie_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"lambda_multi_value_headers_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"load_balancer_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"load_balancing_algorithm_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"load_balancing_anomaly_mitigation": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"load_balancing_cross_zone_enabled": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preserve_client_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protocol_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proxy_protocol_v2": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"slow_start": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"stickiness": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie_duration": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"cookie_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"target_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"target_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_control_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
 
@@ -244,6 +252,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	targetType := targetGroup.TargetType
 	d.Set("target_type", targetType)
+	d.Set("target_control_port", targetGroup.TargetControlPort)
 
 	var protocol awstypes.ProtocolEnum
 	if targetType != awstypes.TargetTypeEnumLambda {
@@ -263,7 +272,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
+	if err := d.Set("stickiness", []any{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 

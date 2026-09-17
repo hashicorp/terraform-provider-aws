@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -19,7 +19,7 @@ func TestSecurityGroupMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0": {
 			StateVersion: 0,
@@ -59,7 +59,7 @@ func TestSecurityGroupMigrateState_empty(t *testing.T) {
 	t.Parallel()
 
 	var is *terraform.InstanceState
-	var meta interface{}
+	var meta any
 
 	// should handle nil
 	is, err := tfec2.SecurityGroupMigrateState(0, is, meta)

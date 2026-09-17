@@ -27,8 +27,9 @@ resource "aws_dx_lag" "hoge" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the LAG.
-* `connections_bandwidth` - (Required) The bandwidth of the individual physical connections bundled by the LAG. Valid values: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
+* `connections_bandwidth` - (Required) The bandwidth of the individual dedicated connections bundled by the LAG. Valid values: 1Gbps, 10Gbps, 100Gbps, and 400Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Dedicated Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/dedicated_connection.html).
 * `location` - (Required) The AWS Direct Connect location in which the LAG should be allocated. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `connection_id` - (Optional) The ID of an existing dedicated connection to migrate to the LAG.
 * `force_destroy` - (Optional, Default:false) A boolean that indicates all connections associated with the LAG should be deleted so that the LAG can be destroyed without error. These objects are *not* recoverable.
@@ -42,9 +43,19 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the LAG.
 * `has_logical_redundancy` - Indicates whether the LAG supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `id` - The ID of the LAG.
-* `jumbo_frame_capable` -Indicates whether jumbo frames (9001 MTU) are supported.
+* `jumbo_frame_capable` - Indicates whether jumbo frames (9001 MTU) are supported.
 * `owner_account_id` - The ID of the AWS account that owns the LAG.
+* `rate_limiter_status` - Rate limiter status for the LAG. See [`rate_limiter_status` Block](#rate_limiter_status-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `rate_limiter_status` Block
+
+`rate_limiter_status` exports the following attributes:
+
+* `max_allowed` - Maximum number of rate limiters allowed on the LAG.
+* `in_use` - Number of rate limiters currently in use.
+* `remaining` - Number of rate limiters remaining (available).
+* `total_bandwidth` - Total bandwidth allocated across all rate limiters.
 
 ## Import
 

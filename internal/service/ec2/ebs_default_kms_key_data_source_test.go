@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -13,7 +13,7 @@ import (
 
 func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -21,7 +21,7 @@ func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEBSDefaultKMSKeyDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSDefaultKMSKey(ctx, "data.aws_ebs_default_kms_key.current"),
+					testAccCheckEBSDefaultKMSKey(ctx, t, "data.aws_ebs_default_kms_key.current"),
 				),
 			},
 		},
@@ -29,7 +29,10 @@ func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 }
 
 const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_ebs_default_kms_key" "test" {
   key_arn = aws_kms_key.test.arn

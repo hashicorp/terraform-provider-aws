@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pricing
 
@@ -19,42 +21,44 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_pricing_product")
+// @SDKDataSource("aws_pricing_product", name="Product")
 func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
 
-		Schema: map[string]*schema.Schema{
-			"filters": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrField: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"filters": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrField: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"result": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PricingClient(ctx)
 
@@ -64,8 +68,8 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	filters := d.Get("filters")
-	for _, v := range filters.([]interface{}) {
-		m := v.(map[string]interface{})
+	for _, v := range filters.([]any) {
+		m := v.(map[string]any)
 		input.Filters = append(input.Filters, types.Filter{
 			Field: aws.String(m[names.AttrField].(string)),
 			Type:  types.FilterTypeTermMatch,

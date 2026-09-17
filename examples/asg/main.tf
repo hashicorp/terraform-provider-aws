@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -36,14 +36,17 @@ resource "aws_elb" "web-elb" {
 }
 
 resource "aws_autoscaling_group" "web-asg" {
-  availability_zones   = local.availability_zones
-  name                 = "terraform-example-asg"
-  max_size             = var.asg_max
-  min_size             = var.asg_min
-  desired_capacity     = var.asg_desired
-  force_delete         = true
-  launch_configuration = aws_launch_configuration.web-lc.name
-  load_balancers       = [aws_elb.web-elb.name]
+  availability_zones = local.availability_zones
+  name               = "terraform-example-asg"
+  max_size           = var.asg_max
+  min_size           = var.asg_min
+  desired_capacity   = var.asg_desired
+  force_delete       = true
+  launch_template {
+    id      = aws_launch_template.web-lt.id
+    version = aws_launch_template.web-lt.latest_version
+  }
+  load_balancers = [aws_elb.web-elb.name]
 
   #vpc_zone_identifier = ["${split(",", var.availability_zones)}"]
   tag {
@@ -53,15 +56,15 @@ resource "aws_autoscaling_group" "web-asg" {
   }
 }
 
-resource "aws_launch_configuration" "web-lc" {
-  name          = "terraform-example-lc"
+resource "aws_launch_template" "web-lt" {
+  name          = "terraform-example-lt"
   image_id      = var.aws_amis[var.aws_region]
   instance_type = var.instance_type
 
   # Security group
-  security_groups = [aws_security_group.default.id]
-  user_data       = file("userdata.sh")
-  key_name        = var.key_name
+  vpc_security_group_ids = [aws_security_group.default.id]
+  user_data              = base64encode(file("userdata.sh"))
+  key_name               = var.key_name
 }
 
 # Our default security group to access

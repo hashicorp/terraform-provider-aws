@@ -22,6 +22,7 @@ data "aws_outposts_outposts" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) Availability Zone name.
 * `availability_zone_id` - (Optional) Availability Zone identifier.
 * `site_id` - (Optional) Site identifier.
@@ -31,6 +32,6 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arns` - Set of Amazon Resource Names (ARNs).
+* `arns` - Set of ARNs.
 * `id` - AWS Region.
 * `ids` - Set of identifiers.

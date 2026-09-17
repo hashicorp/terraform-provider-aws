@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package outposts
 
@@ -22,37 +24,44 @@ func dataSourceOutpostAsset() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceOutpostAssetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"asset_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"asset_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rack_elevation": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"rack_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"asset_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"asset_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_families": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"rack_elevation": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"rack_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 	outpost_id := aws.String(d.Get(names.AttrARN).(string))
@@ -88,8 +97,13 @@ func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.ToString(outpost_id))
 	d.Set("asset_id", asset.AssetId)
 	d.Set("asset_type", asset.AssetType)
-	d.Set("host_id", asset.ComputeAttributes.HostId)
-	d.Set("rack_elevation", asset.AssetLocation.RackElevation)
+	if asset.ComputeAttributes != nil {
+		d.Set("host_id", asset.ComputeAttributes.HostId)
+		d.Set("instance_families", asset.ComputeAttributes.InstanceFamilies)
+	}
+	if asset.AssetLocation != nil {
+		d.Set("rack_elevation", asset.AssetLocation.RackElevation)
+	}
 	d.Set("rack_id", asset.RackId)
 	return diags
 }

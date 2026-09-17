@@ -1,0 +1,18 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: vcr-migrate-uuid
+    languages:
+      - go
+    message: "Use create.UUID(ctx) instead of uuid.GenerateUUID() for VCR compatibility. This ensures deterministic UUID generation during test playback."
+    severity: WARNING
+    patterns:
+      - pattern-inside: |
+          func $FUNC(..., $CTX context.Context, ...) {
+            ...
+          }
+      - pattern: uuid.GenerateUUID()
+    paths:
+      include:
+        - "**/*.go"

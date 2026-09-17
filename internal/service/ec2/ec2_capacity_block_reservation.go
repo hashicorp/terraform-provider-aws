@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -12,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,8 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,15 +43,10 @@ func newCapacityBlockReservationResource(context.Context) (resource.ResourceWith
 }
 
 type capacityBlockReservationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[capacityBlockReservationReservationModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-	framework.WithNoOpUpdate[capacityBlockReservationReservationModel]
 	framework.WithNoOpDelete
-}
-
-func (*capacityBlockReservationResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_reservation"
 }
 
 func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -119,7 +117,7 @@ func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"outpost_arn": schema.StringAttribute{
+			names.AttrOutpostARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -173,15 +171,15 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.PurchaseCapacityBlockInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.PurchaseCapacityBlockInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation)
 
-	output, err := conn.PurchaseCapacityBlock(ctx, input)
+	output, err := conn.PurchaseCapacityBlock(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("purchasing EC2 Capacity Block Reservation", err.Error())
@@ -189,20 +187,18 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 		return
 	}
 
-	// Set values for unknowns.
 	data.ID = fwflex.StringToFramework(ctx, output.CapacityReservation.CapacityReservationId)
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 
 	cr, err := waitCapacityBlockReservationActive(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Capacity Block Reservation (%s) active", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, cr, &data)...)
+	response.Diagnostics.Append(flattenCapacityReservation(ctx, cr, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -221,7 +217,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 
 	cr, err := findCapacityReservationByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -234,7 +230,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, cr, &data)...)
+	response.Diagnostics.Append(flattenCapacityReservation(ctx, cr, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -242,11 +238,15 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *capacityBlockReservationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
+func flattenCapacityReservation(ctx context.Context, cr *awstypes.CapacityReservation, data *capacityBlockReservationReservationModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	diags := fwflex.Flatten(ctx, cr, data, fwflex.WithFieldNamePrefix("CapacityReservation"))
+	data.CreatedDate = fwflex.TimeToFramework(ctx, cr.CreateDate)
+	data.InstanceCount = fwflex.Int32ToFrameworkInt64(ctx, cr.TotalInstanceCount)
+	return diags
 }
 
 type capacityBlockReservationReservationModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                     `tfsdk:"arn"`
 	AvailabilityZone        types.String                                                     `tfsdk:"availability_zone"`
 	CapacityBlockOfferingID types.String                                                     `tfsdk:"capacity_block_offering_id"`

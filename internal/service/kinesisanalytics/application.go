@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kinesisanalytics
 
@@ -24,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,11 +41,12 @@ func resourceApplication() *schema.Resource {
 		UpdateWithoutTimeout: resourceApplicationUpdate,
 		DeleteWithoutTimeout: resourceApplicationDelete,
 
+		DeprecationMessage: "use aws_kinesisanalyticsv2_application resource instead",
+
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("inputs", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("inputs", func(_ context.Context, old, new, meta any) bool {
 				// An existing input configuration cannot be deleted.
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
 		),
 
@@ -51,528 +54,530 @@ func resourceApplication() *schema.Resource {
 			StateContext: resourceApplicationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudwatch_logging_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_stream_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudwatch_logging_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_stream_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 102400),
-			},
-			"create_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"inputs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kinesis_firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				"code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 102400),
+				},
+				"create_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"inputs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"kinesis_firehose": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"kinesis_stream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrNamePrefix: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 32),
-								validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-							),
-						},
-						"parallelism": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntBetween(1, 64),
+							"kinesis_stream": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"processing_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrResourceARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
+							names.AttrNamePrefix: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 32),
+									validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+								),
+							},
+							"parallelism": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(1, 64),
+										},
+									},
+								},
+							},
+							"processing_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrResourceARN: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 
-												names.AttrRoleARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
+													names.AttrRoleARN: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrSchema: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_columns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1000,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-												},
-												"sql_type": {
-													Type:     schema.TypeString,
-													Required: true,
+							names.AttrSchema: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"record_columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1000,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrName: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+													},
+													"sql_type": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"record_encoding": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_format": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping_parameters": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"csv": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_column_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"record_row_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-																ExactlyOneOf: []string{
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
-																},
-															},
-															names.AttrJSON: {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_row_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
+										"record_encoding": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_format": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping_parameters": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"csv": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_column_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"record_row_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
+																	ExactlyOneOf: []string{
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
-																ExactlyOneOf: []string{
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																names.AttrJSON: {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_row_path": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																		},
+																	},
+																	ExactlyOneOf: []string{
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
 															},
 														},
 													},
-												},
-												"record_format_type": {
-													Type:     schema.TypeString,
-													Computed: true,
+													"record_format_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
+										},
+									},
+								},
+							},
+							"starting_position_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"starting_position": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InputStartingPosition](),
+										},
+									},
+								},
+							},
+							"stream_names": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"last_update_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					),
+				},
+				"outputs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"kinesis_firehose": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"kinesis_stream": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"lambda": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 32),
+									validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+								),
+							},
+							names.AttrSchema: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"record_format_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RecordFormatType](),
 										},
 									},
 								},
 							},
 						},
-						"starting_position_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"starting_position": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.InputStartingPosition](),
-									},
-								},
-							},
-						},
-						"stream_names": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 					},
 				},
-			},
-			"last_update_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
-				),
-			},
-			"outputs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kinesis_firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				"reference_data_sources": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"s3": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bucket_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"file_key": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"kinesis_stream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						"lambda": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 32),
-								validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-							),
-						},
-						names.AttrSchema: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_format_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RecordFormatType](),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"reference_data_sources": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"s3": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"file_key": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrSchema: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_columns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1000,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-												},
-												"sql_type": {
-													Type:     schema.TypeString,
-													Required: true,
+							names.AttrSchema: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"record_columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1000,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrName: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+													},
+													"sql_type": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"record_encoding": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_format": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping_parameters": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"csv": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_column_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"record_row_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-																ExactlyOneOf: []string{
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
-																},
-															},
-															names.AttrJSON: {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_row_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
+										"record_encoding": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_format": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping_parameters": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"csv": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_column_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"record_row_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
+																	ExactlyOneOf: []string{
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
-																ExactlyOneOf: []string{
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																names.AttrJSON: {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_row_path": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																		},
+																	},
+																	ExactlyOneOf: []string{
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
 															},
 														},
 													},
-												},
-												"record_format_type": {
-													Type:     schema.TypeString,
-													Computed: true,
+													"record_format_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrTableName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
+							names.AttrTableName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 32),
+							},
 						},
 					},
 				},
-			},
-			"start_application": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"start_application": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
@@ -581,13 +586,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		ApplicationCode:          aws.String(d.Get("code").(string)),
 		ApplicationDescription:   aws.String(d.Get(names.AttrDescription).(string)),
 		ApplicationName:          aws.String(applicationName),
-		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
-		Inputs:                   expandInputs(d.Get("inputs").([]interface{})),
+		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]any)),
+		Inputs:                   expandInputs(d.Get("inputs").([]any)),
 		Outputs:                  expandOutputs(d.Get("outputs").(*schema.Set).List()),
 		Tags:                     getTagsIn(ctx),
 	}
 
-	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+	outputRaw, err := waitIAMPropagation(ctx, func() (any, error) {
 		return conn.CreateApplication(ctx, input)
 	})
 
@@ -599,7 +604,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(applicationSummary.ApplicationARN))
 
-	if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 && v[0] != nil {
+	if v := d.Get("reference_data_sources").([]any); len(v) > 0 && v[0] != nil {
 		// Add new reference data source.
 		input := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
 			ApplicationName:             aws.String(applicationName),
@@ -607,7 +612,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 			ReferenceDataSource:         expandReferenceDataSource(v),
 		}
 
-		_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+		_, err := waitIAMPropagation(ctx, func() (any, error) {
 			return conn.AddApplicationReferenceDataSource(ctx, input)
 		})
 
@@ -617,13 +622,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if _, ok := d.GetOk("start_application"); ok {
-		if v, ok := d.GetOk("inputs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("inputs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 
 			var inputStartingPosition string
 
-			if v, ok := tfMap["starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				tfMap := v[0].(map[string]interface{})
+			if v, ok := tfMap["starting_position_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]any)
 
 				if v, ok := tfMap["starting_position"].(string); ok && v != "" {
 					inputStartingPosition = v
@@ -645,13 +650,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
 	application, err := findApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -686,7 +691,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
@@ -703,9 +708,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("cloudwatch_logging_options") {
 			o, n := d.GetChange("cloudwatch_logging_options")
 
-			if len(o.([]interface{})) == 0 {
+			if len(o.([]any)) == 0 {
 				// Add new CloudWatch logging options.
-				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+				mNewCloudWatchLoggingOption := n.([]any)[0].(map[string]any)
 
 				input := &kinesisanalytics.AddApplicationCloudWatchLoggingOptionInput{
 					ApplicationName: aws.String(applicationName),
@@ -716,7 +721,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.AddApplicationCloudWatchLoggingOption(ctx, input)
 				})
 
@@ -729,9 +734,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				currentApplicationVersionID += 1
-			} else if len(n.([]interface{})) == 0 {
+			} else if len(n.([]any)) == 0 {
 				// Delete existing CloudWatch logging options.
-				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
+				mOldCloudWatchLoggingOption := o.([]any)[0].(map[string]any)
 
 				input := &kinesisanalytics.DeleteApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(applicationName),
@@ -739,7 +744,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.DeleteApplicationCloudWatchLoggingOption(ctx, input)
 				})
 
@@ -754,8 +759,8 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				currentApplicationVersionID += 1
 			} else {
 				// Update existing CloudWatch logging options.
-				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
-				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+				mOldCloudWatchLoggingOption := o.([]any)[0].(map[string]any)
+				mNewCloudWatchLoggingOption := n.([]any)[0].(map[string]any)
 
 				input.ApplicationUpdate.CloudWatchLoggingOptionUpdates = []awstypes.CloudWatchLoggingOptionUpdate{
 					{
@@ -778,15 +783,15 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("inputs") {
 			o, n := d.GetChange("inputs")
 
-			if len(o.([]interface{})) == 0 {
+			if len(o.([]any)) == 0 {
 				// Add new input.
 				input := &kinesisanalytics.AddApplicationInputInput{
 					ApplicationName:             aws.String(applicationName),
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
-					Input:                       expandInput(n.([]interface{})),
+					Input:                       expandInput(n.([]any)),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.AddApplicationInput(ctx, input)
 				})
 
@@ -799,29 +804,29 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				currentApplicationVersionID += 1
-			} else if len(n.([]interface{})) == 0 {
+			} else if len(n.([]any)) == 0 {
 				// The existing input cannot be deleted.
 				// This should be handled by the CustomizeDiff function above.
 				return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics Application (%s) input", d.Id())
 			} else {
 				// Update existing input.
-				inputUpdate := expandInputUpdate(n.([]interface{}))
+				inputUpdate := expandInputUpdate(n.([]any))
 
 				if d.HasChange("inputs.0.processing_configuration") {
 					o, n := d.GetChange("inputs.0.processing_configuration")
 
 					// Update of existing input processing configuration is handled via the updating of the existing input.
 
-					if len(o.([]interface{})) == 0 {
+					if len(o.([]any)) == 0 {
 						// Add new input processing configuration.
 						input := &kinesisanalytics.AddApplicationInputProcessingConfigurationInput{
 							ApplicationName:              aws.String(applicationName),
 							CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionID),
 							InputId:                      inputUpdate.InputId,
-							InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]interface{})),
+							InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]any)),
 						}
 
-						_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+						_, err := waitIAMPropagation(ctx, func() (any, error) {
 							return conn.AddApplicationInputProcessingConfiguration(ctx, input)
 						})
 
@@ -834,7 +839,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						}
 
 						currentApplicationVersionID += 1
-					} else if len(n.([]interface{})) == 0 {
+					} else if len(n.([]any)) == 0 {
 						// Delete existing input processing configuration.
 						input := &kinesisanalytics.DeleteApplicationInputProcessingConfigurationInput{
 							ApplicationName:             aws.String(applicationName),
@@ -842,7 +847,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 							InputId:                     inputUpdate.InputId,
 						}
 
-						_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+						_, err := waitIAMPropagation(ctx, func() (any, error) {
 							return conn.DeleteApplicationInputProcessingConfiguration(ctx, input)
 						})
 
@@ -869,12 +874,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			os := o.(*schema.Set)
 			ns := n.(*schema.Set)
 
-			additions := []interface{}{}
+			additions := []any{}
 			deletions := []string{}
 
 			// Additions.
 			for _, vOutput := range ns.Difference(os).List() {
-				if outputId, ok := vOutput.(map[string]interface{})[names.AttrID].(string); ok && outputId != "" {
+				if outputId, ok := vOutput.(map[string]any)[names.AttrID].(string); ok && outputId != "" {
 					// Shouldn't be attempting to add an output with an ID.
 					log.Printf("[WARN] Attempting to add invalid Kinesis Analytics Application (%s) output: %#v", d.Id(), vOutput)
 				} else {
@@ -884,7 +889,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			// Deletions.
 			for _, vOutput := range os.Difference(ns).List() {
-				if outputId, ok := vOutput.(map[string]interface{})[names.AttrID].(string); ok && outputId != "" {
+				if outputId, ok := vOutput.(map[string]any)[names.AttrID].(string); ok && outputId != "" {
 					deletions = append(deletions, outputId)
 				} else {
 					// Shouldn't be attempting to delete an output without an ID.
@@ -900,7 +905,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					OutputId:                    aws.String(outputID),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.DeleteApplicationOutput(ctx, input)
 				})
 
@@ -923,7 +928,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					Output:                      expandOutput(vOutput),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.AddApplicationOutput(ctx, input)
 				})
 
@@ -942,15 +947,15 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("reference_data_sources") {
 			o, n := d.GetChange("reference_data_sources")
 
-			if len(o.([]interface{})) == 0 {
+			if len(o.([]any)) == 0 {
 				// Add new reference data source.
 				input := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
 					ApplicationName:             aws.String(applicationName),
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
-					ReferenceDataSource:         expandReferenceDataSource(n.([]interface{})),
+					ReferenceDataSource:         expandReferenceDataSource(n.([]any)),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.AddApplicationReferenceDataSource(ctx, input)
 				})
 
@@ -963,9 +968,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				currentApplicationVersionID += 1
-			} else if len(n.([]interface{})) == 0 {
+			} else if len(n.([]any)) == 0 {
 				// Delete existing reference data source.
-				mOldReferenceDataSource := o.([]interface{})[0].(map[string]interface{})
+				mOldReferenceDataSource := o.([]any)[0].(map[string]any)
 
 				input := &kinesisanalytics.DeleteApplicationReferenceDataSourceInput{
 					ApplicationName:             aws.String(applicationName),
@@ -973,7 +978,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					ReferenceId:                 aws.String(mOldReferenceDataSource[names.AttrID].(string)),
 				}
 
-				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				_, err := waitIAMPropagation(ctx, func() (any, error) {
 					return conn.DeleteApplicationReferenceDataSource(ctx, input)
 				})
 
@@ -988,7 +993,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				currentApplicationVersionID += 1
 			} else {
 				// Update existing reference data source.
-				referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]interface{}))
+				referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]any))
 
 				input.ApplicationUpdate.ReferenceDataSourceUpdates = []awstypes.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
 
@@ -999,7 +1004,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if updateApplication {
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
-			_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+			_, err := waitIAMPropagation(ctx, func() (any, error) {
 				return conn.UpdateApplication(ctx, input)
 			})
 
@@ -1021,13 +1026,13 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if _, ok := d.GetOk("start_application"); ok {
-			if v, ok := d.GetOk("inputs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("inputs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 
 				var inputStartingPosition string
 
-				if v, ok := tfMap["starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-					tfMap := v[0].(map[string]interface{})
+				if v, ok := tfMap["starting_position_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+					tfMap := v[0].(map[string]any)
 
 					if v, ok := tfMap["starting_position"].(string); ok && v != "" {
 						inputStartingPosition = v
@@ -1048,7 +1053,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
@@ -1080,7 +1085,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceApplicationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceApplicationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, fmt.Errorf("parsing ARN %q: %w", d.Id(), err)
@@ -1158,14 +1163,14 @@ func stopApplication(ctx context.Context, conn *kinesisanalytics.Client, applica
 	return nil
 }
 
-func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []awstypes.CloudWatchLoggingOption {
+func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []any) []awstypes.CloudWatchLoggingOption {
 	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
 		return nil
 	}
 
 	cloudWatchLoggingOption := awstypes.CloudWatchLoggingOption{}
 
-	mCloudWatchLoggingOption := vCloudWatchLoggingOptions[0].(map[string]interface{})
+	mCloudWatchLoggingOption := vCloudWatchLoggingOptions[0].(map[string]any)
 
 	if vLogStreamArn, ok := mCloudWatchLoggingOption["log_stream_arn"].(string); ok && vLogStreamArn != "" {
 		cloudWatchLoggingOption.LogStreamARN = aws.String(vLogStreamArn)
@@ -1177,7 +1182,7 @@ func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []a
 	return []awstypes.CloudWatchLoggingOption{cloudWatchLoggingOption}
 }
 
-func expandInputs(vInputs []interface{}) []awstypes.Input {
+func expandInputs(vInputs []any) []awstypes.Input {
 	if len(vInputs) == 0 || vInputs[0] == nil {
 		return []awstypes.Input{}
 	}
@@ -1185,19 +1190,19 @@ func expandInputs(vInputs []interface{}) []awstypes.Input {
 	return []awstypes.Input{*expandInput(vInputs)}
 }
 
-func expandInput(vInput []interface{}) *awstypes.Input {
+func expandInput(vInput []any) *awstypes.Input {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
 	}
 
 	input := &awstypes.Input{}
 
-	mInput := vInput[0].(map[string]interface{})
+	mInput := vInput[0].(map[string]any)
 
-	if vInputParallelism, ok := mInput["parallelism"].([]interface{}); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
+	if vInputParallelism, ok := mInput["parallelism"].([]any); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
 		inputParallelism := &awstypes.InputParallelism{}
 
-		mInputParallelism := vInputParallelism[0].(map[string]interface{})
+		mInputParallelism := vInputParallelism[0].(map[string]any)
 
 		if vCount, ok := mInputParallelism["count"].(int); ok {
 			inputParallelism.Count = aws.Int32(int32(vCount))
@@ -1206,18 +1211,18 @@ func expandInput(vInput []interface{}) *awstypes.Input {
 		input.InputParallelism = inputParallelism
 	}
 
-	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]interface{}); ok {
+	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]any); ok {
 		input.InputProcessingConfiguration = expandInputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
-	if vInputSchema, ok := mInput[names.AttrSchema].([]interface{}); ok {
+	if vInputSchema, ok := mInput[names.AttrSchema].([]any); ok {
 		input.InputSchema = expandSourceSchema(vInputSchema)
 	}
 
-	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
+	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose"].([]any); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
 		kinesisFirehoseInput := &awstypes.KinesisFirehoseInput{}
 
-		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
+		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInput.ResourceARN = aws.String(vResourceArn)
@@ -1229,10 +1234,10 @@ func expandInput(vInput []interface{}) *awstypes.Input {
 		input.KinesisFirehoseInput = kinesisFirehoseInput
 	}
 
-	if vKinesisStreamsInput, ok := mInput["kinesis_stream"].([]interface{}); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
+	if vKinesisStreamsInput, ok := mInput["kinesis_stream"].([]any); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
 		kinesisStreamsInput := &awstypes.KinesisStreamsInput{}
 
-		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
+		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInput.ResourceARN = aws.String(vResourceArn)
@@ -1251,19 +1256,19 @@ func expandInput(vInput []interface{}) *awstypes.Input {
 	return input
 }
 
-func expandInputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *awstypes.InputProcessingConfiguration {
+func expandInputProcessingConfiguration(vInputProcessingConfiguration []any) *awstypes.InputProcessingConfiguration {
 	if len(vInputProcessingConfiguration) == 0 || vInputProcessingConfiguration[0] == nil {
 		return nil
 	}
 
 	inputProcessingConfiguration := &awstypes.InputProcessingConfiguration{}
 
-	mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
+	mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]any)
 
-	if vInputLambdaProcessor, ok := mInputProcessingConfiguration["lambda"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
+	if vInputLambdaProcessor, ok := mInputProcessingConfiguration["lambda"].([]any); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
 		inputLambdaProcessor := &awstypes.InputLambdaProcessor{}
 
-		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
+		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]any)
 
 		if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
@@ -1278,23 +1283,23 @@ func expandInputProcessingConfiguration(vInputProcessingConfiguration []interfac
 	return inputProcessingConfiguration
 }
 
-func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
+func expandInputUpdate(vInput []any) awstypes.InputUpdate {
 	inputUpdate := awstypes.InputUpdate{}
 
 	if len(vInput) == 0 || vInput[0] == nil {
 		return inputUpdate
 	}
 
-	mInput := vInput[0].(map[string]interface{})
+	mInput := vInput[0].(map[string]any)
 
 	if vInputId, ok := mInput[names.AttrID].(string); ok && vInputId != "" {
 		inputUpdate.InputId = aws.String(vInputId)
 	}
 
-	if vInputParallelism, ok := mInput["parallelism"].([]interface{}); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
+	if vInputParallelism, ok := mInput["parallelism"].([]any); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
 		inputParallelismUpdate := &awstypes.InputParallelismUpdate{}
 
-		mInputParallelism := vInputParallelism[0].(map[string]interface{})
+		mInputParallelism := vInputParallelism[0].(map[string]any)
 
 		if vCount, ok := mInputParallelism["count"].(int); ok {
 			inputParallelismUpdate.CountUpdate = aws.Int32(int32(vCount))
@@ -1303,15 +1308,15 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 		inputUpdate.InputParallelismUpdate = inputParallelismUpdate
 	}
 
-	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]interface{}); ok && len(vInputProcessingConfiguration) > 0 && vInputProcessingConfiguration[0] != nil {
+	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]any); ok && len(vInputProcessingConfiguration) > 0 && vInputProcessingConfiguration[0] != nil {
 		inputProcessingConfigurationUpdate := &awstypes.InputProcessingConfigurationUpdate{}
 
-		mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
+		mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]any)
 
-		if vInputLambdaProcessor, ok := mInputProcessingConfiguration["lambda"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
+		if vInputLambdaProcessor, ok := mInputProcessingConfiguration["lambda"].([]any); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
 			inputLambdaProcessorUpdate := &awstypes.InputLambdaProcessorUpdate{}
 
-			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
+			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]any)
 
 			if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 				inputLambdaProcessorUpdate.ResourceARNUpdate = aws.String(vResourceArn)
@@ -1326,12 +1331,12 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 		inputUpdate.InputProcessingConfigurationUpdate = inputProcessingConfigurationUpdate
 	}
 
-	if vInputSchema, ok := mInput[names.AttrSchema].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
+	if vInputSchema, ok := mInput[names.AttrSchema].([]any); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
 		inputSchemaUpdate := &awstypes.InputSchemaUpdate{}
 
-		mInputSchema := vInputSchema[0].(map[string]interface{})
+		mInputSchema := vInputSchema[0].(map[string]any)
 
-		if vRecordColumns, ok := mInputSchema["record_columns"].([]interface{}); ok {
+		if vRecordColumns, ok := mInputSchema["record_columns"].([]any); ok {
 			inputSchemaUpdate.RecordColumnUpdates = expandRecordColumns(vRecordColumns)
 		}
 
@@ -1339,17 +1344,17 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 			inputSchemaUpdate.RecordEncodingUpdate = aws.String(vRecordEncoding)
 		}
 
-		if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
+		if vRecordFormat, ok := mInputSchema["record_format"].([]any); ok {
 			inputSchemaUpdate.RecordFormatUpdate = expandRecordFormat(vRecordFormat)
 		}
 
 		inputUpdate.InputSchemaUpdate = inputSchemaUpdate
 	}
 
-	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
+	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose"].([]any); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
 		kinesisFirehoseInputUpdate := &awstypes.KinesisFirehoseInputUpdate{}
 
-		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
+		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
@@ -1361,10 +1366,10 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 		inputUpdate.KinesisFirehoseInputUpdate = kinesisFirehoseInputUpdate
 	}
 
-	if vKinesisStreamsInput, ok := mInput["kinesis_stream"].([]interface{}); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
+	if vKinesisStreamsInput, ok := mInput["kinesis_stream"].([]any); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
 		kinesisStreamsInputUpdate := &awstypes.KinesisStreamsInputUpdate{}
 
-		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
+		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
@@ -1383,19 +1388,19 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 	return inputUpdate
 }
 
-func expandOutput(vOutput interface{}) *awstypes.Output {
+func expandOutput(vOutput any) *awstypes.Output {
 	if vOutput == nil {
 		return nil
 	}
 
 	output := &awstypes.Output{}
 
-	mOutput := vOutput.(map[string]interface{})
+	mOutput := vOutput.(map[string]any)
 
-	if vDestinationSchema, ok := mOutput[names.AttrSchema].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
+	if vDestinationSchema, ok := mOutput[names.AttrSchema].([]any); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
 		destinationSchema := &awstypes.DestinationSchema{}
 
-		mDestinationSchema := vDestinationSchema[0].(map[string]interface{})
+		mDestinationSchema := vDestinationSchema[0].(map[string]any)
 
 		if vRecordFormatType, ok := mDestinationSchema["record_format_type"].(string); ok && vRecordFormatType != "" {
 			destinationSchema.RecordFormatType = awstypes.RecordFormatType(vRecordFormatType)
@@ -1404,10 +1409,10 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 		output.DestinationSchema = destinationSchema
 	}
 
-	if vKinesisFirehoseOutput, ok := mOutput["kinesis_firehose"].([]interface{}); ok && len(vKinesisFirehoseOutput) > 0 && vKinesisFirehoseOutput[0] != nil {
+	if vKinesisFirehoseOutput, ok := mOutput["kinesis_firehose"].([]any); ok && len(vKinesisFirehoseOutput) > 0 && vKinesisFirehoseOutput[0] != nil {
 		kinesisFirehoseOutput := &awstypes.KinesisFirehoseOutput{}
 
-		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]interface{})
+		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisFirehoseOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseOutput.ResourceARN = aws.String(vResourceArn)
@@ -1419,10 +1424,10 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 		output.KinesisFirehoseOutput = kinesisFirehoseOutput
 	}
 
-	if vKinesisStreamsOutput, ok := mOutput["kinesis_stream"].([]interface{}); ok && len(vKinesisStreamsOutput) > 0 && vKinesisStreamsOutput[0] != nil {
+	if vKinesisStreamsOutput, ok := mOutput["kinesis_stream"].([]any); ok && len(vKinesisStreamsOutput) > 0 && vKinesisStreamsOutput[0] != nil {
 		kinesisStreamsOutput := &awstypes.KinesisStreamsOutput{}
 
-		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]interface{})
+		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisStreamsOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsOutput.ResourceARN = aws.String(vResourceArn)
@@ -1434,10 +1439,10 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 		output.KinesisStreamsOutput = kinesisStreamsOutput
 	}
 
-	if vLambdaOutput, ok := mOutput["lambda"].([]interface{}); ok && len(vLambdaOutput) > 0 && vLambdaOutput[0] != nil {
+	if vLambdaOutput, ok := mOutput["lambda"].([]any); ok && len(vLambdaOutput) > 0 && vLambdaOutput[0] != nil {
 		lambdaOutput := &awstypes.LambdaOutput{}
 
-		mLambdaOutput := vLambdaOutput[0].(map[string]interface{})
+		mLambdaOutput := vLambdaOutput[0].(map[string]any)
 
 		if vResourceArn, ok := mLambdaOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			lambdaOutput.ResourceARN = aws.String(vResourceArn)
@@ -1456,7 +1461,7 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 	return output
 }
 
-func expandOutputs(vOutputs []interface{}) []awstypes.Output {
+func expandOutputs(vOutputs []any) []awstypes.Output {
 	if len(vOutputs) == 0 {
 		return nil
 	}
@@ -1474,13 +1479,13 @@ func expandOutputs(vOutputs []interface{}) []awstypes.Output {
 	return outputs
 }
 
-func expandRecordColumns(vRecordColumns []interface{}) []awstypes.RecordColumn {
+func expandRecordColumns(vRecordColumns []any) []awstypes.RecordColumn {
 	recordColumns := []awstypes.RecordColumn{}
 
 	for _, vRecordColumn := range vRecordColumns {
 		recordColumn := awstypes.RecordColumn{}
 
-		mRecordColumn := vRecordColumn.(map[string]interface{})
+		mRecordColumn := vRecordColumn.(map[string]any)
 
 		if vMapping, ok := mRecordColumn["mapping"].(string); ok && vMapping != "" {
 			recordColumn.Mapping = aws.String(vMapping)
@@ -1498,24 +1503,24 @@ func expandRecordColumns(vRecordColumns []interface{}) []awstypes.RecordColumn {
 	return recordColumns
 }
 
-func expandRecordFormat(vRecordFormat []interface{}) *awstypes.RecordFormat {
+func expandRecordFormat(vRecordFormat []any) *awstypes.RecordFormat {
 	if len(vRecordFormat) == 0 || vRecordFormat[0] == nil {
 		return nil
 	}
 
 	recordFormat := &awstypes.RecordFormat{}
 
-	mRecordFormat := vRecordFormat[0].(map[string]interface{})
+	mRecordFormat := vRecordFormat[0].(map[string]any)
 
-	if vMappingParameters, ok := mRecordFormat["mapping_parameters"].([]interface{}); ok && len(vMappingParameters) > 0 && vMappingParameters[0] != nil {
+	if vMappingParameters, ok := mRecordFormat["mapping_parameters"].([]any); ok && len(vMappingParameters) > 0 && vMappingParameters[0] != nil {
 		mappingParameters := &awstypes.MappingParameters{}
 
-		mMappingParameters := vMappingParameters[0].(map[string]interface{})
+		mMappingParameters := vMappingParameters[0].(map[string]any)
 
-		if vCsvMappingParameters, ok := mMappingParameters["csv"].([]interface{}); ok && len(vCsvMappingParameters) > 0 && vCsvMappingParameters[0] != nil {
+		if vCsvMappingParameters, ok := mMappingParameters["csv"].([]any); ok && len(vCsvMappingParameters) > 0 && vCsvMappingParameters[0] != nil {
 			csvMappingParameters := &awstypes.CSVMappingParameters{}
 
-			mCsvMappingParameters := vCsvMappingParameters[0].(map[string]interface{})
+			mCsvMappingParameters := vCsvMappingParameters[0].(map[string]any)
 
 			if vRecordColumnDelimiter, ok := mCsvMappingParameters["record_column_delimiter"].(string); ok && vRecordColumnDelimiter != "" {
 				csvMappingParameters.RecordColumnDelimiter = aws.String(vRecordColumnDelimiter)
@@ -1529,10 +1534,10 @@ func expandRecordFormat(vRecordFormat []interface{}) *awstypes.RecordFormat {
 			recordFormat.RecordFormatType = awstypes.RecordFormatTypeCsv
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters[names.AttrJSON].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters[names.AttrJSON].([]any); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &awstypes.JSONMappingParameters{}
 
-			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
+			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]any)
 
 			if vRecordRowPath, ok := mJsonMappingParameters["record_row_path"].(string); ok && vRecordRowPath != "" {
 				jsonMappingParameters.RecordRowPath = aws.String(vRecordRowPath)
@@ -1549,23 +1554,23 @@ func expandRecordFormat(vRecordFormat []interface{}) *awstypes.RecordFormat {
 	return recordFormat
 }
 
-func expandReferenceDataSource(vReferenceDataSource []interface{}) *awstypes.ReferenceDataSource {
+func expandReferenceDataSource(vReferenceDataSource []any) *awstypes.ReferenceDataSource {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return nil
 	}
 
 	referenceDataSource := &awstypes.ReferenceDataSource{}
 
-	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
+	mReferenceDataSource := vReferenceDataSource[0].(map[string]any)
 
-	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]any); ok {
 		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
-	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]any); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
 		s3ReferenceDataSource := &awstypes.S3ReferenceDataSource{}
 
-		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
+		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]any)
 
 		if vBucketArn, ok := mS3ReferenceDataSource["bucket_arn"].(string); ok && vBucketArn != "" {
 			s3ReferenceDataSource.BucketARN = aws.String(vBucketArn)
@@ -1587,27 +1592,27 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *awstypes.Ref
 	return referenceDataSource
 }
 
-func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) awstypes.ReferenceDataSourceUpdate {
+func expandReferenceDataSourceUpdate(vReferenceDataSource []any) awstypes.ReferenceDataSourceUpdate {
 	referenceDataSourceUpdate := awstypes.ReferenceDataSourceUpdate{}
 
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return referenceDataSourceUpdate
 	}
 
-	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
+	mReferenceDataSource := vReferenceDataSource[0].(map[string]any)
 
 	if vReferenceId, ok := mReferenceDataSource[names.AttrID].(string); ok && vReferenceId != "" {
 		referenceDataSourceUpdate.ReferenceId = aws.String(vReferenceId)
 	}
 
-	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]any); ok {
 		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
-	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]any); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
 		s3ReferenceDataSourceUpdate := &awstypes.S3ReferenceDataSourceUpdate{}
 
-		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
+		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]any)
 
 		if vBucketArn, ok := mS3ReferenceDataSource["bucket_arn"].(string); ok && vBucketArn != "" {
 			s3ReferenceDataSourceUpdate.BucketARNUpdate = aws.String(vBucketArn)
@@ -1629,16 +1634,16 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) awstype
 	return referenceDataSourceUpdate
 }
 
-func expandSourceSchema(vSourceSchema []interface{}) *awstypes.SourceSchema {
+func expandSourceSchema(vSourceSchema []any) *awstypes.SourceSchema {
 	if len(vSourceSchema) == 0 || vSourceSchema[0] == nil {
 		return nil
 	}
 
 	sourceSchema := &awstypes.SourceSchema{}
 
-	mSourceSchema := vSourceSchema[0].(map[string]interface{})
+	mSourceSchema := vSourceSchema[0].(map[string]any)
 
-	if vRecordColumns, ok := mSourceSchema["record_columns"].([]interface{}); ok {
+	if vRecordColumns, ok := mSourceSchema["record_columns"].([]any); ok {
 		sourceSchema.RecordColumns = expandRecordColumns(vRecordColumns)
 	}
 
@@ -1646,48 +1651,48 @@ func expandSourceSchema(vSourceSchema []interface{}) *awstypes.SourceSchema {
 		sourceSchema.RecordEncoding = aws.String(vRecordEncoding)
 	}
 
-	if vRecordFormat, ok := mSourceSchema["record_format"].([]interface{}); ok && len(vRecordFormat) > 0 && vRecordFormat[0] != nil {
+	if vRecordFormat, ok := mSourceSchema["record_format"].([]any); ok && len(vRecordFormat) > 0 && vRecordFormat[0] != nil {
 		sourceSchema.RecordFormat = expandRecordFormat(vRecordFormat)
 	}
 
 	return sourceSchema
 }
 
-func flattenCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []awstypes.CloudWatchLoggingOptionDescription) []interface{} {
+func flattenCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []awstypes.CloudWatchLoggingOptionDescription) []any {
 	if len(cloudWatchLoggingOptionDescriptions) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
 	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
 
-	mCloudWatchLoggingOption := map[string]interface{}{
+	mCloudWatchLoggingOption := map[string]any{
 		names.AttrID:      aws.ToString(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
 		"log_stream_arn":  aws.ToString(cloudWatchLoggingOptionDescription.LogStreamARN),
 		names.AttrRoleARN: aws.ToString(cloudWatchLoggingOptionDescription.RoleARN),
 	}
 
-	return []interface{}{mCloudWatchLoggingOption}
+	return []any{mCloudWatchLoggingOption}
 }
 
-func flattenInputDescriptions(inputDescriptions []awstypes.InputDescription) []interface{} {
+func flattenInputDescriptions(inputDescriptions []awstypes.InputDescription) []any {
 	if len(inputDescriptions) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
 	inputDescription := inputDescriptions[0]
 
-	mInput := map[string]interface{}{
+	mInput := map[string]any{
 		names.AttrID:         aws.ToString(inputDescription.InputId),
 		names.AttrNamePrefix: aws.ToString(inputDescription.NamePrefix),
 		"stream_names":       flex.FlattenStringValueList(inputDescription.InAppStreamNames),
 	}
 
 	if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
-		mInputParallelism := map[string]interface{}{
+		mInputParallelism := map[string]any{
 			"count": int(aws.ToInt32(inputParallelism.Count)),
 		}
 
-		mInput["parallelism"] = []interface{}{mInputParallelism}
+		mInput["parallelism"] = []any{mInputParallelism}
 	}
 
 	if inputSchema := inputDescription.InputSchema; inputSchema != nil {
@@ -1695,95 +1700,95 @@ func flattenInputDescriptions(inputDescriptions []awstypes.InputDescription) []i
 	}
 
 	if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
-		mInputProcessingConfiguration := map[string]interface{}{}
+		mInputProcessingConfiguration := map[string]any{}
 
 		if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
-			mInputLambdaProcessor := map[string]interface{}{
+			mInputLambdaProcessor := map[string]any{
 				names.AttrResourceARN: aws.ToString(inputLambdaProcessorDescription.ResourceARN),
 				names.AttrRoleARN:     aws.ToString(inputLambdaProcessorDescription.RoleARN),
 			}
 
-			mInputProcessingConfiguration["lambda"] = []interface{}{mInputLambdaProcessor}
+			mInputProcessingConfiguration["lambda"] = []any{mInputLambdaProcessor}
 		}
 
-		mInput["processing_configuration"] = []interface{}{mInputProcessingConfiguration}
+		mInput["processing_configuration"] = []any{mInputProcessingConfiguration}
 	}
 
 	if inputStartingPositionConfiguration := inputDescription.InputStartingPositionConfiguration; inputStartingPositionConfiguration != nil {
-		mInputStartingPositionConfiguration := map[string]interface{}{
+		mInputStartingPositionConfiguration := map[string]any{
 			"starting_position": string(inputStartingPositionConfiguration.InputStartingPosition),
 		}
 
-		mInput["starting_position_configuration"] = []interface{}{mInputStartingPositionConfiguration}
+		mInput["starting_position_configuration"] = []any{mInputStartingPositionConfiguration}
 	}
 
 	if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
-		mKinesisFirehoseInput := map[string]interface{}{
+		mKinesisFirehoseInput := map[string]any{
 			names.AttrResourceARN: aws.ToString(kinesisFirehoseInputDescription.ResourceARN),
 			names.AttrRoleARN:     aws.ToString(kinesisFirehoseInputDescription.RoleARN),
 		}
 
-		mInput["kinesis_firehose"] = []interface{}{mKinesisFirehoseInput}
+		mInput["kinesis_firehose"] = []any{mKinesisFirehoseInput}
 	}
 
 	if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
-		mKinesisStreamsInput := map[string]interface{}{
+		mKinesisStreamsInput := map[string]any{
 			names.AttrResourceARN: aws.ToString(kinesisStreamsInputDescription.ResourceARN),
 			names.AttrRoleARN:     aws.ToString(kinesisStreamsInputDescription.RoleARN),
 		}
 
-		mInput["kinesis_stream"] = []interface{}{mKinesisStreamsInput}
+		mInput["kinesis_stream"] = []any{mKinesisStreamsInput}
 	}
 
-	return []interface{}{mInput}
+	return []any{mInput}
 }
 
-func flattenOutputDescriptions(outputDescriptions []awstypes.OutputDescription) []interface{} {
+func flattenOutputDescriptions(outputDescriptions []awstypes.OutputDescription) []any {
 	if len(outputDescriptions) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	vOutputs := []interface{}{}
+	vOutputs := []any{}
 
 	for _, outputDescription := range outputDescriptions {
-		mOutput := map[string]interface{}{
+		mOutput := map[string]any{
 			names.AttrID:   aws.ToString(outputDescription.OutputId),
 			names.AttrName: aws.ToString(outputDescription.Name),
 		}
 
 		if destinationSchema := outputDescription.DestinationSchema; destinationSchema != nil {
-			mDestinationSchema := map[string]interface{}{
+			mDestinationSchema := map[string]any{
 				"record_format_type": string(destinationSchema.RecordFormatType),
 			}
 
-			mOutput[names.AttrSchema] = []interface{}{mDestinationSchema}
+			mOutput[names.AttrSchema] = []any{mDestinationSchema}
 		}
 
 		if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
-			mKinesisFirehoseOutput := map[string]interface{}{
+			mKinesisFirehoseOutput := map[string]any{
 				names.AttrResourceARN: aws.ToString(kinesisFirehoseOutputDescription.ResourceARN),
 				names.AttrRoleARN:     aws.ToString(kinesisFirehoseOutputDescription.RoleARN),
 			}
 
-			mOutput["kinesis_firehose"] = []interface{}{mKinesisFirehoseOutput}
+			mOutput["kinesis_firehose"] = []any{mKinesisFirehoseOutput}
 		}
 
 		if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
-			mKinesisStreamsOutput := map[string]interface{}{
+			mKinesisStreamsOutput := map[string]any{
 				names.AttrResourceARN: aws.ToString(kinesisStreamsOutputDescription.ResourceARN),
 				names.AttrRoleARN:     aws.ToString(kinesisStreamsOutputDescription.RoleARN),
 			}
 
-			mOutput["kinesis_stream"] = []interface{}{mKinesisStreamsOutput}
+			mOutput["kinesis_stream"] = []any{mKinesisStreamsOutput}
 		}
 
 		if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
-			mLambdaOutput := map[string]interface{}{
+			mLambdaOutput := map[string]any{
 				names.AttrResourceARN: aws.ToString(lambdaOutputDescription.ResourceARN),
 				names.AttrRoleARN:     aws.ToString(lambdaOutputDescription.RoleARN),
 			}
 
-			mOutput["lambda"] = []interface{}{mLambdaOutput}
+			mOutput["lambda"] = []any{mLambdaOutput}
 		}
 
 		vOutputs = append(vOutputs, mOutput)
@@ -1792,14 +1797,14 @@ func flattenOutputDescriptions(outputDescriptions []awstypes.OutputDescription) 
 	return vOutputs
 }
 
-func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []awstypes.ReferenceDataSourceDescription) []interface{} {
+func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []awstypes.ReferenceDataSourceDescription) []any {
 	if len(referenceDataSourceDescriptions) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
 	referenceDataSourceDescription := referenceDataSourceDescriptions[0]
 
-	mReferenceDataSource := map[string]interface{}{
+	mReferenceDataSource := map[string]any{
 		names.AttrID:        aws.ToString(referenceDataSourceDescription.ReferenceId),
 		names.AttrTableName: aws.ToString(referenceDataSourceDescription.TableName),
 	}
@@ -1809,32 +1814,32 @@ func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []aw
 	}
 
 	if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
-		mS3ReferenceDataSource := map[string]interface{}{
+		mS3ReferenceDataSource := map[string]any{
 			"bucket_arn":      aws.ToString(s3ReferenceDataSource.BucketARN),
 			"file_key":        aws.ToString(s3ReferenceDataSource.FileKey),
 			names.AttrRoleARN: aws.ToString(s3ReferenceDataSource.ReferenceRoleARN),
 		}
 
-		mReferenceDataSource["s3"] = []interface{}{mS3ReferenceDataSource}
+		mReferenceDataSource["s3"] = []any{mS3ReferenceDataSource}
 	}
 
-	return []interface{}{mReferenceDataSource}
+	return []any{mReferenceDataSource}
 }
 
-func flattenSourceSchema(sourceSchema *awstypes.SourceSchema) []interface{} {
+func flattenSourceSchema(sourceSchema *awstypes.SourceSchema) []any {
 	if sourceSchema == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	mSourceSchema := map[string]interface{}{
+	mSourceSchema := map[string]any{
 		"record_encoding": aws.ToString(sourceSchema.RecordEncoding),
 	}
 
 	if len(sourceSchema.RecordColumns) > 0 {
-		vRecordColumns := []interface{}{}
+		vRecordColumns := []any{}
 
 		for _, recordColumn := range sourceSchema.RecordColumns {
-			mRecordColumn := map[string]interface{}{
+			mRecordColumn := map[string]any{
 				"mapping":      aws.ToString(recordColumn.Mapping),
 				names.AttrName: aws.ToString(recordColumn.Name),
 				"sql_type":     aws.ToString(recordColumn.SqlType),
@@ -1847,35 +1852,35 @@ func flattenSourceSchema(sourceSchema *awstypes.SourceSchema) []interface{} {
 	}
 
 	if recordFormat := sourceSchema.RecordFormat; recordFormat != nil {
-		mRecordFormat := map[string]interface{}{
+		mRecordFormat := map[string]any{
 			"record_format_type": string(recordFormat.RecordFormatType),
 		}
 
 		if mappingParameters := recordFormat.MappingParameters; mappingParameters != nil {
-			mMappingParameters := map[string]interface{}{}
+			mMappingParameters := map[string]any{}
 
 			if csvMappingParameters := mappingParameters.CSVMappingParameters; csvMappingParameters != nil {
-				mCsvMappingParameters := map[string]interface{}{
+				mCsvMappingParameters := map[string]any{
 					"record_column_delimiter": aws.ToString(csvMappingParameters.RecordColumnDelimiter),
 					"record_row_delimiter":    aws.ToString(csvMappingParameters.RecordRowDelimiter),
 				}
 
-				mMappingParameters["csv"] = []interface{}{mCsvMappingParameters}
+				mMappingParameters["csv"] = []any{mCsvMappingParameters}
 			}
 
 			if jsonMappingParameters := mappingParameters.JSONMappingParameters; jsonMappingParameters != nil {
-				mJsonMappingParameters := map[string]interface{}{
+				mJsonMappingParameters := map[string]any{
 					"record_row_path": aws.ToString(jsonMappingParameters.RecordRowPath),
 				}
 
-				mMappingParameters[names.AttrJSON] = []interface{}{mJsonMappingParameters}
+				mMappingParameters[names.AttrJSON] = []any{mJsonMappingParameters}
 			}
 
-			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}
+			mRecordFormat["mapping_parameters"] = []any{mMappingParameters}
 		}
 
-		mSourceSchema["record_format"] = []interface{}{mRecordFormat}
+		mSourceSchema["record_format"] = []any{mRecordFormat}
 	}
 
-	return []interface{}{mSourceSchema}
+	return []any{mSourceSchema}
 }

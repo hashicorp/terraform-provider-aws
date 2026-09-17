@@ -34,6 +34,9 @@ resource "aws_xray_sampling_rule" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rule_name` - (Required) The name of the sampling rule.
 * `resource_arn` - (Required) Matches the ARN of the AWS resource on which the service runs.
 * `priority` - (Required) The priority of the sampling rule.
@@ -58,17 +61,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Sampling Rules using the name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_xray_sampling_rule.example
-  id = "example"
+  identity = {
+    rule_name = "example-rule"
+  }
+}
+
+resource "aws_xray_sampling_rule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import XRay Sampling Rules using the name. For example:
+### Identity Schema
+
+#### Required
+
+* `rule_name` (String) Sampling rule name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Sampling Rules using `rule_name`. For example:
+
+```terraform
+import {
+  to = aws_xray_sampling_rule.example
+  id = "example-rule"
+}
+```
+
+Using `terraform import`, import XRay Sampling Rules using `rule_name`. For example:
 
 ```console
-% terraform import aws_xray_sampling_rule.example example
+% terraform import aws_xray_sampling_rule.example example-rule
 ```

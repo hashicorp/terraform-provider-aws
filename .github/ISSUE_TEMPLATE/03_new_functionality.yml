@@ -1,0 +1,80 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Request Net New Functionality
+description: Choose this option to request an entirely new resource, data source, ephemeral resource/data source, function, or AWS service be added to the provider.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for opening a request!
+
+        This form is intended to be used when requesting an entirely new resource, data source, ephemeral resource/data source, function, or service be added to the provider. If you're looking for a change to be made to an existing resource or data source, please use the [Request an Enhancement](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=02_enhancement.yml) form instead. If something isn't working as expected, the [Report a Bug](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=00_bug_report.yml) form should be used.
+
+        Before submitting a request, we ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=label%3Anew-resource%2Cnew-data-source%2Cnew-function%2Cnew-ephemeral-resource%2Cnew-service%20) to see if someone else has made a similar request or has already worked on adding the feature. This helps to keep all relevant discussions in one place.
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: What new functionality are you requesting?
+      description: |
+        Please provide the name of the new functionality that you're requesting. For the sake of consistency, we ask that you use the following conventions:
+
+        * Resource, Data Source (including ephemeral): `aws_<service>_<resource_name>`, e.g. `aws_lambda_function`
+        * Function: A clear, underscore-separated descriptor, e.g. `arn_parse`
+        * Service: The name of the service itself will suffice
+      placeholder: |
+        * `aws_xxx_yyy`
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Please provide a brief description of what the new functionality will accomplish. For example, what upstream resource(s) could be managed by introducing these changes?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tf_config
+    attributes:
+      label: Potential Terraform Configuration
+      description: |
+        If this request was implemented, what might the Terraform configuration look like? A best guess is helpful, even if you're unsure of exactly what the end result will look like. This helps maintainers and the community better understand how you (someone who is in need of this feature) envisions it.
+
+        For convenience, we pre-populate this section with a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) to help with formatting in the resulting issue. Configurations pasted between the backticks (\```) will have the appropriate syntax highlighting for HCL. Where appropriate, feel free to delete this.
+      value: |
+        ```hcl
+
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: |
+        Where possible, please supply links to the [AWS Go SDK v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service) documentation demonstrating that the SDK supports the requested feature. Other links, such as those to the AWS API or CLI documentation, or other GitHub issues or pull requests that give additional context are also helpful.
+
+        [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: will_contribute
+    attributes:
+      label: Would you like to implement the enhancement?
+      description: |
+        Indicate to the maintainers and community as to whether you plan to implement the new functionality yourself (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
+
+        If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+      options:
+        - "No"
+        - "Yes"
+      multiple: false
+      default: 0
+    validations:
+      required: false

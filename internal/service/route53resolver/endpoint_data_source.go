@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -22,68 +24,78 @@ func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"direction": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"direction": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrIPAddresses: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"protocols": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"resolver_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"resolver_endpoint_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrIPAddresses: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protocols": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"resolver_endpoint_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"resolver_endpoint_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rni_enhanced_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_name_server_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -129,7 +141,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("protocols", flex.FlattenStringyValueSet(ep.Protocols))
 	d.Set("resolver_endpoint_id", ep.Id)
 	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
+	d.Set("rni_enhanced_metrics_enabled", ep.RniEnhancedMetricsEnabled)
 	d.Set(names.AttrStatus, ep.Status)
+	d.Set("target_name_server_metrics_enabled", ep.TargetNameServerMetricsEnabled)
 	d.Set(names.AttrVPCID, ep.HostVPCId)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
@@ -158,9 +172,9 @@ func buildR53ResolverTagFilters(set *schema.Set) []awstypes.Filter {
 	var filters []awstypes.Filter
 
 	for _, v := range set.List() {
-		m := v.(map[string]interface{})
+		m := v.(map[string]any)
 		var filterValues []string
-		for _, e := range m[names.AttrValues].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]any) {
 			filterValues = append(filterValues, e.(string))
 		}
 		filters = append(filters, awstypes.Filter{

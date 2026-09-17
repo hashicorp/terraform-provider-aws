@@ -40,6 +40,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the session queue.
 * `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
 * `custom_event_data` - (Optional) Information to be added to all events that are related to this game session queue.
@@ -47,8 +48,6 @@ This resource supports the following arguments:
 * `notification_target` - (Optional) An SNS topic ARN that is set up to receive game session placement notifications.
 * `player_latency_policy` - (Optional) One or more policies used to choose fleet based on player latency. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-### Nested Fields
 
 #### `player_latency_policy`
 

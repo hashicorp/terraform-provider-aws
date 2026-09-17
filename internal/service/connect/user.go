@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,9 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,121 +41,125 @@ func resourceUser() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_user_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"hierarchy_group_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"identity_info": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"first_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
-						},
-						"last_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrPassword: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 64),
-			},
-			"phone_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"after_contact_work_time_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"auto_accept": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"desk_phone_number": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validDeskPhoneNumber,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.PhoneType(d.Get("phone_config.0.phone_type").(string)); v == awstypes.PhoneTypeDeskPhone {
-									return false
-								}
-								return true
+				"directory_user_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"hierarchy_group_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"identity_info": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"first_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+							"last_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+							"secondary_email": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
 						},
-						"phone_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PhoneType](),
+					},
+				},
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrPassword: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 64),
+				},
+				"phone_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"after_contact_work_time_limit": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"auto_accept": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"desk_phone_number": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validDeskPhoneNumber,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.PhoneType(d.Get("phone_config.0.phone_type").(string)); v == awstypes.PhoneTypeDeskPhone {
+										return false
+									}
+									return true
+								},
+							},
+							"phone_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PhoneType](),
+							},
 						},
 					},
 				},
-			},
-			"routing_profile_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"security_profile_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"routing_profile_id": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"security_profile_ids": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -162,7 +167,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateUserInput{
 		InstanceId:         aws.String(instanceID),
-		PhoneConfig:        expandUserPhoneConfig(d.Get("phone_config").([]interface{})),
+		PhoneConfig:        expandUserPhoneConfig(d.Get("phone_config").([]any)),
 		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
 		SecurityProfileIds: flex.ExpandStringValueSet(d.Get("security_profile_ids").(*schema.Set)),
 		Tags:               getTagsIn(ctx),
@@ -178,7 +183,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("identity_info"); ok {
-		input.IdentityInfo = expandUserIdentityInfo(v.([]interface{}))
+		input.IdentityInfo = expandUserIdentityInfo(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPassword); ok {
@@ -197,7 +202,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -208,7 +213,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	user, err := findUserByTwoPartKey(ctx, conn, instanceID, userID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -238,7 +243,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -275,7 +280,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	// updates to identity_info
 	if d.HasChange("identity_info") {
 		input := &connect.UpdateUserIdentityInfoInput{
-			IdentityInfo: expandUserIdentityInfo(d.Get("identity_info").([]interface{})),
+			IdentityInfo: expandUserIdentityInfo(d.Get("identity_info").([]any)),
 			InstanceId:   aws.String(instanceID),
 			UserId:       aws.String(userID),
 		}
@@ -291,7 +296,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("phone_config") {
 		input := &connect.UpdateUserPhoneConfigInput{
 			InstanceId:  aws.String(instanceID),
-			PhoneConfig: expandUserPhoneConfig(d.Get("phone_config").([]interface{})),
+			PhoneConfig: expandUserPhoneConfig(d.Get("phone_config").([]any)),
 			UserId:      aws.String(userID),
 		}
 
@@ -335,7 +340,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -345,10 +350,11 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Deleting Connect User: %s", d.Id())
-	_, err = conn.DeleteUser(ctx, &connect.DeleteUserInput{
+	input := connect.DeleteUserInput{
 		InstanceId: aws.String(instanceID),
 		UserId:     aws.String(userID),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -394,8 +400,7 @@ func findUser(ctx context.Context, conn *connect.Client, input *connect.Describe
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -404,18 +409,18 @@ func findUser(ctx context.Context, conn *connect.Client, input *connect.Describe
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil
 }
 
-func expandUserIdentityInfo(tfList []interface{}) *awstypes.UserIdentityInfo {
+func expandUserIdentityInfo(tfList []any) *awstypes.UserIdentityInfo {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -434,15 +439,19 @@ func expandUserIdentityInfo(tfList []interface{}) *awstypes.UserIdentityInfo {
 		apiObject.LastName = aws.String(v)
 	}
 
+	if v, ok := tfMap["secondary_email"].(string); ok && v != "" {
+		apiObject.SecondaryEmail = aws.String(v)
+	}
+
 	return apiObject
 }
 
-func expandUserPhoneConfig(tfList []interface{}) *awstypes.UserPhoneConfig {
+func expandUserPhoneConfig(tfList []any) *awstypes.UserPhoneConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -466,12 +475,12 @@ func expandUserPhoneConfig(tfList []interface{}) *awstypes.UserPhoneConfig {
 	return apiObject
 }
 
-func flattenUserIdentityInfo(apiObject *awstypes.UserIdentityInfo) []interface{} {
+func flattenUserIdentityInfo(apiObject *awstypes.UserIdentityInfo) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Email; v != nil {
 		tfMap[names.AttrEmail] = aws.ToString(v)
@@ -485,15 +494,19 @@ func flattenUserIdentityInfo(apiObject *awstypes.UserIdentityInfo) []interface{}
 		tfMap["last_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
-}
-
-func flattenUserPhoneConfig(apiObject *awstypes.UserPhoneConfig) []interface{} {
-	if apiObject == nil {
-		return []interface{}{}
+	if v := apiObject.SecondaryEmail; v != nil {
+		tfMap["secondary_email"] = aws.ToString(v)
 	}
 
-	tfMap := map[string]interface{}{
+	return []any{tfMap}
+}
+
+func flattenUserPhoneConfig(apiObject *awstypes.UserPhoneConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
 		"after_contact_work_time_limit": apiObject.AfterContactWorkTimeLimit,
 		"auto_accept":                   apiObject.AutoAccept,
 		"phone_type":                    apiObject.PhoneType,
@@ -503,5 +516,5 @@ func flattenUserPhoneConfig(apiObject *awstypes.UserPhoneConfig) []interface{} {
 		tfMap["desk_phone_number"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
