@@ -88,6 +88,50 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 						names.AttrDestination: framework.ResourceComputedListOfObjectsAttribute[destinationResultModel](ctx, listplanmodifier.UseStateForUnknown()),
 					},
 					Blocks: map[string]schema.Block{
+						"annotation_table_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[annotationTableConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"configuration_state": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.AnnotationConfigurationState](),
+										Required:   true,
+									},
+									names.AttrRole: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
+									"table_arn": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrTableName: schema.StringAttribute{
+										Computed: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									names.AttrEncryptionConfiguration: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[metadataTableEncryptionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Optional:   true,
+												},
+												"sse_algorithm": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.TableSseAlgorithm](),
+													Required:   true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"inventory_table_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[inventoryTableConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -252,6 +296,14 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 		}
 	}
 
+	if v := input.MetadataConfiguration.AnnotationTableConfiguration; v != nil && v.ConfigurationState == awstypes.AnnotationConfigurationStateEnabled {
+		if _, err := waitBucketMetadataAnnotationTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata annotation table configuration (%s) create", bucket), err.Error())
+
+			return
+		}
+	}
+
 	// Set values for unknowns.
 	output, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
@@ -263,7 +315,7 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 
 	// Encryption configurations are not returned via the API.
 	// Propagate from Plan.
-	inventoryEncryptionConfiguration, journalEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &data)
+	inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &data)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -274,7 +326,7 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 		return
 	}
 
-	diags = setMetadataTableEncryptionConfigurationModels(ctx, &data, inventoryEncryptionConfiguration, journalEncryptionConfiguration)
+	diags = setMetadataTableEncryptionConfigurationModels(ctx, &data, inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -310,7 +362,7 @@ func (r *bucketMetadataConfigurationResource) Read(ctx context.Context, request 
 
 	// Encryption configurations are not returned via the API.
 	// Propagate from State.
-	inventoryEncryptionConfiguration, journalEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &data)
+	inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &data)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -322,7 +374,7 @@ func (r *bucketMetadataConfigurationResource) Read(ctx context.Context, request 
 		return
 	}
 
-	diags = setMetadataTableEncryptionConfigurationModels(ctx, &data, inventoryEncryptionConfiguration, journalEncryptionConfiguration)
+	diags = setMetadataTableEncryptionConfigurationModels(ctx, &data, inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -397,6 +449,26 @@ func (r *bucketMetadataConfigurationResource) Update(ctx context.Context, reques
 		}
 	}
 
+	if newAnnotationTableConfiguration, oldAnnotationTableConfiguration := newMetadataConfigurationModel.AnnotationTableConfiguration, oldMetadataConfigurationModel.AnnotationTableConfiguration; !newAnnotationTableConfiguration.IsNull() && !newAnnotationTableConfiguration.Equal(oldAnnotationTableConfiguration) {
+		var input s3.UpdateBucketMetadataAnnotationTableConfigurationInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.MetadataConfiguration, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.Bucket = aws.String(bucket)
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+		}
+
+		_, err := conn.UpdateBucketMetadataAnnotationTableConfiguration(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket Metadata annotation table configuration (%s)", bucket), err.Error())
+
+			return
+		}
+	}
+
 	// Set values for unknowns.
 	output, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
@@ -408,7 +480,7 @@ func (r *bucketMetadataConfigurationResource) Update(ctx context.Context, reques
 
 	// Encryption configurations are not returned via the API.
 	// Propagate from Plan.
-	inventoryEncryptionConfiguration, journalEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &new)
+	inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &new)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -419,7 +491,7 @@ func (r *bucketMetadataConfigurationResource) Update(ctx context.Context, reques
 		return
 	}
 
-	diags = setMetadataTableEncryptionConfigurationModels(ctx, &new, inventoryEncryptionConfiguration, journalEncryptionConfiguration)
+	diags = setMetadataTableEncryptionConfigurationModels(ctx, &new, inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -511,6 +583,49 @@ func waitBucketMetadataJournalTableConfigurationCreated(ctx context.Context, con
 	return nil, err
 }
 
+func waitBucketMetadataAnnotationTableConfigurationCreated(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, timeout time.Duration) (*awstypes.AnnotationTableConfigurationResult, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{annotationTableConfigurationStatusCreating},
+		Target:                    []string{annotationTableConfigurationStatusActive, annotationTableConfigurationStatusBackfilling},
+		Refresh:                   statusBucketMetadataAnnotationTableConfiguration(conn, bucket, expectedBucketOwner),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.AnnotationTableConfigurationResult); ok {
+		if v := output.Error; v != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusBucketMetadataAnnotationTableConfiguration(conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		mcr, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		output := mcr.AnnotationTableConfigurationResult
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.ToString(output.TableStatus), nil
+	}
+}
+
 func statusBucketMetadataInventoryTableConfiguration(conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		mcr, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
@@ -584,44 +699,54 @@ func findBucketMetadataConfiguration(ctx context.Context, conn *s3.Client, input
 	return output.GetBucketMetadataConfigurationResult.MetadataConfigurationResult, nil
 }
 
-func getMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bucketMetadataConfigurationResourceModel) (fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel], fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel], diag.Diagnostics) {
+func getMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bucketMetadataConfigurationResourceModel) (fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel], fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel], fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 	nullMetadataTableEncryptionConfigurationModel := fwtypes.NewListNestedObjectValueOfNull[metadataTableEncryptionConfigurationModel](ctx)
 
 	metadataConfigurationModel, d := data.MetadataConfiguration.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
-		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
 	if metadataConfigurationModel == nil {
-		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
 	inventoryTableConfigurationModel, d := metadataConfigurationModel.InventoryTableConfiguration.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
-		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
 	if inventoryTableConfigurationModel == nil {
-		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
 	journalTableConfigurationModel, d := metadataConfigurationModel.JournalTableConfiguration.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
-		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
 	if journalTableConfigurationModel == nil {
-		return inventoryTableConfigurationModel.EncryptionConfiguration, nullMetadataTableEncryptionConfigurationModel, diags
+		return inventoryTableConfigurationModel.EncryptionConfiguration, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
-	return inventoryTableConfigurationModel.EncryptionConfiguration, journalTableConfigurationModel.EncryptionConfiguration, diags
+	annotationTableConfigurationModel, d := metadataConfigurationModel.AnnotationTableConfiguration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+	}
+
+	if annotationTableConfigurationModel == nil {
+		return inventoryTableConfigurationModel.EncryptionConfiguration, journalTableConfigurationModel.EncryptionConfiguration, nullMetadataTableEncryptionConfigurationModel, diags
+	}
+
+	return inventoryTableConfigurationModel.EncryptionConfiguration, journalTableConfigurationModel.EncryptionConfiguration, annotationTableConfigurationModel.EncryptionConfiguration, diags
 }
 
-func setMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bucketMetadataConfigurationResourceModel, inventoryEncryptionConfiguration fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel], journalEncryptionConfiguration fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel]) diag.Diagnostics {
+func setMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bucketMetadataConfigurationResourceModel, inventoryEncryptionConfiguration, journalEncryptionConfiguration, annotationEncryptionConfiguration fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel]) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	metadataConfigurationModel, d := data.MetadataConfiguration.ToPtr(ctx)
@@ -657,6 +782,21 @@ func setMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bu
 		return diags
 	}
 
+	if annotationTableConfigurationModel, d := metadataConfigurationModel.AnnotationTableConfiguration.ToPtr(ctx); annotationTableConfigurationModel != nil {
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		annotationTableConfigurationModel.EncryptionConfiguration = annotationEncryptionConfiguration
+
+		metadataConfigurationModel.AnnotationTableConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, annotationTableConfigurationModel)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
 	data.MetadataConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, metadataConfigurationModel)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -675,9 +815,18 @@ type bucketMetadataConfigurationResourceModel struct {
 }
 
 type metadataConfigurationModel struct {
-	Destination                 fwtypes.ListNestedObjectValueOf[destinationResultModel]           `tfsdk:"destination"`
-	InventoryTableConfiguration fwtypes.ListNestedObjectValueOf[inventoryTableConfigurationModel] `tfsdk:"inventory_table_configuration"`
-	JournalTableConfiguration   fwtypes.ListNestedObjectValueOf[journalTableConfigurationModel]   `tfsdk:"journal_table_configuration"`
+	AnnotationTableConfiguration fwtypes.ListNestedObjectValueOf[annotationTableConfigurationModel] `tfsdk:"annotation_table_configuration"`
+	Destination                  fwtypes.ListNestedObjectValueOf[destinationResultModel]            `tfsdk:"destination"`
+	InventoryTableConfiguration  fwtypes.ListNestedObjectValueOf[inventoryTableConfigurationModel]  `tfsdk:"inventory_table_configuration"`
+	JournalTableConfiguration    fwtypes.ListNestedObjectValueOf[journalTableConfigurationModel]    `tfsdk:"journal_table_configuration"`
+}
+
+type annotationTableConfigurationModel struct {
+	ConfigurationState      fwtypes.StringEnum[awstypes.AnnotationConfigurationState]                  `tfsdk:"configuration_state"`
+	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[metadataTableEncryptionConfigurationModel] `tfsdk:"encryption_configuration"`
+	Role                    fwtypes.ARN                                                                `tfsdk:"role"`
+	TableARN                fwtypes.ARN                                                                `tfsdk:"table_arn"`
+	TableName               types.String                                                               `tfsdk:"table_name"`
 }
 
 type destinationResultModel struct {

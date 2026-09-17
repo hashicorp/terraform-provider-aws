@@ -52,6 +52,18 @@ The `metadata_configuration` configuration block supports the following argument
 * `inventory_table_configuration` - (Required) Inventory table configuration. See [`inventory_table_configuration` Block](#inventory_table_configuration-block) for details.
 * `journal_table_configuration` - (Required) Journal table configuration. See [`journal_table_configuration` Block](#journal_table_configuration-block) for details.
 
+The following arguments are optional:
+
+* `annotation_table_configuration` - (Optional) Annotation table configuration. See [`annotation_table_configuration` Block](#annotation_table_configuration-block) for details.
+
+### `annotation_table_configuration` Block
+
+The `annotation_table_configuration` configuration block supports the following arguments:
+
+* `configuration_state` - (Required) Configuration state of the annotation table, indicating whether the annotation table is enabled or disabled. Valid values: `ENABLED`, `DISABLED`.
+* `encryption_configuration` - (Optional) Encryption configuration for the annotation table. See [`encryption_configuration` Block](#encryption_configuration-block) for details.
+* `role` - (Optional) ARN of the IAM role used to manage the annotation table.
+
 ### `inventory_table_configuration` Block
 
 The `inventory_table_configuration` configuration block supports the following arguments:
@@ -93,6 +105,11 @@ This resource exports the following attributes in addition to the arguments abov
 * `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
 * `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
 * `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
+
+### `annotation_table_configuration` Block
+
+* `table_arn` - Annotation table ARN.
+* `table_name` - Annotation table name.
 
 ### `inventory_table_configuration` Block
 

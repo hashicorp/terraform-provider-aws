@@ -196,6 +196,77 @@ func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketMetadataConfiguration_annotationTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.MetadataConfigurationResult
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metadata_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetadataConfigurationConfig_annotationTable(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"annotation_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"configuration_state":             tfknownvalue.StringExact(awstypes.AnnotationConfigurationStateDisabled),
+									names.AttrEncryptionConfiguration: knownvalue.ListSizeExact(0),
+									names.AttrRole:                    knownvalue.Null(),
+									"table_arn":                       knownvalue.Null(),
+									names.AttrTableName:               knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrBucket),
+				ImportStateVerifyIdentifierAttribute: names.AttrBucket,
+			},
+			{
+				Config: testAccBucketMetadataConfigurationConfig_annotationTable(rName, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"annotation_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"configuration_state": tfknownvalue.StringExact(awstypes.AnnotationConfigurationStateEnabled),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.MetadataConfigurationResult
@@ -424,6 +495,35 @@ resource "aws_s3_bucket_metadata_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketMetadataConfigurationConfig_annotationTable(rName, configurationState string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_metadata_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  metadata_configuration {
+    annotation_table_configuration {
+      configuration_state = %[2]q
+    }
+
+    inventory_table_configuration {
+      configuration_state = "DISABLED"
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        days       = 7
+        expiration = "ENABLED"
+      }
+    }
+  }
+}
+`, rName, configurationState)
 }
 
 func testAccBucketMetadataConfigurationConfig_expectedBucketOwner(rName string) string {
