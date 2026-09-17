@@ -54,10 +54,10 @@ This resource supports the following arguments:
 
 ### `time_ranges` Block
 
-* `start_hour` - (Required) Hour (in UTC) at which the time range begins. Valid values: `0` to `23`.
-* `start_week_day` - (Required) Day of the week on which the time range begins. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
 * `end_hour` - (Required) Hour (in UTC) at which the time range ends. Valid values: `0` to `23`.
 * `end_week_day` - (Required) Day of the week on which the time range ends. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
+* `start_hour` - (Required) Hour (in UTC) at which the time range begins. Valid values: `0` to `23`.
+* `start_week_day` - (Required) Day of the week on which the time range begins. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
 
 ## Attribute Reference
 

@@ -54,8 +54,8 @@ resource "aws_ec2_instance_event_window_association" "example" {
 
 This resource supports the following arguments:
 
-* `instance_event_window_id` - (Required) ID of the event window.
 * `association_target` - (Required) Configuration block for the association target. Only one target type can be associated with an event window at a time. See [`association_target`](#association_target) below.
+* `instance_event_window_id` - (Required) ID of the event window.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `association_target` Block

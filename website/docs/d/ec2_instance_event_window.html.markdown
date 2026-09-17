@@ -55,7 +55,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `time_ranges` Block
 
-* `start_hour` - Hour (in UTC) at which the time range begins.
-* `start_week_day` - Day of the week on which the time range begins.
 * `end_hour` - Hour (in UTC) at which the time range ends.
 * `end_week_day` - Day of the week on which the time range ends.
+* `start_hour` - Hour (in UTC) at which the time range begins.
+* `start_week_day` - Day of the week on which the time range begins.
