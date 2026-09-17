@@ -38,17 +38,17 @@ This data source exports the following attributes in addition to the arguments a
 * `report_setting` - Object that identifies the report template for the report. Reports are built using a report template. Detailed below.
 * `tags` - Metadata that you can assign to help organize the report plans you create.
 
-### Report Delivery Channel Attributes
+### `report_delivery_channel` Block
 
-`report_delivery_channel` has the following attributes:
+The `report_delivery_channel` block exports the following attributes:
 
 * `formats` - List of the format of your reports: CSV, JSON, or both.
 * `s3_bucket_name` - Unique name of the S3 bucket that receives your reports.
 * `s3_key_prefix` - Prefix for where Backup Audit Manager delivers your reports to Amazon S3. The prefix is this part of the following path: s3://your-bucket-name/prefix/Backup/us-west-2/year/month/day/report-name.
 
-### Report Setting Attributes
+### `report_setting` Block
 
-`report_setting` has the following attributes:
+The `report_setting` block exports the following attributes:
 
 * `accounts` - List of accounts a report covers.
 * `framework_arns` - ARNs of the frameworks a report covers.

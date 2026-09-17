@@ -35,40 +35,40 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `offers` - List of the offers associated with the specified model. See [`offers`](#offers).
+* `offers` - List of the offers associated with the specified model. See [`offers`](#offers-block).
 
 ### `offers` Block
 
 * `offer_id` - Offer ID for a model offer.
 * `offer_token` - Offer token.
-* `term_details` - Details about the terms of the offer. See [`term_details`](#term_details).
+* `term_details` - Details about the terms of the offer. See [`term_details`](#term_details-block).
 
 #### `term_details` Block
 
-* `legal_term` - Details about the legal terms. See [`legal_term`](#legal_term).
-* `support_term` - Details about the support terms. See [`support_term`](#support_term).
-* `usage_based_pricing_term` - Details about the pricing terms. See [`usage_based_pricing_term`](#usage_based_pricing_term).
-* `validity_term` - Details about the validity terms. See [`validity_term`](#validity_term).
+* `legal_term` - Details about the legal terms. See [`legal_term`](#legal_term-block).
+* `support_term` - Details about the support terms. See [`support_term`](#support_term-block).
+* `usage_based_pricing_term` - Details about the pricing terms. See [`usage_based_pricing_term`](#usage_based_pricing_term-block).
+* `validity_term` - Details about the validity terms. See [`validity_term`](#validity_term-block).
 
-##### `legal_term` Block
+#### `legal_term` Block
 
 * `url` - URL to the legal term document.
 
-##### `support_term` Block
+#### `support_term` Block
 
 * `refund_policy_description` - Refund policy description.
 
-##### `usage_based_pricing_term` Block
+#### `usage_based_pricing_term` Block
 
-* `rate_card` - Details about a usage price for each dimension. See [`rate_card`](#rate_card).
+* `rate_card` - Details about a usage price for each dimension. See [`rate_card`](#rate_card-block).
 
-###### `rate_card` Block
+#### `rate_card` Block
 
 * `description` - Description of the price rate.
 * `dimension` - Dimension for the price rate.
 * `price` - Single-dimensional rate information.
 * `unit` - Unit associated with the price.
 
-##### `validity_term` Block
+#### `validity_term` Block
 
 * `agreement_duration` - Duration of the agreement.

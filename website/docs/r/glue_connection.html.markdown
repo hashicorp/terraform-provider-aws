@@ -356,21 +356,21 @@ The `oauth2_properties` configuration block supports the following arguments:
 * `token_url` - (Optional) Token URL for OAuth2 authentication.
 * `token_url_parameters_map` - (Optional) Map of additional parameters for the token URL.
 
-##### `authorization_code_properties` Block
+#### `authorization_code_properties` Block
 
 The `authorization_code_properties` configuration block supports the following arguments:
 
 * `authorization_code` - (Required) Authorization code.
 * `redirect_uri` - (Required) Redirect URI for OAuth2 flow.
 
-##### `oauth2_client_application` Block
+#### `oauth2_client_application` Block
 
 The `oauth2_client_application` configuration block supports the following arguments:
 
 * `aws_managed_client_application_reference` - (Optional) Reference to an AWS-managed client application.
 * `user_managed_client_application_client_id` - (Optional) Client ID for a user-managed client application.
 
-##### `oauth2_credentials` Block
+#### `oauth2_credentials` Block
 
 The `oauth2_credentials` configuration block supports the following arguments:
 

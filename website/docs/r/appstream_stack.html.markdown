@@ -76,19 +76,19 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `access_endpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints. See [`access_endpoints`](#access_endpoints) below.
-* `application_settings` - (Optional) Settings for application settings persistence. See [`application_settings`](#application_settings) below.
+* `access_endpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints. See [`access_endpoints`](#access_endpoints-block) below.
+* `application_settings` - (Optional) Settings for application settings persistence. See [`application_settings`](#application_settings-block) below.
 * `description` - (Optional) Description for the AppStream stack.
 * `display_name` - (Optional) Stack name to display.
 * `embed_host_domains` - (Optional) Domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.
 * `feedback_url` - (Optional) URL that users are redirected to after they click the Send Feedback link. If no URL is specified, no Send Feedback link is displayed. .
 * `redirect_url` - (Optional) URL that users are redirected to after their streaming session ends.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `storage_connectors` - (Optional) Configuration block for the storage connectors to enable. See [`storage_connectors`](#storage_connectors) below.
-* `streaming_experience_settings` - (Optional) Streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client. See [`streaming_experience_settings`](#streaming_experience_settings) below.
-* `streaming_experience_settings` - (Optional) Streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client. See [`streaming_experience_settings`](#streaming_experience_settings) below.
+* `storage_connectors` - (Optional) Configuration block for the storage connectors to enable. See [`storage_connectors`](#storage_connectors-block) below.
+* `streaming_experience_settings` - (Optional) Streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client. See [`streaming_experience_settings`](#streaming_experience_settings-block) below.
+* `streaming_experience_settings` - (Optional) Streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client. See [`streaming_experience_settings`](#streaming_experience_settings-block) below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action. See [`user_settings`](#user_settings) below.
+* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action. See [`user_settings`](#user_settings-block) below.
 
 ### `access_endpoints` Block
 

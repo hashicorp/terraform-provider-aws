@@ -25,18 +25,18 @@ resource "aws_backup_vault_lock_configuration" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backup_vault_name` - (Required) Name of the backup vault to add a lock configuration for.
-* `changeable_for_days` - (Optional) The number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.
-* `max_retention_days` - (Optional) The maximum retention period that the vault retains its recovery points.
-* `min_retention_days` - (Optional) The minimum retention period that the vault retains its recovery points.
+* `changeable_for_days` - (Optional) Number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.
+* `max_retention_days` - (Optional) Maximum retention period that the vault retains its recovery points.
+* `min_retention_days` - (Optional) Minimum retention period that the vault retains its recovery points.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `backup_vault_name` - The name of the vault.
-* `backup_vault_arn` - The ARN of the vault.
+* `backup_vault_arn` - ARN of the vault.
+* `backup_vault_name` - Name of the vault.
 
 ## Import
 

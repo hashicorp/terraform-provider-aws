@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/YakDriver/copyplop v0.10.0

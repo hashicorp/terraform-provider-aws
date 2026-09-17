@@ -1,5 +1,31 @@
 ## 6.66.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_iam_openid_connect_provider: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024))
+
+FEATURES:
+
+* **New List Resource:** `aws_efs_mount_target` ([#50057](https://github.com/hashicorp/terraform-provider-aws/issues/50057))
+* **New List Resource:** `aws_iam_openid_connect_provider` ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024))
+
+ENHANCEMENTS:
+
+* data-source/aws_ecs_service: Add `target_type` and `timeout_configuration` attributes to the `lifecycle_hook` block. ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add Resource Identity support ([#48629](https://github.com/hashicorp/terraform-provider-aws/issues/48629))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add `api_key_secret_source` argument and `api_key_secret_config` configuration block to support customer-managed AWS Secrets Manager secrets ([#48629](https://github.com/hashicorp/terraform-provider-aws/issues/48629))
+* resource/aws_ecs_service: Add `target_type` and `timeout_configuration` arguments to the `lifecycle_hook` configuration block to support ECS `PAUSE` deployment hooks. `hook_target_arn` and `role_arn` are now Optional (still required for `AWS_LAMBDA` hooks). ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
+* resource/aws_efs_access_point: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_backup_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_file_system: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_file_system_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_mount_target: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_replication_configuration: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+
+BUG FIXES:
+
+* list-resource/aws_rds_cluster_instance: Cache cluster using the DBClusterIdentifier as the key ([#50040](https://github.com/hashicorp/terraform-provider-aws/issues/50040))
+
 ## 6.65.0 (September 16, 2026)
 
 NOTES:
