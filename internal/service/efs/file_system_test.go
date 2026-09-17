@@ -15,9 +15,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+var (
+	checkFileSystemDNSName = tfknownvalue.RegionalHostnameRegexp("efs", regexache.MustCompile(`fs-[0-9a-f]{8,40}`))
+	checkFileSystemARN     = tfknownvalue.RegionalARNRegexp("elasticfilesystem", regexache.MustCompile(`file-system/fs-[0-9a-f]{8,40}`))
 )
 
 func TestAccEFSFileSystem_basic(t *testing.T) {
