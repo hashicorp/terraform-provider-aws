@@ -824,6 +824,14 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, t, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "0"),
+				),
+			},
+			{
 				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, t, resourceName, &smbFileShare),
