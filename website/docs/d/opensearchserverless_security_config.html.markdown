@@ -52,7 +52,7 @@ IAM Federation options for the security configuration.
 IAM Identity Center options for the security configuration.
 
 * `group_attribute` - Group attribute for this IAM Identity Center integration.
-* `instance_arn` - Amazon Resource Name (ARN) of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
+* `instance_arn` - ARN of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
 * `user_attribute` - User attribute for this IAM Identity Center integration.
 
 ### `saml_options` Block

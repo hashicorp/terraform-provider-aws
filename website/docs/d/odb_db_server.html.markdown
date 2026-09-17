@@ -57,3 +57,10 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the database server.
 * `status_reason` - Additional information about the current status of the database server.
 * `vm_cluster_ids` - OCID of the VM clusters that are associated with the database server.
+
+### `db_server_patching_details` Block
+
+* `estimated_patch_duration` - Estimated time, in minutes, that it takes to patch the database server.
+* `patching_status` - Status of the patching operation.
+* `time_patching_ended` - Date and time when the patching operation ended.
+* `time_patching_started` - Date and time when the patching operation started.

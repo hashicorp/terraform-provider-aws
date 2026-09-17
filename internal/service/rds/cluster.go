@@ -284,6 +284,14 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress the diff when the configured version is not newer than
+						// engine_version_actual. This handles the case where the cluster was
+						// auto-upgraded externally (auto_minor_version_upgrade=true or
+						// ignore_changes=[engine_version]): sending the older configured
+						// version would be rejected by AWS as a downgrade.
+						return !engineVersionIsNewer(new, d.Get("engine_version_actual").(string))
+					},
 				},
 				"engine_version_actual": {
 					Type:     schema.TypeString,
@@ -699,6 +707,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -741,6 +754,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate(ctx)
+
+	createStart := time.Now().UTC()
 
 	// get write-only value from configuration
 	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
@@ -1452,6 +1467,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
@@ -1619,10 +1639,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
-		// This can happen when updates are deferred (apply_immediately = false), and
-		// multiple applies occur before the maintenance window. In this case,
-		// continue sending the desired engine_version as part of the modify request.
-		if d.Get(names.AttrEngineVersion).(string) != d.Get("engine_version_actual").(string) {
+		// This can happen when updates are deferred (apply_immediately = false) and
+		// multiple applies occur before the maintenance window. Re-send the desired
+		// engine_version so the pending upgrade is not dropped.
+		// Guard: only send when engine_version is newer than engine_version_actual
+		// (the user's desired version is ahead of what is running — a genuine pending
+		// upgrade). If engine_version_actual is newer, the cluster was auto-upgraded
+		// externally (auto_minor_version_upgrade=true or ignore_changes=[engine_version])
+		// and sending the older version would be rejected by AWS as a downgrade.
+		// See: https://github.com/hashicorp/terraform-provider-aws/issues/48936
+		if engineVersionIsNewer(d.Get(names.AttrEngineVersion).(string), d.Get("engine_version_actual").(string)) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
@@ -1729,6 +1755,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		const (
 			timeout = 5 * time.Minute
 		)
+
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhen(ctx, timeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
@@ -1757,6 +1786,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("warning_event_categories"); ok {
+			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart,
+				flex.ExpandStringValueSet(v.(*schema.Set)))...)
 		}
 	}
 

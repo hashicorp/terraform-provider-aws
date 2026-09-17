@@ -267,6 +267,17 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
+			Factory:  newPatchBaselineResourceAsListResource,
+			TypeName: "aws_ssm_patch_baseline",
+			Name:     "Patch Baseline",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+				ResourceType:        "PatchBaseline",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
 			Factory:  newPatchGroupResourceAsListResource,
 			TypeName: "aws_ssm_patch_group",
 			Name:     "Patch Group",

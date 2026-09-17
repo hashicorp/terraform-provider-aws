@@ -27,6 +27,8 @@ func newSelectionResourceAsListResource() inttypes.ListResourceForSDK {
 	return &l
 }
 
+var _ list.ListResource = &selectionListResource{}
+
 type selectionListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
@@ -109,25 +111,6 @@ func listSelections(ctx context.Context, conn *backup.Client, input *backup.List
 			}
 
 			for _, item := range page.BackupSelectionsList {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
-}
-
-func listPlans(ctx context.Context, conn *backup.Client, input *backup.ListBackupPlansInput) iter.Seq2[awstypes.BackupPlansListMember, error] {
-	return func(yield func(awstypes.BackupPlansListMember, error) bool) {
-		pages := backup.NewListBackupPlansPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.BackupPlansListMember{}, fmt.Errorf("listing Backup Plans: %w", err))
-				return
-			}
-
-			for _, item := range page.BackupPlansList {
 				if !yield(item, nil) {
 					return
 				}

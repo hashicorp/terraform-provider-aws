@@ -159,7 +159,7 @@ Defines the ICMP protocol that consists of the ICMP type and code. The `icmp_typ
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX environment.
+* `arn` - ARN identifier of the KX environment.
 * `availability_zones` - AWS Availability Zone IDs that this environment is available in. Important when selecting VPC subnets to use in cluster creation.
 * `created_timestamp` - Timestamp at which the environment is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - Unique identifier for the KX environment.

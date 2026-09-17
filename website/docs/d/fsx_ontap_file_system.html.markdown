@@ -31,7 +31,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `automatic_backup_retention_days` - Number of days to retain automatic backups.
 * `daily_automatic_backup_start_time` - Preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deployment_type` - File system deployment type.
@@ -45,6 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
 * `network_interface_ids` - IDs of the elastic network interfaces from which a specific file system is accessible.
+* `network_type` - Network type (`IPV4` or `DUAL`).
 * `owner_id` - AWS account identifier that created the file system.
 * `preferred_subnet_id` - Subnet in which you want the preferred file server to be located.
 * `route_table_ids` - (Multi-AZ only) VPC route tables in which your file system's endpoints exist.
@@ -54,7 +55,7 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Tags associated with the file system.
 * `throughput_capacity` - Sustained throughput of an Amazon FSx file system in Megabytes per second (MBps). If the file system uses multiple HA pairs this will equal throuthput_capacity_per_ha_pair x ha_pairs
 * `throughput_capacity_per_ha_pair` - Sustained throughput of each HA pair for an Amazon FSx file system in Megabytes per second (MBps).
-* `vpc_id` - ID of the primary virtual private cloud (VPC) for the file system.
+* `vpc_id` - ID of the primary VPC for the file system.
 * `weekly_maintenance_start_time` - Preferred start time (in `D:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
 ### Disk IOPS

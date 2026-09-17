@@ -40,10 +40,10 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of IPAM Resource Discovery Association.
+* `arn` - ARN of IPAM Resource Discovery Association.
 * `id` - The ID of the IPAM Resource Discovery Association.
 * `owner_id` - The account ID for the account that manages the Resource Discovery
-* `ipam_arn` - The Amazon Resource Name (ARN) of the IPAM.
+* `ipam_arn` - ARN of the IPAM.
 * `ipam_region` - The home region of the IPAM.
 * `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery.
 * `state` - The lifecycle state of the association when you associate or disassociate a resource discovery.

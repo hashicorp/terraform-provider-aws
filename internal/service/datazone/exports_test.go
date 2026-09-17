@@ -13,6 +13,7 @@ var (
 	ResourceFormType                          = newFormTypeResource
 	ResourceGlossary                          = newGlossaryResource
 	ResourceGlossaryTerm                      = newGlossaryTermResource
+	ResourcePolicyGrant                       = newPolicyGrantResource
 	ResourceProject                           = newProjectResource
 	ResourceUserProfile                       = newUserProfileResource
 
@@ -24,5 +25,6 @@ var (
 	FindFormTypeByID                                  = findFormTypeByID
 	FindGlossaryByID                                  = findGlossaryByID
 	FindGlossaryTermByID                              = findGlossaryTermByID
+	FindPolicyGrantByID                               = findPolicyGrantByID
 	FindUserProfileByID                               = findUserProfileByID
 )

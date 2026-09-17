@@ -80,7 +80,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator cross-account attachment.
+- `arn` (String) ARN of the Global Accelerator cross-account attachment.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator Cross Account Attachment using the `arn`. For example:
 

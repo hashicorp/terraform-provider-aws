@@ -173,7 +173,7 @@ resource "aws_redshift_integration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Redshift integration.
+- `arn` (String) ARN of the Redshift integration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Integration using the `arn`. For example:
 

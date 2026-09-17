@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
+	"github.com/aws/smithy-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -516,6 +517,39 @@ func TestFlattenResourceShareARNs(t *testing.T) {
 
 			if !slices.Equal(got, tt.want) {
 				t.Errorf("FlattenResourceShareARNs() =\n  %v\nwant\n  %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSharedResourcesUnavailableInPartition(t *testing.T) {
+	t.Parallel()
+
+	apiErr := func(code string) error {
+		return &smithy.GenericAPIError{Code: code, Message: code}
+	}
+
+	tests := []struct {
+		name      string
+		partition string
+		err       error
+		want      bool
+	}{
+		{"no error", "aws", nil, false},
+		{"GovCloud missing authentication token", "aws-us-gov", apiErr("MissingAuthenticationTokenException"), true},
+		{"standard partition missing authentication token", "aws", apiErr("MissingAuthenticationTokenException"), false},
+		{"GovCloud unsupported operation", "aws-us-gov", apiErr("AccessDeniedException"), true},
+		{"standard partition unsupported operation", "aws", apiErr("AccessDeniedException"), false},
+		{"GovCloud unrelated error surfaces", "aws-us-gov", apiErr("ThrottlingException"), false},
+		{"China missing authentication token", "aws-cn", apiErr("MissingAuthenticationTokenException"), true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfmq.SharedResourcesUnavailableInPartition(tt.partition, tt.err); got != tt.want {
+				t.Errorf("SharedResourcesUnavailableInPartition(%q, %v) = %t, want %t", tt.partition, tt.err, got, tt.want)
 			}
 		})
 	}

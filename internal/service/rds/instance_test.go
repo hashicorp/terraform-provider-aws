@@ -311,7 +311,7 @@ func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.4"),
 				),
 			},
 			{
@@ -8330,7 +8330,7 @@ func testAccInstanceConfig_orderableClassDB2() string {
 }
 
 func testAccInstanceConfig_orderableClassMySQL() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "gp2")
 }
 
 func testAccInstanceConfig_orderableClassMySQLGP3() string {
@@ -8338,7 +8338,11 @@ func testAccInstanceConfig_orderableClassMySQLGP3() string {
 }
 
 func testAccInstanceConfig_orderableClassPostgres() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEnginePostgres, "postgresql-license", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEnginePostgres, "postgresql-license", "gp2")
+}
+
+func testAccInstanceConfig_orderableClassPostgresIO1() string {
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEnginePostgres, "postgresql-license", "io1")
 }
 
 func testAccInstanceConfig_orderableClassPostgresGP3() string {
@@ -8346,11 +8350,11 @@ func testAccInstanceConfig_orderableClassPostgresGP3() string {
 }
 
 func testAccInstanceConfig_orderableClassMariadb() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMariaDB, "general-public-license", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMariaDB, "general-public-license", "gp2")
 }
 
 func testAccInstanceConfig_orderableClassSQLServerEx() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerExpress, "license-included", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerExpress, "license-included", "gp2")
 }
 
 func testAccInstanceConfig_orderableClassSQLServerExGP3() string {
@@ -8358,10 +8362,10 @@ func testAccInstanceConfig_orderableClassSQLServerExGP3() string {
 }
 
 func testAccInstanceConfig_orderableClassSQLServerSe() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerStandard, "license-included", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerStandard, "license-included", "gp2")
 }
 func testAccInstanceConfig_orderableClassSQLServerEE() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerEnterprise, "license-included", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerEnterprise, "license-included", "gp2")
 }
 
 func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
@@ -8827,7 +8831,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.default.engine
   engine_version             = data.aws_rds_engine_version.default.version
   license_model              = "general-public-license"
-  storage_type               = "standard"
+  storage_type               = "gp2"
   preferred_instance_classes = [%[2]s]
 
   supports_iam_database_authentication = true
@@ -8954,7 +8958,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = data.aws_rds_engine_version.default.engine
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   # instance class db.t2.micro is not supported for restoring from S3 # TODO: can we search for instances restorable from s3?
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t2.medium", "db.t3.medium"]
@@ -9028,6 +9032,71 @@ resource "aws_db_instance" "test" {
 `, rName1, rName2))
 }
 
+func TestAccRDSInstance_warningEventCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_warningEventCategories(rName, `["failure"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+				),
+			},
+			{
+				// Confirm an update (not just create) with the argument set
+				// also applies cleanly and does not error.
+				Config: testAccInstanceConfig_warningEventCategories(rName, `["failure", "maintenance"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "maintenance"),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceConfig_warningEventCategories(rName, categories string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  username                = "tfacctest"
+
+  warning_event_categories = %[2]s
+}
+`, rName, categories))
+}
+
 func testAccInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
@@ -9067,7 +9136,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.default.engine
   engine_version             = data.aws_rds_engine_version.default.version
   license_model              = "general-public-license"
-  storage_type               = "standard"
+  storage_type               = "gp2"
   preferred_instance_classes = [%[3]s]
 
   supports_enhanced_monitoring = true
@@ -9104,7 +9173,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.default.engine
   engine_version             = data.aws_rds_engine_version.default.version
   license_model              = "general-public-license"
-  storage_type               = "standard"
+  storage_type               = "gp2"
   preferred_instance_classes = [%[2]s]
 
   supports_enhanced_monitoring = true
@@ -9164,7 +9233,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.default.engine
   engine_version             = data.aws_rds_engine_version.default.version
   license_model              = "general-public-license"
-  storage_type               = "standard"
+  storage_type               = "gp2"
   preferred_instance_classes = [%[3]s]
 
   supports_enhanced_monitoring = true
@@ -10328,7 +10397,7 @@ func testAccInstanceConfig_CloudWatchLogsExport_oracle(rName string) string {
 data "aws_rds_orderable_db_instance" "test" {
   engine        = %[1]q
   license_model = "bring-your-own-license"
-  storage_type  = "standard"
+  storage_type  = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -10355,7 +10424,7 @@ func testAccInstanceConfig_Oracle_nationalCharacterSet(rName string) string {
 data "aws_rds_orderable_db_instance" "test" {
   engine        = %[1]q
   license_model = "bring-your-own-license"
-  storage_type  = "standard"
+  storage_type  = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -10382,7 +10451,7 @@ func testAccInstanceConfig_Oracle_noNationalCharacterSet(rName string) string {
 data "aws_rds_orderable_db_instance" "test" {
   engine        = %[1]q
   license_model = "bring-your-own-license"
-  storage_type  = "standard"
+  storage_type  = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -11246,7 +11315,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = data.aws_rds_engine_version.default.engine
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[3]s]
 }
@@ -11505,7 +11574,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = data.aws_rds_engine_version.default.engine
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[3]s]
 }
@@ -11625,7 +11694,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = data.aws_rds_engine_version.default.engine
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[3]s]
 }
@@ -12753,7 +12822,7 @@ data "aws_rds_orderable_db_instance" "postgres13" {
   engine         = %[1]q
   engine_version = data.aws_rds_engine_version.test.version_actual
   license_model  = "postgresql-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -12779,7 +12848,7 @@ data "aws_rds_orderable_db_instance" "postgres14" {
   engine         = %[1]q
   engine_version = data.aws_rds_engine_version.upgrade.version_actual
   license_model  = "postgresql-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -13629,7 +13698,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13662,7 +13731,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13702,7 +13771,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13740,7 +13809,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13788,7 +13857,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13825,7 +13894,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13887,7 +13956,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -13956,7 +14025,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -14002,7 +14071,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                        = data.aws_rds_engine_version.default.engine
   engine_version                = data.aws_rds_engine_version.default.version
   license_model                 = "general-public-license"
-  storage_type                  = "standard"
+  storage_type                  = "gp2"
   supports_performance_insights = true
   preferred_instance_classes    = [%[2]s]
 }
@@ -14029,12 +14098,11 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassPostgres(),
+		testAccInstanceConfig_orderableClassPostgresIO1(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  # Dedicated log volumes do not support PG 16 instances.
   engine              = "postgres"
-  engine_version      = "15.12"
+  engine_version      = "18.3"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
@@ -14076,7 +14144,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_baseOutpost(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "standard"),
+		testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "gp2"),
 		fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -14214,7 +14282,7 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_license(rName, license string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClass(tfrds.InstanceEngineOracleStandard2, license, "standard"),
+		testAccInstanceConfig_orderableClass(tfrds.InstanceEngineOracleStandard2, license, "gp2"),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   apply_immediately   = true
@@ -14288,7 +14356,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = local.engine_version.engine
   engine_version = local.engine_version.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -14410,7 +14478,7 @@ resource "aws_db_instance" "test" {
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
@@ -14566,7 +14634,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {
@@ -14626,7 +14694,7 @@ resource "aws_db_instance" "test" {
   replicate_source_db     = aws_db_instance.source.identifier
   skip_final_snapshot     = true
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", oddClasses, evenClasses, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_promote(rName string) string {
@@ -14688,7 +14756,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", oddClasses, evenClasses, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName string, deletionProtection bool, oddClasses bool) string {
@@ -14738,7 +14806,7 @@ resource "aws_db_instance" "test" {
 
   deletion_protection = %[6]t
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, deletionProtection))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName, deletionProtection))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_password(rName, password string) string {
@@ -14788,7 +14856,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = local.engine_version.engine
   engine_version = local.engine_version.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }

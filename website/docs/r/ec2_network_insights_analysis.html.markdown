@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 The `alternate_path_hints` object supports the following:
 
-* `component_arn` - The Amazon Resource Name (ARN) of the component.
+* `component_arn` - ARN of the component.
 * `component_id` - The ID of the component.
 
 ## Import

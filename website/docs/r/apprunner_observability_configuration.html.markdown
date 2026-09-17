@@ -72,7 +72,7 @@ resource "aws_apprunner_observability_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the App Runner observability configuration.
+- `arn` (String) ARN of the App Runner observability configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Observability Configuration using the `arn`. For example:
 

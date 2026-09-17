@@ -102,7 +102,7 @@ This resource supports the following arguments:
 
 ### `logging_configuration` Configuration Block
 
-* `log_destination` - (Required) Amazon Resource Name (ARN) of Kinesis Firehose Delivery Stream
+* `log_destination` - (Required) ARN of Kinesis Firehose Delivery Stream
 * `redacted_fields` - (Optional) Configuration block containing parts of the request that you want redacted from the logs. Detailed below.
 
 #### `redacted_fields` Configuration Block

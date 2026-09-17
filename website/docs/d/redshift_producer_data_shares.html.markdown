@@ -24,7 +24,7 @@ data "aws_redshift_producer_data_shares" "example" {
 
 The following arguments are required:
 
-* `producer_arn` - (Required) Amazon Resource Name (ARN) of the producer namespace that returns in the list of datashares.
+* `producer_arn` - (Required) ARN of the producer namespace that returns in the list of datashares.
 
 The following arguments are optional:
 
@@ -40,6 +40,6 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `data_shares` Attribute Reference
 
-* `data_share_arn` - ARN (Amazon Resource Name) of the data share.
+* `data_share_arn` - ARN of the data share.
 * `managed_by` - Identifier of a datashare to show its managing entity.
-* `producer_arn` - ARN (Amazon Resource Name) of the producer.
+* `producer_arn` - ARN of the producer.

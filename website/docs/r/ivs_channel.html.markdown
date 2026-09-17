@@ -70,7 +70,7 @@ resource "aws_ivs_channel" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS channel.
+- `arn` (String) ARN of the IVS channel.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Channel using the ARN. For example:
 

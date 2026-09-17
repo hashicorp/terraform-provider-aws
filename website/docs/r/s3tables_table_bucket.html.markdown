@@ -28,33 +28,33 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `encryption_configuration` - (Optional) Encryption configuration for the table bucket. [See `encryption_configuration` below](#encryption_configuration).
+* `encryption_configuration` - (Optional) Encryption configuration for the table bucket. [See `encryption_configuration` below](#encryption_configuration-block).
 * `force_destroy` - (Optional, Default:`false`) Whether all tables and namespaces within the table bucket should be deleted *when the table bucket is destroyed* so that the table bucket can be destroyed without error. These tables and namespaces are *not* recoverable. This only deletes tables and namespaces when the table bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the table bucket or destroying the table bucket, this flag will not work. Additionally when importing a table bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
-* `maintenance_configuration` - (Optional) Maintenance configuration for the table bucket. [See `maintenance_configuration` below](#maintenance_configuration).
+* `maintenance_configuration` - (Optional) Maintenance configuration for the table bucket. [See `maintenance_configuration` below](#maintenance_configuration-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `encryption_configuration`
+### `encryption_configuration` Block
 
 The `encryption_configuration` object supports the following arguments:
 
 * `kms_key_arn` - (Optional) ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
 * `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
-### `maintenance_configuration`
+### `maintenance_configuration` Block
 
 The `maintenance_configuration` object supports the following argument:
 
-* `iceberg_unreferenced_file_removal` - (Required) Iceberg unreferenced file removal settings for the table bucket. [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal).
+* `iceberg_unreferenced_file_removal` - (Required) Iceberg unreferenced file removal settings for the table bucket. [See `iceberg_unreferenced_file_removal` below](#iceberg_unreferenced_file_removal-block).
 
-### `iceberg_unreferenced_file_removal`
+### `iceberg_unreferenced_file_removal` Block
 
 The `iceberg_unreferenced_file_removal` object supports the following arguments:
 
-* `settings` - (Required) Settings object for unreferenced file removal. [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings).
+* `settings` - (Required) Settings object for unreferenced file removal. [See `iceberg_unreferenced_file_removal.settings` below](#iceberg_unreferenced_file_removalsettings-block).
 * `status` - (Required) Whether the configuration is enabled. Valid values are `enabled` and `disabled`.
 
-### `iceberg_unreferenced_file_removal.settings`
+### `iceberg_unreferenced_file_removal.settings` Block
 
 The `iceberg_unreferenced_file_removal.settings` object supports the following arguments:
 

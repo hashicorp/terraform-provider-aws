@@ -50,7 +50,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "example" {
 
 This resource supports the following arguments:
 
-* `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
+* `bucket` - (Required) ARN of the bucket.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket. See [`rule`](#rule-block) below.
 
@@ -81,11 +81,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the bucket.
+* `id` - ARN of the bucket.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Bucket Lifecycle Configurations using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Bucket Lifecycle Configurations using the ARN. For example:
 
 ```terraform
 import {
@@ -94,7 +94,7 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 Control Bucket Lifecycle Configurations using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import S3 Control Bucket Lifecycle Configurations using the ARN. For example:
 
 ```console
 % terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example

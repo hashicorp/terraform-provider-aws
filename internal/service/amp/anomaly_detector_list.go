@@ -87,6 +87,19 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 			id := aws.ToString(item.AnomalyDetectorId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.Arn))
 
+			var out *awstypes.AnomalyDetectorDescription
+			if request.IncludeResource {
+				var err error
+				out, err = findAnomalyDetectorByID(ctx, conn, id, workspaceID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data anomalyDetectorResourceModel
@@ -94,15 +107,6 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 				data.WorkspaceID = types.StringValue(workspaceID)
 
 				if request.IncludeResource {
-					out, err := findAnomalyDetectorByID(ctx, conn, id, workspaceID)
-					if retry.NotFound(err) {
-						return
-					}
-					if err != nil {
-						result = fwdiag.NewListResultErrorDiagnostic(err)
-						return
-					}
-
 					result.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
 					if result.Diagnostics.HasError() {
 						return

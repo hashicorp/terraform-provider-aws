@@ -50,7 +50,11 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime", name="Agent Runtime")
 // @Tags(identifierAttribute="agent_runtime_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetAgentRuntimeOutput")
+// @Testing(generator="testAccRandomAgentRuntimeName(t)")
+// @Testing(importStateIdAttribute="agent_runtime_id")
+// @Testing(preCheck="testAccPreCheckAgentRuntimes")
+// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeResource{}
 
@@ -75,7 +79,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 			"agent_runtime_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -94,7 +98,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
-			"lifecycle_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[lifecycleConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"lifecycle_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[lifecycleConfigurationModel](ctx),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -223,8 +227,8 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					},
 				},
 			},
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
-			"filesystem_configuration": filesystemConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
+			"filesystem_configuration": filesystemConfigurationBlock(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -303,12 +307,12 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
-func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+func authorizerConfigurationBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
-		Validators: []validator.List{
+		Validators: append([]validator.List{
 			listvalidator.SizeAtMost(1),
-		},
+		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
 			Validators: []validator.Object{
 				tfobjectvalidator.ExactlyOneOfChildren(
@@ -444,29 +448,8 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
-							"private_endpoint": privateEndpointSchema(ctx),
-							"private_endpoint_overrides": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
-								Validators: []validator.List{
-									listvalidator.SizeAtMost(5),
-								},
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										names.AttrDomain: schema.StringAttribute{
-											Required: true,
-											Validators: []validator.String{
-												stringvalidator.LengthBetween(1, 253),
-											},
-										},
-									},
-									Blocks: map[string]schema.Block{
-										// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
-										// enforce it offline so a missing private_endpoint fails at plan
-										// instead of a client-side SDK error at apply.
-										"private_endpoint": privateEndpointSchema(ctx, listvalidator.IsRequired()),
-									},
-								},
-							},
+							"private_endpoint":           privateEndpointBlock(ctx),
+							"private_endpoint_overrides": privateEndpointOverrideBlock(ctx),
 						},
 					},
 				},
@@ -475,7 +458,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func privateEndpointSchema(ctx context.Context, extraValidators ...validator.List) schema.ListNestedBlock {
+func privateEndpointBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
 		Validators: append([]validator.List{
@@ -530,9 +513,14 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 						listvalidator.SizeAtMost(1),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("resource_configuration_identifier"),
+							),
+						},
 						Attributes: map[string]schema.Attribute{
 							"resource_configuration_identifier": schema.StringAttribute{
-								Required: true,
+								Optional: true,
 							},
 						},
 					},
@@ -542,12 +530,37 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 	}
 }
 
-func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+func privateEndpointOverrideBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+		Validators: append([]validator.List{
+			listvalidator.SizeAtMost(5),
+		}, extraValidators...),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrDomain: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 253),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
+				// enforce it offline so a missing private_endpoint fails at plan
+				// instead of a client-side SDK error at apply.
+				"private_endpoint": privateEndpointBlock(ctx, listvalidator.IsRequired()),
+			},
+		},
+	}
+}
+
+func filesystemConfigurationBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[filesystemConfigurationModel](ctx),
-		Validators: []validator.List{
+		Validators: append([]validator.List{
 			listvalidator.SizeAtMost(5),
-		},
+		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
 			Validators: []validator.Object{
 				tfobjectvalidator.ExactlyOneOfChildren(

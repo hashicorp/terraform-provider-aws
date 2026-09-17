@@ -99,21 +99,21 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `application_settings` - (Optional) Application settings configuration for the WorkSpaces Pool. See [`application_settings`](#application_settings) below.
+* `application_settings` - (Optional) Application settings configuration for the WorkSpaces Pool. See [`application_settings` Block](#application_settings-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout_settings` - (Optional) Timeout settings configuration for the WorkSpaces Pool. See [`timeout_settings`](#timeout_settings) below.
+* `timeout_settings` - (Optional) Timeout settings configuration for the WorkSpaces Pool. See [`timeout_settings` Block](#timeout_settings-block) below.
 
 ### `capacity` Block
 
 * `desired_user_sessions` - (Required) Desired number of user sessions for the WorkSpaces Pool.
 
-### `application_settings`
+### `application_settings` Block
 
 * `settings_group` - (Optional) Name of the settings group for the application settings.
 * `status` - (Required) Status of the application settings. Valid values are `ENABLED` and `DISABLED`.
 
-### `timeout_settings`
+### `timeout_settings` Block
 
 * `disconnect_timeout_in_seconds` - (Optional) Time after disconnection when a user is logged out of their WorkSpace. Must be between 1 and 36000.
 * `idle_disconnect_timeout_in_seconds` - (Optional) Time after inactivity when a user is disconnected from their WorkSpace. Must be between 1 and 36000.
@@ -123,7 +123,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `capacity_status` - Capacity status of the WorkSpaces Pool. See [`capacity_status`](#capacity_status) below.
+* `capacity_status` - Capacity status of the WorkSpaces Pool. See [`capacity_status` Block](#capacity_status-block) below.
 * `created_at` - Date and time the WorkSpaces Pool was created.
 * `pool_arn` - ARN of the WorkSpaces Pool.
 * `pool_id` - ID of the WorkSpaces Pool.
@@ -131,7 +131,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `state` - Current state of the WorkSpaces Pool.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### `capacity_status`
+### `capacity_status` Block
 
 * `active_user_sessions` - Number of user sessions that are currently being used for WorkSpaces in the pool.
 * `actual_user_sessions` - Number of user sessions currently being used for WorkSpaces in the pool.

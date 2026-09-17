@@ -30,7 +30,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Resource Explorer index.
+* `arn` - ARN of the Resource Explorer index.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -62,7 +62,7 @@ resource "aws_resourceexplorer2_index" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Resource Explorer index.
+- `arn` (String) ARN of the Resource Explorer index.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource Explorer indexes using the `arn`. For example:
 

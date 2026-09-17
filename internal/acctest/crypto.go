@@ -26,6 +26,7 @@ const (
 	PEMBlockTypeECPrivateKey       = `EC PRIVATE KEY`
 	PEMBlockTypeRSAPrivateKey      = `RSA PRIVATE KEY`
 	PEMBlockTypePublicKey          = `PUBLIC KEY`
+	PEMBlockTypeX509CRL            = `X509 CRL`
 
 	bitShift128 = 128
 )
@@ -270,7 +271,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		IsCA:                  true,
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		NotAfter:              time.Now().Add(hoursForCertificateValidity * time.Hour),
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
@@ -293,6 +294,47 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
+}
+
+// TLSRSAX509CertificateRevocationListPEM generates an empty x509 certificate
+// revocation list (CRL) PEM string signed by the given CA key and certificate.
+func TLSRSAX509CertificateRevocationListPEM(t *testing.T, caKeyPem, caCertificatePem string) string {
+	t.Helper()
+
+	keyBlock, _ := pem.Decode([]byte(caKeyPem))
+
+	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	certificateBlock, _ := pem.Decode([]byte(caCertificatePem))
+
+	caCertificate, err := x509.ParseCertificate(certificateBlock.Bytes)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	template := &x509.RevocationList{
+		Number:     big.NewInt(1),
+		ThisUpdate: time.Now(),
+		NextUpdate: time.Now().Add(hoursForCertificateValidity * time.Hour),
+	}
+
+	crlBytes, err := x509.CreateRevocationList(rand.Reader, template, caCertificate, key)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	crlBlock := &pem.Block{
+		Bytes: crlBytes,
+		Type:  PEMBlockTypeX509CRL,
+	}
+
+	return string(pem.EncodeToMemory(crlBlock))
 }
 
 // TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM generates a x509 CA certificate PEM string.

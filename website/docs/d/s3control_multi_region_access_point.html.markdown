@@ -31,7 +31,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `alias` - Alias for the Multi-Region Access Point.
-* `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
+* `arn` - ARN of the Multi-Region Access Point.
 * `created_at` - Timestamp when the resource has been created.
 * `domain_name` - DNS domain name of the S3 Multi-Region Access Point in the format _`alias`_.accesspoint.s3-global.amazonaws.com. For more information, see the documentation on [Multi-Region Access Point Requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointRequests.html).
 * `public_access_block` - Public Access Block of the Multi-Region Access Point. Detailed below.

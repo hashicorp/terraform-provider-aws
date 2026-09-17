@@ -38,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `db_servers` - the list of DB servers along with their properties.
 
-### db_servers
+### `db_servers` Block
 
 * `autonomous_virtual_machine_ids` - List of unique identifiers for the Autonomous VMs.
 * `autonomous_vm_cluster_ids` - List of identifiers for the Autonomous VM clusters.
@@ -60,3 +60,10 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the database server.
 * `status_reason` - Additional information about the status of the database server.
 * `vm_cluster_ids` - IDs of the VM clusters that are associated with the database server.
+
+#### `db_server_patching_details` Block
+
+* `estimated_patch_duration` - Estimated time, in minutes, that it takes to patch the database server.
+* `patching_status` - Status of the patching operation.
+* `time_patching_ended` - Date and time when the patching operation ended.
+* `time_patching_started` - Date and time when the patching operation started.

@@ -120,7 +120,7 @@ This resource supports the following arguments:
 * `event_source_arn` - (Required) ARN of the event bus associated with the archive. Only events from this event bus are sent to the archive.
 * `description` - (Optional) Description for the archive.
 * `event_pattern` - (Optional) Event pattern to use to filter events sent to the archive. By default, it attempts to archive every event received in the `event_source_arn`.
-* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this archive. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this archive. The identifier can be the key ARN, KeyId, key alias, or key alias ARN.
 * `retention_days` - (Optional) The maximum number of days to retain events in the new event archive. By default, it archives indefinitely.
 
 ## Attribute Reference
