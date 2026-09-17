@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -130,7 +131,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"api_key_secret_config": secretReferenceBlock(ctx),
+			"api_key_secret_config": secretReferenceBlock(ctx, listvalidator.AlsoRequires(path.MatchRoot("api_key_secret_source"))),
 		},
 	}
 }
