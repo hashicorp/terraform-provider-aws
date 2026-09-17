@@ -43,6 +43,13 @@ func resourceFileSystem() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+			if diff.Id() == "" && !diff.Get(names.AttrEncrypted).(bool) {
+				return diff.SetNewComputed(names.AttrEncrypted)
+			}
+			return nil
+		},
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -76,6 +83,9 @@ func resourceFileSystem() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "true" && new == "false"
+					},
 				},
 				names.AttrKMSKeyID: {
 					Type:         schema.TypeString,
