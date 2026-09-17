@@ -308,6 +308,11 @@ type visitor struct {
 	sdkListResources       map[string]ResourceDatum
 }
 
+type parsedAnnotation struct {
+	name string
+	args common.Args
+}
+
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
 	for funcDecl := range common.TopLevelFuncDecls(file) {
@@ -329,16 +334,28 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:                        tests.InitCommonArgs(),
 	}
 
-	annotations := make(map[string]bool)
+	annotationNames := make(map[string]bool)
+	var annotations []parsedAnnotation
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			annotationName := m[1]
-			annotations[annotationName] = true
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
+
+			annotations = append(annotations, parsedAnnotation{
+				name: m[1],
+				args: args,
+			})
 		}
 	}
-	keys := slices.Collect(maps.Keys(annotations))
+	for _, annotation := range annotations {
+		annotationNames[annotation.name] = true
+	}
+	keys := slices.Collect(maps.Keys(annotationNames))
 	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
 		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 	}
