@@ -291,7 +291,7 @@ func instanceEventWindowAssociationTagsFromMap(ctx context.Context, m fwtypes.Ma
 		return nil
 	}
 
-	elements := make(map[string]any, len(m.Elements()))
+	elements := make(map[string]any, m.Length(fwtypes.CollectionLengthUnhandledAsZero))
 	for k, v := range m.Elements() {
 		if s, ok := v.(types.String); ok {
 			elements[k] = s.ValueString()

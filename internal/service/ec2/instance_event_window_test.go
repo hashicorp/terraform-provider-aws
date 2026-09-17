@@ -89,7 +89,7 @@ func testAccEC2InstanceEventWindow_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 			},

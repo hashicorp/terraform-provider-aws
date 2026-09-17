@@ -55,10 +55,10 @@ resource "aws_ec2_instance_event_window_association" "example" {
 This resource supports the following arguments:
 
 * `instance_event_window_id` - (Required) ID of the event window.
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `association_target` - (Required) Configuration block for the association target. Only one target type can be associated with an event window at a time. See [`association_target`](#association_target) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `association_target`
+### `association_target` Block
 
 * `dedicated_host_ids` - (Optional) List of Dedicated Host IDs to associate with the event window. Conflicts with `instance_ids` and `instance_tags`. Exactly one of `dedicated_host_ids`, `instance_ids`, or `instance_tags` must be specified. Limit: 50.
 * `instance_ids` - (Optional) List of instance IDs to associate with the event window. Conflicts with `dedicated_host_ids` and `instance_tags`. Exactly one of `dedicated_host_ids`, `instance_ids`, or `instance_tags` must be specified. Limit: 100.

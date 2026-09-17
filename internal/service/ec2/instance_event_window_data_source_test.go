@@ -19,7 +19,7 @@ func TestAccEC2InstanceEventWindowDataSource_id(t *testing.T) {
 	resourceName := "aws_ec2_instance_event_window.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +45,7 @@ func TestAccEC2InstanceEventWindowDataSource_filter(t *testing.T) {
 	resourceName := "aws_ec2_instance_event_window.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

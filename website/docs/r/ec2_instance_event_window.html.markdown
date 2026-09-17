@@ -49,22 +49,22 @@ This resource supports the following arguments:
 * `cron_expression` - (Optional) Cron expression for the event window, defining a recurring schedule. Conflicts with `time_ranges`. Exactly one of `cron_expression` or `time_ranges` must be specified.
 * `name` - (Optional) Name of the event window.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `time_ranges` - (Optional) One or more time ranges defining the event window. Conflicts with `cron_expression`. Exactly one of `cron_expression` or `time_ranges` must be specified. All times are in UTC. Each individual time range must be at least 2 hours, and the combined duration of all time ranges must total at least 4 hours. See [`time_ranges`](#time_ranges) below.
 
-### `time_ranges`
+### `time_ranges` Block
 
-* `start_week_day` - (Required) Day of the week on which the time range begins. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
 * `start_hour` - (Required) Hour (in UTC) at which the time range begins. Valid values: `0` to `23`.
-* `end_week_day` - (Required) Day of the week on which the time range ends. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
+* `start_week_day` - (Required) Day of the week on which the time range begins. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
 * `end_hour` - (Required) Hour (in UTC) at which the time range ends. Valid values: `0` to `23`.
+* `end_week_day` - (Required) Day of the week on which the time range ends. Valid values: `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the event window.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
