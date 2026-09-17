@@ -10,4 +10,6 @@ var (
 	FindPipeByName           = findPipeByName
 	SMKOrARNPattern          = smkOrARNPattern
 	SecretsManagerARNPattern = secretsManagerARNPattern
+
+	ExpandPipeSourceSelfManagedKafkaParameters = expandPipeSourceSelfManagedKafkaParameters
 )
