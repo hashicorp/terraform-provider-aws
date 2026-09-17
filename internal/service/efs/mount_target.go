@@ -194,38 +194,9 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s): %s", d.Id(), err)
 	}
 
-	fsID := aws.ToString(mt.FileSystemId)
-	d.Set("availability_zone_id", mt.AvailabilityZoneId)
-	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set(names.AttrDNSName, c.RegionalHostname(ctx, fsID+".efs"))
-	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
-	d.Set(names.AttrFileSystemID, fsID)
-	d.Set(names.AttrIPAddress, mt.IpAddress)
-	if mt.IpAddress != nil && mt.Ipv6Address != nil {
-		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeDualStack)
-	} else if mt.IpAddress != nil {
-		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv4Only)
-	} else if mt.Ipv6Address != nil {
-		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv6Only)
-	} else {
-		d.Set(names.AttrIPAddressType, nil)
+	if err := resourceMountTargetFlatten(ctx, c, mt, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("ipv6_address", mt.Ipv6Address)
-	d.Set("mount_target_dns_name", c.RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.ToString(mt.AvailabilityZoneName), aws.ToString(mt.FileSystemId))))
-	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
-	d.Set(names.AttrOwnerID, mt.OwnerId)
-	d.Set(names.AttrSubnetID, mt.SubnetId)
-
-	input := efs.DescribeMountTargetSecurityGroupsInput{
-		MountTargetId: aws.String(d.Id()),
-	}
-	output, err := conn.DescribeMountTargetSecurityGroups(ctx, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
-	}
-
-	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 
 	return diags
 }
@@ -273,6 +244,43 @@ func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func resourceMountTargetFlatten(ctx context.Context, c *conns.AWSClient, mt *awstypes.MountTargetDescription, d *schema.ResourceData) error {
+	fsID := aws.ToString(mt.FileSystemId)
+	d.Set("availability_zone_id", mt.AvailabilityZoneId)
+	d.Set("availability_zone_name", mt.AvailabilityZoneName)
+	d.Set(names.AttrDNSName, c.RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrIPAddress, mt.IpAddress)
+	if mt.IpAddress != nil && mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeDualStack)
+	} else if mt.IpAddress != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv4Only)
+	} else if mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv6Only)
+	} else {
+		d.Set(names.AttrIPAddressType, nil)
+	}
+	d.Set("ipv6_address", mt.Ipv6Address)
+	d.Set("mount_target_dns_name", c.RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.ToString(mt.AvailabilityZoneName), aws.ToString(mt.FileSystemId))))
+	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
+	d.Set(names.AttrOwnerID, mt.OwnerId)
+	d.Set(names.AttrSubnetID, mt.SubnetId)
+
+	input := efs.DescribeMountTargetSecurityGroupsInput{
+		MountTargetId: aws.String(d.Id()),
+	}
+	conn := c.EFSClient(ctx)
+	output, err := conn.DescribeMountTargetSecurityGroups(ctx, &input)
+	if err != nil {
+		return fmt.Errorf("reading EFS Mount Target (%s) security groups: %w", d.Id(), err)
+	}
+
+	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
+
+	return nil
 }
 
 func getAZFromSubnetID(ctx context.Context, conn *ec2.Client, subnetID string) (string, error) {
