@@ -33,6 +33,21 @@ func (file *PackageFile) PackageName() string {
 	return file.file.Name.Name
 }
 
+// TopLevelFuncDecls returns the top-level function declarations in file.
+func TopLevelFuncDecls(file *ast.File) iter.Seq[*ast.FuncDecl] {
+	return func(yield func(*ast.FuncDecl) bool) {
+		for _, decl := range file.Decls {
+			funcDecl, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			if !yield(funcDecl) {
+				return
+			}
+		}
+	}
+}
+
 type Package struct {
 	name  string
 	files []*PackageFile
