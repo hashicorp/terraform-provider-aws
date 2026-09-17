@@ -26,7 +26,6 @@ func TestAccEFSMountTarget_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_efs_mount_target.test[0]"
 	resourceName2 := "aws_efs_mount_target.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -43,7 +42,6 @@ func TestAccEFSMountTarget_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -60,7 +58,6 @@ func TestAccEFSMountTarget_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
@@ -80,7 +77,6 @@ func TestAccEFSMountTarget_List_basic(t *testing.T) {
 func TestAccEFSMountTarget_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_efs_mount_target.test[0]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -96,7 +92,6 @@ func TestAccEFSMountTarget_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -110,7 +105,6 @@ func TestAccEFSMountTarget_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
@@ -138,7 +132,6 @@ func TestAccEFSMountTarget_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_efs_mount_target.test[0]"
 	resourceName2 := "aws_efs_mount_target.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -158,7 +151,6 @@ func TestAccEFSMountTarget_List_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -176,7 +168,6 @@ func TestAccEFSMountTarget_List_regionOverride(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -194,7 +185,6 @@ func TestAccEFSMountTarget_List_accessPointID(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_efs_mount_target.test[0]"
 	resourceName2 := "aws_efs_mount_target.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -211,7 +201,6 @@ func TestAccEFSMountTarget_List_accessPointID(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_access_point_id/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -228,7 +217,6 @@ func TestAccEFSMountTarget_List_accessPointID(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/list_access_point_id/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
