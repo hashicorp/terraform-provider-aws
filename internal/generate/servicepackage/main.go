@@ -361,140 +361,131 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	// Look first for per-resource annotations such as tagging and Region.
-	for _, line := range funcDecl.Doc.List {
-		line := line.Text
+	for _, annotation := range annotations {
+		switch annotationName, args := annotation.name, annotation.args; annotationName {
+		case "FrameworkResource":
+			d.Implementation = common.ImplementationFramework
 
-		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			args, err := common.ParseArgs(m[3])
-			if err != nil {
-				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+		case "SDKResource":
+			d.Implementation = common.ImplementationSDK
+
+		case "Region":
+			if attr, ok := args.Keyword["global"]; ok {
+				if global, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.IsGlobal = global
+					if global {
+						d.regionOverrideEnabled = false
+						d.ValidateRegionOverrideInPartition = false
+					}
+				}
+			}
+			if attr, ok := args.Keyword["overrideEnabled"]; ok {
+				if enabled, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.regionOverrideEnabled = enabled
+				}
+			}
+			if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+				if deprecated, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.RegionOverrideDeprecated = deprecated
+				}
+			}
+			if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
+				if validate, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/validateOverrideInPartition value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.ValidateRegionOverrideInPartition = validate
+				}
+			}
+
+		case "Tags":
+			d.TransparentTagging = true
+
+			if attr, ok := args.Keyword["identifierAttribute"]; ok {
+				if d.TagsIdentifierAttribute != "" {
+					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
+				d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
+			}
+
+			if attr, ok := args.Keyword["resourceType"]; ok {
+				d.TagsResourceType = attr
+			}
+
+		case "WrappedImport":
+			if len(args.Positional) != 1 {
+				v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				attr := args.Positional[0]
+				if b, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				} else {
+					d.wrappedImport = common.TriBool(b)
+				}
+			}
+
+		case "CustomImport":
+			d.CustomImport = true
+
+		case "ArnFormat":
+			if attr, ok := args.Keyword["global"]; ok {
+				if b, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				} else {
+					if b {
+						d.isARNFormatGlobal = arnFormatStateGlobal
+					} else {
+						d.isARNFormatGlobal = arnFormatStateRegional
+					}
+				}
+			}
+
+		case "NoImport":
+			d.wrappedImport = common.TriBooleanFalse
+
+		case "IdentityFix":
+			d.HasIdentityFix = true
+
+		// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
+		// TODO: These fields should be moved out of `@Testing`
+		case "Testing":
+			if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				continue
 			}
-			switch annotationName := m[1]; annotationName {
-			case "FrameworkResource":
-				d.Implementation = common.ImplementationFramework
-
-			case "SDKResource":
-				d.Implementation = common.ImplementationSDK
-
-			case "Region":
-				if attr, ok := args.Keyword["global"]; ok {
-					if global, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.IsGlobal = global
-						if global {
-							d.regionOverrideEnabled = false
-							d.ValidateRegionOverrideInPartition = false
-						}
-					}
-				}
-				if attr, ok := args.Keyword["overrideEnabled"]; ok {
-					if enabled, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.regionOverrideEnabled = enabled
-					}
-				}
-				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
-					if deprecated, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.RegionOverrideDeprecated = deprecated
-					}
-				}
-				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
-					if validate, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/validateOverrideInPartition value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.ValidateRegionOverrideInPartition = validate
-					}
-				}
-
-			case "Tags":
-				d.TransparentTagging = true
-
-				if attr, ok := args.Keyword["identifierAttribute"]; ok {
-					if d.TagsIdentifierAttribute != "" {
-						v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					}
-
-					d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
-				}
-
-				if attr, ok := args.Keyword["resourceType"]; ok {
-					d.TagsResourceType = attr
-				}
-
-			case "WrappedImport":
-				if len(args.Positional) != 1 {
-					v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+				if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+					v.errs = append(v.errs, err)
 				} else {
-					attr := args.Positional[0]
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.wrappedImport = common.TriBool(b)
+					d.HasV6_0NullValuesError = b
+					if b {
+						d.PreIdentityVersion = v5_100_0
 					}
 				}
-
-			case "CustomImport":
-				d.CustomImport = true
-
-			case "ArnFormat":
-				if attr, ok := args.Keyword["global"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						if b {
-							d.isARNFormatGlobal = arnFormatStateGlobal
-						} else {
-							d.isARNFormatGlobal = arnFormatStateRegional
-						}
+			}
+			if attr, ok := args.Keyword["v60RefreshError"]; ok {
+				if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
+					v.errs = append(v.errs, err)
+				} else {
+					d.HasV6_0RefreshError = b
+					if b {
+						d.PreIdentityVersion = v5_100_0
 					}
 				}
+			}
 
-			case "NoImport":
-				d.wrappedImport = common.TriBooleanFalse
-
-			case "IdentityFix":
-				d.HasIdentityFix = true
-
-			// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
-			// TODO: These fields should be moved out of `@Testing`
-			case "Testing":
-				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					continue
-				}
-				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
-					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasV6_0NullValuesError = b
-						if b {
-							d.PreIdentityVersion = v5_100_0
-						}
-					}
-				}
-				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasV6_0RefreshError = b
-						if b {
-							d.PreIdentityVersion = v5_100_0
-						}
-					}
-				}
-
-			default:
-				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.goImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
-					continue
-				}
+		default:
+			if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+				continue
 			}
 		}
 	}
