@@ -619,6 +619,7 @@ object Performance : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         script {
             name = "VPC Main"
             scriptContent = File("./scripts/performance.sh").readText()

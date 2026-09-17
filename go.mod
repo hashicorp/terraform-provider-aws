@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.26.6
+go 1.26.8
 
 // Disable post-quantum X25519MLKEM768 key exchange mechanism
 // This causes errors with AWS Network Firewall
@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.5
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/accountaccess v1.6.0
@@ -44,11 +44,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.65.0
-	github.com/aws/aws-sdk-go-v2/service/batch v1.75.0
+	github.com/aws/aws-sdk-go-v2/service/batch v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockruntime v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.22.0
@@ -95,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.74.0
-	github.com/aws/aws-sdk-go-v2/service/dax v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/dax v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.17.0
@@ -112,7 +113,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.332.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.97.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.98.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.61.0
@@ -148,7 +149,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/interconnect v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/invoicing v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/invoicing v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.84.0
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.29.0
@@ -169,13 +170,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/mailmanager v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.103.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.104.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.110.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.49.0
@@ -235,7 +236,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.79.0
 	github.com/aws/aws-sdk-go-v2/service/s3files v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.42.0

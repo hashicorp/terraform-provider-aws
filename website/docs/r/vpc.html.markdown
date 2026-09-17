@@ -105,6 +105,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - ID of the AWS account that owns the VPC.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+### GuardDuty Cleanup Permissions
+
 ~> **Note:** The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during VPC deletion: `ec2:DescribeVpcEndpoints`, `ec2:DescribeSecurityGroups` (on all resources), and `ec2:DeleteVpcEndpoints`, `ec2:ModifyVpcEndpoint`, `ec2:DeleteSecurityGroup` (on resources tagged `GuardDutyManaged: true`).
 
 ## Import

@@ -1,12 +1,12 @@
 module github.com/hashicorp/terraform-provider-aws/ci/providerlint
 
-go 1.26.6
+go 1.26.8
 
 require (
 	github.com/bflad/tfproviderlint v0.31.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.73
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
-	golang.org/x/tools v0.49.0
+	golang.org/x/tools v0.50.0
 )
 
 require (
