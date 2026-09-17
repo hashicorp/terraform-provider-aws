@@ -161,45 +161,45 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
 The following arguments are required:
 
+* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent_runtime_artifact-block) below.
 * `agent_runtime_name` - (Required) Name of the agent runtime.
+* `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration-block) below.
 * `role_arn` - (Required) ARN of the IAM role that the agent runtime assumes to access AWS services.
-* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent_runtime_artifact) below.
-* `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration) below.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration-block) below.
 * `description` - (Optional) Description of the agent runtime.
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
-* `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration-block) below.
-* `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration) below.
-* `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
-* `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
-* `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
+* `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration-block) below.
+* `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration-block) below.
+* `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `agent_runtime_artifact`
+### `agent_runtime_artifact` Block
 
 The `agent_runtime_artifact` block supports the following:
 
-* `code_configuration` - (Optional) Code configuration block for the agent runtime artifact, including the source code location and execution settings. Exactly one of `code_configuration` or `container_configuration` must be specified. See [`code_configuration`](#code_configuration) below.
-* `container_configuration` - (Optional) Container configuration block for the agent artifact. Exactly one of `code_configuration` or `container_configuration` must be specified. See [`container_configuration`](#container_configuration) below.
+* `code_configuration` - (Optional) Code configuration block for the agent runtime artifact, including the source code location and execution settings. Exactly one of `code_configuration` or `container_configuration` must be specified. See [`code_configuration`](#code_configuration-block) below.
+* `container_configuration` - (Optional) Container configuration block for the agent artifact. Exactly one of `code_configuration` or `container_configuration` must be specified. See [`container_configuration`](#container_configuration-block) below.
 
-### `code_configuration`
+### `code_configuration` Block
 
 The `code_configuration` block supports the following:
 
-* `code` - (Required) Configuration block for the source code location and configuration details. See [`code`](#code) below.
+* `code` - (Required) Configuration block for the source code location and configuration details. See [`code`](#code-block) below.
 * `entry_point` - (Required) Array specifying the entry point for code execution, indicating the function or method to invoke when the code runs. The array must contain 1 or 2 elements. Examples: `["main.py"]`, `["opentelemetry-instrument", "main.py"]`.
 * `runtime` - (Required) Runtime environment used to execute the code. Valid values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`.
 
-### `code`
+### `code` Block
 
 The `code` block supports the following:
 
-* `s3` - (Required) Configuration block for the Amazon S3 object that contains the source code for the agent runtime. See [`s3`](#s3) below.
+* `s3` - (Required) Configuration block for the Amazon S3 object that contains the source code for the agent runtime. See [`s3`](#s3-block) below.
 
-### `s3`
+### `s3` Block
 
 The `s3` block supports the following:
 
@@ -207,7 +207,7 @@ The `s3` block supports the following:
 * `prefix` - (Required) Key of the object containing the ZIP file of the source code for the agent runtime in the Amazon S3 bucket.
 * `version_id` - (Optional) Version ID of the Amazon S3 object. If not specified, the latest version of the object is used.
 
-### `container_configuration`
+### `container_configuration` Block
 
 The `container_configuration` block supports the following:
 
@@ -223,12 +223,12 @@ The `authorizer_configuration` block supports the following:
 
 The `custom_jwt_authorizer` block supports the following:
 
-* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration-block) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim-block) below.
+* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint-block) below.
 * `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides-block) below.
 
@@ -256,11 +256,11 @@ Exactly one of the following must be specified:
 ### `managed_vpc_resource` Block
 
 * `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
-* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
-* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 * `routing_domain` - (Optional) Routing domain for the endpoint.
 * `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
 * `tags` - (Optional) Tags to assign to the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 
 ### `self_managed_lattice_resource` Block
 
@@ -288,67 +288,66 @@ The `claim_match_value` block supports the following:
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 
-### `filesystem_configuration`
+### `filesystem_configuration` Block
 
 Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
 
-* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage) below.
-* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
-* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point-block) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point-block) below.
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage-block) below.
 
-### `session_storage`
+### `session_storage` Block
 
 The `session_storage` block supports the following:
 
 * `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `s3_files_access_point`
+### `s3_files_access_point` Block
 
 The `s3_files_access_point` block supports the following:
 
 * `access_point_arn` - (Required) ARN of the Amazon S3 Files access point to mount into the agent runtime.
 * `mount_path` - (Required) Mount path for the S3 Files access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `efs_access_point`
+### `efs_access_point` Block
 
 The `efs_access_point` block supports the following:
 
 * `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
 * `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `lifecycle_configuration`
+### `lifecycle_configuration` Block
 
 The `lifecycle_configuration` block supports the following:
 
 * `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle runtime sessions.
 * `max_lifetime` - (Optional) Maximum lifetime for the instance in seconds.
 
-### `network_configuration`
+### `network_configuration` Block
 
 The `network_configuration` block supports the following:
 
 * `network_mode` - (Required) Network mode for the agent runtime. Valid values: `PUBLIC`, `VPC`.
-* `network_mode_config` - (Optional) Network mode configuration. See [`network_mode_config`](#network_mode_config) below.
+* `network_mode_config` - (Optional) Network mode configuration. See [`network_mode_config`](#network_mode_config-block) below.
 
-### `network_mode_config`
+### `network_mode_config` Block
 
 The `network_mode_config` block supports the following:
 
 * `security_groups` - (Required) Security groups associated with the VPC configuration.
 * `subnets` - (Required) Subnets associated with the VPC configuration.
-* `require_service_s3_endpoint` - (Read-only) Whether a service-managed Amazon S3 gateway endpoint is provisioned in the VPC for the agent runtime. This value is managed by the service and cannot be set: it is rejected on both create and update. Agent runtimes created on or after the May 5, 2026 rollout do not include a service-managed Amazon S3 gateway.
 
-### `protocol_configuration`
+### `protocol_configuration` Block
 
 The `protocol_configuration` block supports the following:
 
 * `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`, `A2A`, `AGUI`.
 
-### `request_header_configuration`
+### `request_header_configuration` Block
 
 The `request_header_configuration` block supports the following:
 
-* `request_header_allowlist` - (Optional) A list of HTTP request headers that are allowed to be passed through to the runtime.
+* `request_header_allowlist` - (Optional) List of HTTP request headers that are allowed to be passed through to the runtime.
 
 ## Attribute Reference
 
@@ -357,14 +356,20 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_runtime_arn` - ARN of the Agent Runtime.
 * `agent_runtime_id` - Unique identifier of the Agent Runtime.
 * `agent_runtime_version` - Version of the Agent Runtime.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `workload_identity_details` - Workload identity details for the agent runtime. See [`workload_identity_details`](#workload_identity_details) below.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `workload_identity_details` - Workload identity details for the agent runtime. See [`workload_identity_details`](#workload_identity_details-block) below.
 
-### `workload_identity_details`
+### `workload_identity_details` Block
 
 The `workload_identity_details` block contains the following:
 
 * `workload_identity_arn` - ARN of the workload identity.
+
+### `network_mode_config` Block
+
+The `network_mode_config` block exports the following:
+
+* `require_service_s3_endpoint` - Whether a service-managed Amazon S3 gateway endpoint is provisioned in the VPC for the agent runtime. This value is managed by the service. Agent runtimes created on or after the May 5, 2026 rollout do not include a service-managed Amazon S3 gateway.
 
 ## Timeouts
 

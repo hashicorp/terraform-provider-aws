@@ -1,5 +1,9 @@
 ## 6.66.0 (Unreleased)
 
+BUG FIXES:
+
+* list-resource/aws_rds_cluster_instance: Cache cluster using the DBClusterIdentifier as the key ([#50040](https://github.com/hashicorp/terraform-provider-aws/issues/50040))
+
 ## 6.65.0 (September 16, 2026)
 
 NOTES:

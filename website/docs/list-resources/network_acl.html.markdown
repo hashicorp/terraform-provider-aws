@@ -41,10 +41,7 @@ list "aws_network_acl" "example" {
 
 This list resource supports the following arguments:
 
-* `filter` - (Optional) One or more filters to apply to the search.
-  If multiple `filter` blocks are provided, they all must be true.
-  For a full reference of filter names, see [describe-network-acls in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-acls.html).
-  See [`filter` Block](#filter-block) below.
+* `filter` - (Optional) One or more filters to apply to the search. If multiple `filter` blocks are provided, they all must be true. For a full reference of filter names, see [describe-network-acls in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-acls.html). See [`filter` Block](#filter-block) below.
 * `network_acl_ids` - (Optional) List of Network ACL IDs to query.
 * `region` - (Optional) Region to query. Defaults to provider region.
 
@@ -52,6 +49,5 @@ This list resource supports the following arguments:
 
 The `filter` block supports the following arguments:
 
-* `name` - (Required) Name of the filter.
-  For a full reference of filter names, see [describe-network-acls in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-acls.html).
+* `name` - (Required) Name of the filter. For a full reference of filter names, see [describe-network-acls in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-acls.html).
 * `values` - (Required) One or more values to match.

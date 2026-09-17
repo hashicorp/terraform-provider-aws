@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.26.6
+go 1.26.8
 
 // Disable post-quantum X25519MLKEM768 key exchange mechanism
 // This causes errors with AWS Network Firewall
@@ -49,6 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockruntime v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.22.0
