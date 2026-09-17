@@ -30,7 +30,7 @@ resource "aws_msk_channel" "test" {
   logging_info {
     cloudwatch_logs {
       enabled   = true
-      log_group = "/aws/msk/data-channel"
+      log_group = aws_cloudwatch_log_group.test.name
     }
   }
 
@@ -101,6 +101,10 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket" "dlq" {
   bucket        = "${var.rName}-dlq"
   force_destroy = true
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/msk/data-channel"
 }
 
 data "aws_caller_identity" "current" {}
@@ -187,7 +191,7 @@ resource "aws_iam_role_policy" "test" {
           "logs:PutLogEvents"
         ]
         Resource = [
-          "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/msk/data-channel:*",
+          "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:${aws_cloudwatch_log_group.test.name}:*",
         ]
       },
     ]
