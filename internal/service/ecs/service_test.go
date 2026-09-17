@@ -1132,6 +1132,10 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 
 func TestAccECSService_BlueGreenDeployment_pauseLifecycleHook(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var service awstypes.Service
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
 	resourceName := "aws_ecs_service.test"
