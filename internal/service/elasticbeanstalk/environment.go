@@ -67,18 +67,39 @@ func settingSchema() *schema.Resource {
 const (
 	environmentTierWebServer = "WebServer"
 	environmentTierWorker    = "Worker"
+	// The cluster tier accepts both spellings on input; a response only ever
+	// carries "Cluster".
+	environmentTierCluster    = "Cluster"
+	environmentTierKubernetes = "Kubernetes"
 )
 
 func environmentTier_Values() []string {
 	return []string{
 		environmentTierWebServer,
 		environmentTierWorker,
+		environmentTierCluster,
+		environmentTierKubernetes,
 	}
+}
+
+// isSameEnvironmentTier reports whether two tier names refer to the same tier,
+// so "Kubernetes" in a configuration is not treated as drift against "Cluster".
+func isSameEnvironmentTier(a, b string) bool {
+	if strings.EqualFold(a, b) {
+		return true
+	}
+
+	isCluster := func(v string) bool {
+		return strings.EqualFold(v, environmentTierCluster) || strings.EqualFold(v, environmentTierKubernetes)
+	}
+
+	return isCluster(a) && isCluster(b)
 }
 
 const (
 	environmentTierTypeSQSHTTP  = "SQS/HTTP"
 	environmentTierTypeStandard = "Standard"
+	environmentTierTypeEKS      = "EKS"
 )
 
 var (
@@ -122,6 +143,10 @@ func resourceEnvironment() *schema.Resource {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"cluster_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				"cname": {
 					Type:     schema.TypeString,
@@ -275,6 +300,10 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		tierType = environmentTierTypeStandard
 	case environmentTierWorker:
 		tierType = environmentTierTypeSQSHTTP
+	case environmentTierKubernetes:
+		tierType = environmentTierTypeStandard
+	case environmentTierCluster:
+		tierType = environmentTierTypeEKS
 	}
 	input.Tier = &awstypes.EnvironmentTier{
 		Name: aws.String(tier),
@@ -351,8 +380,13 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.Set("application", env.ApplicationName)
 	d.Set(names.AttrARN, env.EnvironmentArn)
-	if err := d.Set("autoscaling_groups", flattenAutoScalingGroups(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
+	if resources != nil && resources.EnvironmentResources != nil {
+		if err := d.Set("autoscaling_groups", flattenAutoScalingGroups(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
+		}
+		if cluster := resources.EnvironmentResources.Cluster; cluster != nil {
+			d.Set("cluster_arn", cluster.ClusterArn)
+		}
 	}
 	cname := aws.ToString(env.CNAME)
 	d.Set("cname", cname)
@@ -369,24 +403,30 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set(names.AttrDescription, env.Description)
 	d.Set("endpoint_url", env.EndpointURL)
-	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
-	}
-	if err := d.Set("launch_configurations", flattenLaunchConfigurations(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting launch_configurations: %s", err)
-	}
-	if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
+	if resources != nil && resources.EnvironmentResources != nil {
+		if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
+		}
+		if err := d.Set("launch_configurations", flattenLaunchConfigurations(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting launch_configurations: %s", err)
+		}
+		if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
+		}
+		if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
+		}
+		if err := d.Set(names.AttrTriggers, flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting triggers: %s", err)
+		}
 	}
 	d.Set(names.AttrName, env.EnvironmentName)
 	d.Set("platform_arn", env.PlatformArn)
-	if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
-	}
 	d.Set("solution_stack_name", env.SolutionStackName)
-	d.Set("tier", env.Tier.Name)
-	if err := d.Set(names.AttrTriggers, flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting triggers: %s", err)
+	// tier is ForceNew, so accepting the response name verbatim would plan a
+	// replacement for a configuration that spells the tier the other way.
+	if tier := aws.ToString(env.Tier.Name); !isSameEnvironmentTier(tier, d.Get("tier").(string)) {
+		d.Set("tier", tier)
 	}
 	d.Set("version_label", env.VersionLabel)
 
@@ -566,13 +606,22 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 		pollInterval = 0
 	}
 
-	// Environment must be Ready before it can be deleted.
-	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-		if retry.NotFound(err) {
-			return diags
-		}
+	// Environment must be Ready before it can be deleted: TerminateEnvironment is
+	// rejected while an environment is Launching or Updating.
+	_, err = waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut)
 
-		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
+	if retry.NotFound(err) {
+		return diags
+	}
+
+	if retry.TimedOut(err) {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) to become Ready before termination: %s. "+
+			"Elastic Beanstalk only terminates an environment from the Ready state; the environment is still running. "+
+			"Wait for it to settle and re-run destroy, or raise wait_for_ready_timeout", d.Id(), err)
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) to become Ready before termination: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Elastic Beanstalk Environment: %s", d.Id())
@@ -736,7 +785,14 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id
 
 func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(awstypes.EnvironmentStatusTerminating),
+		// Target is empty: wait for the environment to disappear. A stale
+		// pre-terminate status must be Pending, or the wait aborts on it.
+		Pending: enum.Slice(
+			awstypes.EnvironmentStatusTerminating,
+			awstypes.EnvironmentStatusReady,
+			awstypes.EnvironmentStatusLaunching,
+			awstypes.EnvironmentStatusUpdating,
+		),
 		Target:       []string{},
 		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
