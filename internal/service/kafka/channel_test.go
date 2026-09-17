@@ -302,7 +302,7 @@ func TestAccKafkaChannel_encryptionConfiguration(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_type"), tfknownvalue.StringExact(awstypes.ChannelDestinationTypeS3)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_info"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrKMSKeyARN: knownvalue.NotNull(),
 					})})),
 				},
