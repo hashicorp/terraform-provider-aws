@@ -11,7 +11,7 @@ on:
   pull_request:
     paths:
       - "**/*.go"
-      - .github/workflows/smarterr_check.yml
+      - .github/workflows/smarterr.yml
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
