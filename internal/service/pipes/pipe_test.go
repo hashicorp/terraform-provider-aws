@@ -3589,10 +3589,6 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
-// TestExpandPipeSourceSelfManagedKafkaParameters_serverRootCACertificate covers a bug
-// (see GH-39066) where an unset "server_root_ca_certificate" (surfaced by the SDK as an
-// empty string) was expanded to a non-nil, empty ServerRootCaCertificate string pointer,
-// which then failed AWS API validation on update.
 func TestExpandPipeSourceSelfManagedKafkaParameters_serverRootCACertificate(t *testing.T) {
 	t.Parallel()
 
@@ -3605,7 +3601,7 @@ func TestExpandPipeSourceSelfManagedKafkaParameters_serverRootCACertificate(t *t
 			want:                    nil,
 		},
 		"non-empty": {
-			serverRootCACertificate: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf", //lintignore:AWSAT003,AWSAT005
+			serverRootCACertificate: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf",             //lintignore:AWSAT003,AWSAT005
 			want:                    aws.String("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf"), //lintignore:AWSAT003,AWSAT005
 		},
 	}
