@@ -309,7 +309,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `schema_version_id` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schema_id` has to be provided.
 * `schema_version_number` - (Required) Version number of the schema.
 
-##### `schema_id` Block
+#### `schema_id` Block
 
 * `registry_name` - (Optional) Name of the schema registry that contains the schema. Must be provided when `schema_name` is specified and conflicts with `schema_arn`.
 * `schema_arn` - (Optional) ARN of the schema. One of `schema_arn` or `schema_name` has to be provided.

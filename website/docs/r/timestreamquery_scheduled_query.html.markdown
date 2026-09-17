@@ -373,12 +373,12 @@ The following arguments are optional:
 * `mixed_measure_mapping` - (Optional) Configuration block for how to map measures to multi-measure records. [See below.](#mixed_measure_mapping)
 * `multi_measure_mappings` - (Optional) Configuration block for multi-measure mappings. Only one of `mixed_measure_mappings` or `multi_measure_mappings` can be provided. `multi_measure_mappings` can be used to ingest data as multi measures in the derived table. [See below.](#multi_measure_mappings)
 
-##### `dimension_mapping`
+#### `dimension_mapping`
 
 * `dimension_value_type` - (Required) Type for the dimension. Valid value: `VARCHAR`.
 * `name` - (Required) Column name from query result.
 
-##### `mixed_measure_mapping`
+#### `mixed_measure_mapping`
 
 * `measure_name` - (Optional) Refers to the value of measure_name in a result row. This field is required if `measure_name_column` is provided.
 * `multi_measure_attribute_mapping` - (Optional) Configuration block for attribute mappings for `MULTI` value measures. Required when `measure_value_type` is `MULTI`. [See below.](#multi_measure_attribute_mapping)
@@ -386,13 +386,13 @@ The following arguments are optional:
 * `source_column` - (Optional) Source column from which measure-value is to be read for result materialization.
 * `target_measure_name` - (Optional) Target measure name to be used. If not provided, the target measure name by default is `measure_name`, if provided, or `source_column` otherwise.
 
-##### `multi_measure_attribute_mapping`
+#### `multi_measure_attribute_mapping`
 
 * `measure_value_type` - (Required) Type of the attribute to be read from the source column. Valid values are `BIGINT`, `BOOLEAN`, `DOUBLE`, `VARCHAR`, `TIMESTAMP`.
 * `source_column` - (Required) Source column from where the attribute value is to be read.
 * `target_multi_measure_attribute_name` - (Optional) Custom name to be used for attribute name in derived table. If not provided, `source_column` is used.
 
-##### `multi_measure_mappings`
+#### `multi_measure_mappings`
 
 * `multi_measure_attribute_mapping` - (Required) Attribute mappings to be used for mapping query results to ingest data for multi-measure attributes. [See above.](#multi_measure_attribute_mapping)
 * `target_multi_measure_name` - (Optional) Name of the target multi-measure name in the derived table. This input is required when `measure_name_column` is not provided. If `measure_name_column` is provided, then the value from that column will be used as the multi-measure name.

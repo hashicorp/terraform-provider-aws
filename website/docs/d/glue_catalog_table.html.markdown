@@ -90,7 +90,7 @@ This data source exports the following attributes in addition to the arguments a
 * `schema_version_id` - Unique ID assigned to a version of the schema.
 * `schema_version_number` - Version number of the schema.
 
-##### schema_id
+#### schema_id
 
 * `registry_name` - Name of the schema registry that contains the schema.
 * `schema_arn` - ARN of the schema.
