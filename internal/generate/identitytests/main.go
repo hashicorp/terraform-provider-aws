@@ -165,7 +165,7 @@ func main() {
 				configTmplFile = testCaseConfigTmplFile
 				configTmplPath = testCaseConfigTmplPath
 			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", testCaseConfigTmplPath, err)
+				g.Fatalf("accessing config template %q: %s", testCaseConfigTmplPath, err)
 			}
 
 			if configTmplPath == "" {
@@ -175,7 +175,7 @@ func main() {
 
 			b, err := os.ReadFile(configTmplPath)
 			if err != nil {
-				g.Fatalf("reading config template %q: %w", configTmplPath, err)
+				g.Fatalf("reading config template %q: %s", configTmplPath, err)
 			}
 			configTmpl := string(b)
 			resource.GenerateConfig = true
@@ -779,7 +779,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	testName := test
 	dirPath = path.Join(dirPath, testName)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		g.Fatalf("creating test directory %q: %w", dirPath, err)
+		g.Fatalf("creating test directory %q: %s", dirPath, err)
 	}
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
