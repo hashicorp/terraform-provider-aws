@@ -210,10 +210,11 @@ func testAccUserConfig_basic(rName, domainName, samAccountName, emailAddress str
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = %[1]q
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-  edition  = "Standard"
+  name                         = %[1]q
+  password                     = "SuperSecretPassw0rd"
+  type                         = "MicrosoftAD"
+  edition                      = "Standard"
+  enable_directory_data_access = true
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -237,10 +238,11 @@ func testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAd
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = %[1]q
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-  edition  = "Standard"
+  name                         = %[1]q
+  password                     = "SuperSecretPassw0rd"
+  type                         = "MicrosoftAD"
+  edition                      = "Standard"
+  enable_directory_data_access = true
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
