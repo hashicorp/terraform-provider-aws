@@ -11,6 +11,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ecs_service: Add `target_type` and `timeout_configuration` attributes to the `lifecycle_hook` block. ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add Resource Identity support ([#48629](https://github.com/hashicorp/terraform-provider-aws/issues/48629))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add `api_key_secret_source` argument and `api_key_secret_config` configuration block to support customer-managed AWS Secrets Manager secrets ([#48629](https://github.com/hashicorp/terraform-provider-aws/issues/48629))
 * resource/aws_ecs_service: Add `target_type` and `timeout_configuration` arguments to the `lifecycle_hook` configuration block to support ECS `PAUSE` deployment hooks. `hook_target_arn` and `role_arn` are now Optional (still required for `AWS_LAMBDA` hooks). ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
 * resource/aws_efs_access_point: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
 * resource/aws_efs_backup_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
