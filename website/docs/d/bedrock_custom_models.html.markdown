@@ -28,5 +28,5 @@ This data source exports the following attributes in addition to the arguments a
 
 * `model_summaries` - Model summaries.
     * `creation_time` - Creation time of the model.
-    * `model_arn` - The ARN of the custom model.
-    * `model_name` - The name of the custom model.
+    * `model_arn` - ARN of the custom model.
+    * `model_name` - Name of the custom model.

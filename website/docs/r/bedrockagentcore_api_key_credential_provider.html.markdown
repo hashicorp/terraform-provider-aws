@@ -41,26 +41,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-**Standard API Key (choose one approach):**
-
 * `api_key` - (Optional) API key value. Conflicts with `api_key_wo`. This value will be visible in Terraform plan outputs and logs.
-
-**Write-Only API Key (choose one approach):**
-
 * `api_key_wo` - (Optional, Write-Only) Write-only API key value. Conflicts with `api_key`. If set, requires `api_key_wo_version` to be set.
 * `api_key_wo_version` - (Optional) Required when `api_key_wo` is set. Changing this value triggers an update to `api_key_wo`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `credential_provider_arn` - ARN of the API Key credential provider.
 * `api_key_secret_arn` - ARN of the AWS Secrets Manager secret containing the API key.
     * `secret_arn` - ARN of the secret in AWS Secrets Manager.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `credential_provider_arn` - ARN of the API Key credential provider.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
