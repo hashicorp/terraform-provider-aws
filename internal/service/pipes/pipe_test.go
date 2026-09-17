@@ -24,6 +24,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestExpandUpdatePipeSourceSelfManagedKafkaParameters_serverRootCACertificate(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		serverRootCACertificate string
+		wantNil                 bool
+	}{
+		"empty": {
+			serverRootCACertificate: "",
+			wantNil:                 true,
+		},
+		"non-empty": {
+			serverRootCACertificate: "arn:aws:secretsmanager:us-west-2:123456789012:secret:test-abc123",
+			wantNil:                 false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfpipes.ExpandUpdatePipeSourceSelfManagedKafkaParameters(map[string]any{
+				"server_root_ca_certificate": tc.serverRootCACertificate,
+			})
+
+			if got.ServerRootCaCertificate == nil != tc.wantNil {
+				t.Errorf("ServerRootCaCertificate = %v, wantNil %t", got.ServerRootCaCertificate, tc.wantNil)
+			}
+
+			if !tc.wantNil && *got.ServerRootCaCertificate != tc.serverRootCACertificate {
+				t.Errorf("ServerRootCaCertificate = %q, want %q", *got.ServerRootCaCertificate, tc.serverRootCACertificate)
+			}
+		})
+	}
+}
+
 func TestAccPipesPipe_basicSQS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
