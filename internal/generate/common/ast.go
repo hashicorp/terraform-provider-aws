@@ -130,8 +130,8 @@ func ScanDirectory(path string) iter.Seq2[*PackageFile, error] {
 		fileSet := token.NewFileSet()
 
 		for _, entry := range entries {
-			// Skip directories, test files, and service_package_gen.go.
-			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") || entry.Name() == "service_package_gen.go" {
+			// Skip directories, test files, and generated files without factory annotations.
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") || entry.Name() == "service_package_gen.go" || entry.Name() == "service_endpoint_resolver_gen.go" {
 				continue
 			}
 
