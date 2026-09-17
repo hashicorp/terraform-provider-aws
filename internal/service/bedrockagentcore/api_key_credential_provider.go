@@ -43,11 +43,13 @@ var validOutboundAuthProviderResourceName validator.String = stringvalidator.Reg
 )
 
 // @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="API Key Credential Provider")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="credential_provider_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput")
 // @Testing(importIgnore="api_key")
 // @Testing(importStateIdAttribute="name")
 // @Testing(preCheck="testAccPreCheckAPIKeyCredentialProviders")
+// @Testing(preIdentityVersion="v6.65.0")
 func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiKeyCredentialProviderResource{}
 	return r, nil
@@ -55,6 +57,7 @@ func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWi
 
 type apiKeyCredentialProviderResource struct {
 	framework.ResourceWithModel[apiKeyCredentialProviderResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -264,10 +267,6 @@ func (r *apiKeyCredentialProviderResource) Delete(ctx context.Context, request r
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
-}
-
-func (r *apiKeyCredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func (r *apiKeyCredentialProviderResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
