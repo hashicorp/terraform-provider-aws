@@ -12,6 +12,12 @@ ENHANCEMENTS:
 
 * data-source/aws_ecs_service: Add `target_type` and `timeout_configuration` attributes to the `lifecycle_hook` block. ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
 * resource/aws_ecs_service: Add `target_type` and `timeout_configuration` arguments to the `lifecycle_hook` configuration block to support ECS `PAUSE` deployment hooks. `hook_target_arn` and `role_arn` are now Optional (still required for `AWS_LAMBDA` hooks). ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
+* resource/aws_efs_access_point: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_backup_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_file_system: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_file_system_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_mount_target: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_replication_configuration: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
 
 BUG FIXES:
 
