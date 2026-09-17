@@ -69,7 +69,6 @@ type Destination interface {
 func (g *Generator) NewGoFileDestination(filename string) Destination {
 	return &fileDestination{
 		baseDestination: baseDestination{
-			formatter:      format.Source,
 			writeFormatter: goodgo,
 		},
 		filename: filename,
