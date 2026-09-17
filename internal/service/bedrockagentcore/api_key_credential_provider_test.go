@@ -10,6 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,6 +24,10 @@ import (
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkAPIKeyCredentialProviderARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/`+name))
+}
 
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -40,7 +46,11 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_key":       config.StringVariable("secret-value-1"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -50,15 +60,25 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key"), knownvalue.StringExact("secret-value-1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"secret_arn": knownvalue.NotNull(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeManaged)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo_version"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), checkAPIKeyCredentialProviderARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_key":       config.StringVariable("secret-value-1"),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -67,7 +87,11 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{"api_key"},
 			},
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-2"),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_key":       config.StringVariable("secret-value-2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -75,6 +99,9 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key"), knownvalue.StringExact("secret-value-2")),
 				},
 			},
 		},
@@ -98,7 +125,12 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "write-only-api-key-123", 1),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_wo/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"api_key_wo":         config.StringVariable("write-only-api-key-123"),
+					"api_key_wo_version": config.IntegerVariable(1),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -108,15 +140,23 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"secret_arn": knownvalue.NotNull(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeManaged)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo_version"), knownvalue.Int64Exact(1)),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_wo/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"api_key_wo":         config.StringVariable("write-only-api-key-123"),
+					"api_key_wo_version": config.IntegerVariable(1),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -125,7 +165,12 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{"api_key_wo_version"},
 			},
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "updated-write-only-api-key-456", 2),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_wo/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"api_key_wo":         config.StringVariable("write-only-api-key-456"),
+					"api_key_wo_version": config.IntegerVariable(2),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -133,6 +178,16 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"secret_arn": knownvalue.NotNull(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeManaged)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo_version"), knownvalue.Int64Exact(2)),
 				},
 			},
 		},
@@ -156,7 +211,10 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAPIKeyCredentialProvider, resourceName),
@@ -192,7 +250,10 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T
 		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_secret_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -202,16 +263,24 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("EXTERNAL")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_config"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"secret_id": knownvalue.NotNull(),
-							"json_key":  knownvalue.StringExact("apiKey"),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"secret_arn": knownvalue.NotNull(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"json_key":  knownvalue.StringExact("apiKey"),
+						"secret_id": knownvalue.NotNull(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeExternal)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_wo_version"), knownvalue.Null()),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_secret_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -224,7 +293,10 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T
 				// Re-apply the same config to ensure the Optional+Computed
 				// api_key_secret_source and input-only api_key_secret_config block
 				// do not produce a perpetual diff.
-				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_secret_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -252,17 +324,29 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_switchSecretSource(t *testi
 		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_key":       config.StringVariable("secret-value-1"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("MANAGED")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeManaged)),
 				},
 			},
 			{
 				// The API cannot change the secret source between MANAGED and EXTERNAL in place.
-				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key_secret_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -272,13 +356,17 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_switchSecretSource(t *testi
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("EXTERNAL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeExternal)),
 				},
 			},
 			{
 				// Switching back removes api_key_secret_source from configuration; the
 				// effective source must be derived from api_key and still force replacement.
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-2"),
+				ConfigDirectory: config.StaticDirectory("testdata/APIKeyCredentialProvider/api_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_key":       config.StringVariable("secret-value-2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
@@ -288,32 +376,8 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_switchSecretSource(t *testi
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("MANAGED")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), tfknownvalue.StringExact(awstypes.SecretSourceTypeManaged)),
 				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreAPIKeyCredentialProvider_secretSourceValidation(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAPIKeyCredentialProviderConfig_apiKeyWithExternalSource(rName),
-				ExpectError: regexache.MustCompile(`Attribute\s+api_key_secret_config\s+must\s+be\s+configured\s+when\s+api_key_secret_source\s+equals\s+"EXTERNAL"`),
-			},
-			{
-				Config:      testAccAPIKeyCredentialProviderConfig_secretConfigWithManagedSource(rName),
-				ExpectError: regexache.MustCompile(`One\s+\(and\s+only\s+one\)\s+of\s+\[api_key,api_key_wo\]\s+must\s+be\s+configured\s+when\s+api_key_secret_source\s+equals\s+"MANAGED".\s+No\s+attribute\s+configured.`),
 			},
 		},
 	})
@@ -377,70 +441,4 @@ func testAccPreCheckAPIKeyCredentialProviders(ctx context.Context, t *testing.T)
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccAPIKeyCredentialProviderConfig_basic(rName, apiKey string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name    = %[1]q
-  api_key = %[2]q
-}
-`, rName, apiKey)
-}
-
-func testAccAPIKeyCredentialProviderConfig_writeOnly(rName, apiKeyWo string, version int) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name               = %[1]q
-  api_key_wo         = %[2]q
-  api_key_wo_version = %[3]d
-}
-`, rName, apiKeyWo, version)
-}
-
-func testAccAPIKeyCredentialProviderConfig_externalSecret(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ apiKey = "external-secret-value" })
-}
-
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name                  = %[1]q
-  api_key_secret_source = "EXTERNAL"
-
-  api_key_secret_config {
-    secret_id = aws_secretsmanager_secret_version.test.secret_id
-    json_key  = "apiKey"
-  }
-}
-`, rName)
-}
-
-func testAccAPIKeyCredentialProviderConfig_apiKeyWithExternalSource(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name                  = %[1]q
-  api_key               = "some-api-key"
-  api_key_secret_source = "EXTERNAL"
-}
-`, rName)
-}
-
-func testAccAPIKeyCredentialProviderConfig_secretConfigWithManagedSource(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
-  name                  = %[1]q
-  api_key_secret_source = "MANAGED"
-
-  api_key_secret_config {
-    secret_id = "dummy-secret-id"
-    json_key  = "apiKey"
-  }
-}
-`, rName)
 }
