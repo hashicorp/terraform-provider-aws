@@ -720,7 +720,7 @@ func resourceService() *schema.Resource {
 										"target_type": {
 											Type:             schema.TypeString,
 											Optional:         true,
-											Computed:         true,
+											Default:          string(awstypes.DeploymentLifecycleHookTargetTypeAwsLambda),
 											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookTargetType](),
 										},
 										"timeout_configuration": {
