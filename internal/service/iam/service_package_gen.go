@@ -548,6 +548,17 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
+			Factory:  newOpenIDConnectProviderResourceAsListResource,
+			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "OIDCProvider",
+			}),
+			Identity: inttypes.GlobalARNIdentity(),
+		},
+		{
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
