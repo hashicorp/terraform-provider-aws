@@ -436,9 +436,6 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						// data_freshness_in_seconds is the only destination field that can
