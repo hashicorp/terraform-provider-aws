@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_msk_channel" "test" {
   channel_name = var.rName
   cluster_arn  = aws_msk_cluster.test.arn
