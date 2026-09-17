@@ -5,46 +5,21 @@
 
 package kinesis
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/kinesis/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"time"
+	"fmt"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -65,50 +40,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_kinesis_channel", name="Channel")
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-// 
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one of the following sets of annotations as appropriate:
-//
-// * ARN Identity
-// @ArnIdentity
-// or
-// @ArnIdentity("arn_attribute")
-//
-// * Singleton Identity
-// @SingletonIdentity
-//
-// * Parameterized Identity
-// @IdentityAttribute("id_attribute")
-// // @IdentityAttribute("another_id_attribute")
-//
-// TIP: ==== GENERATED ACCEPTANCE TESTS ====
-// Resource Identity and tagging make use of automatically generated acceptance tests.
-// For more information about automatically generated acceptance tests, see
-// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
-//
-// Some common annotations are included below:
+// @IdentityAttribute("channel")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kinesis;kinesis.DescribeChannelResponse")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="...;...")
@@ -116,11 +50,6 @@ import (
 func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelResource{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -139,77 +68,48 @@ type channelResource struct {
 }
 
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
-// Optional: true,
-//
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
-// Computed: true,
-//
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+
+			names.AttrCreationTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "ChannelId"
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
+
+			"channel_name": schema.StringAttribute{
+				Description: "The name of the channel. The name is unique within your Amazon Web Services account and Amazon Web Services Region.",
+				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 128),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`[a-zA-Z0-9_.-]+`),
+						fmt.Sprintf(
+							"value must contain only letters, numbers, hyphens and underscores.",
+						),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"type": schema.StringAttribute{
+
+			"service_execution_role_arn": schema.StringAttribute{
+				Description: "The Amazon Resource Name (ARN) of the IAM role that Amazon Kinesis Data Streams assumes to write records to the destination.",
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 512),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`arn:aws[-a-z0-9]*:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-_/]+`),
+						fmt.Sprint(
+							"value must be an IAM role arn.",
+						),
+					),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
