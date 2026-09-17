@@ -8,4 +8,6 @@ var (
 	ResourcePipe = resourcePipe
 
 	FindPipeByName = findPipeByName
+
+	ExpandUpdatePipeSourceSelfManagedKafkaParameters = expandUpdatePipeSourceSelfManagedKafkaParameters
 )
