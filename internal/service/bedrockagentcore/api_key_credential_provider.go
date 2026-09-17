@@ -78,24 +78,6 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 					stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("api_key_wo")),
 				},
 			},
-			"api_key_wo": schema.StringAttribute{
-				Optional:  true,
-				WriteOnly: true,
-				Sensitive: true,
-				Validators: []validator.String{
-					stringvalidator.AlsoRequires(
-						path.MatchRoot("api_key_wo_version"),
-					),
-				},
-			},
-			"api_key_wo_version": schema.Int64Attribute{
-				Optional: true,
-				Validators: []validator.Int64{
-					int64validator.AlsoRequires(
-						path.MatchRoot("api_key_wo"),
-					),
-				},
-			},
 			"api_key_secret_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"api_key_secret_source": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
@@ -114,6 +96,24 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"api_key_wo": schema.StringAttribute{
+				Optional:  true,
+				WriteOnly: true,
+				Sensitive: true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(
+						path.MatchRoot("api_key_wo_version"),
+					),
+				},
+			},
+			"api_key_wo_version": schema.Int64Attribute{
+				Optional: true,
+				Validators: []validator.Int64{
+					int64validator.AlsoRequires(
+						path.MatchRoot("api_key_wo"),
+					),
 				},
 			},
 			"credential_provider_arn": framework.ARNAttributeComputedOnly(),
