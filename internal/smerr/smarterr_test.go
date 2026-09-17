@@ -97,7 +97,7 @@ func (listEnrich) List(ctx context.Context, incoming fwdiag.Diagnostics) iter.Se
 	return smerr.ListStreamEnrich(ctx, incoming)
 }
 
-func TestNewListResultError_InjectsContextAndHappening(t *testing.T) {
+func TestNewListResultError_InjectsContextAndHappening(t *testing.T) { //nolint:paralleltest // smarterr.SetFS sets process-global state; these tests must not run in parallel
 	setListTestFS(t)
 
 	// List returns the iterator; the framework consumes it after List has returned.
@@ -113,7 +113,7 @@ func TestNewListResultError_InjectsContextAndHappening(t *testing.T) {
 	}
 }
 
-func TestListStreamError_InjectsContextAndHappening(t *testing.T) {
+func TestListStreamError_InjectsContextAndHappening(t *testing.T) { //nolint:paralleltest // smarterr.SetFS sets process-global state; these tests must not run in parallel
 	setListTestFS(t)
 
 	seq := listBody{}.List(resourceCtx(), errors.New("kaboom"))
@@ -128,7 +128,7 @@ func TestListStreamError_InjectsContextAndHappening(t *testing.T) {
 	}
 }
 
-func TestListStreamEnrich_InjectsContextAndHappening(t *testing.T) {
+func TestListStreamEnrich_InjectsContextAndHappening(t *testing.T) { //nolint:paralleltest // smarterr.SetFS sets process-global state; these tests must not run in parallel
 	setListTestFS(t)
 
 	var incoming fwdiag.Diagnostics
