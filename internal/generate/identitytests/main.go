@@ -496,7 +496,11 @@ type visitor struct {
 
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
-	ast.Walk(v, file)
+	for funcDecl := range common.TopLevelFuncDecls(file) {
+		if funcDecl.Recv == nil && funcDecl.Doc != nil {
+			v.processFuncDecl(funcDecl)
+		}
+	}
 }
 
 // processFuncDecl processes a single Go function.
@@ -763,16 +767,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	v.functionName = ""
-}
-
-// Visit is called for each node visited by ast.Walk.
-func (v *visitor) Visit(node ast.Node) ast.Visitor {
-	// Look at functions (not methods) with comments.
-	if funcDecl, ok := node.(*ast.FuncDecl); ok && funcDecl.Recv == nil && funcDecl.Doc != nil {
-		v.processFuncDecl(funcDecl)
-	}
-
-	return v
 }
 
 func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *template.Template, config commonConfig) {
