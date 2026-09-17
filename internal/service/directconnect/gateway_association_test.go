@@ -223,6 +223,10 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 
 func TestAccDirectConnectGatewayAssociation_recreateTransitGateway(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_dx_gateway_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
