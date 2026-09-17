@@ -137,7 +137,7 @@ func ScanDirectory(path string) iter.Seq2[*PackageFile, error] {
 
 			name := path + "/" + entry.Name()
 
-			file, err := parser.ParseFile(fileSet, name, nil, parser.ParseComments)
+			file, err := parser.ParseFile(fileSet, name, nil, parser.ParseComments|parser.SkipObjectResolution)
 			if err != nil {
 				yield(nil, err)
 				return
