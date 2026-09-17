@@ -10,6 +10,7 @@ var (
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
 	ResourceAvailabilityZoneGroup                         = resourceAvailabilityZoneGroup
+	ResourceCapacityManagerSettings                       = newCapacityManagerSettingsResource
 	ResourceCapacityReservation                           = resourceCapacityReservation
 	ResourceCarrierGateway                                = resourceCarrierGateway
 	ResourceClientVPNAuthorizationRule                    = resourceClientVPNAuthorizationRule
@@ -155,6 +156,7 @@ var (
 	ExpandIPPerms                                               = expandIPPerms
 	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
+	FindCapacityManagerAttributes                               = findCapacityManagerAttributes
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
 	FindClientVPNAuthorizationRuleByThreePartKey                = findClientVPNAuthorizationRuleByThreePartKey
