@@ -1057,8 +1057,9 @@ func resourceLaunchTemplate() *schema.Resource {
 					ConflictsWith: []string{"default_version"},
 				},
 				"user_data": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validLaunchTemplateUserData,
 				},
 				names.AttrVPCSecurityGroupIDs: {
 					Type:          schema.TypeSet,
