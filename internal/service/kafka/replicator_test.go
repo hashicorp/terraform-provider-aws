@@ -1157,6 +1157,11 @@ func randKafkaARN(prefix string) string { // nosemgrep:ci.kafka-in-func-name
 	return fmt.Sprintf("arn:aws:secretsmanager:us-east-1:123456789012:secret:%s-%d", prefix, rand.IntN(1_000_000)) //lintignore:AWSAT003,AWSAT005
 }
 
+// randKafkaClusterARN returns a pseudo-random MSK cluster ARN. // nosemgrep:ci.kafka-in-func-name
+func randKafkaClusterARN(prefix string) string { // nosemgrep:ci.kafka-in-func-name
+	return fmt.Sprintf("arn:aws:kafka:us-east-1:123456789012:cluster/%s/%d-1", prefix, rand.IntN(1_000_000)) //lintignore:AWSAT003,AWSAT005
+}
+
 // TestReplicatorApacheKafkaClusterRoundTrip asserts that expanding an apache_kafka_cluster
 // config and flattening it back yields the original map, over randomized inputs.
 func TestReplicatorApacheKafkaClusterRoundTrip(t *testing.T) { // nosemgrep:ci.kafka-in-func-name
@@ -1329,6 +1334,216 @@ func TestReplicatorKafkaClusterIdentifier(t *testing.T) { // nosemgrep:ci.kafka-
 	}
 }
 
+// TestReplicatorUpdateReplicationInfoInput asserts that an UpdateReplicationInfo request
+// identifies each side of the replication by the identifier its cluster kind uses -- an Amazon
+// MSK cluster by ARN, a self-managed Apache Kafka cluster by ID -- and leaves the unused field
+// of each pair unset, over randomized combinations of the two kinds. Sending an empty string
+// instead of omitting the unused field leaves the API unable to resolve the cluster.
+func TestReplicatorUpdateReplicationInfoInput(t *testing.T) {
+	t.Parallel()
+
+	const (
+		currentVersion = "1"
+		replicatorARN  = "arn:aws:kafka:us-east-1:123456789012:replicator/test/00000000-0000-0000-0000-000000000000-1" //lintignore:AWSAT003,AWSAT005
+	)
+
+	for i := range propertyTestIterations {
+		var (
+			tfMap         = map[string]any{"target_compression_type": "NONE"}
+			wantSourceARN *string
+			wantSourceID  *string
+			wantTargetARN *string
+			wantTargetID  *string
+		)
+
+		// kind: 0 = Amazon MSK, referenced by ARN; 1 = Apache Kafka, referenced by ID.
+		if rand.IntN(2) == 0 {
+			v := randKafkaClusterARN(names.AttrSource)
+			tfMap["source_kafka_cluster_arn"], wantSourceARN = v, aws.String(v)
+		} else {
+			v := randKafkaString("on-prem-source")
+			tfMap["source_kafka_cluster_id"], wantSourceID = v, aws.String(v)
+		}
+
+		if rand.IntN(2) == 0 {
+			v := randKafkaClusterARN(names.AttrTarget)
+			tfMap["target_kafka_cluster_arn"], wantTargetARN = v, aws.String(v)
+		} else {
+			v := randKafkaString("on-prem-target")
+			tfMap["target_kafka_cluster_id"], wantTargetID = v, aws.String(v)
+		}
+
+		d := schema.TestResourceDataRaw(t, tfkafka.ResourceReplicator().SchemaFunc(), map[string]any{
+			"replication_info_list": []any{tfMap},
+		})
+		d.SetId(replicatorARN)
+		if err := d.Set("current_version", currentVersion); err != nil {
+			t.Fatalf("iteration %d: setting current_version: %s", i, err)
+		}
+
+		input := tfkafka.NewUpdateReplicationInfoInput(d)
+
+		if got := aws.ToString(input.ReplicatorArn); got != replicatorARN {
+			t.Fatalf("iteration %d: ReplicatorArn: got %q, want %q", i, got, replicatorARN)
+		}
+		if got := aws.ToString(input.CurrentVersion); got != currentVersion {
+			t.Fatalf("iteration %d: CurrentVersion: got %q, want %q", i, got, currentVersion)
+		}
+
+		for _, identifier := range []struct {
+			name string
+			got  *string
+			want *string
+		}{
+			{"SourceKafkaClusterArn", input.SourceKafkaClusterArn, wantSourceARN},
+			{"SourceKafkaClusterId", input.SourceKafkaClusterId, wantSourceID},
+			{"TargetKafkaClusterArn", input.TargetKafkaClusterArn, wantTargetARN},
+			{"TargetKafkaClusterId", input.TargetKafkaClusterId, wantTargetID},
+		} {
+			switch {
+			case identifier.want == nil && identifier.got != nil:
+				t.Fatalf("iteration %d: %s: got %q, want unset\nconfig: %#v", i, identifier.name, aws.ToString(identifier.got), tfMap)
+			case identifier.want != nil && identifier.got == nil:
+				t.Fatalf("iteration %d: %s: got unset, want %q\nconfig: %#v", i, identifier.name, aws.ToString(identifier.want), tfMap)
+			case aws.ToString(identifier.got) != aws.ToString(identifier.want):
+				t.Fatalf("iteration %d: %s: got %q, want %q\nconfig: %#v", i, identifier.name, aws.ToString(identifier.got), aws.ToString(identifier.want), tfMap)
+			}
+		}
+	}
+}
+
+// TestReplicatorFlattenReplicationInfoDescription documents which replication_info_list
+// identifier attribute Read produces for each side of a replication: an Amazon MSK cluster
+// yields the ARN attribute, a self-managed Apache Kafka cluster yields the ID attribute, and
+// neither is produced when DescribeReplicator returns no cluster details for that side.
+func TestReplicatorFlattenReplicationInfoDescription(t *testing.T) {
+	t.Parallel()
+
+	const (
+		sourceARN = "arn:aws:kafka:us-east-1:123456789012:cluster/source/00000000-0000-0000-0000-000000000000-1" //lintignore:AWSAT003,AWSAT005
+		targetARN = "arn:aws:kafka:us-east-1:123456789012:cluster/target/00000000-0000-0000-0000-000000000000-2" //lintignore:AWSAT003,AWSAT005
+		sourceID  = "on-prem-source"
+		targetID  = "on-prem-target"
+	)
+
+	amazonCluster := func(arn string) *awstypes.KafkaClusterDescription {
+		return &awstypes.KafkaClusterDescription{
+			AmazonMskCluster: &awstypes.AmazonMskCluster{MskClusterArn: aws.String(arn)},
+		}
+	}
+	apacheCluster := func(id string) *awstypes.KafkaClusterDescription {
+		return &awstypes.KafkaClusterDescription{
+			ApacheKafkaCluster: &awstypes.ApacheKafkaCluster{
+				ApacheKafkaClusterId:  aws.String(id),
+				BootstrapBrokerString: aws.String("b-1:9092,b-2:9092"),
+			},
+		}
+	}
+	// clusterWithoutDetails is a description that carries neither cluster kind, which is what
+	// DescribeReplicator returns for a self-managed cluster if it omits ApacheKafkaCluster.
+	clusterWithoutDetails := func() *awstypes.KafkaClusterDescription {
+		return &awstypes.KafkaClusterDescription{KafkaClusterAlias: aws.String(names.AttrAlias)}
+	}
+
+	// want lists the identifier attributes expected in the flattened map. Any identifier
+	// attribute absent from want must be absent from the map.
+	testCases := map[string]struct {
+		source *awstypes.KafkaClusterDescription
+		target *awstypes.KafkaClusterDescription
+		want   map[string]string
+	}{
+		"Amazon MSK source and target": {
+			source: amazonCluster(sourceARN),
+			target: amazonCluster(targetARN),
+			want: map[string]string{
+				"source_kafka_cluster_arn": sourceARN,
+				"target_kafka_cluster_arn": targetARN,
+			},
+		},
+		"Apache Kafka source, Amazon MSK target": {
+			source: apacheCluster(sourceID),
+			target: amazonCluster(targetARN),
+			want: map[string]string{
+				"source_kafka_cluster_id":  sourceID,
+				"target_kafka_cluster_arn": targetARN,
+			},
+		},
+		"Amazon MSK source, Apache Kafka target": {
+			source: amazonCluster(sourceARN),
+			target: apacheCluster(targetID),
+			want: map[string]string{
+				"source_kafka_cluster_arn": sourceARN,
+				"target_kafka_cluster_id":  targetID,
+			},
+		},
+		"Apache Kafka source and target": {
+			source: apacheCluster(sourceID),
+			target: apacheCluster(targetID),
+			want: map[string]string{
+				"source_kafka_cluster_id": sourceID,
+				"target_kafka_cluster_id": targetID,
+			},
+		},
+		"source details omitted": {
+			source: clusterWithoutDetails(),
+			target: amazonCluster(targetARN),
+			want: map[string]string{
+				"target_kafka_cluster_arn": targetARN,
+			},
+		},
+		"neither side resolved to a cluster": {
+			source: nil,
+			target: nil,
+			want:   map[string]string{},
+		},
+	}
+
+	identifierAttributes := []string{
+		"source_kafka_cluster_arn",
+		"source_kafka_cluster_id",
+		"target_kafka_cluster_arn",
+		"target_kafka_cluster_id",
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			apiObject := awstypes.ReplicationInfoDescription{
+				SourceKafkaClusterAlias: aws.String("source-alias"),
+				TargetKafkaClusterAlias: aws.String("target-alias"),
+			}
+
+			tfMap := tfkafka.FlattenReplicationInfoDescription(apiObject, testCase.source, testCase.target)
+
+			for _, attribute := range identifierAttributes {
+				got, set := tfMap[attribute]
+				want, expected := testCase.want[attribute]
+
+				switch {
+				case expected && !set:
+					t.Errorf("%s: absent, want %q", attribute, want)
+				case !expected && set:
+					t.Errorf("%s: got %q, want absent", attribute, got)
+				case expected && got != want:
+					t.Errorf("%s: got %q, want %q", attribute, got, want)
+				}
+			}
+
+			// The computed aliases are what Read matches against output.KafkaClusters to pick
+			// the source and target descriptions, so they must always survive the flatten.
+			for attribute, want := range map[string]string{
+				"source_kafka_cluster_alias": "source-alias",
+				"target_kafka_cluster_alias": "target-alias",
+			} {
+				if got := tfMap[attribute]; got != want {
+					t.Errorf("%s: got %v, want %q", attribute, got, want)
+				}
+			}
+		})
+	}
+}
+
 // TestExpandKafkaCluster_amazonMSKCluster verifies that a kafka_cluster with an
 // amazon_msk_cluster block expands to a KafkaCluster with AmazonMskCluster set and no
 // ApacheKafkaCluster.
@@ -1447,7 +1662,7 @@ func TestAccKafkaReplicator_selfManagedSASLSCRAM(t *testing.T) { // nosemgrep:ci
 		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs),
+				Config: testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs, ".*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
@@ -1458,6 +1673,29 @@ func TestAccKafkaReplicator_selfManagedSASLSCRAM(t *testing.T) { // nosemgrep:ci
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.client_authentication.0.sasl_scram.0.secret_arn", secretARN),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_id", clusterID),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", targetARN),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
+				),
+			},
+			{
+				// Changing the topic list goes through UpdateReplicationInfo, which has to
+				// identify the self-managed source by ID. An empty source ARN leaves the API
+				// unable to resolve the cluster and the update fails.
+				Config: testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs, "topic-a,topic-b"),
+				// Assert the change is applied in place. Without this the step would also pass
+				// if the plan replaced the replicator, and a replacement never calls
+				// UpdateReplicationInfo -- so the step would stop covering the update path.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_id", clusterID),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", targetARN),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.*", "topic-a"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.*", "topic-b"),
 				),
 			},
 		},
@@ -1510,7 +1748,7 @@ func TestAccKafkaReplicator_amazonMSKClusterOnly_noDiff(t *testing.T) { // nosem
 	})
 }
 
-func testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs string) string { // nosemgrep:ci.kafka-in-func-name
+func testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs, topics string) string { // nosemgrep:ci.kafka-in-func-name
 	hclList := func(csv string) string {
 		var quoted []string
 		for p := range strings.SplitSeq(csv, ",") {
@@ -1604,7 +1842,7 @@ resource "aws_msk_replicator" "test" {
     target_compression_type  = "NONE"
 
     topic_replication {
-      topics_to_replicate = [".*"]
+      topics_to_replicate = [%[8]s]
     }
 
     consumer_group_replication {
@@ -1612,5 +1850,5 @@ resource "aws_msk_replicator" "test" {
     }
   }
 }
-`, rName, clusterID, bootstrap, secretARN, targetARN, hclList(subnetIDs), hclList(securityGroupIDs))
+`, rName, clusterID, bootstrap, secretARN, targetARN, hclList(subnetIDs), hclList(securityGroupIDs), hclList(topics))
 }
