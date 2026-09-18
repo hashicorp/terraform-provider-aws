@@ -26,6 +26,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * list-resource/aws_rds_cluster_instance: Cache cluster using the DBClusterIdentifier as the key ([#50040](https://github.com/hashicorp/terraform-provider-aws/issues/50040))
+* resource/aws_pipes_pipe: Fix `source_parameters.self_managed_kafka_parameters.server_root_ca_certificate` being sent to the API as an empty string instead of being omitted, which caused `UpdatePipe` to fail with a `ValidationException` when the attribute was unset ([#40116](https://github.com/hashicorp/terraform-provider-aws/issues/40116))
 
 ## 6.65.0 (September 16, 2026)
 
