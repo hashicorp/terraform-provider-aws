@@ -1,0 +1,1788 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../finders-and-listers/">
+      
+      
+        <link rel="next" href="../go-vcr/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Go Conventions - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#go-for-terraform-aws-provider-contributors" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Go Conventions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Add a New AWS Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Add a New Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Add a New Data Source Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Add a New Ephemeral Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Add a New Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-list-resource/" class="md-nav__link">
+        Add a New List Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        Add a New AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-resource-identity-support/" class="md-nav__link">
+        Add Resource Identity Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Add Resource Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../end-user-documentation/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-generation/" class="md-nav__link">
+        Generated Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-usage/" class="md-nav__link">
+        AI Usage
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../breaking-changes/" class="md-nav__link">
+        Breaking Changes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../finders-and-listers/" class="md-nav__link">
+        Finders and Listers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Go Conventions
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Go Conventions
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-read-this-in-10-30-or-60-seconds" class="md-nav__link">
+    How to read this in 10, 30, or 60 seconds
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instincts-from-other-languages-that-dont-transfer-to-go" class="md-nav__link">
+    Instincts from other languages that don't transfer to Go
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hall-of-shame" class="md-nav__link">
+    Hall of Shame
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#external-hall-of-shame" class="md-nav__link">
+    External Hall of Shame
+  </a>
+  
+    <nav class="md-nav" aria-label="External Hall of Shame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-does-the-per-type-package-split-come-from" class="md-nav__link">
+    Where does the per-type package split come from?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clarity-comes-from-the-code-not-the-commentary" class="md-nav__link">
+    Clarity comes from the code, not the commentary
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-small-stuff-reviewers-will-flag" class="md-nav__link">
+    The small stuff reviewers will flag
+  </a>
+  
+    <nav class="md-nav" aria-label="The small stuff reviewers will flag">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#names" class="md-nav__link">
+    Names
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    Data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    Tests
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#doc-comments" class="md-nav__link">
+    Doc comments
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-organize-packages-architect" class="md-nav__link">
+    Files organize; packages architect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#earn-your-abstractions" class="md-nav__link">
+    Earn your abstractions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keep-control-flow-visible" class="md-nav__link">
+    Keep control flow visible
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors-are-values" class="md-nav__link">
+    Errors are values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reach-for-what-already-exists" class="md-nav__link">
+    Reach for what already exists
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-in-doubt-fewer-concepts" class="md-nav__link">
+    When in doubt, fewer concepts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github-actions-caching/" class="md-nav__link">
+        GitHub Actions Caching
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-identity/" class="md-nav__link">
+        Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../list-resources/" class="md-nav__link">
+        List Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-read-this-in-10-30-or-60-seconds" class="md-nav__link">
+    How to read this in 10, 30, or 60 seconds
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instincts-from-other-languages-that-dont-transfer-to-go" class="md-nav__link">
+    Instincts from other languages that don't transfer to Go
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hall-of-shame" class="md-nav__link">
+    Hall of Shame
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#external-hall-of-shame" class="md-nav__link">
+    External Hall of Shame
+  </a>
+  
+    <nav class="md-nav" aria-label="External Hall of Shame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-does-the-per-type-package-split-come-from" class="md-nav__link">
+    Where does the per-type package split come from?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clarity-comes-from-the-code-not-the-commentary" class="md-nav__link">
+    Clarity comes from the code, not the commentary
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-small-stuff-reviewers-will-flag" class="md-nav__link">
+    The small stuff reviewers will flag
+  </a>
+  
+    <nav class="md-nav" aria-label="The small stuff reviewers will flag">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#names" class="md-nav__link">
+    Names
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    Data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    Tests
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#doc-comments" class="md-nav__link">
+    Doc comments
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-organize-packages-architect" class="md-nav__link">
+    Files organize; packages architect
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#earn-your-abstractions" class="md-nav__link">
+    Earn your abstractions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keep-control-flow-visible" class="md-nav__link">
+    Keep control flow visible
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors-are-values" class="md-nav__link">
+    Errors are values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reach-for-what-already-exists" class="md-nav__link">
+    Reach for what already exists
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-in-doubt-fewer-concepts" class="md-nav__link">
+    When in doubt, fewer concepts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<h1 id="go-for-terraform-aws-provider-contributors">Go for Terraform AWS Provider Contributors<a class="headerlink" href="#go-for-terraform-aws-provider-contributors" title="Permanent link">#</a></h1>
+<p><em>Applying Go's design philosophy in a very large provider codebase.</em></p>
+<p>Most of us didn't start in Go, and the provider remembers. We came from Java, Python, TypeScript, C#, and Ruby, and those habits still shape the code we write here. Some of them don't belong in Go. You don't have to take that on faith: the <a href="#hall-of-shame">Hall of Shame</a> below counts the damage in our own repository, with file names. This guide is about catching the pattern before you add to it.</p>
+<p>It isn't one maintainer's opinion about Go. Every rule below traces to Go's own guidance (<em>Effective Go</em>, <em>Organizing Go Code</em>, <em>Package Names</em>, <em>Go Code Review Comments</em>), translated into what it means inside a three-million-line provider. Where we get it wrong today, we say so.</p>
+<div class="admonition note">
+<p class="admonition-title">These are defaults, not laws</p>
+<p>This document is opinionated about defaults, not absolute prohibitions. It exists because unnecessary structure is far easier to add than to remove in a repository this size. Deviate when you have a concrete reason, not because another design is theoretically cleaner. If you think a rule here is wrong, or wrong for one case, say so in review. That's how the rule gets fixed or the exception gets recorded.</p>
+</div>
+<h2 id="how-to-read-this-in-10-30-or-60-seconds">How to read this in 10, 30, or 60 seconds<a class="headerlink" href="#how-to-read-this-in-10-30-or-60-seconds" title="Permanent link">#</a></h2>
+<ul>
+<li><strong>10 seconds:</strong> Prefer the simplest code that fits into the package you already have. Concrete over abstract, visible over clever, together over scattered. When two designs are equally correct, choose the one with fewer concepts.</li>
+<li><strong>30 seconds:</strong> Read the table below. It's the highest-value thing here.</li>
+<li><strong>60 seconds:</strong> Keep going. Every principle is short, and the one your reviewer keeps citing is probably in it.</li>
+</ul>
+<h2 id="instincts-from-other-languages-that-dont-transfer-to-go">Instincts from other languages that don't transfer to Go<a class="headerlink" href="#instincts-from-other-languages-that-dont-transfer-to-go" title="Permanent link">#</a></h2>
+<p>Read down the left column and wince at the ones you recognize. Everyone recognizes at least three.</p>
+<table>
+<thead>
+<tr>
+<th>The instinct you brought with you</th>
+<th>What Go asks for instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Extract repeated code on sight</td>
+<td>First decide whether the abstraction improves clarity</td>
+</tr>
+<tr>
+<td>An interface for every implementation</td>
+<td>Consumer-defined interfaces, only where needed</td>
+</tr>
+<tr>
+<td>One class or concept per file</td>
+<td>A cohesive package, files sized for humans</td>
+</tr>
+<tr>
+<td>Tiny packages for "separation of concerns"</td>
+<td>Packages that are real API or dependency boundaries</td>
+</tr>
+<tr>
+<td>A <code>helpers</code>, <code>common</code>, or <code>utils</code> package</td>
+<td>Keep code with the domain it belongs to</td>
+</tr>
+<tr>
+<td>More layers means better architecture</td>
+<td>Fewer concepts and visible control flow</td>
+</tr>
+<tr>
+<td>A comment on every operation</td>
+<td>Names and structure first, comments for the non-obvious</td>
+</tr>
+<tr>
+<td>Mocking requires interfaces everywhere</td>
+<td>Introduce seams only where they earn their keep</td>
+</tr>
+<tr>
+<td>A constructor for every type</td>
+<td>Prefer useful zero values where practical</td>
+</tr>
+<tr>
+<td>Two similar things must be generalized</td>
+<td>Generalize when the problem is general</td>
+</tr>
+</tbody>
+</table>
+<p>If you absorb only this table, you're already writing more idiomatic provider code than a fair amount of what's already merged. No names, no shame. Just read the diffs sometime.</p>
+<h2 id="hall-of-shame">Hall of Shame<a class="headerlink" href="#hall-of-shame" title="Permanent link">#</a></h2>
+<p>Everything above is easy to agree with in the abstract, so here are five current examples from this repository. Each was chosen because the pattern outlives the next refactor. Nobody involved was careless, and every one of them looked reasonable the day it was written. These instincts feel right in the moment. The provider is what they accumulate into.</p>
+<p><strong>Exhibit A: <code>Id</code> in a provider made of IDs.</strong> Go's rule on initialisms is unambiguous. Acronyms keep one case, so it's <code>ID</code>, <code>ARN</code>, <code>API</code>, <code>VPC</code>, <code>URL</code>, never <code>Id</code>, <code>Arn</code>, <code>Api</code>. In non-generated, non-test service code we have 61 local variables and 38 function names using <code>Id</code>, among them <code>findBaiduChannelByApplicationId</code> and <code>findADMChannelByApplicationId</code>. The best of them appears verbatim in several Pinpoint resources:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">applicationId</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrApplicationID</span><span class="p">).(</span><span class="kt">string</span><span class="p">)</span>
+</code></pre></div>
+<p>Right on the right, wrong on the left, one statement. Nobody was being sloppy. <code>Id</code> is what muscle memory types in most other languages, which is the reason this guide exists. Look at that second function name too: <code>ADMChannel</code> gets the initialism right while <code>ApplicationId</code> doesn't.</p>
+<div class="admonition tip">
+<p class="admonition-title">What we should have done</p>
+<p><code>applicationID := d.Get(names.AttrApplicationID).(string)</code>, and <code>findADMChannelByApplicationID</code>. Every one of these is an unexported local or an unexported function, so renaming breaks nothing outside its own package. This is the cheapest fix in the document. Do it in files you're already editing, and skip the 51-file rename PR; that's churn, and reviewers can't see the real change underneath it.</p>
+</div>
+<p><strong>Exhibit B: the package name we rename 1,372 times.</strong> <em>Go Code Review Comments</em> lists the package names to avoid, by name: "util, common, misc, api, types, and interfaces." We ship three packages named <code>types</code>.</p>
+<p>You don't have to take Go's word for it, because our own import blocks testify against us. Our <code>types</code> collides with the AWS SDK's <code>types</code> and with the Plugin Framework's, so nobody imports ours under the name we gave it:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">inttypes</span><span class="w"> </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/types&quot;</span>
+<span class="nx">fwtypes</span><span class="w">  </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/framework/types&quot;</span>
+<span class="nx">sdktypes</span><span class="w"> </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types&quot;</span>
+</code></pre></div>
+<p>Those account for 708, 662, and 2 import lines, and all 1,372 of them are aliased. Not one file in the repository imports any of the three by its real name. The same document that warns against the name also says to avoid renaming imports, because "good package names should not require renaming." So the codebase reports the defect once per file, 1,372 times, with no dissent.</p>
+<p>This one belongs to maintainers rather than to some first-time contributor, and it's the most expensive mistake in this guide, because a package name is load-bearing at every call site. Renaming now would touch well over a thousand files, so it stays.</p>
+<div class="admonition tip">
+<p class="admonition-title">What we should have done</p>
+<p>Name the package what every caller already calls it. 1,372 import lines voted independently for <code>inttypes</code>, <code>fwtypes</code>, and <code>sdktypes</code>; those are the names, discovered the hard way. A package that every consumer renames on the way in has told you its real name, so believe it. Better still, much of <code>internal/types</code> is specific enough to live in the package that uses it, which deletes the import instead of renaming it. The test is simple: if you have to alias a package to use it, the name failed.</p>
+</div>
+<p><strong>Exhibit C: the generic filename with no generic content.</strong> <code>internal/service/networkfirewall/helpers.go</code> exists, and its name promises the miscellany this guide warns you off. Open it, and every function (<code>expandEncryptionConfiguration</code>, <code>flattenCustomActions</code>, <code>expandIPSets</code>) is Network Firewall-specific expand, flatten, and schema code that belongs to that resource as much as any other line in the package. The problem isn't the file, it's the label. The name tells the next reader "generic, skippable," and the contents aren't either. <code>internal/service/comprehend/common_model.go</code> earns the same citation.</p>
+<div class="admonition tip">
+<p class="admonition-title">What we should have done</p>
+<p>Name the file for what's in it: <code>encryption_configuration.go</code>, <code>custom_action.go</code>, <code>ip_set.go</code>. Better still, move each function into the resource file that uses it and delete the extra file. A file name is free documentation that shows up in every diff, every <code>git log --stat</code>, and every editor tab. <code>helpers.go</code> spends that budget on nothing. If you can't name a file for its contents, the contents probably don't belong together.</p>
+</div>
+<p><strong>Exhibit D: the package family that's never used apart.</strong> <code>internal/provider/framework/resourceattribute</code>, <code>listresourceattribute</code>, and <code>datasourceattribute</code> are three separate packages. Search for their consumers and you find one file, <code>region.go</code>, importing all three, plus one more that pulls in <code>datasourceattribute</code> alone. Nothing imports one of these without needing a neighbor. That's the package diagnostic from later in this guide, confirmed rather than hypothetical.</p>
+<p>This exhibit is nuance, not a verdict. Each package wraps a different Plugin Framework type (<code>resource/schema.StringAttribute</code>, <code>list/schema.StringAttribute</code>, <code>datasource/schema.StringAttribute</code>), so collapsing them isn't free. Go won't let three unrelated concrete return types share one function without an interface or generics, and this guide asks you to justify both. Whether the fix is one package with three constructors, a shared generic helper, or nothing at all is a real design conversation. Sometimes the diagnostic fires and the honest answer is "yes, and it's still the least-bad option."</p>
+<div class="admonition tip">
+<p class="admonition-title">What we should have done</p>
+<p>One package, three plainly named constructors: <code>attribute.ResourceRegion()</code>, <code>attribute.DataSourceRegion()</code>, <code>attribute.ListResourceRegion()</code>. Returning three different types from three functions in one package is ordinary Go. It needs no interface, no generics, and no directory per type. <code>strconv</code> settles the question: <code>ParseInt</code>, <code>ParseBool</code>, and <code>ParseFloat</code> live together rather than in <code>intconv</code>, <code>boolconv</code>, and <code>floatconv</code>. Put the type in the function name, not the package name.</p>
+</div>
+<p><strong>Exhibit E: forty percent of our packages are one file.</strong> Exhibit D isn't an isolated case, it's a sample. Excluding <code>internal/service/**</code> and <code>internal/generate/**</code>, the provider has <strong>90 packages</strong>. Of those, <strong>36 are a single file</strong> and <strong>44 are under 150 lines</strong>. Half of our internal architecture is a directory wrapped around one file.</p>
+<p>The extremes make the point faster than the average:</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Non-test LOC</th>
+<th>Exported identifiers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/unique</code></td>
+<td>19</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>internal/io</code></td>
+<td>28</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>internal/logging</code></td>
+<td>36</td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>internal/yaml</code></td>
+<td>37</td>
+<td>3</td>
+</tr>
+<tr>
+<td><code>internal/smithy</code></td>
+<td>39</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>Each of those is a full API boundary: an import path, a name at every call site, a documentation unit, an exported-or-not decision. All of it wrapped around less code than the function you're probably writing right now. Several are genuinely reusable and fine. But 36 single-file packages isn't 36 independent decisions that each happened to be right. It's a habit. When the next one feels obviously necessary, that feeling is what this exhibit is documenting.</p>
+<p>Forty percent is also the conservative floor, because counting single-file packages only catches the ones that are too small. The harder question is how many of the remaining 54 would be better merged with a neighbor, not because either is tiny but because no caller ever wants one without the other. Size is the easy metric. Cohesion is the real one.</p>
+<div class="admonition tip">
+<p class="admonition-title">What we should have done</p>
+<p>Ask which existing package this belongs in before you reach for <code>mkdir</code>. Concretely: <code>internal/io</code>, <code>internal/yaml</code>, <code>internal/json</code>, and <code>internal/smithy</code> are all encoding and serialization concerns that would make one coherent package with an obvious name, instead of four import paths that each answer a fraction of one question. For the truly tiny ones, 19 lines and a single exported function, the honest home is usually the one package that calls them, unexported. A new package should be the conclusion of a design discussion, not the reflex that starts one.</p>
+</div>
+<h2 id="external-hall-of-shame">External Hall of Shame<a class="headerlink" href="#external-hall-of-shame" title="Permanent link">#</a></h2>
+<p>We didn't invent all of this. Some of it we inherited, and it's worth naming, because "the library does it this way" is the most common defense for fragmentation in our own code. Sometimes that defense is fair, which is what makes it dangerous.</p>
+<p>Here is the real import block from <code>internal/service/timestreaminfluxdb/db_cluster.go</code>. One resource, <strong>35 imports</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="s">&quot;github.com/hashicorp/terraform-plugin-framework-validators/int32validator&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework-validators/int64validator&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework-validators/listvalidator&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework-validators/setvalidator&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator&quot;</span>
+<span class="o">...</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier&quot;</span>
+<span class="s">&quot;github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier&quot;</span>
+</code></pre></div>
+<p>Ten packages, one job: validating and plan-modifying attributes. Upstream ships <strong>11 separate <code>*planmodifier</code> packages</strong> and a matching spread of <code>*default</code> packages. Across the provider we import 18 distinct <code>resource/schema/*</code> packages, and 42 distinct <code>terraform-plugin-framework</code> packages in total. The split is per type rather than per concept, so <code>stringplanmodifier.RequiresReplace</code> and <code>boolplanmodifier.RequiresReplace</code> live in different packages for no reason a caller cares about. It's a type-parameter problem solved with a directory tree.</p>
+<p>Two things follow, and the second matters more.</p>
+<p><strong>We mirrored it.</strong> <code>internal/framework/planmodifiers</code> reproduces the same shape: <code>boolplanmodifier</code>, <code>int32planmodifier</code>, <code>int64planmodifier</code>, <code>listplanmodifier</code>, <code>setplanmodifier</code>, <code>stringplanmodifier</code>. Seven packages, 15 files, 703 lines, with <code>LegacyValue()</code> defined four separate times, differing only by return type. There's even a <code>planmodifiers/internal/</code> package holding the implementation the split forced us to re-share. Consistency with the library it extends is a legitimate reason for that layout, which is exactly what makes it the strongest argument here for thinking about a package boundary before copying one.</p>
+<p><strong>It's why Exhibit B hurts.</strong> Look at that import block again: <code>awstypes</code>, the Framework's <code>types</code>, and our <code>fwtypes</code> are all in scope at once. Three packages named <code>types</code> in one file, two of which we rename to compile. Fragmented ecosystems produce name collisions, and name collisions produce the alias sprawl measured above. The costs compound.</p>
+<p>None of this is a reason to fork a dependency or fight its idioms. Use the libraries as designed. It is a reason to stop treating upstream layout as proof that a layout is good.</p>
+<h3 id="where-does-the-per-type-package-split-come-from">Where does the per-type package split come from?<a class="headerlink" href="#where-does-the-per-type-package-split-come-from" title="Permanent link">#</a></h3>
+<p>Fair question, and the answer isn't "Java." Nothing in the enterprise-Java playbook produces <code>int32validator</code>. This is an over-application of one of Go's own rules, under a constraint that has since expired.</p>
+<p>The rule: let the package qualify the name, so you write <code>bytes.Buffer</code> rather than <code>bytes.BytesBuffer</code>. Applied here, <code>stringvalidator.LengthBetween(1, 64)</code> reads better than <code>validator.StringLengthBetween(1, 64)</code>. The constraint: the Plugin Framework predates usable generics, and each type genuinely needs its own interface, since <code>validator.String</code> and <code>validator.Int64</code> have different method signatures. One <code>LengthBetween</code> couldn't return the right thing for both.</p>
+<p>So the trade was 13 import paths in exchange for roughly six characters per call site. That's the entire saving. We import <code>actionvalidator</code>, <code>boolvalidator</code>, <code>datasourcevalidator</code>, <code>float32validator</code>, <code>float64validator</code>, <code>int32validator</code>, <code>int64validator</code>, <code>listvalidator</code>, <code>mapvalidator</code>, <code>objectvalidator</code>, <code>resourcevalidator</code>, <code>setvalidator</code>, and <code>stringvalidator</code>. <code>SizeAtMost</code> alone appears 1,187 times across the list, set, and map variants: the same function name in three packages.</p>
+<p>The standard library hit the identical problem and answered it the other way, which is what makes this settled rather than a matter of taste.</p>
+<ul>
+<li><strong><code>strconv</code></strong> converts ints, floats, bools, and uints in one package: <code>ParseInt</code>, <code>ParseBool</code>, <code>ParseFloat</code>, <code>FormatInt</code>. Not <code>intconv</code>, <code>boolconv</code>, <code>floatconv</code>.</li>
+<li><strong><code>sort</code></strong> sorts every type in one package: <code>sort.Ints</code>, <code>sort.Strings</code>, <code>sort.Float64s</code>.</li>
+<li><strong><code>slices</code></strong> does it generically now. One <code>slices.Sort</code> covers all of them.</li>
+</ul>
+<p>Same problem, one package, slightly longer function names. Nobody has ever complained that <code>strconv.ParseBool</code> is hard to read.</p>
+<div class="admonition tip">
+<p class="admonition-title">What upstream should have done</p>
+<p>One <code>validator</code> package with type-qualified function names (<code>validator.StringLengthBetween</code>, <code>validator.Int64Between</code>), or one generic API now that generics exist. Thirteen packages to save six characters is a bad trade, and it pushes the cost onto every caller forever.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">What we do now</p>
+<p>Stop mirroring it. Our <code>internal/framework/planmodifiers</code> copied a shape we had no obligation to copy. One <code>planmodifiers</code> package exposing <code>LegacyValueString()</code>, <code>LegacyValueBool()</code>, <code>LegacyValueInt32()</code>, and <code>LegacyValueInt64()</code> would have fit in a single file. Consume a fragmented library at its edges, and don't reproduce its fragmentation in the code you own. Upstream's layout is a constraint to absorb, not a template to follow.</p>
+</div>
+<h2 id="clarity-comes-from-the-code-not-the-commentary">Clarity comes from the code, not the commentary<a class="headerlink" href="#clarity-comes-from-the-code-not-the-commentary" title="Permanent link">#</a></h2>
+<p><em>Effective Go</em> treats a good name as the beginning of good documentation, and reserves comments for what the code can't say itself. Get the name right and you may not need the comment.</p>
+<p>The provider's own <a href="../naming/">Naming</a> guidance makes the case better than a comment could. It calls out <code>helper</code> by name as a package name that "conveys zero information," and holds up <code>verify</code> as good because it tells you what the package does. Apply that test before reaching for a comment. If you have to explain what a name means, the name is the bug.</p>
+<p>Implementation comments are where the over-commenting habit lives.</p>
+<p><strong>If a comment is doing any of the following, <em>delete it</em>:</strong></p>
+<ul>
+<li>Restating the line below it. "Check if the ARN is valid" above an <code>arn.IsARN</code> call, "increment the counter" above <code>i++</code>.</li>
+<li>Naming the obvious operation. "Create the client," "return the error," "close the file."</li>
+<li>Acting as a section header inside a function. "// Validation," "// Step 2." If a function needs internal signposting, the signal is about the function, not the missing comment.</li>
+<li>Explaining a name instead of fixing it. Rename the variable and the comment disappears.</li>
+<li>Paraphrasing the signature. "Takes a bucket name and returns an error."</li>
+<li>Repeating the AWS API reference with no provider-specific consequence. Link it or omit it.</li>
+<li>Teaching Go. "<code>defer</code> runs when the function returns."</li>
+<li>Sitting above commented-out code. Delete the code; git remembers it.</li>
+<li>Carrying a bare <code>TODO</code> with no issue number. In a repository this size that's archaeology, not a plan.</li>
+</ul>
+<p>What survives that list is worth keeping: a constraint, an invariant, an AWS behavior that contradicts the obvious reading, or the reason an obvious approach was rejected. Comment the surprise, not the syntax.</p>
+<p><strong>Exported declarations are the exception to all of it.</strong> Their comments are the package's public documentation rather than commentary on the implementation, so document every exported type, function, method, and variable, starting with its name, even when the implementation is obvious.</p>
+<h2 id="the-small-stuff-reviewers-will-flag">The small stuff reviewers will flag<a class="headerlink" href="#the-small-stuff-reviewers-will-flag" title="Permanent link">#</a></h2>
+<p>None of these are judgment calls. They're settled Go conventions, and they come up in review constantly.</p>
+<h3 id="names">Names<a class="headerlink" href="#names" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Initialisms keep one case:</strong> <code>ID</code>, <code>ARN</code>, <code>API</code>, <code>VPC</code>, <code>KMS</code>, <code>URL</code>, <code>HTTP</code>, so <code>applicationID</code>, <code>vpcARN</code>, <code>ServeHTTP</code>. Never <code>Id</code>, <code>Arn</code>, <code>Url</code>. This matters more here than in most repositories, because the provider is mostly acronyms.</li>
+<li><strong><code>MixedCaps</code>, never underscores.</strong> An unexported constant is <code>maxRetries</code>, not <code>MAX_RETRIES</code> or <code>max_retries</code>. Test names are the deliberate exception: <code>TestAccDocDBElasticCluster_basic</code> uses the underscore to separate subject from scenario, which is the Go test convention rather than a violation of this one.</li>
+<li><strong>Short local names.</strong> Prefer <code>c</code> to <code>lineCount</code> and <code>i</code> to <code>sliceIndex</code>. The further a name travels from its declaration, the more descriptive it needs to be, so loop indices stay tiny and package-level vars don't.</li>
+<li><strong>Receivers are short and consistent.</strong> One or two letters (<code>r</code> for a resource, <code>c</code> for a client), the same letter on every method of the type. Never <code>this</code>, <code>me</code>, or <code>self</code>.</li>
+<li><strong>Getters drop the <code>Get</code>.</strong> Write <code>Owner()</code>, not <code>GetOwner()</code>. A setter is <code>SetOwner()</code>.</li>
+</ul>
+<h3 id="context">Context<a class="headerlink" href="#context" title="Permanent link">#</a></h3>
+<ul>
+<li><code>ctx context.Context</code> is the <strong>first parameter</strong>, always.</li>
+<li><strong>Never store a <code>Context</code> in a struct field.</strong> Pass it to each method that needs it. Provider CRUD, finders, waiters, and sweepers all take it explicitly, which keeps the call chain visible.</li>
+<li>Don't define custom context types, and don't accept anything but <code>context.Context</code> in that position.</li>
+</ul>
+<h3 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Error strings are lowercase and unpunctuated:</strong> <code>fmt.Errorf("reading bucket policy")</code>, not <code>"Reading bucket policy."</code>. They get wrapped into longer messages, where a mid-sentence capital reads like a bug. Proper nouns and acronyms stay capitalized.</li>
+<li><strong>Never discard an error with <code>_</code>.</strong> Handle it, return it, or panic in the rare case that warrants it. <code>fi, _ := os.Stat(path)</code> is how you get a nil-pointer panic three lines later.</li>
+<li><strong>Don't panic</strong> for ordinary failures. Errors are values, so return them.</li>
+</ul>
+<h3 id="data">Data<a class="headerlink" href="#data" title="Permanent link">#</a></h3>
+<ul>
+<li><strong><code>var x []string</code>, not <code>x := []string{}</code>.</strong> The nil slice is the idiomatic empty slice.</li>
+<li><strong>Know when the distinction is load-bearing.</strong> A <code>nil</code> slice marshals to JSON <code>null</code> and an empty one marshals to <code>[]</code>, and flatten functions feeding Terraform state care about the difference. Choose deliberately instead of by accident.</li>
+<li><strong>Don't pass a pointer to save bytes.</strong> If a function only ever reads <code>*s</code>, take a <code>string</code>. A <code>*string</code> or <code>*io.Reader</code> parameter is almost always a mistake. This doesn't apply to the AWS SDK's own <code>*string</code> fields, which use pointers to model absence.</li>
+</ul>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Fail with useful messages</strong>, <code>got</code> before <code>want</code>: <code>t.Errorf("Foo(%q) = %d, want %d", in, got, want)</code>. Assume whoever debugs it is neither you nor on your team.</li>
+<li>Reach for <a href="https://go.dev/wiki/TableDrivenTests">table-driven tests</a> when a helper would otherwise need six call sites.</li>
+</ul>
+<h3 id="doc-comments">Doc comments<a class="headerlink" href="#doc-comments" title="Permanent link">#</a></h3>
+<ul>
+<li>Full sentences, starting with the name and ending with a period: <code>// FindBucketByName returns the bucket matching name.</code> That's what reads correctly in <code>go doc</code> output, which is the whole reason for the convention.</li>
+</ul>
+<h2 id="files-organize-packages-architect">Files organize; packages architect<a class="headerlink" href="#files-organize-packages-architect" title="Permanent link">#</a></h2>
+<p>This is where imported instincts do the most damage, so it gets the most space.</p>
+<p>A Go package is every source file in one directory, compiled together, and a declaration in one file is visible across the whole package. A new file therefore creates <strong>no</strong> encapsulation, ownership, visibility, or API boundary. Files exist to keep a package readable by humans, nothing more.</p>
+<div class="admonition tip">
+<p class="admonition-title">Default: use an existing file</p>
+<p>Creating a new <code>.go</code> file is the exception, not the routine. Noticing that some code is shared, separately nameable, or "logically a different concern" is not by itself a reason for a new file.</p>
+</div>
+<p>For files:</p>
+<ul>
+<li>No <code>helpers.go</code>, <code>common.go</code>, or <code>utils.go</code> holding a handful of functions. <em>Package Names</em> calls out <code>util</code>, <code>common</code>, and <code>misc</code> as smells.</li>
+<li>Two resources sharing a helper doesn't justify a new file. Keep resource-specific helpers with the resource.</li>
+<li>Split a file when its size genuinely hurts navigation, not because another noun can be invented.</li>
+</ul>
+<p>Packages are the real boundary, and the more expensive one. <em>Organizing Go Code</em> warns plainly that it's easy to go too far splitting code into small packages and end up "bogged down in interface design" instead of getting work done.</p>
+<ul>
+<li>Don't create a package just because functionality can be independently named. "Single responsibility" doesn't mean one responsibility per package.</li>
+<li>Closely related functionality that callers use together usually belongs together.</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Known fails</p>
+<p>We ship three packages named <code>types</code>: <code>internal/types</code>, <code>internal/framework/types</code>, and <code>internal/sdkv2/types</code>. Go's own guidance lists <code>types</code> among the names to avoid, and every one of our 1,372 imports of them is aliased. See <a href="#hall-of-shame">Exhibit B</a> for the accounting. They're load-bearing and renaming them now would touch over a thousand files, so they stay. These are known fails, not precedent.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Two diagnostics for over-decomposition</p>
+<ol>
+<li>If ordinary code repeatedly imports several narrow sibling packages sharing one repo path prefix, the functionality was fragmented rather than decomposed.</li>
+<li>If splitting code into a new package forces you to export identifiers that used to be unexported, the split itself may be the mistake. When in doubt, leave it out and keep implementation details unexported.</li>
+</ol>
+</div>
+<p>The thread tying all of it together is <strong>locality</strong>. Code that changes together and is understood together should stay together: a resource's schema and implementation, its flatten and expand functions, its tests. Don't relocate details into another file or package because they can be labeled "validation," "conversion," or "helpers."</p>
+<h2 id="earn-your-abstractions">Earn your abstractions<a class="headerlink" href="#earn-your-abstractions" title="Permanent link">#</a></h2>
+<p>Start concrete. Add the abstraction once real usage proves it makes the program better, not because you can picture the version where it would.</p>
+<ul>
+<li>Two nearly identical expand functions don't automatically demand a generic framework.</li>
+<li>A single implementation doesn't need an interface so that it "could be mocked" someday.</li>
+<li><strong>Similarity is evidence to examine, not an instruction to abstract.</strong> The second call site tells you something. Go build it.</li>
+<li><strong>A little copying is better than a little dependency.</strong> If sharing five lines means importing a package, adding an interface, or reaching across a boundary that doesn't otherwise exist, the copy is usually the better trade. That isn't laziness. It's a real Go value rather than a consolation prize for skipping the abstraction.</li>
+</ul>
+<p>Three traps, because we've all set at least one of them:</p>
+<ul>
+<li><strong>Interfaces are consumer-defined capabilities.</strong> Don't pair an interface with every concrete type. Define one when a consumer needs a smaller capability than the concrete type exposes. Turning a concrete <code>*ec2.Client</code> into a twelve-method <code>EC2API</code> interface so it "could be mocked" is a Java reflex, not a Go one.</li>
+<li><strong>Generics solve generic problems.</strong> Use standard-library generics like <code>slices</code> and <code>maps</code> where they simplify code directly. Don't build a generic abstraction because two concrete types have a similar shape. Modern Go isn't anti-generics, it's against mechanism without payoff.</li>
+<li><strong>Tests don't dictate production architecture.</strong> Don't add interfaces, factories, wrappers, or packages to make a unit test easier to write. And don't split one test file into ten because each function "deserves its own." Organize tests along the same boundaries as the code they test.</li>
+</ul>
+<h2 id="keep-control-flow-visible">Keep control flow visible<a class="headerlink" href="#keep-control-flow-visible" title="Permanent link">#</a></h2>
+<p>Terraform resources already carry real lifecycle complexity. Hiding it behind callbacks and clever indirection makes it worse.</p>
+<ul>
+<li>Prefer straightforward, top-to-bottom control flow.</li>
+<li>Handle errors and exceptional cases early, then return.</li>
+<li>Don't extract three obvious lines into <code>buildRequest</code> and <code>processResponse</code> to make a function shorter. You've only made the reader travel further to learn less.</li>
+</ul>
+<p>Here, <code>if err != nil</code> isn't boilerplate to be ashamed of. It's the plot.</p>
+<h2 id="errors-are-values">Errors are values<a class="headerlink" href="#errors-are-values" title="Permanent link">#</a></h2>
+<p>The provider is a translation layer between Terraform and AWS, which makes error handling load-bearing. Treat errors as ordinary values: return them, wrap them with useful context, and preserve their identity when callers need to inspect AWS errors. Don't wrap merely to produce more verbose prose, and don't build an exception-like subsystem around routine failures.</p>
+<p>See <a href="../error-handling/">Error Handling</a> for the provider's concrete patterns (<code>smerr</code> and <code>smarterr</code>, <code>retry.NotFound</code>, <code>errs.IsA</code>).</p>
+<h2 id="reach-for-what-already-exists">Reach for what already exists<a class="headerlink" href="#reach-for-what-already-exists" title="Permanent link">#</a></h2>
+<p>The provider is enormous and already solves most problems once. Before adding a package, a helper framework, a dependency, or an abstraction, check whether the standard library, the AWS SDK, the Terraform plugin libraries, or existing provider utilities already do the job. The standard library isn't showing off. It's showing you the idiom.</p>
+<h2 id="when-in-doubt-fewer-concepts">When in doubt, fewer concepts<a class="headerlink" href="#when-in-doubt-fewer-concepts" title="Permanent link">#</a></h2>
+<p>If you remember one sentence, make it this one:</p>
+<blockquote>
+<p>When two implementations are equally correct, prefer the one that introduces fewer concepts.</p>
+</blockquote>
+<p>Not fewer lines. Not fewer functions. Fewer things the next contributor has to learn: fewer packages, fewer interfaces, fewer indirections, fewer exported identifiers, fewer files without a real boundary, fewer comments standing in for names that could have spoken for themselves.</p>
+<p>Agents and humans both tend to read the absence of machinery as an unfinished job. Go reads the machinery as the defect. Fewer moving parts isn't a lack of architecture. In Go it often is the architecture.</p>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">#</a></h2>
+<p>The guidance above is drawn from Go's own canon. When in doubt, these outrank this page:</p>
+<ul>
+<li><a href="https://go.dev/doc/effective_go">Effective Go</a></li>
+<li><a href="https://go.dev/blog/organizing-go-code">Organizing Go Code</a></li>
+<li><a href="https://go.dev/blog/package-names">Package Names</a></li>
+<li><a href="https://go.dev/doc/code">How to Write Go Code</a></li>
+<li><a href="https://go.dev/wiki/CodeReviewComments">Go Code Review Comments</a></li>
+<li><a href="https://go.dev/wiki/TestComments">Go Test Comments</a></li>
+<li><a href="https://go.dev/doc/comment">Go Doc Comments</a></li>
+</ul>
+<p>For provider-specific application, see also <a href="../provider-design/">Provider Design</a>, <a href="../naming/">Naming</a>, and <a href="../error-handling/">Error Handling</a>.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      IBM Corp.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
