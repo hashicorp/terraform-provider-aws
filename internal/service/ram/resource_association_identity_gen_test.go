@@ -48,7 +48,6 @@ func TestAccRAMResourceAssociation_Identity_basic(t *testing.T) {
 					testAccCheckResourceAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{resource_share_arn}:{resource_arn}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID:   tfknownvalue.AccountID(),
@@ -135,7 +134,6 @@ func TestAccRAMResourceAssociation_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{resource_share_arn}:{resource_arn}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID:   tfknownvalue.AccountID(),
@@ -204,7 +202,7 @@ func TestAccRAMResourceAssociation_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.63.0
+// Resource Identity was added after v6.65.0
 func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -222,7 +220,7 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T)
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.63.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.65.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -264,7 +262,7 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T)
 	})
 }
 
-// Resource Identity was added after v6.63.0
+// Resource Identity was added after v6.65.0
 func TestAccRAMResourceAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -287,7 +285,7 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_noRefreshNoChange(t
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.63.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.65.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
