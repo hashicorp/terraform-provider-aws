@@ -3216,6 +3216,58 @@ func TestBucketRegionalDomainName(t *testing.T) {
 	}
 }
 
+func TestBucketLocationConstraint(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		region         string
+		originalRegion string
+		want           types.BucketLocationConstraint
+	}{
+		"native aws global region sends no constraint": {
+			region:         endpoints.UsEast1RegionID,
+			originalRegion: "",
+			want:           "",
+		},
+		"native aws regional region uses region": {
+			region:         endpoints.EuWest1RegionID,
+			originalRegion: "",
+			want:           types.BucketLocationConstraint(endpoints.EuWest1RegionID),
+		},
+		// Regression: S3-compatible storage substitutes the configured region with
+		// the SDK default region during init. Without preferring the original
+		// region, this produced an empty CreateBucketConfiguration and Ceph returned
+		// 400 InvalidArgument.
+		"s3-compatible substituted region uses original bare constraint": {
+			region:         endpoints.UsEast1RegionID,
+			originalRegion: ":region-ha-premium",
+			want:           types.BucketLocationConstraint(":region-ha-premium"),
+		},
+		// Ceph treats the prefixed and bare forms equally server-side; the provider
+		// passes whichever the user configured through verbatim.
+		"s3-compatible substituted region uses original prefixed constraint": {
+			region:         endpoints.UsEast1RegionID,
+			originalRegion: "ceph-objectstore-region1:region-ha-premium",
+			want:           types.BucketLocationConstraint("ceph-objectstore-region1:region-ha-premium"),
+		},
+		"s3-compatible original global region sends no constraint": {
+			region:         endpoints.UsEast1RegionID,
+			originalRegion: endpoints.UsEast1RegionID,
+			want:           "",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfs3.BucketLocationConstraint(tc.region, tc.originalRegion); got != tc.want {
+				t.Errorf("BucketLocationConstraint(%q, %q) = %q, want %q", tc.region, tc.originalRegion, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestWebsiteEndpoint(t *testing.T) {
 	t.Parallel()
 
