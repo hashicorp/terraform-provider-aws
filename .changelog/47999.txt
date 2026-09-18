@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sqs_queue: Skip empty `SetQueueAttributes` API call when only provider-level `default_tags` change, fixing `MissingParameter: The request must contain the parameter Attribute.Name` errors
+```
