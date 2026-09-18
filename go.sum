@@ -14,8 +14,8 @@ github.com/YakDriver/go-version v0.2.0 h1:0jlIXRn7IFMUg8mGiyPKfEzYzCOiknlCrVNjik
 github.com/YakDriver/go-version v0.2.0/go.mod h1:+Zt/moP5cBKVefqwqk6XtB6pf6LvWuMZufsLN20JB4Y=
 github.com/YakDriver/regexache v0.25.0 h1:uggvmj09EhXQgaXYmdGsKuDARbmdOIqICiO+PIwhlTA=
 github.com/YakDriver/regexache v0.25.0/go.mod h1:4xOFrfggN3UAGlhcvNpM/kuedpJL+48DrUs0CcCxPv8=
-github.com/YakDriver/smarterr v0.8.0 h1:U4GZytxw/js/2hzoyg94S341sC8PuD0CV5dEBRurZPs=
-github.com/YakDriver/smarterr v0.8.0/go.mod h1:tF8iZvoX2SHQIEk5Ttj+jnLe3jb2JGQ4ag8JkuYZE7Y=
+github.com/YakDriver/smarterr v0.10.0 h1:iMWnZPWv/42act2lKDpNXl51mxj+wlfAVEMQ/19traQ=
+github.com/YakDriver/smarterr v0.10.0/go.mod h1:+FGdMIFM77gDDVuSPu+9mrBpP7nuKNbDUGxKehrbAio=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
@@ -702,8 +702,8 @@ github.com/hashicorp/go-version v1.9.0 h1:CeOIz6k+LoN3qX9Z0tyQrPtiB1DFYRPfCIBtaX
 github.com/hashicorp/go-version v1.9.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/hashicorp/hc-install v0.9.5 h1:XHCjcMn2563ysuaQ9v9ec2FNc7c2PJOIEEGobAFeIx4=
 github.com/hashicorp/hc-install v0.9.5/go.mod h1:ihEW4LshrNkxq2bU/MpVbKyn+yt1is2hYqUTHDGhG84=
-github.com/hashicorp/hcl/v2 v2.24.0 h1:2QJdZ454DSsYGoaE6QheQZjtKZSUs9Nh2izTWiwQxvE=
-github.com/hashicorp/hcl/v2 v2.24.0/go.mod h1:oGoO1FIQYfn/AgyOhlg9qLC6/nOJPX3qGbkZpYAcqfM=
+github.com/hashicorp/hcl/v2 v2.25.0 h1:HmmQVYRny4MaBo4b20TjmL46wyuUxpnMWkPZ4+NTbWk=
+github.com/hashicorp/hcl/v2 v2.25.0/go.mod h1:vR+FKETxoZAmRlHgFfKmuqivj+C4Izm/c66XkmZ3r7M=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/terraform-exec v0.25.3 h1:Xr9DBt2LX4deJnahlbhw7N25MFPDMxzj/VzE7cdFBoc=
