@@ -499,6 +499,74 @@ func resourceCluster() *schema.Resource {
 									},
 								},
 							},
+							"authorizer_logs": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCloudWatchLogs: {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MaxItems:         1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													"log_group": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"firehose": {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MaxItems:         1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"delivery_stream": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+												},
+											},
+										},
+										"s3": {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MaxItems:         1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrBucket: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													names.AttrPrefix: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1793,6 +1861,10 @@ func expandLoggingInfo(tfMap map[string]any) *types.LoggingInfo {
 		apiObject.BrokerLogs = expandBrokerLogs(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["authorizer_logs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AuthorizerLogs = expandAuthorizerLogs(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
@@ -1802,6 +1874,28 @@ func expandBrokerLogs(tfMap map[string]any) *types.BrokerLogs {
 	}
 
 	apiObject := &types.BrokerLogs{}
+
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["firehose"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Firehose = expandFirehose(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3 = expandS3(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandAuthorizerLogs(tfMap map[string]any) *types.AuthorizerLogs {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AuthorizerLogs{}
 
 	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]any))
@@ -2248,10 +2342,36 @@ func flattenLoggingInfo(apiObject *types.LoggingInfo) map[string]any {
 		tfMap["broker_logs"] = []any{flattenBrokerLogs(v)}
 	}
 
+	if v := apiObject.AuthorizerLogs; v != nil {
+		tfMap["authorizer_logs"] = []any{flattenAuthorizerLogs(v)}
+	}
+
 	return tfMap
 }
 
 func flattenBrokerLogs(apiObject *types.BrokerLogs) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLogs; v != nil {
+		tfMap[names.AttrCloudWatchLogs] = []any{flattenCloudWatchLogs(v)}
+	}
+
+	if v := apiObject.Firehose; v != nil {
+		tfMap["firehose"] = []any{flattenFirehose(v)}
+	}
+
+	if v := apiObject.S3; v != nil {
+		tfMap["s3"] = []any{flattenS3(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAuthorizerLogs(apiObject *types.AuthorizerLogs) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
