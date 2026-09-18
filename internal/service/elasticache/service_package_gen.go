@@ -34,6 +34,18 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newClustersDataSource,
+			TypeName: "aws_elasticache_clusters",
+			Name:     "Clusters",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newReplicationGroupsDataSource,
+			TypeName: "aws_elasticache_replication_groups",
+			Name:     "Replication Groups",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newReservedCacheNodeOfferingDataSource,
 			TypeName: "aws_elasticache_reserved_cache_node_offering",
 			Name:     "Reserved Cache Node Offering",
