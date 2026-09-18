@@ -618,4 +618,3 @@ export TF_AWS_ASSUME_NO_PROPAGATION_DELAY=true
 When set to a truthy value, participating waiters collapse the consecutive-confirmation budget to a single check. This is an assertion by the operator about their environment; the provider cannot detect it. It is **unsupported against real AWS**, where enabling it can surface intermittent spurious diffs and cross-service races. It is off by default, so real-AWS behavior is unchanged.
 
 Today the SQS queue create, update, and delete waiters honor this variable. Other services can opt in by resolving their occurrence count through the same environment variable rather than exposing per-resource tuning.
-
