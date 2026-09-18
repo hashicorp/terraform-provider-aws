@@ -10,9 +10,13 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,12 +37,67 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, t, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "redshift-serverless", "workgroup/{workgroup_id}"),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("base_capacity"), knownvalue.Int32Exact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config_parameter"), knownvalue.SetPartial([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("auto_mv"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("datestyle"),
+							"parameter_value": knownvalue.StringExact("ISO, MDY"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("enable_case_sensitive_identifier"),
+							"parameter_value": knownvalue.StringExact("false"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("enable_user_activity_logging"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("query_group"),
+							"parameter_value": knownvalue.StringExact("default"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("require_ssl"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("search_path"),
+							"parameter_value": knownvalue.StringExact("$user, public"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("use_fips_ssl"),
+							"parameter_value": knownvalue.StringExact("false"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("max_query_execution_time"),
+							"parameter_value": knownvalue.StringExact("14400"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enhanced_vpc_routing"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMaxCapacity), knownvalue.Int32Exact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.Int32Exact(5439)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("price_performance_target"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"level":           knownvalue.Int32Exact(50),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSecurityGroupIDs), tfknownvalue.SetNotEmpty()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnetIDs), tfknownvalue.SetNotEmpty()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("track_name"), knownvalue.StringExact("current")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
