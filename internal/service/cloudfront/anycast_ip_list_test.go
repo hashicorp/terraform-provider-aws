@@ -30,6 +30,7 @@ func TestAccCloudFrontAnycastIPList_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccAnycastIPList_basic,
 		acctest.CtDisappears: testAccAnycastIPList_disappears,
+		"ipAddressType":      testAccAnycastIPList_ipAddressType,
 		"tags":               testAccCloudFrontAnycastIPList_tagsSerial,
 	}
 
@@ -64,6 +65,40 @@ func testAccAnycastIPList_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ip_count"), knownvalue.Int32Exact(3)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAnycastIPList_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_anycast_ip_list.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnycastIPListConfig_ipAddressType(rName, "dualstack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnycastIPListExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrIPAddressType), knownvalue.StringExact("dualstack")),
 				},
 			},
 			{
@@ -155,4 +190,14 @@ resource "aws_cloudfront_anycast_ip_list" "test" {
   ip_count = 3
 }
 `, rName)
+}
+
+func testAccAnycastIPListConfig_ipAddressType(rName, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_anycast_ip_list" "test" {
+  name            = %[1]q
+  ip_count        = 3
+  ip_address_type = %[2]q
+}
+`, rName, ipAddressType)
 }
