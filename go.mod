@@ -12,10 +12,10 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.47.0
-	github.com/aws/aws-sdk-go-v2/config v1.33.4
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.4
+	github.com/aws/aws-sdk-go-v2/config v1.33.5
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.6
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/accountaccess v1.6.0
@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.18.0
-	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.55.0
@@ -136,7 +136,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.158.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.159.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.51.0
@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/interconnect v1.9.0
@@ -156,7 +156,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.69.0
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.47.0
@@ -269,7 +269,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.52.0
-	github.com/aws/aws-sdk-go-v2/service/sts v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.27.0
