@@ -362,6 +362,7 @@ This resource supports the following arguments:
 * `capacity` - (Required, Forces new resource) The web ACL capacity units (WCUs) required for this rule group. See [here](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateRuleGroup.html#API_CreateRuleGroup_RequestSyntax) for general information and [here](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements-list.html) for capacity specific information.
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [Custom Response Body](#custom-response-body) below for details.
 * `description` - (Optional) A friendly description of the rule group.
+* `monetization_config` - (Optional) Specifies the monetization configuration for the rule group. Required when any rule uses the `monetize` action. See [`monetization_config`](#monetization_config-block) below for details.
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
@@ -401,6 +402,7 @@ The `action` block supports the following arguments:
 * `captcha` - (Optional) Instructs AWS WAF to run a `CAPTCHA` check against the web request. See [Captcha](#captcha) below for details.
 * `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [Challenge](#challenge) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
+* `monetize` - (Optional) Instructs AWS WAF to monetize the web request, charging per request according to the monetization configuration of the web ACL that references this rule group. See [Monetize](#monetize) below for details.
 
 ### Allow
 
@@ -431,6 +433,40 @@ The `challenge` block supports the following arguments:
 The `count` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Monetize
+
+The `monetize` block supports the following arguments:
+
+* `price_multiplier` - (Optional) Integer multiplier applied to the base price defined in the rule group's [`monetization_config`](#monetization_config-block) when charging for a matching request. Expressed as a string. Valid values are `1` to `100` (for example, `"5"`).
+
+### `monetization_config` Block
+
+The `monetization_config` block supports the following arguments:
+
+* `crypto_config` - (Optional) Cryptocurrency payment configuration for the rule group. See [`crypto_config`](#crypto_config-block) below for details.
+* `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`.
+
+### `crypto_config` Block
+
+The `crypto_config` block supports the following arguments:
+
+* `payment_network` - (Required) Blockchain payment networks configured to receive payments. You can specify 1 to 2 networks. See [`payment_network`](#payment_network-block) below for details.
+
+### `payment_network` Block
+
+The `payment_network` block supports the following arguments:
+
+* `chain` - (Required) Blockchain network used for settlement. Valid values are `BASE`, `SOLANA`, `BASE_SEPOLIA`, and `SOLANA_DEVNET`.
+* `prices` - (Required) Price configuration for this payment network. Currently supports a single price entry. See [`prices`](#prices-block) below for details.
+* `wallet_address` - (Required) Payee wallet address on the specified blockchain that receives payments.
+
+### `prices` Block
+
+The `prices` block supports the following arguments:
+
+* `amount` - (Required) Base price amount per request, expressed as a decimal string with up to 3 decimal places. Minimum `0.001`, maximum `999999999.999` (for example, `"0.001"`).
+* `currency` - (Required) Currency of the price amount. Valid value is `USDC`.
 
 ### Custom Request Handling
 
