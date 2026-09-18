@@ -203,69 +203,56 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	if !plan.EmailAddress.Equal(state.EmailAddress) {
-		input := directoryservicedata.UpdateUserInput{
+	inputs := map[awstypes.UpdateType]*directoryservicedata.UpdateUserInput{}
+
+	updateInput := func(updateType awstypes.UpdateType) *directoryservicedata.UpdateUserInput {
+		if input, ok := inputs[updateType]; ok {
+			return input
+		}
+
+		input := &directoryservicedata.UpdateUserInput{
 			DirectoryId:    plan.DirectoryID.ValueStringPointer(),
 			SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-			EmailAddress:   plan.EmailAddress.ValueStringPointer(),
+			UpdateType:     updateType,
 		}
+		inputs[updateType] = input
+		return input
+	}
 
+	updateType := func(planValue, stateValue types.String) awstypes.UpdateType {
 		switch {
-		case state.EmailAddress.IsNull():
-			input.UpdateType = awstypes.UpdateTypeAdd
-		case plan.EmailAddress.IsNull():
-			input.UpdateType = awstypes.UpdateTypeRemove
+		case stateValue.IsNull():
+			return awstypes.UpdateTypeAdd
+		case planValue.IsNull():
+			return awstypes.UpdateTypeRemove
 		default:
-			input.UpdateType = awstypes.UpdateTypeReplace
+			return awstypes.UpdateTypeReplace
 		}
+	}
 
-		_, err := conn.UpdateUser(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
+	if !plan.EmailAddress.Equal(state.EmailAddress) {
+		input := updateInput(updateType(plan.EmailAddress, state.EmailAddress))
+		input.EmailAddress = plan.EmailAddress.ValueStringPointer()
 	}
 
 	if !plan.GivenName.Equal(state.GivenName) {
-		input := directoryservicedata.UpdateUserInput{
-			DirectoryId:    plan.DirectoryID.ValueStringPointer(),
-			SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-			GivenName:      plan.GivenName.ValueStringPointer(),
-		}
-
-		switch {
-		case state.GivenName.IsNull():
-			input.UpdateType = awstypes.UpdateTypeAdd
-		case plan.GivenName.IsNull():
-			input.UpdateType = awstypes.UpdateTypeRemove
-		default:
-			input.UpdateType = awstypes.UpdateTypeReplace
-		}
-
-		_, err := conn.UpdateUser(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
+		input := updateInput(updateType(plan.GivenName, state.GivenName))
+		input.GivenName = plan.GivenName.ValueStringPointer()
 	}
 
 	if !plan.Surname.Equal(state.Surname) {
-		input := directoryservicedata.UpdateUserInput{
-			DirectoryId:    plan.DirectoryID.ValueStringPointer(),
-			SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-			Surname:        plan.Surname.ValueStringPointer(),
+		input := updateInput(updateType(plan.Surname, state.Surname))
+		input.Surname = plan.Surname.ValueStringPointer()
+	}
+
+	// For when more than one attribute needs to be updated
+	for _, updateType := range []awstypes.UpdateType{awstypes.UpdateTypeAdd, awstypes.UpdateTypeReplace, awstypes.UpdateTypeRemove} {
+		input, ok := inputs[updateType]
+		if !ok {
+			continue
 		}
 
-		switch {
-		case state.Surname.IsNull():
-			input.UpdateType = awstypes.UpdateTypeAdd
-		case plan.Surname.IsNull():
-			input.UpdateType = awstypes.UpdateTypeRemove
-		default:
-			input.UpdateType = awstypes.UpdateTypeReplace
-		}
-
-		_, err := conn.UpdateUser(ctx, &input)
+		_, err := conn.UpdateUser(ctx, input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
