@@ -525,240 +525,230 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	// Then build the resource maps, looking for duplicates.
-	for _, line := range funcDecl.Doc.List {
-		line := line.Text
+	for _, annotation := range annotations {
+		d.FactoryName = v.functionName
 
-		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			d.FactoryName = v.functionName
+		if attr, ok := annotation.args.Keyword["name"]; ok {
+			d.Name = attr
+		}
 
-			args, err := common.ParseArgs(m[3])
-			if err != nil {
-				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+		switch annotationName, args := annotation.name, annotation.args; annotationName {
+		case "Action":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				continue
 			}
 
-			if attr, ok := args.Keyword["name"]; ok {
-				d.Name = attr
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
 			}
 
-			switch annotationName := m[1]; annotationName {
-			case "Action":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.actions[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Action (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.actions[typeName] = d
-				}
-
-			case "EphemeralResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.ephemeralResources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.ephemeralResources[typeName] = d
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Ephemeral Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "FrameworkDataSource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.frameworkDataSources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.frameworkDataSources[typeName] = d
-				}
-
-				if d.HasResourceIdentity() {
-					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "FrameworkResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.frameworkResources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.frameworkResources[typeName] = d
-				}
-
-				if d.IdentityVersion > 0 {
-					v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "SDKDataSource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.sdkDataSources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.sdkDataSources[typeName] = d
-				}
-
-				if d.HasResourceIdentity() {
-					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "SDKResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.sdkResources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.sdkResources[typeName] = d
-				}
-
-			case "FrameworkListResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				_, fOK := v.frameworkListResources[typeName]
-				_, sdkOK := v.sdkListResources[typeName]
-				if fOK || sdkOK {
-					v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.frameworkListResources[typeName] = d
-				}
-
-			case "SDKListResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				_, fOK := v.frameworkListResources[typeName]
-				_, sdkOK := v.sdkListResources[typeName]
-				if fOK || sdkOK {
-					v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.sdkListResources[typeName] = d
-				}
-
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
-				// Handled above.
-			case "ArnFormat", "IdAttrFormat", "Testing":
-				// Ignored.
-			default:
-				v.g.Warnf("unknown annotation: %s", annotationName)
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
 			}
+
+			if _, ok := v.actions[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Action (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.actions[typeName] = d
+			}
+
+		case "EphemeralResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.ephemeralResources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.ephemeralResources[typeName] = d
+			}
+
+			if d.HasV6_0NullValuesError {
+				v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Ephemeral Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "FrameworkDataSource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.frameworkDataSources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkDataSources[typeName] = d
+			}
+
+			if d.HasResourceIdentity() {
+				v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+			if d.HasV6_0NullValuesError {
+				v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "FrameworkResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.frameworkResources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkResources[typeName] = d
+			}
+
+			if d.IdentityVersion > 0 {
+				v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "SDKDataSource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.sdkDataSources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.sdkDataSources[typeName] = d
+			}
+
+			if d.HasResourceIdentity() {
+				v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+			if d.HasV6_0NullValuesError {
+				v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "SDKResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.sdkResources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.sdkResources[typeName] = d
+			}
+
+		case "FrameworkListResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			_, fOK := v.frameworkListResources[typeName]
+			_, sdkOK := v.sdkListResources[typeName]
+			if fOK || sdkOK {
+				v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkListResources[typeName] = d
+			}
+
+		case "SDKListResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			_, fOK := v.frameworkListResources[typeName]
+			_, sdkOK := v.sdkListResources[typeName]
+			if fOK || sdkOK {
+				v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.sdkListResources[typeName] = d
+			}
+
+		case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
+			// Handled above.
+		case "ArnFormat", "IdAttrFormat", "Testing":
+			// Ignored.
+		default:
+			v.g.Warnf("unknown annotation: %s", annotationName)
 		}
 	}
 
