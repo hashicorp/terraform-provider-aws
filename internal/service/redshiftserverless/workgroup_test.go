@@ -330,6 +330,150 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessWorkgroup_configParameters_partial(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_configParameters_partial_initial(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config_parameter"), knownvalue.SetPartial([]knownvalue.Check{
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("auto_mv"),
+						// 	"parameter_value": knownvalue.StringExact("true"),
+						// }),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("datestyle"),
+						// 	"parameter_value": knownvalue.StringExact("ISO, MDY"),
+						// }),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("enable_case_sensitive_identifier"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("enable_user_activity_logging"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("query_group"),
+							"parameter_value": knownvalue.StringExact(rName),
+						}),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("require_ssl"),
+						// 	"parameter_value": knownvalue.StringExact("true"),
+						// }),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("search_path"),
+							"parameter_value": knownvalue.StringExact("$user, public"),
+						}),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("use_fips_ssl"),
+						// 	"parameter_value": knownvalue.StringExact("false"),
+						// }),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("max_query_execution_time"),
+						// 	"parameter_value": knownvalue.StringExact("14400"),
+						// }),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// On import, the full `config_parameter` set is returned, not just what is tracked
+				ImportStateVerifyIgnore: []string{
+					"config_parameter",
+				},
+			},
+			{
+				Config: testAccWorkgroupConfig_configParameters_partial_updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					// resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config_parameter"), knownvalue.SetPartial([]knownvalue.Check{
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("auto_mv"),
+						// 	"parameter_value": knownvalue.StringExact("true"),
+						// }),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("datestyle"),
+							"parameter_value": knownvalue.StringExact("ISO, MDY"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("enable_case_sensitive_identifier"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("enable_user_activity_logging"),
+							"parameter_value": knownvalue.StringExact("true"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("query_group"),
+							"parameter_value": knownvalue.StringExact(rName),
+						}),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("require_ssl"),
+						// 	"parameter_value": knownvalue.StringExact("true"),
+						// }),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"parameter_key":   knownvalue.StringExact("search_path"),
+							"parameter_value": knownvalue.StringExact("$user, public"),
+						}),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("use_fips_ssl"),
+						// 	"parameter_value": knownvalue.StringExact("false"),
+						// }),
+						// knownvalue.ObjectExact(map[string]knownvalue.Check{
+						// 	"parameter_key":   knownvalue.StringExact("max_query_execution_time"),
+						// 	"parameter_value": knownvalue.StringExact("14400"),
+						// }),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// On import, the full `config_parameter` set is returned, not just what is tracked
+				ImportStateVerifyIgnore: []string{
+					"config_parameter",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_configParameters_invalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWorkgroupConfig_configParameters_partial_invalid(rName),
+				ExpectError: regexache.MustCompile(`ValidationException: The parameter key invalid_parameter isn't supported\.`),
+			},
+		},
+	})
+}
+
 func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
@@ -630,6 +774,95 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
 }
 `, rName, maxQueryExecutionTime)
+}
+
+func testAccWorkgroupConfig_configParameters_partial_initial(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+
+  # default
+  config_parameter {
+    parameter_key   = "enable_user_activity_logging"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "search_path"
+    parameter_value = "$user, public"
+  }
+
+  # non-default
+  config_parameter {
+    parameter_key   = "query_group"
+    parameter_value = %[1]q
+  }
+  config_parameter {
+    parameter_key   = "enable_case_sensitive_identifier"
+    parameter_value = "true"
+  }
+}
+
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+`, rName)
+}
+
+func testAccWorkgroupConfig_configParameters_partial_updated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+
+  # default
+  config_parameter {
+    parameter_key   = "enable_user_activity_logging"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "search_path"
+    parameter_value = "$user, public"
+  }
+  # added, set to default value
+  config_parameter {
+    parameter_key   = "datestyle"
+    parameter_value = "ISO, MDY"
+  }
+
+  # non-default
+  config_parameter {
+    parameter_key   = "query_group"
+    parameter_value = %[1]q
+  }
+  config_parameter {
+    parameter_key   = "enable_case_sensitive_identifier"
+    parameter_value = "true"
+  }
+}
+
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+`, rName)
+}
+
+func testAccWorkgroupConfig_configParameters_partial_invalid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+
+  config_parameter {
+    parameter_key   = "invalid_parameter"
+    parameter_value = "invalid_parameter_value"
+  }
+}
+
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+`, rName)
 }
 
 func testAccWorkgroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
