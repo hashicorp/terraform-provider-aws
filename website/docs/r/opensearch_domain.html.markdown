@@ -498,6 +498,7 @@ AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://d
 
 -> Security Groups and Subnets referenced in these attributes must all be within the same VPC. This determines what VPC the endpoints are created in.
 
+* `egress_enabled` - (Optional) Whether egress traffic from the domain is routed through the VPC. When `true`, outbound traffic flows through the VPC. When `false`, outbound traffic goes through the public internet. Defaults to `false`.
 * `security_group_ids` - (Optional) List of VPC Security Group IDs to be applied to the OpenSearch domain endpoints. If omitted, the default Security Group for the VPC will be used.
 * `subnet_ids` - (Required) List of VPC Subnet IDs for the OpenSearch domain endpoints to be created in.
 
