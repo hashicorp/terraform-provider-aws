@@ -36,5 +36,7 @@ var (
 	FlattenApacheKafkaCluster               = flattenApacheKafkaCluster               // nosemgrep:ci.kafka-in-var-name
 	FlattenKafkaClusterClientAuthentication = flattenKafkaClusterClientAuthentication // nosemgrep:ci.kafka-in-var-name
 	FlattenKafkaClusterEncryptionInTransit  = flattenKafkaClusterEncryptionInTransit  // nosemgrep:ci.kafka-in-var-name
-	KafkaClusterIdentifier                  = kafkaClusterIdentifier                  // nosemgrep:ci.kafka-in-var-name
+	FlattenReplicationInfoDescription       = flattenReplicationInfoDescription
+	KafkaClusterIdentifier                  = kafkaClusterIdentifier // nosemgrep:ci.kafka-in-var-name
+	NewUpdateReplicationInfoInput           = newUpdateReplicationInfoInput
 )

@@ -656,12 +656,7 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := kafka.UpdateReplicationInfoInput{
-			CurrentVersion:        aws.String(d.Get("current_version").(string)),
-			ReplicatorArn:         aws.String(d.Id()),
-			SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
-			TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
-		}
+		input := newUpdateReplicationInfoInput(d)
 
 		if d.HasChanges("log_delivery") {
 			input.LogDelivery = expandLogDelivery(d.Get("log_delivery").([]any))
@@ -691,6 +686,36 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
+}
+
+// newUpdateReplicationInfoInput returns an UpdateReplicationInfo request identifying the
+// replication info to update. Each side of the replication is referenced by the identifier its
+// cluster kind uses: an Amazon MSK cluster by ARN, a self-managed Apache Kafka cluster by ID.
+// ExactlyOneOf in the schema guarantees that exactly one of each pair is set, and the unused
+// field is left unset rather than sent as an empty string, which the API cannot resolve.
+func newUpdateReplicationInfoInput(d *schema.ResourceData) kafka.UpdateReplicationInfoInput {
+	input := kafka.UpdateReplicationInfoInput{
+		CurrentVersion: aws.String(d.Get("current_version").(string)),
+		ReplicatorArn:  aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.source_kafka_cluster_arn"); ok {
+		input.SourceKafkaClusterArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.source_kafka_cluster_id"); ok {
+		input.SourceKafkaClusterId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.target_kafka_cluster_arn"); ok {
+		input.TargetKafkaClusterArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.target_kafka_cluster_id"); ok {
+		input.TargetKafkaClusterId = aws.String(v.(string))
+	}
+
+	return input
 }
 
 func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
