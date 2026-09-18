@@ -604,3 +604,18 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
     ```
 
 Typically, the AWS Go SDK should include constants for various status field values (e.g., `StatusCreating` for `CREATING`). If not, create them in a file named `internal/service/{SERVICE}/consts.go`.
+
+## Local Development Against Emulators
+
+Some waiters require several _consecutive_ successful state checks (`ContinuousTargetOccurence`) before a resource is considered settled. This absorbs AWS eventual consistency: a resource can look ready on its own service endpoint while a dependent resource in another service still cannot see it. Because that cross-service propagation is not observable from the waiter, the counts are tuned conservatively for real AWS and should not be lowered.
+
+In an in-process emulator such as [LocalStack](https://www.localstack.cloud/), there is a single backing store and no cross-service propagation delay, so the consecutive-confirmation budget is pure dead time. For that case only, the provider recognizes an opt-in environment variable:
+
+```sh
+export TF_AWS_ASSUME_NO_PROPAGATION_DELAY=true
+```
+
+When set to a truthy value, participating waiters collapse the consecutive-confirmation budget to a single check. This is an assertion by the operator about their environment; the provider cannot detect it. It is **unsupported against real AWS**, where enabling it can surface intermittent spurious diffs and cross-service races. It is off by default, so real-AWS behavior is unchanged.
+
+Today the SQS queue create, update, and delete waiters honor this variable. Other services can opt in by resolving their occurrence count through the same environment variable rather than exposing per-resource tuning.
+
