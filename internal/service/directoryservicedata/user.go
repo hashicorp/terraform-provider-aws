@@ -12,13 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -35,7 +33,7 @@ import (
 // @FrameworkResource("aws_directoryservicedata_user", name="User")
 // @IdentityAttribute("directory_id")
 // @IdentityAttribute("sam_account_name")
-// @ImportIDHandler("userImportID", setIDAttribute=true)
+// @ImportIDHandler("userImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
 // @Testing(domainTfVar="directoryDomain")
@@ -84,7 +82,6 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringvalidator.LengthBetween(1, 64),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"realm": schema.StringAttribute{
 				Computed: true,
 			},
@@ -125,16 +122,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	directoryID, samAccountName := plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString()
 
-	id, err := intflex.FlattenResourceId(
-		[]string{directoryID, samAccountName},
-		userResourceIDPartCount,
-		false,
-	)
-
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
+	id := userResourceID(directoryID, samAccountName)
 
 	var input directoryservicedata.CreateUserInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
@@ -142,13 +130,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	_, err = conn.CreateUser(ctx, &input)
+	_, err := conn.CreateUser(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
-
-	plan.ID = types.StringValue(id)
 
 	out, err := findUserByTwoPartKey(ctx, conn, directoryID, samAccountName)
 	if err != nil {
@@ -181,7 +167,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, userResourceID(state.DirectoryID.ValueString(), state.SAMAccountName.ValueString()))
 		return
 	}
 
@@ -254,7 +240,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		_, err := conn.UpdateUser(ctx, input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, userResourceID(plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString()))
 			return
 		}
 	}
@@ -262,7 +248,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	out, err := findUserByTwoPartKey(ctx, conn, plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString())
 
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, userResourceID(plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString()))
 		return
 	}
 
@@ -294,7 +280,7 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, userResourceID(state.DirectoryID.ValueString(), state.SAMAccountName.ValueString()))
 		return
 	}
 }
@@ -330,7 +316,6 @@ type userResourceModel struct {
 	EmailAddress      types.String `tfsdk:"email_address"`
 	Enabled           types.Bool   `tfsdk:"enabled"`
 	GivenName         types.String `tfsdk:"given_name"`
-	ID                types.String `tfsdk:"id"`
 	Realm             types.String `tfsdk:"realm"`
 	SAMAccountName    types.String `tfsdk:"sam_account_name"`
 	SID               types.String `tfsdk:"sid"`
@@ -339,8 +324,7 @@ type userResourceModel struct {
 }
 
 var (
-	_ inttypes.ImportIDParser           = userImportID{}
-	_ inttypes.FrameworkImportIDCreator = userImportID{}
+	_ inttypes.ImportIDParser = userImportID{}
 )
 
 type userImportID struct{}
@@ -359,13 +343,9 @@ func (userImportID) Parse(id string) (string, map[string]any, error) {
 	return id, result, nil
 }
 
-func (userImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var directoryID, samAccountName types.String
-	state.GetAttribute(ctx, path.Root("directory_id"), &directoryID)
-	state.GetAttribute(ctx, path.Root("sam_account_name"), &samAccountName)
-
+func userResourceID(directoryID, samAccountName string) string {
 	id, _ := intflex.FlattenResourceId(
-		[]string{directoryID.ValueString(), samAccountName.ValueString()},
+		[]string{directoryID, samAccountName},
 		userResourceIDPartCount,
 		false,
 	)
