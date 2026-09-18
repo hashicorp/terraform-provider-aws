@@ -57,6 +57,25 @@ func findGSIFromTable(table *awstypes.TableDescription, indexName string) (*awst
 	return nil, &retry.NotFoundError{}
 }
 
+func findVectorIndexByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) (*awstypes.VectorIndexDescription, error) {
+	table, err := findTableByName(ctx, conn, tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	return findVectorIndexFromTable(table, indexName)
+}
+
+func findVectorIndexFromTable(table *awstypes.TableDescription, indexName string) (*awstypes.VectorIndexDescription, error) {
+	for _, v := range table.VectorIndexes {
+		if aws.ToString(v.IndexName) == indexName {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
 func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) (*awstypes.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
