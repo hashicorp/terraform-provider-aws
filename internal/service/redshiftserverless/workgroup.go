@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,7 +38,6 @@ func resourceWorkgroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceWorkgroupRead,
 		UpdateWithoutTimeout: resourceWorkgroupUpdate,
 		DeleteWithoutTimeout: resourceWorkgroupDelete,
-		CustomizeDiff:        resourceWorkgroupCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -280,6 +278,10 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
+	// When importing, only `id` will be set.
+	// During a read of an existing resource, `workgroup_id` will be set as it is a required attribute.
+	isImport := d.Get("workgroup_id") == ""
+
 	out, err := findWorkgroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -294,8 +296,8 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.Set(names.AttrARN, out.WorkgroupArn)
 	d.Set("base_capacity", out.BaseCapacity)
-	// Keep state aligned with the subset Terraform is actively managing.
-	configParameters := flattenConfigParametersForState(out.ConfigParameters, configuredConfigParameterKeysFromSet(d.Get("config_parameter")))
+	// On read, keep state aligned with the subset Terraform is actively managing.
+	configParameters := flattenConfigParametersForState(isImport, out.ConfigParameters, d)
 	if err := d.Set("config_parameter", configParameters); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
@@ -317,38 +319,6 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("workgroup_name", out.WorkgroupName)
 
 	return diags
-}
-
-func resourceWorkgroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-	if diff.Id() == "" || !diff.HasChange("config_parameter") {
-		return nil
-	}
-
-	configuredKeys, ok := configuredConfigParameterKeys(diff.GetRawConfig())
-	if !ok {
-		return nil
-	}
-
-	serverOnlyConfigParameters := legacyServerOnlyConfigParameters(diff.GetRawState(), configuredKeys)
-	if len(serverOnlyConfigParameters) == 0 {
-		return nil
-	}
-
-	configParameters, ok := diff.Get("config_parameter").(*schema.Set)
-	if !ok {
-		return nil
-	}
-
-	mergedConfigParameters := schema.NewSet(schema.HashResource(workgroupConfigParameterSchema()), configParameters.List())
-	for _, configParameter := range serverOnlyConfigParameters {
-		mergedConfigParameters.Add(configParameter)
-	}
-
-	if err := diff.SetNew("config_parameter", mergedConfigParameters); err != nil {
-		return fmt.Errorf("setting config_parameter diff: %w", err)
-	}
-
-	return nil
 }
 
 func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -823,59 +793,6 @@ func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]any {
 	return tfMap
 }
 
-var legacyConfigParameterKeys = map[string]struct{}{
-	"auto_mv":                          {},
-	"datestyle":                        {},
-	"enable_case_sensitive_identifier": {},
-	"enable_user_activity_logging":     {},
-	"query_group":                      {},
-	"search_path":                      {},
-	"max_query_cpu_time":               {},
-	"max_query_blocks_read":            {},
-	"max_scan_row_count":               {},
-	"max_query_execution_time":         {},
-	"max_query_queue_time":             {},
-	"max_query_cpu_usage_percent":      {},
-	"max_query_temp_blocks_to_disk":    {},
-	"max_join_row_count":               {},
-	"max_nested_loop_join_row_count":   {},
-	"require_ssl":                      {},
-	"use_fips_ssl":                     {},
-}
-
-func configuredConfigParameterKeys(rawConfig cty.Value) (map[string]struct{}, bool) {
-	if rawConfig.IsNull() || !rawConfig.IsKnown() || !rawConfig.Type().HasAttribute("config_parameter") {
-		return nil, false
-	}
-
-	configParameters := rawConfig.GetAttr("config_parameter")
-	if configParameters.IsNull() {
-		return nil, false
-	}
-
-	if !configParameters.IsKnown() || !configParameters.CanIterateElements() {
-		return nil, false
-	}
-
-	keys := make(map[string]struct{}, configParameters.LengthInt())
-
-	for it := configParameters.ElementIterator(); it.Next(); {
-		_, configParameter := it.Element()
-		if configParameter.IsNull() || !configParameter.IsKnown() || !configParameter.Type().HasAttribute("parameter_key") {
-			continue
-		}
-
-		parameterKey := configParameter.GetAttr("parameter_key")
-		if parameterKey.IsNull() || !parameterKey.IsKnown() {
-			continue
-		}
-
-		keys[parameterKey.AsString()] = struct{}{}
-	}
-
-	return keys, true
-}
-
 func configuredConfigParameterKeysFromSet(tfSet any) map[string]struct{} {
 	configParameters, ok := tfSet.(*schema.Set)
 	if !ok || configParameters == nil {
@@ -901,13 +818,27 @@ func configuredConfigParameterKeysFromSet(tfSet any) map[string]struct{} {
 	return keys
 }
 
-func flattenConfigParametersForState(apiObjects []awstypes.ConfigParameter, configuredKeys map[string]struct{}) []any {
-	if len(apiObjects) == 0 || len(configuredKeys) == 0 {
+func flattenConfigParametersForState(isImport bool, apiObjects []awstypes.ConfigParameter, d *schema.ResourceData) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []any
 
+	// TODO: Quick and dirty, needs better logic
+	if isImport {
+		for _, apiObject := range apiObjects {
+			if apiObject.ParameterKey == nil {
+				continue
+			}
+
+			tfList = append(tfList, flattenConfigParameter(apiObject))
+		}
+
+		return tfList
+	}
+
+	configuredKeys := configuredConfigParameterKeysFromSet(d.Get("config_parameter"))
 	for _, apiObject := range apiObjects {
 		if apiObject.ParameterKey == nil {
 			continue
@@ -918,54 +849,6 @@ func flattenConfigParametersForState(apiObjects []awstypes.ConfigParameter, conf
 		}
 
 		tfList = append(tfList, flattenConfigParameter(apiObject))
-	}
-
-	return tfList
-}
-
-func legacyServerOnlyConfigParameters(rawState cty.Value, configuredKeys map[string]struct{}) []any {
-	if rawState.IsNull() || !rawState.IsKnown() || !rawState.Type().HasAttribute("config_parameter") {
-		return nil
-	}
-
-	configParameters := rawState.GetAttr("config_parameter")
-	if configParameters.IsNull() || !configParameters.IsKnown() || !configParameters.CanIterateElements() {
-		return nil
-	}
-
-	var tfList []any
-
-	for it := configParameters.ElementIterator(); it.Next(); {
-		_, configParameter := it.Element()
-		if configParameter.IsNull() || !configParameter.IsKnown() {
-			continue
-		}
-		if !configParameter.Type().HasAttribute("parameter_key") || !configParameter.Type().HasAttribute("parameter_value") {
-			continue
-		}
-
-		parameterKey := configParameter.GetAttr("parameter_key")
-		if parameterKey.IsNull() || !parameterKey.IsKnown() {
-			continue
-		}
-
-		key := parameterKey.AsString()
-		if _, ok := configuredKeys[key]; ok {
-			continue
-		}
-		if _, ok := legacyConfigParameterKeys[key]; ok {
-			continue
-		}
-
-		parameterValue := configParameter.GetAttr("parameter_value")
-		if parameterValue.IsNull() || !parameterValue.IsKnown() {
-			continue
-		}
-
-		tfList = append(tfList, map[string]any{
-			"parameter_key":   key,
-			"parameter_value": parameterValue.AsString(),
-		})
 	}
 
 	return tfList
