@@ -25,7 +25,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newPackageOriginConfigurationResource,
+			TypeName: "aws_codeartifact_package_origin_configuration",
+			Name:     "Package Origin Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrDomain, true),
+				inttypes.StringIdentityAttribute("repository", true),
+				inttypes.StringIdentityAttribute(names.AttrFormat, true),
+				inttypes.StringIdentityAttribute(names.AttrNamespace, false),
+				inttypes.StringIdentityAttribute("package", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      packageOriginConfigurationImportID{},
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
