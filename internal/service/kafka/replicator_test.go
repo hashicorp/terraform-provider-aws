@@ -1358,7 +1358,7 @@ func TestReplicatorUpdateReplicationInfoInput(t *testing.T) {
 
 		// kind: 0 = Amazon MSK, referenced by ARN; 1 = Apache Kafka, referenced by ID.
 		if rand.IntN(2) == 0 {
-			v := randKafkaClusterARN("source")
+			v := randKafkaClusterARN(names.AttrSource)
 			tfMap["source_kafka_cluster_arn"], wantSourceARN = v, aws.String(v)
 		} else {
 			v := randKafkaString("on-prem-source")
@@ -1366,7 +1366,7 @@ func TestReplicatorUpdateReplicationInfoInput(t *testing.T) {
 		}
 
 		if rand.IntN(2) == 0 {
-			v := randKafkaClusterARN("target")
+			v := randKafkaClusterARN(names.AttrTarget)
 			tfMap["target_kafka_cluster_arn"], wantTargetARN = v, aws.String(v)
 		} else {
 			v := randKafkaString("on-prem-target")
@@ -1442,7 +1442,7 @@ func TestReplicatorFlattenReplicationInfoDescription(t *testing.T) {
 	// clusterWithoutDetails is a description that carries neither cluster kind, which is what
 	// DescribeReplicator returns for a self-managed cluster if it omits ApacheKafkaCluster.
 	clusterWithoutDetails := func() *awstypes.KafkaClusterDescription {
-		return &awstypes.KafkaClusterDescription{KafkaClusterAlias: aws.String("alias")}
+		return &awstypes.KafkaClusterDescription{KafkaClusterAlias: aws.String(names.AttrAlias)}
 	}
 
 	// want lists the identifier attributes expected in the flattened map. Any identifier

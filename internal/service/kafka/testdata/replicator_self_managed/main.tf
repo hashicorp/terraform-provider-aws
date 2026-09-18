@@ -318,7 +318,7 @@ resource "aws_instance" "bastion" {
 
     dnf install -y java-17-amazon-corretto-headless tar gzip jq
 
-    curl -fsSL "https://archive.apache.org/dist/kafka/${var.kafka_version}/kafka_2.13-${var.kafka_version}.tgz" -o /tmp/kafka.tgz
+    curl -fsSL "https://archive.apache.org/dist/kafka/${var.kafka_version}/kafka_2.13-${var.kafka_version}.tgz" -o /tmp/kafka.tgz # nosemgrep:ci.semgrep.domain-names.domain-names-tf
     tar xzf /tmp/kafka.tgz -C /opt
     ln -sfn "/opt/kafka_2.13-${var.kafka_version}" /opt/kafka
 
