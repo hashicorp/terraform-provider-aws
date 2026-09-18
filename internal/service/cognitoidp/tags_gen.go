@@ -9,6 +9,7 @@ import (
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	sdkarn "github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,7 +39,20 @@ func listTags(ctx context.Context, conn *cognitoidentityprovider.Client, identif
 // ListTags lists cognitoidp service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).CognitoIDPClient(ctx), identifier)
+	c := meta.(*conns.AWSClient)
+	conn := c.CognitoIDPClient(ctx)
+
+	// Cognito requires the caller region to match the ARN region (e.g. for user pool
+	// replicas whose ARN is in a different region than the provider's default).
+	var optFns []func(*cognitoidentityprovider.Options)
+	if a, err := sdkarn.Parse(identifier); err == nil && a.Region != "" && a.Region != c.Region(ctx) {
+		region := a.Region
+		optFns = append(optFns, func(o *cognitoidentityprovider.Options) {
+			o.Region = region
+		})
+	}
+
+	tags, err := listTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
 		return smarterr.NewError(err)
@@ -127,5 +141,18 @@ func updateTags(ctx context.Context, conn *cognitoidentityprovider.Client, ident
 // UpdateTags updates cognitoidp service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).CognitoIDPClient(ctx), identifier, oldTags, newTags)
+	c := meta.(*conns.AWSClient)
+	conn := c.CognitoIDPClient(ctx)
+
+	// Cognito requires the caller region to match the ARN region (e.g. for user pool
+	// replicas whose ARN is in a different region than the provider's default).
+	var optFns []func(*cognitoidentityprovider.Options)
+	if a, err := sdkarn.Parse(identifier); err == nil && a.Region != "" && a.Region != c.Region(ctx) {
+		region := a.Region
+		optFns = append(optFns, func(o *cognitoidentityprovider.Options) {
+			o.Region = region
+		})
+	}
+
+	return updateTags(ctx, conn, identifier, oldTags, newTags, optFns...)
 }
