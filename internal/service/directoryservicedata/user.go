@@ -5,14 +5,12 @@ package directoryservicedata
 
 import (
 	"context"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -43,24 +41,16 @@ import (
 // @Testing(domainTfVar="directoryDomain")
 // @Testing(emailAddress="emailAddress")
 func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &userResource{}
-
-	r.SetDefaultCreateTimeout(20 * time.Minute)
-	r.SetDefaultUpdateTimeout(20 * time.Minute)
-	r.SetDefaultDeleteTimeout(20 * time.Minute)
-
-	return r, nil
+	return &userResource{}, nil
 }
 
 const (
 	ResNameUser             = "User"
 	userResourceIDPartCount = 2
-	statusFound             = "found"
 )
 
 type userResource struct {
 	framework.ResourceWithModel[userResourceModel]
-	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -121,13 +111,6 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed: true,
 			},
 		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
-		},
 	}
 }
 
@@ -167,9 +150,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.StringValue(id)
 
-	out, err := waitUserCreated(
-		ctx, conn, directoryID, samAccountName, r.CreateTimeout(ctx, plan.Timeouts),
-	)
+	out, err := findUserByTwoPartKey(ctx, conn, directoryID, samAccountName)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
@@ -292,7 +273,6 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	out, err := findUserByTwoPartKey(ctx, conn, plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString())
-	// out, err := waitUserUpdated(ctx, conn, plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString(), plan, r.UpdateTimeout(ctx, plan.Timeouts))
 
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
@@ -331,58 +311,6 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	err = waitUserDeleted(ctx, conn, state.DirectoryID.ValueString(), state.SAMAccountName.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-}
-
-func waitUserCreated(ctx context.Context, conn *directoryservicedata.Client, directoryID string, samAccountName string, timeout time.Duration) (*directoryservicedata.DescribeUserOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusFound},
-		Refresh:                   statusUser(conn, directoryID, samAccountName),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*directoryservicedata.DescribeUserOutput); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-// func waitUserUpdated(ctx context.Context, conn *directoryservicedata.Client, directoryID, samAccountName string, expected userResourceModel, timeout time.Duration) (*directoryservicedata.DescribeUserOutput, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{statusPending},
-// 		Target:                    []string{statusUpdated},
-// 		Refresh:                   StatusUserUpdated(conn, directoryID, samAccountName, expected),
-// 		Timeout:                   timeout,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*directoryservicedata.DescribeUserOutput); ok {
-// 		return out, smarterr.NewError(err)
-// 	}
-
-// 	return nil, smarterr.NewError(err)
-// }
-
-func waitUserDeleted(ctx context.Context, conn *directoryservicedata.Client, directoryID, samAccountName string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusFound},
-		Target:  []string{},
-		Refresh: statusUser(conn, directoryID, samAccountName),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return smarterr.NewError(err)
 }
 
 func findUserByTwoPartKey(ctx context.Context, conn *directoryservicedata.Client, directoryID, samAccountName string) (*directoryservicedata.DescribeUserOutput, error) {
@@ -409,38 +337,19 @@ func findUserByTwoPartKey(ctx context.Context, conn *directoryservicedata.Client
 	return out, nil
 }
 
-func statusUser(conn *directoryservicedata.Client, directoryID, samAccountName string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findUserByTwoPartKey(ctx, conn, directoryID, samAccountName)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-		return out, statusFound, nil
-	}
-}
-
 type userResourceModel struct {
 	framework.WithRegionModel
-	DirectoryID       types.String   `tfsdk:"directory_id"`
-	DistinguishedName types.String   `tfsdk:"distinguished_name"`
-	EmailAddress      types.String   `tfsdk:"email_address"`
-	Enabled           types.Bool     `tfsdk:"enabled"`
-	GivenName         types.String   `tfsdk:"given_name"`
-	ID                types.String   `tfsdk:"id"`
-	Realm             types.String   `tfsdk:"realm"`
-	SAMAccountName    types.String   `tfsdk:"sam_account_name"`
-	SID               types.String   `tfsdk:"sid"`
-	Surname           types.String   `tfsdk:"surname"`
-	Timeouts          timeouts.Value `tfsdk:"timeouts"`
-	UserPrincipalName types.String   `tfsdk:"user_principal_name"`
-}
-
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+	DirectoryID       types.String `tfsdk:"directory_id"`
+	DistinguishedName types.String `tfsdk:"distinguished_name"`
+	EmailAddress      types.String `tfsdk:"email_address"`
+	Enabled           types.Bool   `tfsdk:"enabled"`
+	GivenName         types.String `tfsdk:"given_name"`
+	ID                types.String `tfsdk:"id"`
+	Realm             types.String `tfsdk:"realm"`
+	SAMAccountName    types.String `tfsdk:"sam_account_name"`
+	SID               types.String `tfsdk:"sid"`
+	Surname           types.String `tfsdk:"surname"`
+	UserPrincipalName types.String `tfsdk:"user_principal_name"`
 }
 
 var (
