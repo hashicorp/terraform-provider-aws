@@ -76,6 +76,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the domain the SAML options are associated with.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elasticsearch domains using the `domain_name`. For example:

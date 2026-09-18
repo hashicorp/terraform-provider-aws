@@ -36,56 +36,58 @@ func resourceMaintenanceWindow() *schema.Resource {
 		UpdateWithoutTimeout: resourceMaintenanceWindowUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowDelete,
 
-		Schema: map[string]*schema.Schema{
-			"allow_unassociated_targets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cutoff": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"end_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"schedule_offset": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 6),
-			},
-			"schedule_timezone": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"start_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_unassociated_targets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"cutoff": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"end_date": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"schedule_offset": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 6),
+				},
+				"schedule_timezone": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"start_date": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

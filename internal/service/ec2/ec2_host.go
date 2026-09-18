@@ -45,56 +45,58 @@ func resourceHost() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asset_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"outpost_arn"},
-				Computed:     true,
-			},
-			"auto_placement": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AutoPlacementOn,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"host_recovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.HostRecoveryOff,
-				ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
-			},
-			"instance_family": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
-			},
-			names.AttrInstanceType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"asset_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{names.AttrOutpostARN},
+					Computed:     true,
+				},
+				"auto_placement": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AutoPlacementOn,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"host_recovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.HostRecoveryOff,
+					ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
+				},
+				"instance_family": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
+				},
+				names.AttrInstanceType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -124,7 +126,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -167,7 +169,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set(names.AttrInstanceType, host.HostProperties.InstanceType)
-	d.Set("outpost_arn", host.OutpostArn)
+	d.Set(names.AttrOutpostARN, host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 
 	setTagsOut(ctx, host.Tags)

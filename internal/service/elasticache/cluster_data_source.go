@@ -27,149 +27,151 @@ func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cache_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"outpost_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cache_nodes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrOutpostARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				StateFunc: func(v any) string {
-					value := v.(string)
-					return strings.ToLower(value)
+				"cluster_address": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"configuration_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ip_discovery": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_delivery_configuration": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestination: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"destination_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_format": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					StateFunc: func(v any) string {
+						value := v.(string)
+						return strings.ToLower(value)
+					},
+				},
+				"configuration_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ip_discovery": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_delivery_configuration": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestination: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"destination_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_format": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"notification_topic_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"num_cache_nodes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preferred_outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"snapshot_retention_limit": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"notification_topic_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"num_cache_nodes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preferred_outpost_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"snapshot_retention_limit": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_window": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +22,7 @@ import (
 
 func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -59,7 +60,7 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -97,7 +98,7 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -113,6 +114,14 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_email_identity.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_email_identity.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -120,7 +129,7 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,7 +163,7 @@ func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -190,7 +199,7 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 
 func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity.test"
 
 	key1 := inttypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))

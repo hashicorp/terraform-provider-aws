@@ -47,157 +47,159 @@ func ResourceKxEnvironment() *schema.Resource {
 			Delete: schema.DefaultTimeout(75 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				Computed: true,
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_dns_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_dns_server_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(3, 255),
-						},
-						"custom_dns_server_ip": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsIPAddress,
+				names.AttrAvailabilityZones: {
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Computed: true,
+				},
+				"created_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_dns_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_dns_server_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(3, 255),
+							},
+							"custom_dns_server_ip": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.IsIPAddress,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"infrastructure_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"last_modified_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attachment_network_acl_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 100,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrCIDRBlock: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.IsCIDR,
-									},
-									"icmp_type_code": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-												"code": {
-													Type:     schema.TypeInt,
-													Required: true,
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"infrastructure_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"last_modified_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_gateway_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attachment_network_acl_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 100,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCIDRBlock: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.IsCIDR,
+										},
+										"icmp_type_code": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
+													"code": {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"port_range": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IsPortNumber,
-												},
-												"to": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IsPortNumber,
+										"port_range": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"from": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IsPortNumber,
+													},
+													"to": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IsPortNumber,
+													},
 												},
 											},
 										},
-									},
-									names.AttrProtocol: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 5),
-									},
-									"rule_action": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.RuleAction](),
-									},
-									"rule_number": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 32766),
+										names.AttrProtocol: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 5),
+										},
+										"rule_action": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.RuleAction](),
+										},
+										"rule_number": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 32766),
+										},
 									},
 								},
 							},
-						},
-						"routable_cidr_space": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						names.AttrTransitGatewayID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
+							"routable_cidr_space": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.IsCIDR,
+							},
+							names.AttrTransitGatewayID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 32),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

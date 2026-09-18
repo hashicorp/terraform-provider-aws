@@ -20,12 +20,14 @@ func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
-		Schema: map[string]*schema.Schema{
-			// As the CloudFront service is global we define our own region attribute.
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				// As the CloudFront service is global we define our own region attribute.
+				names.AttrRegion: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

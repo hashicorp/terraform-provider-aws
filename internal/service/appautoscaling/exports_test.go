@@ -14,4 +14,5 @@ var (
 	FindTargetByThreePartKey         = findTargetByThreePartKey
 
 	PolicyParseImportID = policyParseImportID
+	TargetParseImportID = targetParseImportID
 )

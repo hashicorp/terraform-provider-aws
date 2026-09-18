@@ -25,34 +25,36 @@ func dataSourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kafka_versions": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"server_properties": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kafka_versions": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"latest_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"server_properties": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

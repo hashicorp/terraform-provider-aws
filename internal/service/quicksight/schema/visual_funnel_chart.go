@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,9 +20,9 @@ func funnelChartVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -36,17 +37,17 @@ func funnelChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-										"label_color":               hexColorSchema(attrOptional),
+										"category_label_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"label_color":               hexColorSchema(sdkschema.AttrOptional),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"measure_data_label_style":  stringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](attrOptional),
-										"measure_label_visibility":  stringEnumSchema[awstypes.Visibility](attrOptional),
-										"position":                  stringEnumSchema[awstypes.DataLabelPosition](attrOptional),
-										"visibility":                stringEnumSchema[awstypes.Visibility](attrOptional),
+										"measure_data_label_style":  sdkschema.StringEnumSchema[awstypes.FunnelChartMeasureDataLabelStyle](sdkschema.AttrOptional),
+										"measure_label_visibility":  sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"position":                  sdkschema.StringEnumSchema[awstypes.DataLabelPosition](sdkschema.AttrOptional),
+										attrVisibility:              sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -68,7 +69,7 @@ func funnelChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -87,9 +88,80 @@ func funnelChartVisualSchema() *schema.Schema {
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func funnelChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisualID:      idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"category_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"data_label_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartDataLabelOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_label_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"label_color":               stringComputedOnly(),
+										"label_font_configuration":  fontConfigurationDataSourceSchema(),
+										"measure_data_label_style":  sdkschema.StringEnumDataSourceSchema[awstypes.FunnelChartMeasureDataLabelStyle](),
+										"measure_label_visibility":  sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"position":                  sdkschema.StringEnumDataSourceSchema[awstypes.DataLabelPosition](),
+										attrVisibility:              sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+									},
+								},
+							},
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"funnel_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":       dimensionFieldDataSourceSchema(),
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FunnelChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":        fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":             tooltipOptionsDataSourceSchema(),
+							"value_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"visual_palette":      visualPaletteDataSourceSchema(),
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -107,7 +179,7 @@ func expandFunnelChartVisual(tfList []any) *awstypes.FunnelChartVisual {
 
 	apiObject := &awstypes.FunnelChartVisual{}
 
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -116,13 +188,13 @@ func expandFunnelChartVisual(tfList []any) *awstypes.FunnelChartVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandFunnelChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -150,7 +222,7 @@ func expandFunnelChartConfiguration(tfList []any) *awstypes.FunnelChartConfigura
 	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandFunnelChartFieldWells(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandFunnelChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -256,7 +328,7 @@ func expandFunnelChartDataLabelOptions(tfList []any) *awstypes.FunnelChartDataLa
 	if v, ok := tfMap["position"].(string); ok && v != "" {
 		apiObject.Position = awstypes.DataLabelPosition(v)
 	}
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 	if v, ok := tfMap["label_font_configuration"].([]any); ok && len(v) > 0 {
@@ -272,7 +344,7 @@ func flattenFunnelChartVisual(apiObject *awstypes.FunnelChartVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
 
 	if apiObject.Actions != nil {
@@ -282,13 +354,13 @@ func flattenFunnelChartVisual(apiObject *awstypes.FunnelChartVisual) []any {
 		tfMap["chart_configuration"] = flattenFunnelChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -311,7 +383,7 @@ func flattenFunnelChartConfiguration(apiObject *awstypes.FunnelChartConfiguratio
 		tfMap["field_wells"] = flattenFunnelChartFieldWells(apiObject.FieldWells)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenFunnelChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenFunnelChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
@@ -343,7 +415,7 @@ func flattenFunnelChartDataLabelOptions(apiObject *awstypes.FunnelChartDataLabel
 	tfMap["measure_data_label_style"] = apiObject.MeasureDataLabelStyle
 	tfMap["measure_label_visibility"] = apiObject.MeasureLabelVisibility
 	tfMap["position"] = apiObject.Position
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }

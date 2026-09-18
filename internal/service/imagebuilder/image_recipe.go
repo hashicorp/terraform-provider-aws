@@ -41,212 +41,214 @@ func resourceImageRecipe() *schema.Resource {
 		UpdateWithoutTimeout: resourceImageRecipeUpdate,
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
 
-		Schema: map[string]*schema.Schema{
-			"ami_tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"block_device_mapping": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						"ebs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDeleteOnTermination: {
-										Type:             nullable.TypeNullableBool,
-										Optional:         true,
-										ForceNew:         true,
-										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-									},
-									names.AttrEncrypted: {
-										Type:             nullable.TypeNullableBool,
-										Optional:         true,
-										ForceNew:         true,
-										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
-										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-									},
-									names.AttrIOPS: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(100, 100000),
-									},
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									names.AttrSnapshotID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									names.AttrThroughput: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(125, 2000),
-									},
-									names.AttrVolumeSize: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 16000),
-									},
-									names.AttrVolumeType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EbsVolumeType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"ami_tags": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"block_device_mapping": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							"ebs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDeleteOnTermination: {
+											Type:             nullable.TypeNullableBool,
+											Optional:         true,
+											ForceNew:         true,
+											DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+											ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+										},
+										names.AttrEncrypted: {
+											Type:             nullable.TypeNullableBool,
+											Optional:         true,
+											ForceNew:         true,
+											DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+											ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+										},
+										names.AttrIOPS: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(100, 100000),
+										},
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										names.AttrSnapshotID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										names.AttrThroughput: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(125, 2000),
+										},
+										names.AttrVolumeSize: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 16000),
+										},
+										names.AttrVolumeType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.EbsVolumeType](),
+										},
 									},
 								},
 							},
-						},
-						"no_device": {
-							// Use TypeBool to allow an "unspecified" value of false,
-							// since the API uses an empty string ("") as true and
-							// this is not compatible with TypeString's zero value.
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVirtualName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-					},
-				},
-			},
-			"component": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"component_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrParameter: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
+							"no_device": {
+								// Use TypeBool to allow an "unspecified" value of false,
+								// since the API uses an empty string ("") as true and
+								// this is not compatible with TypeString's zero value.
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVirtualName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
 							},
 						},
 					},
 				},
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_image": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"systems_manager_agent": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"uninstall_after_build": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
+				"component": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"component_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrParameter: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_data_base64": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 21847),
-					verify.ValidBase64String,
-				),
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"working_directory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_image": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"systems_manager_agent": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"uninstall_after_build": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_data_base64": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 21847),
+						verify.ValidBase64String,
+					),
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"working_directory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+			}
 		},
 	}
 }

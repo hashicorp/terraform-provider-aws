@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecr_lifecycle_policy: Fix diffs in `policy` when no changes are detected
-```

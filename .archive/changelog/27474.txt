@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_budgets_budget: Add `auto_adjust_data` configuration block
-```

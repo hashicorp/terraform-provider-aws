@@ -71,66 +71,68 @@ func resourceCertificate() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_passthrough": sdkv2.JSONDocumentSchemaOptionalForceNew(),
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_authority_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_signing_request": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"signing_algorithm": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.SigningAlgorithm](),
-			},
-			"template_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validTemplateARN,
-			},
-			"validity": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.ValidityPeriodType](),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidStringDateOrPositiveInt,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_passthrough": sdkv2.JSONDocumentSchemaOptionalForceNew(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_authority_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_signing_request": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"signing_algorithm": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.SigningAlgorithm](),
+				},
+				"template_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validTemplateARN,
+				},
+				"validity": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.ValidityPeriodType](),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidStringDateOrPositiveInt,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

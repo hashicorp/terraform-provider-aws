@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_transfer_server: Add `tags` attribute
-```

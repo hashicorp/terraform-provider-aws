@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -82,6 +83,14 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrailVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -92,7 +101,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 	resourceName := "aws_bedrock_guardrail_version.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var guardrailversion bedrock.GetGuardrailOutput
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)

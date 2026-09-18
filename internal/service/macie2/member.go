@@ -41,62 +41,64 @@ func resourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"administrator_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"invitation_disable_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"invitation_message": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"invite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"invited_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"relationship_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"administrator_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"invitation_disable_email_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"invitation_message": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"invite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"invited_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"relationship_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

@@ -28,111 +28,113 @@ func dataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_signing_request": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_storage_security_standard": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"not_after": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"not_before": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
-			"revocation_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
-						"crl_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"custom_cname": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"custom_path": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"expiration_in_days": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrS3BucketName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"s3_object_acl": {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_signing_request": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_storage_security_standard": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"not_after": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"not_before": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
+				"revocation_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
+							"crl_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"custom_cname": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"custom_path": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"expiration_in_days": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrS3BucketName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"s3_object_acl": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
-						"ocsp_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"ocsp_custom_cname": {
-										Type:     schema.TypeString,
-										Computed: true,
+							// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
+							"ocsp_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"ocsp_custom_cname": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"serial": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"serial": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

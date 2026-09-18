@@ -40,19 +40,21 @@ func resourceResourceAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"resource_share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"resource_share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

@@ -10,7 +10,7 @@ description: |-
 
 A Cluster Instance Resource defines attributes that are specific to a single instance in a Neptune Cluster.
 
-You can simply add neptune instances and Neptune manages the replication. You can use the [count][1]
+You can simply add neptune instances and Neptune manages the replication. You can use the [count](https://www.terraform.io/docs/configuration/meta-arguments/count.html)
 meta-parameter to make multiple instances and join them all to the same Neptune Cluster, or you may specify different Cluster Instance resources with various `instance_class` sizes.
 
 ## Example Usage
@@ -68,7 +68,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The hostname of the instance. See also `endpoint` and `port`.
-* `arn` - Amazon Resource Name (ARN) of neptune instance
+* `arn` - ARN of neptune instance
 * `dbi_resource_id` - The region-unique, immutable identifier for the neptune instance.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `id` - The Instance identifier
@@ -77,8 +77,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `storage_type` - Storage type associated with the cluster `standard/iopt1`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` - Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
-
-[1]: https://www.terraform.io/docs/configuration/meta-arguments/count.html
 
 ## Timeouts
 

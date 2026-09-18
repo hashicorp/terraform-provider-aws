@@ -65,12 +65,53 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccMQBrokerDataSource_resourceShareARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+	dataSourceName := "data.aws_mq_broker.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.MQEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerDataSourceConfig_resourceShareARNs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "resource_share_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resource_share_arns.#", resourceName, "resource_share_arns.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "shared_resources.#", resourceName, "shared_resources.#"),
+				),
+			},
+		},
+	})
+}
+
+func testAccBrokerDataSourceConfig_resourceShareARNs(rName string) string {
+	return acctest.ConfigCompose(testAccBrokerConfig_rabbitResourceShareARNs(rName), `
+data "aws_mq_broker" "test" {
+  broker_id = aws_mq_broker.test.id
+}
+`)
+}
+
 func testAccBrokerDataSourceConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccBrokerConfig_baseCustomVPC(rName), fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.17.6"
+  engine_version = %[2]q
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -90,9 +131,9 @@ resource "aws_mq_broker" "test" {
   }
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
-  engine_type        = "ActiveMQ"
-  engine_version     = "5.17.6"
-  host_instance_type = "mq.t3.micro"
+  engine_type        = aws_mq_configuration.test.engine_type
+  engine_version     = aws_mq_configuration.test.engine_version
+  host_instance_type = %[3]q
 
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
@@ -116,9 +157,13 @@ resource "aws_mq_broker" "test" {
     groups         = ["dragon", "salamander", "leopard"]
   }
 
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_internet_gateway.test]
 }
-`, rName))
+`, rName, testAccActiveMQVersionNormalized5_19, testAccActiveMQHostInstanceType1))
 }
 
 func testAccBrokerDataSourceConfig_byID(rName string) string {

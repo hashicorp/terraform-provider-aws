@@ -51,6 +51,35 @@ service "account" {
   is_global = true
 }
 
+service "accountaccess" {
+  cli_v2_command {
+    aws_cli_v2_command           = "account-access"
+    aws_cli_v2_command_no_dashes = "accountaccess"
+  }
+
+  sdk {
+    id            = "Account Access"
+    arn_namespace = "account-access"
+  }
+
+  names {
+    provider_name_upper = "AccountAccess"
+    human_friendly      = "Account Access"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
+  }
+
+  resource_prefix {
+    correct = "aws_accountaccess_"
+  }
+
+  provider_package_correct = "accountaccess"
+  doc_prefix               = ["accountaccess_"]
+  brand                    = "AWS"
+}
+
 service "acm" {
   sdk {
     id            = "ACM"
@@ -102,6 +131,40 @@ service "acmpca" {
 
   provider_package_correct = "acmpca"
   doc_prefix               = ["acmpca_"]
+  brand                    = "AWS"
+}
+
+service "agentregistry" {
+  cli_v2_command {
+    aws_cli_v2_command           = "agent-registry-control"
+    aws_cli_v2_command_no_dashes = "agentregistrycontrol"
+  }
+
+  go_packages {
+    v2_package = "agentregistrycontrol"
+  }
+
+  sdk {
+    id            = "Agent Registry Control"
+    arn_namespace = "agent-registry"
+  }
+
+  names {
+    provider_name_upper = "AgentRegistry"
+    human_friendly      = "Agent Registry"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListRegistries"
+    endpoint_no_fips_support = true
+  }
+
+  resource_prefix {
+    correct = "aws_agentregistry_"
+  }
+
+  provider_package_correct = "agentregistry"
+  doc_prefix               = ["agentregistry_"]
   brand                    = "AWS"
 }
 
@@ -966,6 +1029,36 @@ service "bedrockagentcore" {
 
   provider_package_correct = "bedrockagentcore"
   doc_prefix               = ["bedrockagentcore_"]
+  brand                    = "Amazon"
+}
+
+service "bedrockruntime" {
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-runtime"
+    aws_cli_v2_command_no_dashes = "bedrockruntime"
+  }
+
+  sdk {
+    id            = "Bedrock Runtime"
+    arn_namespace = "bedrock"
+  }
+
+  names {
+    provider_name_upper = "BedrockRuntime"
+    human_friendly      = "Bedrock Runtime"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "InvokeModel"
+    endpoint_api_params = "Body: []byte(\"{}\"), ModelId: aws.String(\"test\")"
+  }
+
+  resource_prefix {
+    correct = "aws_bedrockruntime_"
+  }
+
+  provider_package_correct = "bedrockruntime"
+  doc_prefix               = ["bedrockruntime_"]
   brand                    = "Amazon"
 }
 
@@ -2743,6 +2836,35 @@ service "devicefarm" {
   brand                    = "AWS"
 }
 
+service "devopsagent" {
+  cli_v2_command {
+    aws_cli_v2_command           = "devops-agent"
+    aws_cli_v2_command_no_dashes = "devopsagent"
+  }
+
+  sdk {
+    id            = "DevOps Agent"
+    arn_namespace = "aidevops"
+  }
+
+  names {
+    provider_name_upper = "DevOpsAgent"
+    human_friendly      = "DevOps Agent"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListAgentSpaces"
+  }
+
+  resource_prefix {
+    correct = "aws_devopsagent_"
+  }
+
+  provider_package_correct = "devopsagent"
+  doc_prefix               = ["devopsagent_"]
+  brand                    = "AWS"
+}
+
 service "devopsguru" {
   cli_v2_command {
     aws_cli_v2_command           = "devops-guru"
@@ -2794,6 +2916,31 @@ service "directconnect" {
 
   provider_package_correct = "directconnect"
   doc_prefix               = ["dx_"]
+  brand                    = "AWS"
+}
+
+service "directoryservicedata" {
+  sdk {
+    id            = "Directory Service Data"
+    arn_namespace = "ds"
+  }
+
+  names {
+    provider_name_upper = "DirectoryServiceData"
+    human_friendly      = "Directory Service Data"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "ListUsers"
+    endpoint_api_params = "DirectoryId: aws.String(\"d-1234567890\")"
+  }
+
+  resource_prefix {
+    correct = "aws_directoryservicedata_"
+  }
+
+  provider_package_correct = "directoryservicedata"
+  doc_prefix               = ["directoryservicedata_"]
   brand                    = "AWS"
 }
 
@@ -4275,6 +4422,30 @@ service "inspector2" {
   brand                    = "AWS"
 }
 
+service "interconnect" {
+  sdk {
+    id            = "Interconnect"
+    arn_namespace = "interconnect"
+  }
+
+  names {
+    provider_name_upper = "Interconnect"
+    human_friendly      = "Interconnect"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_interconnect_"
+  }
+
+  provider_package_correct = "interconnect"
+  doc_prefix               = ["interconnect_"]
+  brand                    = "AWS"
+}
+
 service "iot1clickdevices" {
   cli_v2_command {
     aws_cli_v2_command           = "iot1click-devices"
@@ -4782,7 +4953,7 @@ service "kinesis" {
   }
 
   provider_package_correct = "kinesis"
-  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings"]
   brand                    = "AWS"
 }
 
@@ -5038,6 +5209,57 @@ service "lambda" {
   provider_package_correct = "lambda"
   doc_prefix               = ["lambda_"]
   brand                    = "AWS"
+}
+
+service "lambdacore" {
+  cli_v2_command {
+    aws_cli_v2_command           = "lambda-core"
+    aws_cli_v2_command_no_dashes = "lambdacore"
+  }
+
+  sdk {
+    id            = "Lambda Core"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaCore"
+    human_friendly      = "Lambda Core"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListNetworkConnectors"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdacore_"
+  }
+
+  doc_prefix = ["lambdacore_"]
+  brand      = "AWS"
+}
+
+service "lambdamicrovms" {
+  sdk {
+    id            = "Lambda Microvms"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaMicroVMs"
+    human_friendly      = "Lambda MicroVMs"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMicrovms"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdamicrovms_"
+  }
+
+  doc_prefix = ["lambdamicrovms_"]
+  brand      = "AWS"
 }
 
 service "launchwizard" {
@@ -6253,7 +6475,7 @@ service "opensearch" {
 
   provider_package_correct = "opensearch"
   doc_prefix               = ["opensearch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opensearchserverless" {
@@ -6277,7 +6499,7 @@ service "opensearchserverless" {
 
   provider_package_correct = "opensearchserverless"
   doc_prefix               = ["opensearchserverless_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "osis" {
@@ -6289,7 +6511,7 @@ service "osis" {
   names {
     aliases             = ["opensearchingestion"]
     provider_name_upper = "OpenSearchIngestion"
-    human_friendly      = "OpenSearch Ingestion"
+    human_friendly      = "OpenSearch Ingestion (OSIS)"
   }
 
   endpoint_info {
@@ -6302,7 +6524,7 @@ service "osis" {
 
   provider_package_correct = "osis"
   doc_prefix               = ["osis_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opsworks" {
@@ -6591,7 +6813,7 @@ service "pinpoint" {
 
   names {
     provider_name_upper = "Pinpoint"
-    human_friendly      = "Pinpoint"
+    human_friendly      = "End User Messaging"
   }
 
   endpoint_info {
@@ -7156,6 +7378,35 @@ service "resiliencehub" {
   brand                    = "AWS"
 }
 
+service "resiliencehubv2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "resilience-hub-v2"
+    aws_cli_v2_command_no_dashes = "resiliencehubv2"
+  }
+
+  sdk {
+    id            = "resiliencehubv2"
+    arn_namespace = "resiliencehub"
+  }
+
+  names {
+    provider_name_upper = "ResilienceHubV2"
+    human_friendly      = "Resilience Hub V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPolicies"
+  }
+
+  resource_prefix {
+    correct = "aws_resiliencehubv2_"
+  }
+
+  provider_package_correct = "resiliencehubv2"
+  doc_prefix               = ["resiliencehubv2_"]
+  brand                    = "AWS"
+}
+
 service "resourceexplorer2" {
   cli_v2_command {
     aws_cli_v2_command           = "resource-explorer-2"
@@ -7171,7 +7422,6 @@ service "resourceexplorer2" {
     provider_name_upper = "ResourceExplorer2"
     human_friendly      = "Resource Explorer"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListIndexes"
@@ -8093,6 +8343,30 @@ service "servicequotas" {
   doc_prefix               = ["servicequotas_"]
 }
 
+service "mailmanager" {
+  sdk {
+    id            = "MailManager"
+    arn_namespace = "ses"
+  }
+
+  names {
+    provider_name_upper = "MailManager"
+    human_friendly      = "SES Mail Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListIngressPoints"
+  }
+
+  resource_prefix {
+    correct = "aws_mailmanager_"
+  }
+
+  provider_package_correct = "mailmanager"
+  doc_prefix               = ["mailmanager_"]
+  brand                    = "Amazon"
+}
+
 service "ses" {
   sdk {
     id            = "SES"
@@ -8888,7 +9162,6 @@ service "transfer" {
     provider_name_upper = "Transfer"
     human_friendly      = "Transfer Family"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListConnectors"

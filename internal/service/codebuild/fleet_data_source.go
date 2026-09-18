@@ -24,159 +24,161 @@ func dataSourceFleet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFleetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"compute_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"disk": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"machine_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"memory": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"vcpu": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"compute_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"disk": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"machine_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"memory": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"vcpu": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"compute_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"environment_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fleet_service_role": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(2, 128),
-			},
-			"overflow_behavior": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"scaling_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrMaxCapacity: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"scaling_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"target_tracking_scaling_configs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"metric_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"target_value": {
-										Type:     schema.TypeFloat,
-										Computed: true,
+				"compute_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"environment_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"fleet_service_role": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(2, 128),
+				},
+				"overflow_behavior": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"scaling_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrMaxCapacity: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"scaling_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"target_tracking_scaling_configs": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"target_value": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"context": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusCode: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrStatus: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"context": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusCode: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

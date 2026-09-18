@@ -38,88 +38,90 @@ func dataSourceVPCEndpointService() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acceptance_required": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"base_endpoint_dns_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"manages_vpc_endpoints": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "region is deprecated. Use service_region instead.",
-			},
-			"service": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrServiceName},
-			},
-			"service_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrServiceName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"service"},
-			},
-			"service_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_regions": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"service_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
-			},
-			"supported_ip_address_types": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_policy_supported": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acceptance_required": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"base_endpoint_dns_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"manages_vpc_endpoints": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrRegion: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "region is deprecated. Use service_region instead.",
+				},
+				"service": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrServiceName},
+				},
+				"service_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrServiceName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"service"},
+				},
+				"service_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_regions": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"service_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
+				},
+				"supported_ip_address_types": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vpc_endpoint_policy_supported": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

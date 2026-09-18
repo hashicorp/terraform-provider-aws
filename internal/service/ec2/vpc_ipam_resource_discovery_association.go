@@ -44,41 +44,43 @@ func resourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"ipam_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_resource_discovery_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"is_default": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"ipam_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_resource_discovery_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"is_default": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

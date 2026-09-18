@@ -22,4 +22,5 @@ list "aws_s3files_mount_target" "example" {
 
 This list resource supports the following arguments:
 
+* `file_system_id` - (Optional) File system ID to filter by.
 * `region` - (Optional) Region to query. Defaults to provider region.

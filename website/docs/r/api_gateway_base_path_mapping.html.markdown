@@ -43,12 +43,12 @@ resource "aws_api_gateway_base_path_mapping" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `domain_name` - (Required) Already-registered domain name to connect the API to.
 * `api_id` - (Required) ID of the API to connect.
-* `stage_name` - (Optional) Name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
-* `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
+* `domain_name` - (Required) Already-registered domain name to connect the API to.
+* `domain_name_id` - (Optional) Identifier for the domain name resource. Supported only for private custom domain names.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `stage_name` - (Optional) Name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 
 ## Attribute Reference
 

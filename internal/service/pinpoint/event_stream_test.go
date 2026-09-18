@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -76,6 +77,14 @@ func TestAccPinpointEventStream_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,7 +98,7 @@ func testAccCheckEventStreamExists(ctx context.Context, t *testing.T, n string, 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint event stream with that ID exists")
+			return fmt.Errorf("No End User Messaging event stream with that ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -125,7 +134,7 @@ func testAccCheckEventStreamDestroy(ctx context.Context, t *testing.T) resource.
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint Event Stream %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging Event Stream %s still exists", rs.Primary.ID)
 		}
 
 		return nil

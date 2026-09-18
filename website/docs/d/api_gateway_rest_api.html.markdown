@@ -25,8 +25,8 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -36,13 +36,18 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the REST API.
 * `binary_media_types` - List of binary media types supported by the REST API.
 * `description` - Description of the REST API.
-* `endpoint_configuration` - The endpoint configuration of this RestApi showing the endpoint types of the API.
-    * `ip_address_type` - The IP address types that can invoke an API (RestApi).
-    * `types` - List of endpoint types.
-    * `vpc_endpoint_ids` - Set of VPC Endpoint identifiers.
+* `endpoint_access_mode` - Endpoint access mode for the REST API.
+* `endpoint_configuration` - Endpoint configuration of this REST API showing the endpoint types of the API. See below.
 * `execution_arn` - Execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` when allowing API Gateway to invoke a Lambda function, e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j`, which can be concatenated with allowed stage, method and resource path.
 * `id` - Set to the ID of the found REST API.
 * `minimum_compression_size` - Minimum response size to compress for the REST API.
 * `policy` - JSON formatted policy document that controls access to the API Gateway.
 * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
+* `security_policy` - TLS version + cipher suite for the REST API's default execute-api endpoint.
 * `tags` - Key-value map of resource tags.
+
+### `endpoint_configuration` Block
+
+* `ip_address_type` - IP address types that can invoke a REST API.
+* `types` - List of endpoint types.
+* `vpc_endpoint_ids` - Set of VPC Endpoint identifiers.

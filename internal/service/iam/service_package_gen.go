@@ -221,6 +221,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_access_key",
 			Name:     "Access Key",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceAccountAlias,
@@ -239,6 +243,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_group",
 			Name:     "Group",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceGroupMembership,
@@ -257,6 +267,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_group_policy_attachment",
 			Name:     "Group Policy Attachment",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("group", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      groupPolicyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceInstanceProfile,
@@ -309,6 +327,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_policy_attachment",
 			Name:     "Policy Attachment",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalARNIdentityNamed("policy_arn"),
 		},
 		{
 			Factory:  resourceRole,
@@ -447,6 +466,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_user_policy",
 			Name:     "User Policy",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("user", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      userPolicyImportID{},
+			},
 		},
 		{
 			Factory:  resourceUserPolicyAttachment,
@@ -483,6 +510,54 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newAccessKeyResourceAsListResource,
+			TypeName: "aws_iam_access_key",
+			Name:     "Access Key",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newGroupResourceAsListResource,
+			TypeName: "aws_iam_group",
+			Name:     "Group",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.WithMutableIdentity(),
+			),
+		},
+		{
+			Factory:  newGroupPolicyAttachmentResourceAsListResource,
+			TypeName: "aws_iam_group_policy_attachment",
+			Name:     "Group Policy Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("group", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+		},
+		{
+			Factory:  newInstanceProfileResourceAsListResource,
+			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrName,
+				ResourceType:        "InstanceProfile",
+			}),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
+			Factory:  newOpenIDConnectProviderResourceAsListResource,
+			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "OIDCProvider",
+			}),
+			Identity: inttypes.GlobalARNIdentity(),
+		},
 		{
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_iam_policy",
@@ -537,6 +612,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithMutableIdentity(),
 			),
+		},
+		{
+			Factory:  newUserPolicyResourceAsListResource,
+			TypeName: "aws_iam_user_policy",
+			Name:     "User Policy",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("user", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
 		},
 		{
 			Factory:  newUserPolicyAttachmentResourceAsListResource,

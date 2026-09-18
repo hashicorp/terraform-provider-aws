@@ -27,7 +27,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_basic(t *testing.T) {
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -122,7 +122,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_regionOverride(t *tes
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -257,7 +257,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource_basi
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -345,7 +345,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource_noRe
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 

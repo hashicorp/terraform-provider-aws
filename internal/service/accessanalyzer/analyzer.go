@@ -53,124 +53,74 @@ func resourceAnalyzer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"analyzer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
-				),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"internal_access": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"configuration.0.unused_access"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"analysis_rule": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"inclusion": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"account_ids": {
-																Type:     schema.TypeList,
-																Optional: true,
-																ForceNew: true,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: verify.ValidAccountID,
-																},
-															},
-															"resource_arns": {
-																Type:     schema.TypeList,
-																Optional: true,
-																ForceNew: true,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: verify.ValidARN,
-																},
-															},
-															"resource_types": {
-																Type:     schema.TypeList,
-																Optional: true,
-																ForceNew: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[types.ResourceType](),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"unused_access": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"configuration.0.internal_access"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"analysis_rule": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"exclusion": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"account_ids": {
-																Type:     schema.TypeList,
-																Optional: true,
-																ForceNew: true,
-																MaxItems: 2000,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: verify.ValidAccountID,
-																},
-															},
-															names.AttrResourceTags: {
-																Type:     schema.TypeList,
-																Optional: true,
-																ForceNew: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeMap,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"analyzer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
+					),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"internal_access": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								ConflictsWith: []string{"configuration.0.unused_access"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"analysis_rule": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"inclusion": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"account_ids": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	ForceNew: true,
 																	Elem: &schema.Schema{
 																		Type:         schema.TypeString,
-																		ValidateFunc: validation.StringLenBetween(0, 256),
+																		ValidateFunc: verify.ValidAccountID,
+																	},
+																},
+																"resource_arns": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	ForceNew: true,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: verify.ValidARN,
+																	},
+																},
+																"resource_types": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	ForceNew: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[types.ResourceType](),
 																	},
 																},
 															},
@@ -180,26 +130,78 @@ func resourceAnalyzer() *schema.Resource {
 											},
 										},
 									},
-									"unused_access_age": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
+								},
+							},
+							"unused_access": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								ConflictsWith: []string{"configuration.0.internal_access"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"analysis_rule": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"exclusion": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"account_ids": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	ForceNew: true,
+																	MaxItems: 2000,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: verify.ValidAccountID,
+																	},
+																},
+																names.AttrResourceTags: {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	ForceNew: true,
+																	Elem: &schema.Schema{
+																		Type: schema.TypeMap,
+																		Elem: &schema.Schema{
+																			Type:         schema.TypeString,
+																			ValidateFunc: validation.StringLenBetween(0, 256),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"unused_access_age": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.TypeAccount,
-				ValidateDiagFunc: enum.Validate[types.Type](),
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.TypeAccount,
+					ValidateDiagFunc: enum.Validate[types.Type](),
+				},
+			}
 		},
 	}
 }

@@ -43,32 +43,34 @@ func resourceAggregateAuthorization() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorized_aws_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"authorized_aws_region", names.AttrRegion},
-			},
-			names.AttrRegion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"authorized_aws_region", names.AttrRegion},
-				Deprecated:   "region is deprecated. Use authorized_aws_region instead.",
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authorized_aws_region": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"authorized_aws_region", names.AttrRegion},
+				},
+				names.AttrRegion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"authorized_aws_region", names.AttrRegion},
+					Deprecated:   "region is deprecated. Use authorized_aws_region instead.",
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

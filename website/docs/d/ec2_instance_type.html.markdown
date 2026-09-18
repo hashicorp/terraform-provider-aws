@@ -6,7 +6,6 @@ description: |-
   Information about single EC2 Instance Type.
 ---
 
-
 # Data Source: aws_ec2_instance_type
 
 Get characteristics for a single EC2 Instance Type.

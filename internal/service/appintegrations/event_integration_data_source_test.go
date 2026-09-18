@@ -25,7 +25,7 @@ func TestAccAppIntegrationsEventIntegrationDataSource_name(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	sourceName := os.Getenv(key)
 	if sourceName == "" {
-		sourceName = "aws.partner/examplepartner.com"
+		sourceName = "aws.partner/example.com"
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

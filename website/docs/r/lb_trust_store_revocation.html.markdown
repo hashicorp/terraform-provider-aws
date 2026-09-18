@@ -50,6 +50,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `revocation_id` - AWS assigned RevocationId, (number).
 * `id` - "combination of the Trust Store ARN and RevocationId `${trust_store_arn},{revocation_id}`"
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Trust Store Revocations using their ARN. For example:

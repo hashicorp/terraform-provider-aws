@@ -337,6 +337,9 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[sourceIPConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									names.AttrIPAddressType: schema.StringAttribute{
+										Computed: true,
+									},
 									names.AttrValues: schema.SetAttribute{
 										ElementType: types.StringType,
 										Computed:    true,
@@ -585,7 +588,8 @@ type queryStringKeyValuePairModel struct {
 }
 
 type sourceIPConfigModel struct {
-	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+	IpAddressType fwtypes.StringEnum[awstypes.SourceIpAddressTypeEnum] `tfsdk:"ip_address_type"`
+	Values        fwtypes.SetValueOf[types.String]                     `tfsdk:"values"`
 }
 
 type transformModel struct {

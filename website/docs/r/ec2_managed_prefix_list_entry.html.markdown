@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ec2_managed_prefix_list_entry
 
-Use the `aws_prefix_list_entry` resource to manage a managed prefix list entry.
+Use the `aws_ec2_managed_prefix_list_entry` resource to manage a managed prefix list entry.
 
 ~> **NOTE:** Terraform currently provides two resources for managing Managed Prefix Lists and Managed Prefix List Entries. The standalone resource, [Managed Prefix List Entry](ec2_managed_prefix_list_entry.html), is used to manage a single entry. The [Managed Prefix List resource](ec2_managed_prefix_list.html) is used to manage multiple entries defined in-line. It is important to note that you cannot use a Managed Prefix List with in-line rules in conjunction with any Managed Prefix List Entry resources. This will result in a conflict of entries and will cause the entries to be overwritten.
 

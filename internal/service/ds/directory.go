@@ -53,159 +53,161 @@ func resourceDirectory() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"connect_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"connect_ips": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"customer_dns_ips": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"connect_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"connect_ips": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"customer_dns_ips": {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPAddress,
+								},
+							},
+							"customer_username": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
 							},
 						},
-						"customer_username": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"desired_number_of_domain_controllers": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(2),
+				},
+				"dns_ip_addresses": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"edition": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DirectoryEdition](),
+				},
+				"enable_sso": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: domainValidator,
+				},
+				names.AttrPassword: {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"short_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrSize: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DirectorySize](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DirectoryTypeSimpleAd,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
+				},
+				"vpc_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"desired_number_of_domain_controllers": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(2),
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"edition": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DirectoryEdition](),
-			},
-			"enable_sso": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: domainValidator,
-			},
-			names.AttrPassword: {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"short_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrSize: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DirectorySize](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DirectoryTypeSimpleAd,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
-			},
-			"vpc_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
+				"enable_directory_data_access": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			"enable_directory_data_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+			}
 		},
 	}
 }
@@ -366,10 +368,14 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	if dir.Type == awstypes.DirectoryTypeMicrosoftAd {
 		dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
-		if err != nil {
+		if errs.IsA[*awstypes.UnsupportedOperationException](err) {
+			// Directory Service Data is not available in all regions (e.g. GovCloud).
+			d.Set("enable_directory_data_access", false)
+		} else if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading directory data access: %s", err)
+		} else {
+			d.Set("enable_directory_data_access", dda.DataAccessStatus == awstypes.DataAccessStatusEnabled)
 		}
-		d.Set("enable_directory_data_access", dda.DataAccessStatus == awstypes.DataAccessStatusEnabled)
 	} else {
 		d.Set("enable_directory_data_access", false)
 	}

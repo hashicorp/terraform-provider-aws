@@ -28,6 +28,7 @@ func TestAccMetaServiceDataSource_basic(t *testing.T) {
 				Config: testAccServiceDataSourceConfig_serviceID(serviceID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", serviceID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, "reverse_dns_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),

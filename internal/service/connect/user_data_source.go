@@ -30,96 +30,98 @@ func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hierarchy_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_info": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"first_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secondary_email": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hierarchy_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_info": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"first_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"secondary_email": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "user_id"},
-			},
-			"phone_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"after_contact_work_time_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"auto_accept": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"desk_phone_number": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"phone_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrName, "user_id"},
+				},
+				"phone_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"after_contact_work_time_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"auto_accept": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"desk_phone_number": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"phone_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"routing_profile_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_profile_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"routing_profile_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"user_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"user_id", names.AttrName},
-			},
+				"security_profile_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"user_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"user_id", names.AttrName},
+				},
+			}
 		},
 	}
 }

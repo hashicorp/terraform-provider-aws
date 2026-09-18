@@ -48,71 +48,73 @@ func resourceIPAM() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cascade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"default_resource_discovery_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_resource_discovery_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable_private_gua": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"metered_account": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpamMeteredAccount](),
-			},
-			"operating_regions": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidRegionName,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cascade": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"default_resource_discovery_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_resource_discovery_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"enable_private_gua": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"metered_account": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpamMeteredAccount](),
+				},
+				"operating_regions": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"region_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidRegionName,
+							},
 						},
 					},
 				},
-			},
-			"private_default_scope_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_default_scope_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"scope_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tier": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.IpamTierAdvanced,
-				ValidateDiagFunc: enum.Validate[awstypes.IpamTier](),
-			},
+				"private_default_scope_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_default_scope_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"scope_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tier": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.IpamTierAdvanced,
+					ValidateDiagFunc: enum.Validate[awstypes.IpamTier](),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

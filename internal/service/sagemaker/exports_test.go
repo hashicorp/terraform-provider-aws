@@ -65,6 +65,7 @@ var (
 	ResourceFeatureGroup                           = resourceFeatureGroup
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
+	ResourceHubContentReference                    = newHubContentReferenceResource
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceImage                                  = resourceImage
@@ -97,10 +98,12 @@ var (
 	FindDeviceFleetByName                     = findDeviceFleetByName
 	FindDomainByName                          = findDomainByName
 	FindEndpointByName                        = findEndpointByName
+	FindEndpointByNameExcludeDeleting         = findEndpointByNameExcludeDeleting
 	FindEndpointConfigByName                  = findEndpointConfigByName
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
 	FindHubByName                             = findHubByName
+	FindHubContentByName                      = findHubContentByName
 	FindHyperParameterTuningJobByName         = findHyperParameterTuningJobByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
@@ -151,4 +154,6 @@ var (
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
+
+	StripARNVersion = stripARNVersion
 )

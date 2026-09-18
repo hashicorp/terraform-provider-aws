@@ -45,46 +45,48 @@ func resourceIntegrationResponse() *schema.Resource {
 		UpdateWithoutTimeout: resourceIntegrationResponsePut,
 		DeleteWithoutTimeout: resourceIntegrationResponseDelete,
 
-		Schema: map[string]*schema.Schema{
-			"content_handling": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validIntegrationContentHandling(),
-			},
-			"http_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validHTTPMethod(),
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"response_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"response_templates": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"selection_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatusCode: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"content_handling": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validIntegrationContentHandling(),
+				},
+				"http_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validHTTPMethod(),
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"response_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"response_templates": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"selection_pattern": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatusCode: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -96,7 +98,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	input := apigateway.PutIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
@@ -123,7 +125,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.IsNewResource() {
-		d.SetId(resourceIntegrationResponseIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
+		d.SetId(resourceIntegrationResponseIDAttr(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
 	}
 
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
@@ -133,7 +135,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integrationResponse, err := findIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string), d.Get(names.AttrStatusCode).(string))
+	integrationResponse, err := findIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get(attrRestAPIID).(string), d.Get(names.AttrStatusCode).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration Response (%s) not found, removing from state", d.Id())
@@ -168,7 +170,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	input := apigateway.DeleteIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:  aws.String(d.Get(attrRestAPIID).(string)),
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 	_, err := conn.DeleteIntegrationResponse(ctx, &input)
@@ -224,7 +226,7 @@ func resourceIntegrationResponseIDAttr(restApiID, resourceID, httpMethod, status
 }
 
 func (integrationResponseImportID) Create(d *schema.ResourceData) string {
-	return integrationResponseCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string))
+	return integrationResponseCreateImportID(d.Get(attrRestAPIID).(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string))
 }
 
 func (integrationResponseImportID) Parse(id string) (string, map[string]any, error) {
@@ -234,7 +236,7 @@ func (integrationResponseImportID) Parse(id string) (string, map[string]any, err
 	}
 
 	result := map[string]any{
-		"rest_api_id":        parts[0],
+		attrRestAPIID:        parts[0],
 		names.AttrResourceID: parts[1],
 		"http_method":        parts[2],
 		names.AttrStatusCode: parts[3],

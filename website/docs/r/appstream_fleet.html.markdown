@@ -49,7 +49,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description to display.
 * `disconnect_timeout_in_seconds` - (Optional) Amount of time that a streaming session remains active after users disconnect.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream fleet.
@@ -58,42 +57,43 @@ The following arguments are optional:
 * `fleet_type` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the fleet.
 * `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins. Defaults to `0`. Valid value is between `60` and `3600 `seconds.
-* `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
-* `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
-* `max_sessions_per_instance` - (Optional) The maximum number of user sessions on an instance. This only applies to multi-session fleets.
+* `image_name` - (Optional) Name of the image used to create the fleet.
+* `max_sessions_per_instance` - (Optional) Maximum number of user sessions on an instance. This only applies to multi-session fleets.
 * `max_user_duration_in_seconds` - (Optional) Maximum amount of time that a streaming session can remain active, in seconds.
-* `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
+* `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 
-### `compute_capacity`
+### `compute_capacity` Block
 
 Exactly one of `desired_instances` or `desired_sessions` must be set, based on the type of fleet being created.
 
 * `desired_instances` - (Optional) Desired number of streaming instances.
 * `desired_sessions` - (Optional) Desired number of user sessions for a multi-session fleet. This is not allowed for single-session fleets.
 
-### `domain_join_info`
+### `domain_join_info` Block
 
 * `directory_name` - (Optional) Fully qualified name of the directory (for example, corp.example.com).
 * `organizational_unit_distinguished_name` - (Optional) Distinguished name of the organizational unit for computer accounts.
 
-### `vpc_config`
+### `vpc_config` Block
 
-* `security_group_ids` - Identifiers of the security groups for the fleet or image builder.
-* `subnet_ids` - Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
+* `security_group_ids` - (Optional) Identifiers of the security groups for the fleet or image builder.
+* `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier (ID) of the appstream fleet.
 * `arn` - ARN of the appstream fleet.
-* `state` - State of the fleet. Can be `STARTING`, `RUNNING`, `STOPPING` or `STOPPED`
+* `compute_capacity` - Capacity status for a fleet.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the fleet was created.
-* `compute_capacity` - Describes the capacity status for a fleet.
+* `id` - Unique identifier (ID) of the appstream fleet.
+* `state` - State of the fleet. Can be `STARTING`, `RUNNING`, `STOPPING` or `STOPPED`
 
-### `compute_capacity`
+### `compute_capacity` Block
 
 * `available` - Number of currently available instances that can be used to stream sessions.
 * `in_use` - Number of instances in use for streaming.

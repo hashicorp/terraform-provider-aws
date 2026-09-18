@@ -9,6 +9,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,6 +68,14 @@ func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -91,6 +100,14 @@ func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -46,48 +46,50 @@ func resourceTrustStore() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ca_certificates_bundle_s3_bucket": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"ca_certificates_bundle_s3_key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"ca_certificates_bundle_s3_object_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validNamePrefix,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"arn_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ca_certificates_bundle_s3_bucket": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"ca_certificates_bundle_s3_key": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"ca_certificates_bundle_s3_object_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validNamePrefix,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

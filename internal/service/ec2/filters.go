@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"slices"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -97,49 +98,39 @@ func tagFilters(ctx context.Context) []awstypes.Filter {
 //	  name   = "availabilityZone"
 //	  values = ["us-west-2a", "us-west-2b"]
 //	}
-func customFiltersSchema() *schema.Schema {
+var customFiltersSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				names.AttrValues: {
-					Type:     schema.TypeSet,
-					Required: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
-			},
-		},
+		Elem:     customFilterElement(),
 	}
-}
+})
 
-func customRequiredFiltersSchema() *schema.Schema {
+var customRequiredFiltersSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				names.AttrValues: {
-					Type:     schema.TypeSet,
-					Required: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
+		Elem:     customFilterElement(),
+	}
+})
+
+var customFilterElement = sync.OnceValue(func() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrValues: {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 		},
 	}
-}
+})
 
 // customFiltersBlock is the Plugin Framework variant of customFiltersSchema.
 func customFiltersBlock(ctx context.Context) datasourceschema.Block {

@@ -278,11 +278,11 @@ This resource supports the following arguments:
 
 #### client_authentication tls Argument Reference
 
-* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
+* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority ARNs.
 
 ### configuration_info Argument Reference
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the MSK Configuration to use in the cluster.
+* `arn` - (Required) ARN of the MSK Configuration to use in the cluster.
 * `revision` - (Required) Revision of the MSK Configuration to use in the cluster.
 
 ### encryption_info Argument Reference
@@ -348,7 +348,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the MSK cluster.
+* `arn` - ARN of the MSK cluster.
 * `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster. Contains a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts values alphabetically. AWS may not always return all endpoints so this value is not guaranteed to be stable across applies.
 * `bootstrap_brokers_public_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `b-1-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9198,b-2-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9198,b-3-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9198`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true` and `broker_node_group_info.0.connectivity_info.0.public_access.0.type` is set to `SERVICE_PROVIDED_EIPS` and the cluster fulfill all other requirements for public access. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_public_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b-1-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9196,b-2-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9196,b-3-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9196`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true` and `broker_node_group_info.0.connectivity_info.0.public_access.0.type` is set to `SERVICE_PROVIDED_EIPS` and the cluster fulfill all other requirements for public access. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
@@ -359,8 +359,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `bootstrap_brokers_vpc_connectivity_sasl_iam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_ipv6` - One or more IPv6 DNS names (or IP addresses) and plaintext port pairs. For example, `2001:db8:1234:1a00:*:80,2001:db8:1234:1a02:*:80,2001:db8:1234:1a04:*:80`. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_sasl_iam_ipv6` - One or more IPv6 DNS names (or IP addresses) and SASL IAM port pairs. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_sasl_scram_ipv6` - One or more IPv6 DNS names (or IP addresses) and SASL SCRAM port pairs. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_tls_ipv6` - One or more IPv6 DNS names (or IP addresses) and TLS port pairs. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `cluster_uuid` - UUID of the MSK cluster, for use in IAM policies.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
+* `customer_action_status` - Status indicating whether Amazon MSK requires customer action for the cluster. Valid values are `NONE`, `ACTION_RECOMMENDED`, and `CRITICAL_ACTION_REQUIRED`.
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
@@ -383,7 +388,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_msk_cluster.example
   identity = {
-    "arn" = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+    arn = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
   }
 }
 
@@ -396,7 +401,7 @@ resource "aws_msk_cluster" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the MSK cluster.
+- `arn` (String) ARN of the MSK cluster.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK cluster using the cluster ARN. For example:
 

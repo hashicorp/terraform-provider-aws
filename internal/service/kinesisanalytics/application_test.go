@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -79,6 +80,14 @@ func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesisanalytics.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -2050,7 +2059,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
   role          = aws_iam_role.test[0].arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

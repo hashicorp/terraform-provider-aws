@@ -33,20 +33,22 @@ func resourceAvailabilityZoneGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"opt_in_status": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(
-					awstypes.AvailabilityZoneOptInStatusOptedIn,
-					awstypes.AvailabilityZoneOptInStatusNotOptedIn,
-				), false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"opt_in_status": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						awstypes.AvailabilityZoneOptInStatusOptedIn,
+						awstypes.AvailabilityZoneOptInStatusNotOptedIn,
+					), false),
+				},
+			}
 		},
 	}
 }

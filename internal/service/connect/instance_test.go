@@ -82,7 +82,7 @@ func testAccInstance_directory(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

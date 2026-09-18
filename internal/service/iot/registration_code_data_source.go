@@ -20,11 +20,13 @@ func dataSourceRegistrationCode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegistrationCodeRead,
 
-		Schema: map[string]*schema.Schema{
-			"registration_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"registration_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -8,8 +8,6 @@ description: |-
 
 # Data Source: aws_lb_trust_store
 
-~> **Note:** `aws_alb_trust_store` is known as `aws_lb_trust_store`. The functionality is identical.
-
 Provides information about a Load Balancer Trust Store.
 
 This data source can prove useful when a module accepts an LB Trust Store as an
@@ -51,9 +49,3 @@ This data source exports the following attributes in addition to the arguments a
 
 See the [LB Trust Store Resource](/docs/providers/aws/r/lb_trust_store.html) for details
 on the returned attributes - they are identical.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `read` - (Default `20m`)

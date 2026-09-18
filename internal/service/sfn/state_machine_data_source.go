@@ -26,39 +26,41 @@ func dataSourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"definition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"revision_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"definition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"revision_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

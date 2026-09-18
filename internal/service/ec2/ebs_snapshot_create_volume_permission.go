@@ -39,17 +39,19 @@ func resourceSnapshotCreateVolumePermission() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrSnapshotID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrSnapshotID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

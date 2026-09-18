@@ -13,6 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -230,6 +231,14 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourcePlatformApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_platform_application.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_platform_application.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -364,7 +373,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt(t))
 
-					acctest.Test(ctx, t, resource.TestCase{
+					acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- sequential subtests within parallel platform loop to avoid credential conflicts
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 						ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

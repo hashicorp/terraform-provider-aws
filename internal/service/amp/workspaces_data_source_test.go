@@ -18,7 +18,7 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) { // nosemgrep:ci.caps0-
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_prometheus_workspaces.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
@@ -48,7 +48,7 @@ func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) { // nosemgrep:ci.
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_prometheus_workspaces.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)

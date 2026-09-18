@@ -28,20 +28,22 @@ func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

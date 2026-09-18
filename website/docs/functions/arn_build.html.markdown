@@ -10,7 +10,7 @@ description: |-
 
 Builds an ARN from its constituent parts.
 
-See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) for additional information on Amazon Resource Names.
+See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) for additional information on ARNs.
 
 ## Example Usage
 

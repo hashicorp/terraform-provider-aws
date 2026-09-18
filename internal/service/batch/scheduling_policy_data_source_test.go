@@ -21,7 +21,7 @@ func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
 	resourceName := "aws_batch_scheduling_policy.test"
 	dataSourceName := "data.aws_batch_scheduling_policy.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

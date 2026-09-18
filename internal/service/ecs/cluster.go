@@ -7,6 +7,7 @@ package ecs
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,7 +31,12 @@ import (
 
 // @SDKResource("aws_ecs_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-// @ArnFormat("cluster/{name}")
+// @IdentityAttribute("name")
+// @ArnFormat("cluster/{name}", attribute="arn")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.Cluster")
+// @Testing(importStateIdFunc="testAccClusterImportStateIdFunc")
+// @Testing(preIdentityVersion="v6.61.0")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -41,125 +48,127 @@ func resourceCluster() *schema.Resource {
 			StateContext: resourceClusterImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execute_command_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKeyID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"log_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cloud_watch_encryption_enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"cloud_watch_log_group_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"s3_bucket_encryption_enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												names.AttrS3BucketName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrS3KeyPrefix: {
-													Type:     schema.TypeString,
-													Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"execute_command_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKeyID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"log_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cloud_watch_encryption_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"cloud_watch_log_group_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"s3_bucket_encryption_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													names.AttrS3BucketName: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrS3KeyPrefix: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
+										"logging": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.ExecuteCommandLoggingDefault,
+											ValidateDiagFunc: enum.Validate[awstypes.ExecuteCommandLogging](),
+										},
 									},
-									"logging": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.ExecuteCommandLoggingDefault,
-										ValidateDiagFunc: enum.Validate[awstypes.ExecuteCommandLogging](),
+								},
+							},
+							"managed_storage_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"fargate_ephemeral_storage_kms_key_id": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrKMSKeyID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
-						"managed_storage_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"fargate_ephemeral_storage_kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrKMSKeyID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validateClusterName,
+				},
+				"service_connect_defaults": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrNamespace: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateClusterName,
-			},
-			"service_connect_defaults": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrNamespace: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				"setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ClusterSettingName](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ClusterSettingName](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -246,27 +255,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, cluster.ClusterArn)
-	if cluster.Configuration != nil {
-		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
-		}
-	}
-	d.Set(names.AttrName, cluster.ClusterName)
-	if cluster.ServiceConnectDefaults != nil {
-		if err := d.Set("service_connect_defaults", []any{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
-		}
-	} else {
-		d.Set("service_connect_defaults", nil)
-	}
-	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
-	}
-
-	setTagsOut(ctx, cluster.Tags)
-
-	return diags
+	return sdkdiag.AppendFromErr(diags, resourceClusterFlatten(ctx, d, cluster))
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -330,6 +319,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
+	}
+
 	d.Set(names.AttrName, d.Id())
 
 	region := d.Get(names.AttrRegion).(string)
@@ -474,6 +467,30 @@ func waitClusterDeleted(ctx context.Context, conn *ecs.Client, arn string, timeo
 	}
 
 	return nil, err
+}
+
+func resourceClusterFlatten(ctx context.Context, d *schema.ResourceData, cluster *awstypes.Cluster) error {
+	d.Set(names.AttrARN, cluster.ClusterArn)
+	if cluster.Configuration != nil {
+		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
+			return fmt.Errorf("setting configuration: %w", err)
+		}
+	}
+	d.Set(names.AttrName, cluster.ClusterName)
+	if cluster.ServiceConnectDefaults != nil {
+		if err := d.Set("service_connect_defaults", []any{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
+			return fmt.Errorf("setting service_connect_defaults: %w", err)
+		}
+	} else {
+		d.Set("service_connect_defaults", nil)
+	}
+	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
+		return fmt.Errorf("setting setting: %w", err)
+	}
+
+	setTagsOut(ctx, cluster.Tags)
+
+	return nil
 }
 
 func expandClusterSettings(tfSet *schema.Set) []awstypes.ClusterSetting {

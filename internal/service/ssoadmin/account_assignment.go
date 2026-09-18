@@ -52,46 +52,48 @@ func resourceAccountAssignment() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"permission_set_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"principal_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 47),
-					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
-				),
-			},
-			"principal_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
-			},
-			"target_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"target_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"permission_set_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"principal_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 47),
+						validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
+					),
+				},
+				"principal_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
+				},
+				"target_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"target_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
+				},
+			}
 		},
 	}
 }

@@ -46,90 +46,92 @@ func resourceCustomRoutingAccelerator() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAttributes: {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_logs_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"flow_logs_s3_bucket": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"flow_logs_s3_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAttributes: {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"flow_logs_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"flow_logs_s3_bucket": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"flow_logs_s3_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
 						},
 					},
 				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.IpAddressTypeIpv4,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-			},
-			names.AttrIPAddresses: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"ip_sets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddresses: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ip_family": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.IpAddressTypeIpv4,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				names.AttrIPAddresses: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"ip_sets": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddresses: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ip_family": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot start with a hyphen"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot start with a hyphen"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

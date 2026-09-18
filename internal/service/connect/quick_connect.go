@@ -40,107 +40,109 @@ func resourceQuickConnect() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 250),
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 127),
-			},
-			"quick_connect_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"phone_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"phone_number": {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 250),
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 127),
+				},
+				"quick_connect_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"phone_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"phone_number": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
-							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypePhoneNumber {
-									return false
-								}
-								return true
-							},
-						},
-						"queue_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"queue_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypePhoneNumber {
+										return false
+									}
+									return true
 								},
 							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeQueue {
-									return false
-								}
-								return true
-							},
-						},
-						"quick_connect_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.QuickConnectType](),
-						},
-						"user_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"user_id": {
-										Type:     schema.TypeString,
-										Required: true,
+							"queue_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"contact_flow_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"queue_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeQueue {
+										return false
+									}
+									return true
+								},
 							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeUser {
-									return false
-								}
-								return true
+							"quick_connect_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.QuickConnectType](),
+							},
+							"user_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"contact_flow_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"user_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeUser {
+										return false
+									}
+									return true
+								},
 							},
 						},
 					},
 				},
-			},
-			"quick_connect_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"quick_connect_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

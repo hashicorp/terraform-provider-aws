@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_opensearch_domain: Correctly handle `off_peak_window_options.off_peak_window.window_start_time` value of `00:00`
-```

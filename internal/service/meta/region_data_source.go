@@ -46,10 +46,7 @@ func (d *regionDataSource) Schema(ctx context.Context, request datasource.Schema
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID: idAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			names.AttrName: schema.StringAttribute{
 				Optional:           true,
 				Computed:           true,

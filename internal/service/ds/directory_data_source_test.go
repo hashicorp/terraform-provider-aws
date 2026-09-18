@@ -18,7 +18,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
@@ -59,7 +59,7 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -99,7 +99,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -146,7 +146,7 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

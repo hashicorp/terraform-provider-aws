@@ -153,6 +153,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering Connection Accepters using the Peering Connection ID. For example:

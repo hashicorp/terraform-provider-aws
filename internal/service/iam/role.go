@@ -73,134 +73,136 @@ func resourceRole() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assume_role_policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1000),
-					validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
-					validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
-				),
-			},
-			"force_detach_policies": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"inline_policy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Deprecated: "inline_policy is deprecated. " +
-					"Use the aws_iam_role_policy resource instead. If Terraform should " +
-					"exclusively manage all inline policy associations (the current " +
-					"behavior of this argument), use the aws_iam_role_policies_exclusive " +
-					"resource as well.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc: validation.All(
-								validation.StringIsNotEmpty,
-								validRolePolicyName,
-							),
-						},
-						names.AttrPolicy: {
-							Type:                  schema.TypeString,
-							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc:          verify.ValidIAMPolicyJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v any) string {
-								json, _ := verify.LegacyPolicyNormalize(v)
-								return json
+				"assume_role_policy": {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          verify.ValidIAMPolicyJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 1000),
+						validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+						validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+					),
+				},
+				"force_detach_policies": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"inline_policy": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Deprecated: "inline_policy is deprecated. " +
+						"Use the aws_iam_role_policy resource instead. If Terraform should " +
+						"exclusively manage all inline policy associations (the current " +
+						"behavior of this argument), use the aws_iam_role_policies_exclusive " +
+						"resource as well.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true, // semantically required but syntactically optional to allow empty inline_policy
+								ValidateFunc: validation.All(
+									validation.StringIsNotEmpty,
+									validRolePolicyName,
+								),
+							},
+							names.AttrPolicy: {
+								Type:                  schema.TypeString,
+								Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
+								ValidateFunc:          verify.ValidIAMPolicyJSON,
+								DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+								DiffSuppressOnRefresh: true,
+								StateFunc: func(v any) string {
+									json, _ := verify.LegacyPolicyNormalize(v)
+									return json
+								},
 							},
 						},
 					},
-				},
-				DiffSuppressFunc: func(k, _, _ string, d *schema.ResourceData) bool {
-					if d.Id() == "" {
-						return false
-					}
+					DiffSuppressFunc: func(k, _, _ string, d *schema.ResourceData) bool {
+						if d.Id() == "" {
+							return false
+						}
 
-					return !inlinePoliciesActualDiff(d)
+						return !inlinePoliciesActualDiff(d)
+					},
 				},
-			},
-			"managed_policy_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Deprecated: "managed_policy_arns is deprecated. " +
-					"Use the aws_iam_role_policy_attachment resource instead. If Terraform should " +
-					"exclusively manage all managed policy attachments (the current " +
-					"behavior of this argument), use the aws_iam_role_policy_attachments_exclusive " +
-					"resource as well.",
-				Elem: &schema.Schema{
+				"managed_policy_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Deprecated: "managed_policy_arns is deprecated. " +
+						"Use the aws_iam_role_policy_attachment resource instead. If Terraform should " +
+						"exclusively manage all managed policy attachments (the current " +
+						"behavior of this argument), use the aws_iam_role_policy_attachments_exclusive " +
+						"resource as well.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"max_session_duration": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      3600,
+					ValidateFunc: validation.IntBetween(3600, 43200),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validResourceName(roleNameMaxLen),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
+				},
+				names.AttrPath: {
 					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "/",
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"permissions_boundary": {
+					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"max_session_duration": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3600,
-				ValidateFunc: validation.IntBetween(3600, 43200),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validResourceName(roleNameMaxLen),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
-			},
-			names.AttrPath: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -29,290 +29,292 @@ func dataSourceFunction() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionRead,
 
-		Schema: map[string]*schema.Schema{
-			"architectures": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity_provider_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"lambda_managed_instances_capacity_provider_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_provider_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"execution_environment_memory_gib_per_vcpu": {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-									"per_execution_environment_max_concurrency": {
-										Type:     schema.TypeInt,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"architectures": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity_provider_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"lambda_managed_instances_capacity_provider_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_provider_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"execution_environment_memory_gib_per_vcpu": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"per_execution_environment_max_concurrency": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"code_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"code_signing_config_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dead_letter_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrTargetARN: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"code_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"code_signing_config_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dead_letter_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrTargetARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"durable_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execution_timeout": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrRetentionPeriod: {
-							Type:     schema.TypeInt,
-							Computed: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"durable_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"execution_timeout": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrRetentionPeriod: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrEnvironment: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variables": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrEnvironment: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"variables": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"ephemeral_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
+				"ephemeral_storage": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSize: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"file_system_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"local_mount_path": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"handler": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"logging_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"application_log_level": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_format": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_group": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"system_log_level": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"file_system_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"local_mount_path": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"memory_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"qualified_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualified_invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"reserved_concurrent_executions": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"response_streaming_invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRole: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"runtime": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_code_hash": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
-			},
-			"source_code_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"source_kms_key_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"tenancy_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tenant_isolation_mode": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"function_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"handler": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"layers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"logging_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application_log_level": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_format": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_group": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"system_log_level": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"tracing_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"memory_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"qualified_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"qualified_invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"reserved_concurrent_executions": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"response_streaming_invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRole: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"runtime": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_job_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_profile_version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_code_hash": {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
+				},
+				"source_code_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"source_kms_key_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTimeout: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"tenancy_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tenant_isolation_mode": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv6_allowed_for_dual_stack": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"tracing_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMode: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv6_allowed_for_dual_stack": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

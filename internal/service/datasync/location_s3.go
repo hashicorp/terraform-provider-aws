@@ -41,70 +41,72 @@ func resourceLocationS3() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationS3Update,
 		DeleteWithoutTimeout: resourceLocationS3Delete,
 
-		Schema: map[string]*schema.Schema{
-			"agent_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"agent_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"s3_bucket_arn": {
 					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"s3_bucket_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"s3_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_access_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+				"s3_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bucket_access_role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"s3_storage_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.S3StorageClass](),
-			},
-			"subdirectory": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// Ignore missing trailing slash
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "/" {
-						return false
-					}
-					if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
-						return true
-					}
-					return false
+				"s3_storage_class": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.S3StorageClass](),
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"subdirectory": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					// Ignore missing trailing slash
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if new == "/" {
+							return false
+						}
+						if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
+							return true
+						}
+						return false
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

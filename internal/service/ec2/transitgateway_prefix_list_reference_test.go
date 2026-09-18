@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -78,6 +79,14 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T, semaphore
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -107,6 +116,14 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(transitGatewayResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(transitGatewayResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

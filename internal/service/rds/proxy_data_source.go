@@ -20,97 +20,99 @@ func dataSourceProxy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProxyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auth": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_scheme": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"client_password_auth_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"iam_auth": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secret_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auth": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_scheme": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"client_password_auth_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"iam_auth": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"secret_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"debug_logging": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"default_auth_scheme": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_network_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"engine_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"idle_client_timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"require_tls": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_connection_network_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_subnet_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"debug_logging": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"default_auth_scheme": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"engine_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"idle_client_timeout": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"require_tls": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_connection_network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"vpc_subnet_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

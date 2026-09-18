@@ -48,11 +48,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the custom accelerator.
-* `arn` - The Amazon Resource Name (ARN) of the custom accelerator.
+* `id` - ARN of the custom accelerator.
+* `arn` - ARN of the custom accelerator.
 * `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
 * `hosted_zone_id` --  The Global Accelerator Route 53 zone ID that can be used to
-  route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
+  route an [Alias Resource Record Set](https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html) to the Global Accelerator. This attribute
   is simply an alias for the zone ID `Z2BJ6XQ5FK7U4H`.
 * `ip_sets` - IP address set associated with the accelerator.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -61,8 +61,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `ip_addresses` - A list of IP addresses in the IP address set.
 * `ip_family` - The type of IP addresses included in this IP set.
-
-[1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html
 
 ## Timeouts
 
@@ -92,7 +90,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing accelerator.
+- `arn` (String) ARN of the Global Accelerator custom routing accelerator.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing accelerators using the `arn`. For example:
 

@@ -29,7 +29,9 @@ import (
 
 // @SDKResource("aws_medialive_input_security_group", name="Input Security Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
+// @Testing(preIdentityVersion="v6.60.0")
 // @Testing(generator=false)
 func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
@@ -38,42 +40,40 @@ func resourceInputSecurityGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceInputSecurityGroupUpdate,
 		DeleteWithoutTimeout: resourceInputSecurityGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"inputs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"whitelist_rules": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidCIDRNetworkAddress),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"inputs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"whitelist_rules": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cidr": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidCIDRNetworkAddress),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

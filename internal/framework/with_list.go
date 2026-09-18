@@ -106,7 +106,7 @@ func setZeroValueAttrFieldsToNull(ctx context.Context, target any) diag.Diagnost
 		return diags
 	}
 
-	if value.Kind() != reflect.Ptr {
+	if value.Kind() != reflect.Pointer {
 		diags.AddError("Normalizing List Result", fmt.Sprintf("target must be a pointer, got %T", target))
 		return diags
 	}

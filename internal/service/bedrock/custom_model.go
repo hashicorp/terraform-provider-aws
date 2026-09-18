@@ -51,6 +51,9 @@ import (
 // @Testing(serialize=true)
 // @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(preCheckRegion="us-east-1")
+// Model availability is region-specific
+// @Testing(identityRegionOverrideTest=false)
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 

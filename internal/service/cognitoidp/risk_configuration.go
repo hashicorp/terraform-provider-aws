@@ -40,257 +40,259 @@ func resourceRiskConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account_takeover_risk_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				AtLeastOneOf: []string{
-					"account_takeover_risk_configuration",
-					"compromised_credentials_risk_configuration",
-					"risk_exception_configuration",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrActions: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"high_action": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"event_action": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
-												},
-												"notify": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-											},
-										},
-									},
-									"low_action": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"event_action": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
-												},
-												"notify": {
-													Type:     schema.TypeBool,
-													Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_takeover_risk_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					AtLeastOneOf: []string{
+						"account_takeover_risk_configuration",
+						"compromised_credentials_risk_configuration",
+						"risk_exception_configuration",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrActions: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"high_action": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"event_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
+													},
+													"notify": {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"medium_action": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"event_action": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
+										"low_action": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"event_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
+													},
+													"notify": {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
 												},
-												"notify": {
-													Type:     schema.TypeBool,
-													Required: true,
+											},
+										},
+										"medium_action": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"event_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.AccountTakeoverEventActionType](),
+													},
+													"notify": {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"notify_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"block_email": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"html_body": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 20000),
-												},
-												"subject": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 140),
-												},
-												"text_body": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 20000),
-												},
-											},
-										},
-									},
-									"from": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"mfa_email": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"html_body": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 20000),
-												},
-												"subject": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 140),
-												},
-												"text_body": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 20000),
+							"notify_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"block_email": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"html_body": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(6, 20000),
+													},
+													"subject": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 140),
+													},
+													"text_body": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(6, 20000),
+													},
 												},
 											},
 										},
-									},
-									"no_action_email": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"html_body": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 20000),
-												},
-												"subject": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 140),
-												},
-												"text_body": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 20000),
+										"from": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"mfa_email": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"html_body": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(6, 20000),
+													},
+													"subject": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 140),
+													},
+													"text_body": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(6, 20000),
+													},
 												},
 											},
 										},
-									},
-									"reply_to": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"source_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+										"no_action_email": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"html_body": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(6, 20000),
+													},
+													"subject": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 140),
+													},
+													"text_body": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(6, 20000),
+													},
+												},
+											},
+										},
+										"reply_to": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"source_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrClientID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"compromised_credentials_risk_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrActions: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_action": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CompromisedCredentialsEventActionType](),
+				names.AttrClientID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"compromised_credentials_risk_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrActions: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"event_action": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CompromisedCredentialsEventActionType](),
+										},
 									},
 								},
 							},
-						},
-						"event_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.EventFilterType](),
+							"event_filter": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.EventFilterType](),
+								},
 							},
 						},
 					},
 				},
-			},
-			"risk_exception_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"blocked_ip_range_list": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 200,
-							AtLeastOneOf: []string{
-								"risk_exception_configuration.0.blocked_ip_range_list",
-								"risk_exception_configuration.0.skipped_ip_range_list",
+				"risk_exception_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"blocked_ip_range_list": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 200,
+								AtLeastOneOf: []string{
+									"risk_exception_configuration.0.blocked_ip_range_list",
+									"risk_exception_configuration.0.skipped_ip_range_list",
+								},
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.IsCIDR,
+									),
+								},
 							},
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.All(
-									validation.IsCIDR,
-								),
+							"skipped_ip_range_list": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 200,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.IsCIDR,
+									)},
 							},
-						},
-						"skipped_ip_range_list": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 200,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.All(
-									validation.IsCIDR,
-								)},
 						},
 					},
 				},
-			},
-			names.AttrUserPoolID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validUserPoolID,
-			},
+				names.AttrUserPoolID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validUserPoolID,
+				},
+			}
 		},
 	}
 }

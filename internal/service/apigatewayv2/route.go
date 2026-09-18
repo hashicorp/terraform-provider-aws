@@ -48,76 +48,78 @@ func resourceRoute() *schema.Resource {
 			StateContext: resourceRouteImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"api_key_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"authorization_scopes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"authorization_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AuthorizationTypeNone,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthorizationType](),
-			},
-			"authorizer_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"model_selection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"operation_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"request_models": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"request_parameter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"request_parameter_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"required": {
-							Type:     schema.TypeBool,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"api_key_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"authorization_scopes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"authorization_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AuthorizationTypeNone,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthorizationType](),
+				},
+				"authorizer_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"model_selection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"operation_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"request_models": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"request_parameter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"request_parameter_key": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"required": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"route_key": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"route_response_selection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTarget: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
+				"route_key": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"route_response_selection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTarget: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			}
 		},
 	}
 }

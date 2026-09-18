@@ -82,114 +82,116 @@ func resourceVPC() *schema.Resource {
 
 		// Keep in sync with aws_default_vpc's schema.
 		// See notes in default_vpc.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_generated_ipv6_cidr_block": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"ipv6_ipam_pool_id"},
-			},
-			names.AttrCIDRBlock: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{"ipv4_netmask_length"},
-			},
-			"default_network_acl_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_dns_hostnames": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_network_address_usage_metrics": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_tenancy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.TenancyDefault,
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.TenancyDefault, awstypes.TenancyDedicated), false),
-			},
-			"ipv4_ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"ipv4_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{names.AttrCIDRBlock},
-				RequiredWith:  []string{"ipv4_ipam_pool_id"},
-			},
-			"ipv6_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-				ValidateFunc:  validVPCIPv6CIDRBlock,
-			},
-			"ipv6_cidr_block_network_border_group": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-			},
-			"main_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_generated_ipv6_cidr_block": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"ipv6_ipam_pool_id"},
+				},
+				names.AttrCIDRBlock: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{"ipv4_netmask_length"},
+				},
+				"default_network_acl_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_dns_hostnames": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns_support": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"enable_network_address_usage_metrics": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_tenancy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      awstypes.TenancyDefault,
+					ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.TenancyDefault, awstypes.TenancyDedicated), false),
+				},
+				"ipv4_ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"ipv4_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{names.AttrCIDRBlock},
+					RequiredWith:  []string{"ipv4_ipam_pool_id"},
+				},
+				"ipv6_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+					ValidateFunc:  validVPCIPv6CIDRBlock,
+				},
+				"ipv6_cidr_block_network_border_group": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_ipam_pool_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+					ConflictsWith: []string{"ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"main_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

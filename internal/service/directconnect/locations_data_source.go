@@ -23,12 +23,14 @@ func dataSourceLocations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocationsRead,
 
-		Schema: map[string]*schema.Schema{
-			"location_codes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"location_codes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

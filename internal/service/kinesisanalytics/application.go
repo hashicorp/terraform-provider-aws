@@ -54,523 +54,525 @@ func resourceApplication() *schema.Resource {
 			StateContext: resourceApplicationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudwatch_logging_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_stream_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudwatch_logging_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_stream_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 102400),
-			},
-			"create_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"inputs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kinesis_firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				"code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 102400),
+				},
+				"create_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"inputs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"kinesis_firehose": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"kinesis_stream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrNamePrefix: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 32),
-								validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-							),
-						},
-						"parallelism": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntBetween(1, 64),
+							"kinesis_stream": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"processing_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrResourceARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
+							names.AttrNamePrefix: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 32),
+									validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+								),
+							},
+							"parallelism": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(1, 64),
+										},
+									},
+								},
+							},
+							"processing_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrResourceARN: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 
-												names.AttrRoleARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
+													names.AttrRoleARN: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrSchema: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_columns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1000,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-												},
-												"sql_type": {
-													Type:     schema.TypeString,
-													Required: true,
+							names.AttrSchema: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"record_columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1000,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrName: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+													},
+													"sql_type": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"record_encoding": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_format": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping_parameters": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"csv": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_column_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"record_row_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-																ExactlyOneOf: []string{
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
-																},
-															},
-															names.AttrJSON: {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_row_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
+										"record_encoding": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_format": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping_parameters": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"csv": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_column_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"record_row_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
+																	ExactlyOneOf: []string{
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
-																ExactlyOneOf: []string{
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																names.AttrJSON: {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_row_path": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																		},
+																	},
+																	ExactlyOneOf: []string{
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
 															},
 														},
 													},
-												},
-												"record_format_type": {
-													Type:     schema.TypeString,
-													Computed: true,
+													"record_format_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
+										},
+									},
+								},
+							},
+							"starting_position_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"starting_position": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InputStartingPosition](),
+										},
+									},
+								},
+							},
+							"stream_names": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"last_update_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					),
+				},
+				"outputs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"kinesis_firehose": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"kinesis_stream": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"lambda": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrResourceARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 32),
+									validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+								),
+							},
+							names.AttrSchema: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"record_format_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RecordFormatType](),
 										},
 									},
 								},
 							},
 						},
-						"starting_position_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"starting_position": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.InputStartingPosition](),
-									},
-								},
-							},
-						},
-						"stream_names": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 					},
 				},
-			},
-			"last_update_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
-				),
-			},
-			"outputs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kinesis_firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				"reference_data_sources": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"s3": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bucket_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"file_key": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"kinesis_stream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						"lambda": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrResourceARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 32),
-								validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-							),
-						},
-						names.AttrSchema: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_format_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RecordFormatType](),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"reference_data_sources": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"s3": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"file_key": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrSchema: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_columns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1000,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
-												},
-												"sql_type": {
-													Type:     schema.TypeString,
-													Required: true,
+							names.AttrSchema: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"record_columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1000,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrName: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+													},
+													"sql_type": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"record_encoding": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_format": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mapping_parameters": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"csv": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_column_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"record_row_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-																ExactlyOneOf: []string{
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
-																},
-															},
-															names.AttrJSON: {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_row_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
+										"record_encoding": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_format": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mapping_parameters": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"csv": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_column_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"record_row_delimiter": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
+																	ExactlyOneOf: []string{
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
-																ExactlyOneOf: []string{
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
-																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																names.AttrJSON: {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"record_row_path": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																		},
+																	},
+																	ExactlyOneOf: []string{
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																		"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																	},
 																},
 															},
 														},
 													},
-												},
-												"record_format_type": {
-													Type:     schema.TypeString,
-													Computed: true,
+													"record_format_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrTableName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
+							names.AttrTableName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 32),
+							},
 						},
 					},
 				},
-			},
-			"start_application": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"start_application": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -38,46 +38,48 @@ func resourceDeliveryChannel() *schema.Resource {
 		UpdateWithoutTimeout: resourceDeliveryChannelPut,
 		DeleteWithoutTimeout: resourceDeliveryChannelDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      defaultDeliveryChannelName,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			names.AttrS3BucketName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrS3KeyPrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"s3_kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"snapshot_delivery_properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delivery_frequency": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      defaultDeliveryChannelName,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				names.AttrS3BucketName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrS3KeyPrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"s3_kms_key_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"snapshot_delivery_properties": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delivery_frequency": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrSNSTopicARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				names.AttrSNSTopicARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

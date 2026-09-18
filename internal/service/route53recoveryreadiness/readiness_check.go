@@ -41,22 +41,24 @@ func resourceReadinessCheck() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"readiness_check_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"resource_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"readiness_check_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"resource_set_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

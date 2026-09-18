@@ -34,7 +34,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_identity_provider", name="Identity Provider")
 // @Tags(identifierAttribute="identity_provider_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IdentityProvider")
 // @Testing(importStateIdAttribute="identity_provider_arn")

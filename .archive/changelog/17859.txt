@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_instance: Add `ipv6_addresses` attribute
-```

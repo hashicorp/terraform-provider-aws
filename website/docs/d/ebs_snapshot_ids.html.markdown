@@ -36,7 +36,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
 * `restorable_by_user_ids` - (Optional) One or more AWS accounts IDs that can create volumes from the snapshot.
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-volumes in the AWS CLI reference][1].
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-volumes in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html).
 
 ## Attribute Reference
 
@@ -50,5 +50,3 @@ This data source exports the following attributes in addition to the arguments a
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
-
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html

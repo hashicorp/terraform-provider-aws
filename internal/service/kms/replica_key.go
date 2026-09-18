@@ -47,57 +47,59 @@ func resourceReplicaKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bypass_policy_lockout_safety_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"deletion_window_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(7, 30),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 8192),
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_rotation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"key_spec": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"primary_key_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bypass_policy_lockout_safety_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"deletion_window_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      30,
+					ValidateFunc: validation.IntBetween(7, 30),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 8192),
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_rotation_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"key_spec": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_usage": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"primary_key_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

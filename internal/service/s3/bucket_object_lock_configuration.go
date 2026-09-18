@@ -38,65 +38,67 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
-			},
-			"object_lock_enabled": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.ObjectLockEnabledEnabled,
-				ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
-			},
-			names.AttrRule: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_retention": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days": {
-										Type:          schema.TypeInt,
-										Optional:      true,
-										ConflictsWith: []string{"rule.0.default_retention.0.years"},
-									},
-									names.AttrMode: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
-									},
-									"years": {
-										Type:          schema.TypeInt,
-										Optional:      true,
-										ConflictsWith: []string{"rule.0.default_retention.0.days"},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
+				},
+				"object_lock_enabled": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.ObjectLockEnabledEnabled,
+					ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
+				},
+				names.AttrRule: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_retention": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"days": {
+											Type:          schema.TypeInt,
+											Optional:      true,
+											ConflictsWith: []string{"rule.0.default_retention.0.years"},
+										},
+										names.AttrMode: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
+										},
+										"years": {
+											Type:          schema.TypeInt,
+											Optional:      true,
+											ConflictsWith: []string{"rule.0.default_retention.0.days"},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
+				"token": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }

@@ -27,7 +27,7 @@ func TestAccAPIGatewayDomainNameDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -63,7 +63,7 @@ func TestAccAPIGatewayDomainNameDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -95,7 +95,7 @@ func TestAccAPIGatewayDomainNameDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -127,7 +127,7 @@ func TestAccAPIGatewayDomainNameDataSource_Tags_DefaultTags_nonOverlapping(t *te
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -167,7 +167,7 @@ func TestAccAPIGatewayDomainNameDataSource_Tags_IgnoreTags_Overlap_defaultTag(t 
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -213,7 +213,7 @@ func TestAccAPIGatewayDomainNameDataSource_Tags_IgnoreTags_Overlap_resourceTag(t
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 

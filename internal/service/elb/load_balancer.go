@@ -67,204 +67,206 @@ func resourceLoadBalancer() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrBucketPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						names.AttrInterval: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      60,
-							ValidateFunc: validAccessLogsInterval,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"connection_draining": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"connection_draining_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  300,
-			},
-			"cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "defensive",
-				ValidateFunc: validation.StringInSlice([]string{
-					"monitor",
-					"defensive",
-					"strictest",
-				}, false),
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHealthCheck: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"healthy_threshold": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-						names.AttrInterval: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(5, 300),
-						},
-						names.AttrTarget: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validHeathCheckTarget,
-						},
-						names.AttrTimeout: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 60),
-						},
-						"unhealthy_threshold": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 10),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_logs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrBucketPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							names.AttrInterval: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      60,
+								ValidateFunc: validAccessLogsInterval,
+							},
 						},
 					},
 				},
-			},
-			"idle_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      60,
-				ValidateFunc: validation.IntBetween(1, 4000),
-			},
-			"instances": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"listener": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						"instance_protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateListenerProtocol(),
-						},
-						"lb_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						"lb_protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateListenerProtocol(),
-						},
-						"ssl_certificate_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"connection_draining": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"connection_draining_timeout": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  300,
+				},
+				"cross_zone_load_balancing": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"desync_mitigation_mode": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "defensive",
+					ValidateFunc: validation.StringInSlice([]string{
+						"monitor",
+						"defensive",
+						"strictest",
+					}, false),
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHealthCheck: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"healthy_threshold": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(2, 10),
+							},
+							names.AttrInterval: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(5, 300),
+							},
+							names.AttrTarget: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validHeathCheckTarget,
+							},
+							names.AttrTimeout: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(2, 60),
+							},
+							"unhealthy_threshold": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(2, 10),
+							},
 						},
 					},
 				},
-				Set: listenerHash,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validNamePrefix,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"source_security_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"source_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnets: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"idle_timeout": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      60,
+					ValidateFunc: validation.IntBetween(1, 4000),
+				},
+				"instances": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"internal": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"listener": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instance_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							"instance_protocol": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateListenerProtocol(),
+							},
+							"lb_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							"lb_protocol": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateListenerProtocol(),
+							},
+							"ssl_certificate_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+					Set: listenerHash,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validNamePrefix,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"source_security_group": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"source_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSubnets: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -70,6 +71,14 @@ func TestAccKMSKeyPolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceKey(), attachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(attachmentResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(attachmentResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

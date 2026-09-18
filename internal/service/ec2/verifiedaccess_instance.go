@@ -37,63 +37,65 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cidr_endpoints_custom_subdomain": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"fips_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"verified_access_trust_providers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_trust_provider_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"trust_provider_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_trust_provider_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"verified_access_trust_provider_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cidr_endpoints_custom_subdomain": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"fips_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"verified_access_trust_providers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"device_trust_provider_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"trust_provider_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_trust_provider_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"verified_access_trust_provider_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"name_servers": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"name_servers": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

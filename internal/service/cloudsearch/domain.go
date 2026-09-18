@@ -47,138 +47,140 @@ func resourceDomain() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_service_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_options": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"tls_security_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.TLSSecurityPolicy](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"document_service_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_options": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforce_https": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"tls_security_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.TLSSecurityPolicy](),
+							},
 						},
 					},
 				},
-			},
-			// The index_field schema is based on the AWS Console screen, not the API model.
-			"index_field": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"analysis_scheme": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"facet": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"highlight": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateIndexName,
-						},
-						"return": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"search": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"sort": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"source_fields": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.IndexFieldType](),
-						},
-					},
-				},
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
-			},
-			"scaling_parameters": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_instance_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.PartitionInstanceType](),
-						},
-						"desired_partition_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"desired_replication_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+				// The index_field schema is based on the AWS Console screen, not the API model.
+				"index_field": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"analysis_scheme": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"facet": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"highlight": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateIndexName,
+							},
+							"return": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"search": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"sort": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"source_fields": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.IndexFieldType](),
+							},
 						},
 					},
 				},
-			},
-			"search_service_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+				},
+				"scaling_parameters": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_instance_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.PartitionInstanceType](),
+							},
+							"desired_partition_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"desired_replication_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"search_service_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

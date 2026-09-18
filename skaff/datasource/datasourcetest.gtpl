@@ -165,7 +165,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)

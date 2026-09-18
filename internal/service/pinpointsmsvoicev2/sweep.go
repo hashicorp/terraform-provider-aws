@@ -18,8 +18,18 @@ import (
 
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_phone_number", &resource.Sweeper{
-		Name: "aws_pinpointsmsvoicev2_phone_number",
-		F:    sweepPhoneNumbers,
+		Name:         "aws_pinpointsmsvoicev2_phone_number",
+		F:            sweepPhoneNumbers,
+		Dependencies: []string{"aws_pinpointsmsvoicev2_pool"},
+	})
+	resource.AddTestSweepers("aws_pinpointsmsvoicev2_pool", &resource.Sweeper{
+		Name: "aws_pinpointsmsvoicev2_pool",
+		F:    sweepPools,
+	})
+	resource.AddTestSweepers("aws_pinpointsmsvoicev2_sender_id", &resource.Sweeper{
+		Name:         "aws_pinpointsmsvoicev2_sender_id",
+		F:            sweepSenderIDs,
+		Dependencies: []string{"aws_pinpointsmsvoicev2_pool"},
 	})
 }
 
@@ -63,6 +73,93 @@ func sweepPhoneNumbers(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping End User Messaging SMS Phone Numbers (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepPools(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	input := &pinpointsmsvoicev2.DescribePoolsInput{}
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := pinpointsmsvoicev2.NewDescribePoolsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping End User Messaging SMS Pool sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing End User Messaging SMS Pools (%s): %w", region, err)
+		}
+
+		for _, v := range page.Pools {
+			id := aws.ToString(v.PoolId)
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPoolResource, client,
+				framework.NewAttribute(names.AttrID, id)))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping End User Messaging SMS Pools (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepSenderIDs(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	input := &pinpointsmsvoicev2.DescribeSenderIdsInput{}
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := pinpointsmsvoicev2.NewDescribeSenderIdsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping End User Messaging SMS Sender ID sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing End User Messaging SMS Sender IDs (%s): %w", region, err)
+		}
+
+		for _, v := range page.SenderIds {
+			senderID := aws.ToString(v.SenderId)
+			isoCountryCode := aws.ToString(v.IsoCountryCode)
+
+			if v := v.DeletionProtectionEnabled; v {
+				log.Printf("[INFO] Skipping End User Messaging SMS Sender ID %s: DeletionProtectionEnabled=%t", senderID, v)
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSenderIDResource, client,
+				framework.NewAttribute("sender_id", senderID),
+				framework.NewAttribute("iso_country_code", isoCountryCode)))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping End User Messaging SMS Sender IDs (%s): %w", region, err)
 	}
 
 	return nil

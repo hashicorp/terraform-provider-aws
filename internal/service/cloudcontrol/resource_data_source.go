@@ -23,28 +23,30 @@ func dataSourceResource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"type_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}`), "must be three alphanumeric sections separated by double colons (::)"),
-			},
-			"type_version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrProperties: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"type_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}`), "must be three alphanumeric sections separated by double colons (::)"),
+				},
+				"type_version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

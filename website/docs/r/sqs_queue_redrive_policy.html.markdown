@@ -53,6 +53,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sqs_queue_redrive_policy.test
+  identity = {
+    queue_url = "https://queue.amazonaws.com/123456789012/myqueue"
+  }
+}
+
+resource "aws_sqs_queue_redrive_policy" "test" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `queue_url` (String) URL of the SQS Queue.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queue Redrive Policies using the queue URL. For example:
 
 ```terraform

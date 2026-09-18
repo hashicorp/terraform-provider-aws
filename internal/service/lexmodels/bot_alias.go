@@ -53,71 +53,73 @@ func resourceBotAlias() *schema.Resource {
 			Delete: schema.DefaultTimeout(botAliasDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bot_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validBotName,
-			},
-			"bot_version": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validBotVersion,
-			},
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"conversation_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIAMRoleARN: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(20, 2048),
-								verify.ValidARN,
-							),
-						},
-						// Currently the API docs do not list a min and max for this list.
-						// https://docs.aws.amazon.com/lex/latest/dg/API_PutBotAlias.html#lex-PutBotAlias-request-conversationLogs
-						"log_settings": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     logSettings,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bot_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validBotName,
+				},
+				"bot_version": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validBotVersion,
+				},
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"conversation_logs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIAMRoleARN: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(20, 2048),
+									verify.ValidARN,
+								),
+							},
+							// Currently the API docs do not list a min and max for this list.
+							// https://docs.aws.amazon.com/lex/latest/dg/API_PutBotAlias.html#lex-PutBotAlias-request-conversationLogs
+							"log_settings": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     logSettings,
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validBotAliasName,
-			},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "",
+					ValidateFunc: validation.StringLenBetween(0, 200),
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validBotAliasName,
+				},
+			}
 		},
 	}
 }

@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_verifiedpermissions_schema: `definition` is now a list nested block instead of a single nested block
-```

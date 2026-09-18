@@ -34,7 +34,9 @@ func resourceSharingWithOrganization() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{}
+		},
 	}
 }
 

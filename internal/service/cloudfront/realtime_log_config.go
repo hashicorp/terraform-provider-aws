@@ -38,61 +38,63 @@ func resourceRealtimeLogConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceRealtimeLogConfigUpdate,
 		DeleteWithoutTimeout: resourceRealtimeLogConfigDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kinesis_stream_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrStreamARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kinesis_stream_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrStreamARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"stream_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[streamType](),
+							"stream_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[streamType](),
+							},
 						},
 					},
 				},
-			},
-			"fields": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sampling_rate": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-			},
+				"fields": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"sampling_rate": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+				},
+			}
 		},
 	}
 }

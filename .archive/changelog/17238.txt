@@ -1,3 +1,0 @@
-```release-note:bug
-data-source/aws_lb_listener: Prevent error when retrieving a listener whose default action contains weighted target groups
-```

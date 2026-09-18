@@ -89,6 +89,7 @@ This resource supports the following arguments:
 * `disallowed_cidrs` - (Optional, Forces new resource) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required, Forces new resource) The ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional, Forces new resource) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-128`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -98,6 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `resource_id` - The ID of the resource.
 * `resource_owner` - The owner of the resource.
 * `resource_type` - The type of the resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

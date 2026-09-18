@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -116,7 +117,7 @@ func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"outpost_arn": schema.StringAttribute{
+			names.AttrOutpostARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -186,20 +187,18 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 		return
 	}
 
-	// Set values for unknowns.
 	data.ID = fwflex.StringToFramework(ctx, output.CapacityReservation.CapacityReservationId)
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 
 	cr, err := waitCapacityBlockReservationActive(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Capacity Block Reservation (%s) active", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, cr, &data)...)
+	response.Diagnostics.Append(flattenCapacityReservation(ctx, cr, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -231,12 +230,19 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, cr, &data)...)
+	response.Diagnostics.Append(flattenCapacityReservation(ctx, cr, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func flattenCapacityReservation(ctx context.Context, cr *awstypes.CapacityReservation, data *capacityBlockReservationReservationModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	diags := fwflex.Flatten(ctx, cr, data, fwflex.WithFieldNamePrefix("CapacityReservation"))
+	data.CreatedDate = fwflex.TimeToFramework(ctx, cr.CreateDate)
+	data.InstanceCount = fwflex.Int32ToFrameworkInt64(ctx, cr.TotalInstanceCount)
+	return diags
 }
 
 type capacityBlockReservationReservationModel struct {

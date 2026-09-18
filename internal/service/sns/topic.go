@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"regexp"
 	"strconv"
 	"time"
@@ -229,7 +230,7 @@ func resourceTopic() *schema.Resource {
 
 		CustomizeDiff: resourceTopicCustomizeDiff,
 
-		Schema: topicSchema,
+		Schema: maps.Clone(topicSchema),
 	}
 }
 

@@ -218,6 +218,27 @@ resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
 }
 ```
 
+### With a Warm-Up Period
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "example" {
+  alarm_name          = "example-service-errors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "Errors"
+  namespace           = "ExampleApp"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "breaching"
+  alarm_actions       = [aws_sns_topic.example.arn]
+
+  warm_up_configuration {
+    warm_up_period_duration_in_minutes = 30
+  }
+}
+```
+
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
 You must choose one or the other.
 
@@ -242,12 +263,12 @@ This resource supports the following arguments:
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
 * `threshold_metric_id` - (Optional) If this is an alarm based on an anomaly detection model, make this value match the ID of the ANOMALY_DETECTION_BAND function.
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
-* `alarm_actions` - (Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Name (ARN).
+* `alarm_actions` - (Optional) List of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an ARN.
 * `alarm_description` - (Optional) The description for the alarm.
 * `datapoints_to_alarm` - (Optional) The number of data points that must be breaching to trigger the alarm.
 * `dimensions` - (Optional) The dimensions for the alarm's associated metric.  For the list of available dimensions see the AWS documentation [here](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
-* `insufficient_data_actions` - (Optional) The list of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an Amazon Resource Name (ARN).
-* `ok_actions` - (Optional) The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Name (ARN).
+* `insufficient_data_actions` - (Optional) List of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an ARN.
+* `ok_actions` - (Optional) List of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an ARN.
 * `unit` - (Optional) The unit for the alarm's associated metric.
 * `extended_statistic` - (Optional) The percentile statistic for the metric associated with the alarm. Specify a value between p0.0 and p100.
 * `treat_missing_data` - (Optional) Sets how this alarm is to handle missing data points. The following values are supported: `missing`, `ignore`, `breaching` and `notBreaching`. Defaults to `missing`.
@@ -256,14 +277,13 @@ This resource supports the following arguments:
   If you specify `evaluate` or omit this parameter, the alarm will always be evaluated and possibly change state no matter how many data points are available.
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
+* `warm_up_configuration` - (Optional) Warm-up period that delays alarm evaluation after the alarm is created. During the warm-up period the alarm stays in `INSUFFICIENT_DATA` and does not perform alarm actions. See [`warm_up_configuration`](#warm_up_configuration) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
 for details about valid values.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
-
-### Nested fields
 
 #### `metric_query`
 
@@ -304,6 +324,13 @@ for details about valid values.
 * `stat` - (Required) The statistic to apply to this metric.
    See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
+
+#### `warm_up_configuration`
+
+* `warm_up_period_duration_in_minutes` - (Required) Length of the warm-up period, in minutes. Valid values are `1` to `2880`.
+* `only_start_evaluating_after_warm_up_period_ends` - (Optional) Whether to wait for the full warm-up period before evaluation begins, even if metric data arrives earlier. When `false`, the warm-up period ends early as soon as the alarm has enough data to fill its evaluation window. Defaults to `false`.
+
+~> **Note:** The warm-up period applies once, when the alarm is created. Changing the warm-up configuration after the warm-up period ends does not start a new warm-up period. See [Alarm warm-up periods](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-warm-up.html) in the Amazon CloudWatch User Guide.
 
 ## Attribute Reference
 

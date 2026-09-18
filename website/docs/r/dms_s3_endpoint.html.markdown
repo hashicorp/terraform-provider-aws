@@ -127,14 +127,14 @@ The following arguments are optional:
 * `detach_target_on_lob_lookup_failure_parquet` - (Optional) Undocumented argument for use as directed by AWS Support.
 * `dict_page_size_limit` - (Optional) Maximum size in bytes of an encoded dictionary page of a column. (AWS default is 1 MiB, _i.e._, `1048576`.)
 * `enable_statistics` - (Optional) Whether to enable statistics for Parquet pages and row groups. Default is `true`.
-* `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)
+* `encoding_type` - (Optional) Type of encoding to use. Value values are `rle-dictionary`, `plain`, and `plain-dictionary`. (AWS default is `rle-dictionary`.)
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. (AWS default is `SSE_S3`.) (Ignored for source endpoints -- only `SSE_S3` is valid.)
 * `expected_bucket_owner` - (Optional) Bucket owner to prevent sniping. Value is an AWS account ID.
 * `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data. Required for `source` endpoints.
 * `glue_catalog_generation` - (Optional) Whether to integrate AWS Glue Data Catalog with an Amazon S3 target. See [Using AWS Glue Data Catalog with an Amazon S3 target for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.GlueCatalog) for more information. Default is `false`.
 * `ignore_header_rows` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
-* `kms_key_arn` - (Optional) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
+* `kms_key_arn` - (Optional, **Deprecated** Use `server_side_encryption_kms_key_id` instead) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. (AWS default is 1 GB, _i.e._, `1048576`.)
 * `parquet_timestamp_in_millisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Default is `false`. (Ignored for source endpoints.)
 * `parquet_version` - (Optional) Version of the .parquet file format. Valid values are `parquet-1-0` and `parquet-2-0`. (AWS default is `parquet-1-0`.) (Ignored for source endpoints.)

@@ -26,9 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_session_logger_association", name="Session Logger Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.SessionLogger")
-// @Testing(importStateIdAttribute="session_logger_arn,portal_arn")
 func newSessionLoggerAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &sessionLoggerAssociationResource{}, nil
 }

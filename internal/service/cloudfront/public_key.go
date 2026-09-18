@@ -38,40 +38,42 @@ func resourcePublicKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"encoded_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validPublicKeyName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validPublicKeyNamePrefix,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"encoded_key": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validPublicKeyName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validPublicKeyNamePrefix,
+				},
+			}
 		},
 	}
 }

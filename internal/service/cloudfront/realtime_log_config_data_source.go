@@ -23,52 +23,54 @@ func dataSourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRealtimeLogConfigRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kinesis_stream_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrRoleARN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrStreamARN: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kinesis_stream_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRoleARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrStreamARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"stream_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+							"stream_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"fields": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sampling_rate": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"fields": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sampling_rate": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

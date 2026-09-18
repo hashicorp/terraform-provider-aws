@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -42,6 +43,12 @@ import (
 
 // @FrameworkResource("aws_osis_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="pipeline_arn")
+// @IdentityAttribute("name", resourceAttributeName="pipeline_name", identityDuplicateAttributes="id")
+// @ArnFormat("pipeline/{pipeline_name}", attribute="pipeline_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/osis/types;awstypes;awstypes.Pipeline")
+// @Testing(generator="randomPipelineName(t)")
+// @Testing(preIdentityVersion="v6.47.0")
+// @Testing(importStateIdAttribute="pipeline_name")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}
 
@@ -54,14 +61,14 @@ func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 type pipelineResource struct {
 	framework.ResourceWithModel[pipelineResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("pipeline_name")),
 			"ingest_endpoint_urls": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
@@ -267,6 +274,8 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
 	data.PipelineRoleARN = fwflex.StringToFrameworkARN(ctx, pipeline.PipelineRoleArn)
 
+	setTagsOut(ctx, pipeline.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -279,7 +288,6 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	data.PipelineName = data.ID
 	name := data.PipelineName.ValueString()
 	pipeline, err := findPipelineByName(ctx, conn, name)
 
@@ -296,7 +304,7 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, pipeline, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, pipeline, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -324,7 +332,7 @@ func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if diff.HasChanges() {
-		input := osis.UpdatePipelineInput{}
+		var input osis.UpdatePipelineInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -380,6 +388,17 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
+}
+
+func (r *pipelineResource) flatten(ctx context.Context, pipeline *awstypes.Pipeline, data *pipelineResourceModel) diag.Diagnostics {
+	diags := fwflex.Flatten(ctx, pipeline, data)
+	if diags.HasError() {
+		return diags
+	}
+
+	setTagsOut(ctx, pipeline.Tags)
+
+	return diags
 }
 
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {

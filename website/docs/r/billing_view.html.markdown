@@ -31,38 +31,38 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `data_filter_expression` - (Optional) Filter Cost Explorer APIs using the expression. See [`data_filter_expression`](#data_filter_expression-block) below for details.
 * `description` - (Optional) Description of the custom billing view.
-* `data_filter_expression` - (Optional) Filter Cost Explorer APIs using the expression. Refer to the [data-filter-expression block](#data-filter-expression) documentation for more details.
-* `tags` - (Optional) List of key value map specifying tags associated to the billing view being created.
+* `tags` - (Optional) Key-value map of tags associated with the billing view being created.
 
-### data-filter-expression
+### `data_filter_expression` Block
 
-A `data-filter-expression` block supports the following:
+The `data_filter_expression` block supports the following arguments:
 
-* `dimensions` - (Optional) Dimension to use for `expression`. Refer to [#dimensions](#dimensions) for more details.
-* `tags` - (Optional) Tags to use for `expression`. Refer to [#tags](#tags) for more details.
-* `time_range` - (Optional) Time range to use for `expression`. Refer to [#time-range](#time-range) for more details.
+* `dimensions` - (Optional) Dimension to use for the expression. See [`dimensions`](#dimensions-block) below for details.
+* `tags` - (Optional) Tags to use for the expression. See [`tags`](#tags-block) below for details.
+* `time_range` - (Optional) Time range to use for the expression. See [`time_range`](#time_range-block) below for details.
 
-#### dimensions
+### `dimensions` Block
 
-A `dimensions` block supports the following:
+The `dimensions` block supports the following arguments:
 
-* `key` - (Required) Key of the dimension. Possible values are `LINKED_ACCOUNT`.
+* `key` - (Required) Key of the dimension. Valid values are `LINKED_ACCOUNT`.
 * `values` - (Required) List of metadata values that you can use to filter and group your results.
 
-#### tags
+### `tags` Block
 
-A `tags` block supports the following:
+The `tags` block supports the following arguments:
 
 * `key` - (Required) Key of the tag.
 * `values` - (Required) List of values for the tag.
 
-#### time-range
+### `time_range` Block
 
-A `time_range` block supports the following:
+The `time_range` block supports the following arguments:
 
 * `begin_date_inclusive` - (Required) Inclusive start date of the time range.
-* `begin_date_inclusive` - (Required) Inclusive end date of the time range.
+* `end_date_inclusive` - (Required) Inclusive end date of the time range.
 
 ## Attribute Reference
 

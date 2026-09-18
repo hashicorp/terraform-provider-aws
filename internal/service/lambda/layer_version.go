@@ -47,125 +47,127 @@ func resourceLayerVersion() *schema.Resource {
 		ReadWithoutTimeout:   resourceLayerVersionRead,
 		DeleteWithoutTimeout: resourceLayerVersionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"code_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compatible_architectures": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 2,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"compatible_runtimes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 0,
-				MaxItems: 15,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
+				"code_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress diff when importing: filename is never returned by the API.
-					return old == "" && d.Id() != ""
+				"compatible_architectures": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 2,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
+					},
 				},
-			},
-			"layer_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"license_info": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			names.AttrS3Bucket: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"filename"},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "" && d.Id() != ""
+				"compatible_runtimes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 0,
+					MaxItems: 15,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
+					},
 				},
-			},
-			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"filename"},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "" && d.Id() != ""
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"s3_object_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"filename"},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "" && d.Id() != ""
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
 				},
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				ForceNew: true,
-				Optional: true,
-			},
-			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"source_code_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"filename": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress diff when importing: filename is never returned by the API.
+						return old == "" && d.Id() != ""
+					},
+				},
+				"layer_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"layer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"license_info": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				names.AttrS3Bucket: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"filename"},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "" && d.Id() != ""
+					},
+				},
+				"s3_key": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"filename"},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "" && d.Id() != ""
+					},
+				},
+				"s3_object_version": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"filename"},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "" && d.Id() != ""
+					},
+				},
+				"signing_job_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_profile_version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					ForceNew: true,
+					Optional: true,
+				},
+				"source_code_hash": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"source_code_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

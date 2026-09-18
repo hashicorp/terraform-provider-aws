@@ -10,7 +10,7 @@ description: |-
 
 Creates an Amazon CloudFront web distribution.
 
-For information about CloudFront distributions, see the [Amazon CloudFront Developer Guide][1]. For specific information about creating CloudFront web distributions, see the [POST Distribution][2] page in the Amazon CloudFront API Reference.
+For information about CloudFront distributions, see the [Amazon CloudFront Developer Guide](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html). For specific information about creating CloudFront web distributions, see the [POST Distribution](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html) page in the Amazon CloudFront API Reference.
 
 ~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed state after creation or modification. During this time, deletes to resources will be blocked. If you need to delete a distribution that is enabled and you do not want to wait, you need to use the `retain_on_delete` flag.
 
@@ -426,6 +426,7 @@ This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
+* `cache_tag_config` (Optional) -  [Cache tag configuration](#cache-tag-config-arguments) block for cache tag extraction from origin responses (maximum one). See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/invalidation-by-tags.html) for more information about cache tags.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `connection_function_association` (Optional) - A [connection function association](#connection-function-association-arguments) configuration block (maximum one).
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
@@ -475,14 +476,14 @@ This resource supports the following arguments:
 * `viewer_protocol_policy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
 * `grpc_config` (Optional) - A [config block](#grpc-config-arguments) that sets the grpc config.
 
-##### Forwarded Values Arguments
+#### Forwarded Values Arguments
 
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments) that specifies how CloudFront handles cookies (maximum one).
 * `headers` (Optional) - Headers, if any, that you want CloudFront to vary upon for this cache behavior. Specify `*` to include all headers.
 * `query_string` (Required) - Indicates whether you want CloudFront to forward query strings to the origin that is associated with this cache behavior.
 * `query_string_cache_keys` (Optional) - When specified, along with a value of `true` for `query_string`, all query strings are forwarded, however only the query string keys listed in this argument are cached. When omitted with a value of `true` for `query_string`, all query string keys are cached.
 
-##### Lambda Function Association
+#### Lambda Function Association
 
 Lambda@Edge allows you to associate an AWS Lambda Function with a predefined
 event. You can associate a single function per event type. See [What is
@@ -512,7 +513,7 @@ resource "aws_cloudfront_distribution" "example" {
 * `lambda_arn` (Required) - ARN of the Lambda function.
 * `include_body` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
 
-##### Function Association
+#### Function Association
 
 With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. You can associate a single function per event type. See [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
 for more information.
@@ -538,11 +539,11 @@ resource "aws_cloudfront_distribution" "example" {
 * `event_type` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
 * `function_arn` (Required) - ARN of the CloudFront function.
 
-##### GRPC config arguments
+#### GRPC config arguments
 
 * `enabled` (Required) - Whether Grpc requests are enabled.
 
-##### Cookies Arguments
+#### Cookies Arguments
 
 * `forward` (Required) - Whether you want CloudFront to forward cookies to the origin that is associated with this cache behavior. You can specify `all`, `none` or `whitelist`. If `whitelist`, you must include the subsequent `whitelisted_names`.
 * `whitelisted_names` (Optional) - If you have specified `whitelist` to `forward`, the whitelisted cookies that you want CloudFront to forward to your origin.
@@ -575,7 +576,7 @@ argument should not be specified.
 * `custom_origin_config` - The [CloudFront custom origin](#custom-origin-config-arguments) configuration information. If an S3 origin is required, use `origin_access_control_id` or `s3_origin_config` instead.
 * `domain_name` (Required) - DNS domain name of either the S3 bucket, or web site of your custom origin.
 * `custom_header` (Optional) - One or more sub-resources with `name` and `value` parameters that specify header data that will be sent to the origin (multiples allowed).
-* `origin_access_control_id` (Optional) - Unique identifier of a [CloudFront origin access control][8] for this origin.
+* `origin_access_control_id` (Optional) - Unique identifier of a [CloudFront origin access control](/docs/providers/aws/r/cloudfront_origin_access_control.html) for this origin.
 * `origin_id` (Required) - Unique identifier for the origin.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
@@ -583,7 +584,7 @@ argument should not be specified.
 * `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
 * `vpc_origin_config` - (Optional) The [VPC origin configuration](#vpc-origin-config-arguments).
 
-##### Custom Origin Config Arguments
+#### Custom Origin Config Arguments
 
 * `http_port` (Required) - HTTP port the custom origin listens on.
 * `https_port` (Required) - HTTPS port the custom origin listens on.
@@ -591,18 +592,23 @@ argument should not be specified.
 * `origin_protocol_policy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
 * `origin_ssl_protocols` (Required) - List of SSL/TLS protocols that CloudFront can use when connecting to your origin over HTTPS. Valid values: `SSLv3`, `TLSv1`, `TLSv1.1`, `TLSv1.2`. For more information, see [Minimum Origin SSL Protocol](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols) in the Amazon CloudFront Developer Guide.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
+* `origin_mtls_config` - (Optional) The [origin mTLS configuration](#origin-mtls-config-arguments) for mutual TLS authentication between CloudFront and your origin.
 * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `30`.
 
-##### Origin Shield Arguments
+#### Origin mTLS Config Arguments
+
+* `client_certificate_arn` (Required) - ARN of the ACM certificate to use for mutual TLS authentication with the origin. The certificate must have Extended Key Usage set to TLS Client Authentication.
+
+#### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
 * `origin_shield_region` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `us-east-2`.
 
-##### S3 Origin Config Arguments
+#### S3 Origin Config Arguments
 
-* `origin_access_identity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
+* `origin_access_identity` (Required) - The [CloudFront origin access identity](/docs/providers/aws/r/cloudfront_origin_access_identity.html) to associate with the origin.
 
-##### VPC Origin Config Arguments
+#### VPC Origin Config Arguments
 
 * `origin_keepalive_timeout` - (Optional) Specifies how long, in seconds, CloudFront persists its connection to the origin. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `5`.
 * `origin_read_timeout` - (Optional) Specifies how long, in seconds, CloudFront waits for a response from the origin. This is also known as the _origin response timeout_. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `30`.
@@ -615,11 +621,11 @@ argument should not be specified.
 * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin.
 * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. You must specify two members.
 
-##### Failover Criteria Arguments
+#### Failover Criteria Arguments
 
 * `status_codes` (Required) - List of HTTP status codes for the origin group.
 
-##### Member Arguments
+#### Member Arguments
 
 * `origin_id` (Required) - Unique identifier of the member origin.
 
@@ -629,16 +635,20 @@ The `restrictions` sub-resource takes another single sub-resource named `geo_res
 
 The arguments of `geo_restriction` are:
 
-* `locations` (Required) - [ISO 3166-1-alpha-2 codes][4] for which you want CloudFront either to distribute your content (`whitelist`) or not distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
+* `locations` (Required) - [ISO 3166-1-alpha-2 codes](http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm) for which you want CloudFront either to distribute your content (`whitelist`) or not distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
 * `restriction_type` (Required) - Method that you want to use to restrict distribution of your content by country: `none`, `whitelist`, or `blacklist`.
 
 #### Viewer Certificate Arguments
 
-* `acm_certificate_arn` - ARN of the [AWS Certificate Manager][6] certificate that you wish to use with this distribution. Specify this, `cloudfront_default_certificate`, or `iam_certificate_id`.  The ACM certificate must be in  US-EAST-1.
+* `acm_certificate_arn` - ARN of the [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) certificate that you wish to use with this distribution. Specify this, `cloudfront_default_certificate`, or `iam_certificate_id`.  The ACM certificate must be in  US-EAST-1.
 * `cloudfront_default_certificate` - `true` if you want viewers to use HTTPS to request your objects and you're using the CloudFront domain name for your distribution. Specify this, `acm_certificate_arn`, or `iam_certificate_id`.
 * `iam_certificate_id` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
 * `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip`, `sni-only`, or `static-ip`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+
+#### Cache Tag Config Arguments
+
+* `header_name` (Required) - Name of the HTTP header to extract cache tags. The header value must contain comma-separated tag values.
 
 #### Connection Function Association Arguments
 
@@ -649,7 +659,7 @@ The arguments of `geo_restriction` are:
 * `mode` (Required) - The mode for viewer mTLS. Valid values: `required`, `optional`.
 * `trust_store_config` (Required) - The [trust store configuration](#trust-store-config-arguments) for viewer mTLS (maximum one).
 
-##### Trust Store Config Arguments
+#### Trust Store Config Arguments
 
 * `trust_store_id` (Required) - Identifier of the trust store to use for viewer mTLS.
 * `advertise_trust_store_ca_names` (Optional) - Whether to advertise the trust store CA names to clients. Defaults to `false`.
@@ -679,15 +689,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_modified_time` - Date and time the distribution was last modified.
 * `in_progress_validation_batches` - Number of invalidation batches currently in progress.
 * `etag` - Current version of the distribution's information. For example: `E2QWRUHAPOMQZL`.
-* `hosted_zone_id` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set][7] to. This attribute is simply an alias for the zone ID `Z2FDTNDATAQYW2`.
-
-[1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
-[4]: http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm
-[5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
-[6]: https://aws.amazon.com/certificate-manager/
-[7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
-[8]: /docs/providers/aws/r/cloudfront_origin_access_control.html
+* `hosted_zone_id` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set](http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html) to. This attribute is simply an alias for the zone ID `Z2FDTNDATAQYW2`.
 
 ## Import
 

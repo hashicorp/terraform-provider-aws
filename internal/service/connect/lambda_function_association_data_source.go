@@ -21,16 +21,18 @@ func dataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFunctionARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFunctionARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

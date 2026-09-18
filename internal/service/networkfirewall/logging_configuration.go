@@ -39,51 +39,53 @@ func resourceLoggingConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"enable_monitoring_dashboard": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"firewall_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrLoggingConfiguration: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_destination_config": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: len(enum.Values[awstypes.LogType]()),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"log_destination": {
-										Type:     schema.TypeMap,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"log_destination_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
-									},
-									"log_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"enable_monitoring_dashboard": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"firewall_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"log_destination_config": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: len(enum.Values[awstypes.LogType]()),
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"log_destination": {
+											Type:     schema.TypeMap,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"log_destination_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
+										},
+										"log_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {

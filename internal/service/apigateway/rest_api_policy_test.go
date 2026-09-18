@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -74,6 +75,14 @@ func TestAccAPIGatewayRestAPIPolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPIPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -98,6 +107,14 @@ func TestAccAPIGatewayRestAPIPolicy_Disappears_restAPI(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

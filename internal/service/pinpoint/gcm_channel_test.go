@@ -153,7 +153,7 @@ func testAccCheckGCMChannelExists(ctx context.Context, t *testing.T, n string, c
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
+			return fmt.Errorf("No End User Messaging GCM Channel with that application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -189,7 +189,7 @@ func testAccCheckGCMChannelDestroy(ctx context.Context, t *testing.T) resource.T
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint GCM Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging GCM Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

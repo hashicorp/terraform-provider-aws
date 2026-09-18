@@ -48,55 +48,57 @@ func resourceAgent() *schema.Resource {
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"activation_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_link_endpoint", names.AttrIPAddress},
-			},
-			names.AttrIPAddress: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"activation_key"},
-			},
-			"private_link_endpoint": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"activation_key"},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"security_group_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"subnet_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCEndpointID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"activation_key": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"private_link_endpoint", names.AttrIPAddress},
+				},
+				names.AttrIPAddress: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"activation_key"},
+				},
+				"private_link_endpoint": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"activation_key"},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"security_group_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"subnet_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCEndpointID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

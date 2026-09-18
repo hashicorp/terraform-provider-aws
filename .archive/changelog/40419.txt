@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_connect_contact_flow: Fix `deserialization failed, failed to decode response body with invalid JSON` errors on Read
-```

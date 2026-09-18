@@ -8,7 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 func ThemeConfigurationSchema() *schema.Schema {
@@ -29,15 +29,15 @@ func ThemeConfigurationSchema() *schema.Schema {
 								Optional: true,
 								MinItems: 8, // Colors size needs to be in the range between 8 and 20
 								MaxItems: 20,
-								Elem:     hexColorSchema(attrElem),
+								Elem:     hexColorSchema(sdkschema.AttrElem),
 							},
-							"empty_fill_color": hexColorSchema(attrOptional),
+							"empty_fill_color": hexColorSchema(sdkschema.AttrOptional),
 							"min_max_gradient": {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 2, // MinMaxGradient size needs to be 2
 								MaxItems: 2,
-								Elem:     hexColorSchema(attrElem),
+								Elem:     hexColorSchema(sdkschema.AttrElem),
 							},
 						},
 					},
@@ -136,22 +136,22 @@ func ThemeConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"accent":               hexColorSchema(attrOptional),
-							"accent_foreground":    hexColorSchema(attrOptional),
-							"danger":               hexColorSchema(attrOptional),
-							"danger_foreground":    hexColorSchema(attrOptional),
-							"dimension":            hexColorSchema(attrOptional),
-							"dimension_foreground": hexColorSchema(attrOptional),
-							"measure":              hexColorSchema(attrOptional),
-							"measure_foreground":   hexColorSchema(attrOptional),
-							"primary_background":   hexColorSchema(attrOptional),
-							"primary_foreground":   hexColorSchema(attrOptional),
-							"secondary_background": hexColorSchema(attrOptional),
-							"secondary_foreground": hexColorSchema(attrOptional),
-							"success":              hexColorSchema(attrOptional),
-							"success_foreground":   hexColorSchema(attrOptional),
-							"warning":              hexColorSchema(attrOptional),
-							"warning_foreground":   hexColorSchema(attrOptional),
+							"accent":               hexColorSchema(sdkschema.AttrOptional),
+							"accent_foreground":    hexColorSchema(sdkschema.AttrOptional),
+							"danger":               hexColorSchema(sdkschema.AttrOptional),
+							"danger_foreground":    hexColorSchema(sdkschema.AttrOptional),
+							"dimension":            hexColorSchema(sdkschema.AttrOptional),
+							"dimension_foreground": hexColorSchema(sdkschema.AttrOptional),
+							"measure":              hexColorSchema(sdkschema.AttrOptional),
+							"measure_foreground":   hexColorSchema(sdkschema.AttrOptional),
+							"primary_background":   hexColorSchema(sdkschema.AttrOptional),
+							"primary_foreground":   hexColorSchema(sdkschema.AttrOptional),
+							"secondary_background": hexColorSchema(sdkschema.AttrOptional),
+							"secondary_foreground": hexColorSchema(sdkschema.AttrOptional),
+							"success":              hexColorSchema(sdkschema.AttrOptional),
+							"success_foreground":   hexColorSchema(sdkschema.AttrOptional),
+							"warning":              hexColorSchema(sdkschema.AttrOptional),
+							"warning_foreground":   hexColorSchema(sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -161,7 +161,129 @@ func ThemeConfigurationSchema() *schema.Schema {
 }
 
 func ThemeConfigurationDataSourceSchema() *schema.Schema {
-	return sdkv2.ComputedOnlyFromSchema(ThemeConfigurationSchema())
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColorPalette.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"colors": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"empty_fill_color": hexColorSchema(sdkschema.AttrComputed),
+							"min_max_gradient": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetStyle.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tile": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileStyle.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BorderStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"show": boolComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"tile_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileLayoutStyle.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"gutter": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GutterStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"show": boolComputedOnly(),
+												},
+											},
+										},
+										"margin": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MarginStyle.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"show": boolComputedOnly(),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"typography": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Typography.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"font_families": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Font.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"font_family": stringComputedOnly(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"ui_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UIColorPalette.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accent":               hexColorSchema(sdkschema.AttrComputed),
+							"accent_foreground":    hexColorSchema(sdkschema.AttrComputed),
+							"danger":               hexColorSchema(sdkschema.AttrComputed),
+							"danger_foreground":    hexColorSchema(sdkschema.AttrComputed),
+							"dimension":            hexColorSchema(sdkschema.AttrComputed),
+							"dimension_foreground": hexColorSchema(sdkschema.AttrComputed),
+							"measure":              hexColorSchema(sdkschema.AttrComputed),
+							"measure_foreground":   hexColorSchema(sdkschema.AttrComputed),
+							"primary_background":   hexColorSchema(sdkschema.AttrComputed),
+							"primary_foreground":   hexColorSchema(sdkschema.AttrComputed),
+							"secondary_background": hexColorSchema(sdkschema.AttrComputed),
+							"secondary_foreground": hexColorSchema(sdkschema.AttrComputed),
+							"success":              hexColorSchema(sdkschema.AttrComputed),
+							"success_foreground":   hexColorSchema(sdkschema.AttrComputed),
+							"warning":              hexColorSchema(sdkschema.AttrComputed),
+							"warning_foreground":   hexColorSchema(sdkschema.AttrComputed),
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func ExpandThemeConfiguration(tfList []any) *awstypes.ThemeConfiguration {

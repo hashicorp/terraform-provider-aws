@@ -63,6 +63,7 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -243,6 +244,7 @@ func testAccAppFabricAppBundle_Tags_null(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -309,6 +311,7 @@ func testAccAppFabricAppBundle_Tags_emptyMap(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -363,6 +366,7 @@ func testAccAppFabricAppBundle_Tags_addOnUpdate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -446,6 +450,7 @@ func testAccAppFabricAppBundle_Tags_EmptyTag_onCreate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -538,6 +543,7 @@ func testAccAppFabricAppBundle_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -678,6 +684,7 @@ func testAccAppFabricAppBundle_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
@@ -771,6 +778,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_providerOnly(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -950,6 +958,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1110,6 +1119,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_overlapping(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1286,6 +1296,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_updateToProviderOnly(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1379,6 +1390,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_updateToResourceOnly(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1471,6 +1483,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1541,6 +1554,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1603,6 +1617,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_nullOverlappingResourceTag(t *te
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1676,6 +1691,7 @@ func testAccAppFabricAppBundle_Tags_DefaultTags_nullNonOverlappingResourceTag(t 
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1751,6 +1767,7 @@ func testAccAppFabricAppBundle_Tags_ComputedTag_onCreate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1810,6 +1827,7 @@ func testAccAppFabricAppBundle_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -1910,6 +1928,7 @@ func testAccAppFabricAppBundle_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -2000,6 +2019,7 @@ func testAccAppFabricAppBundle_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
@@ -2165,6 +2185,7 @@ func testAccAppFabricAppBundle_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),

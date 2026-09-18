@@ -38,14 +38,6 @@ type apiListResource struct {
 func (l *apiListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().APIGatewayV2Client(ctx)
 
-	var query listAPIModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -89,25 +81,23 @@ func (l *apiListResource) List(ctx context.Context, request list.ListRequest, st
 	}
 }
 
-type listAPIModel struct {
-	framework.WithRegionModel
-}
-
 func listAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApisInput) iter.Seq2[awstypes.Api, error] {
 	return func(yield func(awstypes.Api, error) bool) {
+		var stopped bool
 		err := getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 			for _, item := range page.Items {
 				if !yield(item, nil) {
+					stopped = true
 					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			yield(awstypes.Api{}, fmt.Errorf("listing API Gateway V2 API resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Api](), fmt.Errorf("listing API Gateway V2 APIs: %w", err))
 		}
 	}
 }

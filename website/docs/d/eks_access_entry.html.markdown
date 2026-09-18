@@ -35,7 +35,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `access_entry_arn` - Amazon Resource Name (ARN) of the Access Entry.
+* `access_entry_arn` - ARN of the Access Entry.
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `kubernetes_groups` - List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.

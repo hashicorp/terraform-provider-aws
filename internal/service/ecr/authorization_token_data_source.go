@@ -25,33 +25,35 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
-		Schema: map[string]*schema.Schema{
-			"authorization_token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"expires_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPassword: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"proxy_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authorization_token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"expires_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPassword: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"proxy_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

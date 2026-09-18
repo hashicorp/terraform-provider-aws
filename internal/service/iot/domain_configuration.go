@@ -40,100 +40,102 @@ func resourceDomainConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"application_protocol": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApplicationProtocol](),
-			},
-			"authentication_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
-			},
-			"authorizer_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_authorizer_override": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"default_authorizer_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"application_protocol": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ApplicationProtocol](),
+				},
+				"authentication_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+				},
+				"authorizer_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_authorizer_override": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"default_authorizer_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"domain_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"server_certificate_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"domain_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"server_certificate_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"service_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ServiceTypeData,
+					ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DomainConfigurationStatusEnabled,
+					ValidateDiagFunc: enum.Validate[awstypes.DomainConfigurationStatus](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tls_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"security_policy": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"validation_certificate_arn": {
 					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"service_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ServiceTypeData,
-				ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DomainConfigurationStatusEnabled,
-				ValidateDiagFunc: enum.Validate[awstypes.DomainConfigurationStatus](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tls_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"security_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"validation_certificate_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+			}
 		},
 	}
 }

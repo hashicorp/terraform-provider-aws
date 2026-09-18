@@ -6,6 +6,11 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 name: Firewatch
+
+permissions:
+  actions: read # required to list and download previous firewatch artifacts
+  issues: read  # required to search open issues
+
 jobs:
   FirewatchJob:
     if: github.repository_owner == 'hashicorp'

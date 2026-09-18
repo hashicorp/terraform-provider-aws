@@ -23,25 +23,27 @@ func dataSourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHTTPNamespaceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"http_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validNamespaceName,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"http_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validNamespaceName,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -32,26 +32,20 @@ resource "aws_wafregional_geo_match_set" "geo_match_set" {
 
 This resource supports the following arguments:
 
+* `geo_match_constraint` - (Optional) Geo Match Constraint objects which contain the country that you want AWS WAF to search for.
+* `name` - (Required) Name or description of the Geo Match Set.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name or description of the Geo Match Set.
-* `geo_match_constraint` - (Optional) The Geo Match Constraint objects which contain the country that you want AWS WAF to search for.
 
-## Nested Blocks
+### `geo_match_constraint` Block
 
-### `geo_match_constraint`
-
-#### Arguments
-
-* `type` - (Required) The type of geographical area you want AWS WAF to search for. Currently Country is the only valid value.
-* `value` - (Required) The country that you want AWS WAF to search for.
-  This is the two-letter country code, e.g., `US`, `CA`, `RU`, `CN`, etc.
-  See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchConstraint.html) for all supported values.
+* `type` - (Required) Type of geographical area you want AWS WAF to search for. Currently `Country` is the only valid value.
+* `value` - (Required) Two-letter country code that you want AWS WAF to search for, e.g., `US`, `CA`, `RU`, `CN`. See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchConstraint.html) for all supported values.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF Regional Geo Match Set.
+* `id` - ID of the WAF Regional Geo Match Set.
 
 ## Import
 

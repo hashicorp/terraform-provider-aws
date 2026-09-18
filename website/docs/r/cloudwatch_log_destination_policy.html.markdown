@@ -62,7 +62,33 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs destination policies using the `destination_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_destination_policy.example
+  identity = {
+    destination_name = "test_destination"
+  }
+}
+
+resource "aws_cloudwatch_log_destination_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `destination_name` (String) Name of the destination.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Destination Policies using `destination_name`. For example:
 
 ```terraform
 import {
@@ -71,7 +97,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs destination policies using the `destination_name`. For example:
+Using `terraform import`, import Destination Policies using `destination_name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_destination_policy.test_destination_policy test_destination

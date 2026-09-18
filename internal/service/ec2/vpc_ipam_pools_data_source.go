@@ -25,82 +25,84 @@ func dataSourceIPAMPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			"ipam_pools": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"address_family": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customFiltersSchema(),
+				"ipam_pools": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"address_family": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"allocation_default_netmask_length": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"allocation_max_netmask_length": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"allocation_min_netmask_length": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"allocation_resource_tags": tftags.TagsSchemaComputed(),
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"auto_import": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"aws_service": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipam_scope_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipam_scope_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"locale": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"publicly_advertisable": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"pool_depth": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"source_ipam_pool_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
 						},
-						"allocation_default_netmask_length": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"allocation_max_netmask_length": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"allocation_min_netmask_length": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"allocation_resource_tags": tftags.TagsSchemaComputed(),
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"auto_import": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"aws_service": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipam_scope_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipam_scope_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"locale": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"publicly_advertisable": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"pool_depth": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"source_ipam_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
-			},
+			}
 		},
 	}
 }

@@ -183,3 +183,54 @@ resource "aws_s3files_synchronization_configuration" "test" {
 }
 `)
 }
+
+func TestAccS3FilesSynchronizationConfiguration_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var synchronization s3files.GetSynchronizationConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3files_synchronization_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3FilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSynchronizationConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSynchronizationConfigurationConfig_prefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSynchronizationConfigurationExists(ctx, t, resourceName, &synchronization),
+					resource.TestCheckResourceAttr(resourceName, "import_data_rule.0.prefix", "data/"),
+				),
+			},
+		},
+	})
+}
+
+func testAccSynchronizationConfigurationConfig_prefix(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFileSystemConfig_base(rName),
+		`
+resource "aws_s3files_file_system" "test" {
+  bucket   = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+  prefix   = "data/"
+
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
+resource "aws_s3files_synchronization_configuration" "test" {
+  file_system_id = aws_s3files_file_system.test.id
+
+  import_data_rule {
+    prefix         = "data/"
+    size_less_than = 131072
+    trigger        = "ON_DIRECTORY_FIRST_ACCESS"
+  }
+
+  expiration_data_rule {
+    days_after_last_access = 30
+  }
+}
+`)
+}

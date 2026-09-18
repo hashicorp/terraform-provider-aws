@@ -42,29 +42,31 @@ func resourceGlobalTable() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validGlobalTableName,
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validGlobalTableName,
+				},
+				"replica": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"region_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

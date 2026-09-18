@@ -37,7 +37,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a HOME_NET Override
+### Policy with a HOME_NET Override
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -67,7 +67,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a Custom Action for Stateless Inspection
+### Policy with a Custom Action for Stateless Inspection
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -91,7 +91,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Action Order
+### Policy with Active Threat Defense in Action Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -112,7 +112,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Strict Order
+### Policy with Active Threat Defense in Strict Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -223,7 +223,7 @@ The `stateful_rule_group_reference` block supports the following arguments:
   For details, refer to [AWS active threat defense for AWS Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/aws-managed-rule-groups-atd.html) in the AWS Network Firewall Developer Guide.
 * `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
 
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateful rule group.
+* `resource_arn` - (Required) ARN of the stateful rule group.
 
 * `override` - (Optional) Configuration block for override values
 
@@ -245,7 +245,7 @@ The `stateless_rule_group_reference` block supports the following arguments:
 
 * `priority` - (Required) An integer setting that indicates the order in which to run the stateless rule groups in a single policy. AWS Network Firewall applies each stateless rule group to a packet starting with the group that has the lowest priority setting.
 
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateless rule group.
+* `resource_arn` - (Required) ARN of the stateless rule group.
 
 ### Action Definition
 
@@ -269,9 +269,9 @@ The `dimension` block supports the following argument:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the firewall policy.
+* `id` - ARN that identifies the firewall policy.
 
-* `arn` - The Amazon Resource Name (ARN) that identifies the firewall policy.
+* `arn` - ARN that identifies the firewall policy.
 
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

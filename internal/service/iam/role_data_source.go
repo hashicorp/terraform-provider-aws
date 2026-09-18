@@ -27,60 +27,62 @@ func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assume_role_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"max_session_duration": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permissions_boundary": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"role_last_used": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_used_date": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assume_role_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"max_session_duration": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permissions_boundary": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"role_last_used": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_used_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

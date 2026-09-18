@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_networkfirewall_tls_inspection_configuration: Fix issue where `check_certificate_revovation_status` is ignored due to bad autoflex field mapping
-```

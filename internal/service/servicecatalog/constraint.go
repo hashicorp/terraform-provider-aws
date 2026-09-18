@@ -43,48 +43,50 @@ func resourceConstraint() *schema.Resource {
 			Delete: schema.DefaultTimeout(ConstraintDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrParameters: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			"portfolio_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(constraintType_Values(), false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrParameters: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				"portfolio_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrType: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(constraintType_Values(), false),
+				},
+			}
 		},
 	}
 }

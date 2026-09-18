@@ -75,7 +75,7 @@ func (r *restAPIPutResource) Schema(ctx context.Context, req resource.SchemaRequ
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			"rest_api_id": schema.StringAttribute{
+			attrRestAPIID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -181,7 +181,7 @@ func (r *restAPIPutResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *restAPIPutResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("rest_api_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(attrRestAPIID), req, resp)
 }
 
 const (

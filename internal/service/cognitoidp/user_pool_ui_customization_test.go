@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -89,6 +90,14 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -289,6 +298,14 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) { 
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -424,7 +441,7 @@ func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_UpdateClientToAll_cSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_UpdateClientToAll_css(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"

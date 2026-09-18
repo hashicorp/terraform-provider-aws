@@ -29,6 +29,13 @@ The following arguments are required:
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import User Notifications Notification Hub using the `notification_hub_region`. For example:

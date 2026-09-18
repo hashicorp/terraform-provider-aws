@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_guardduty_invite_accepter: Fix `BadRequestException: The request is rejected because an invalid or out-of-range value is specified as an input parameter` errors on resource Create
-```

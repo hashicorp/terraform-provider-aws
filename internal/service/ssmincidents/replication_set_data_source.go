@@ -26,77 +26,79 @@ func dataSourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protected": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"last_modified_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deletion_protected": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"last_modified_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRegion: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						names.AttrKMSKeyARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+					Deprecated: "region is deprecated. Use regions instead.",
+				},
+				"regions": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-				Deprecated: "region is deprecated. Use regions instead.",
-			},
-			"regions": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

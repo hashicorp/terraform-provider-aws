@@ -39,28 +39,30 @@ func resourceUserStackAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"authentication_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
-			},
-			"send_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stack_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authentication_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+				},
+				"send_email_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"stack_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -41,50 +41,52 @@ func resourceSharedDirectory() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"method": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ShareMethodHandshake,
-				ValidateDiagFunc: enum.Validate[awstypes.ShareMethod](),
-			},
-			"notes": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"shared_directory_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTarget: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.TargetTypeAccount,
-							ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"method": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ShareMethodHandshake,
+					ValidateDiagFunc: enum.Validate[awstypes.ShareMethod](),
+				},
+				"notes": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"shared_directory_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTarget: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.TargetTypeAccount,
+								ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

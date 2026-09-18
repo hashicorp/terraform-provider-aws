@@ -70,91 +70,93 @@ func resourceDevice() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_location": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ValidateFunc:  verify.ValidARN,
-							ConflictsWith: []string{"aws_location.0.zone"},
-						},
-						"zone": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"aws_location.0.subnet_arn"},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_location": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"subnet_arn": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  verify.ValidARN,
+								ConflictsWith: []string{"aws_location.0.zone"},
+							},
+							"zone": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"aws_location.0.subnet_arn"},
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"latitude": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"longitude": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+							"latitude": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+							"longitude": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
 						},
 					},
 				},
-			},
-			"model": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"serial_number": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"site_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"vendor": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
+				"model": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"serial_number": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"site_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"vendor": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+			}
 		},
 	}
 }

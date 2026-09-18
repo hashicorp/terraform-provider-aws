@@ -125,6 +125,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Account"
     severity: WARNING
+  - id: accountaccess-in-func-name
+    languages:
+      - go
+    message: Do not use "AccountAccess" in func name inside accountaccess package
+    paths:
+      include:
+        - "/internal/service/accountaccess"
+      exclude:
+        - "/internal/service/accountaccess/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AccountAccess"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: accountaccess-in-test-name
+    languages:
+      - go
+    message: Include "AccountAccess" in test name
+    paths:
+      include:
+        - "/internal/service/accountaccess/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAccountAccess"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: accountaccess-in-const-name
+    languages:
+      - go
+    message: Do not use "AccountAccess" in const name inside accountaccess package
+    paths:
+      include:
+        - "/internal/service/accountaccess"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AccountAccess"
+    severity: WARNING
+  - id: accountaccess-in-var-name
+    languages:
+      - go
+    message: Do not use "AccountAccess" in var name inside accountaccess package
+    paths:
+      include:
+        - "/internal/service/accountaccess"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AccountAccess"
+    severity: WARNING
   - id: acm-in-func-name
     languages:
       - go
@@ -246,6 +307,67 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ACMPCA"
+    severity: WARNING
+  - id: agentregistry-in-func-name
+    languages:
+      - go
+    message: Do not use "AgentRegistry" in func name inside agentregistry package
+    paths:
+      include:
+        - "/internal/service/agentregistry"
+      exclude:
+        - "/internal/service/agentregistry/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AgentRegistry"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: agentregistry-in-test-name
+    languages:
+      - go
+    message: Include "AgentRegistry" in test name
+    paths:
+      include:
+        - "/internal/service/agentregistry/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAgentRegistry"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: agentregistry-in-const-name
+    languages:
+      - go
+    message: Do not use "AgentRegistry" in const name inside agentregistry package
+    paths:
+      include:
+        - "/internal/service/agentregistry"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AgentRegistry"
+    severity: WARNING
+  - id: agentregistry-in-var-name
+    languages:
+      - go
+    message: Do not use "AgentRegistry" in var name inside agentregistry package
+    paths:
+      include:
+        - "/internal/service/agentregistry"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AgentRegistry"
     severity: WARNING
   - id: amg-in-func-name
     languages:
@@ -2123,6 +2245,67 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)BedrockAgentCore"
+    severity: WARNING
+  - id: bedrockruntime-in-func-name
+    languages:
+      - go
+    message: Do not use "BedrockRuntime" in func name inside bedrockruntime package
+    paths:
+      include:
+        - "/internal/service/bedrockruntime"
+      exclude:
+        - "/internal/service/bedrockruntime/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockRuntime"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: bedrockruntime-in-test-name
+    languages:
+      - go
+    message: Include "BedrockRuntime" in test name
+    paths:
+      include:
+        - "/internal/service/bedrockruntime/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBedrockRuntime"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bedrockruntime-in-const-name
+    languages:
+      - go
+    message: Do not use "BedrockRuntime" in const name inside bedrockruntime package
+    paths:
+      include:
+        - "/internal/service/bedrockruntime"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockRuntime"
+    severity: WARNING
+  - id: bedrockruntime-in-var-name
+    languages:
+      - go
+    message: Do not use "BedrockRuntime" in var name inside bedrockruntime package
+    paths:
+      include:
+        - "/internal/service/bedrockruntime"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockRuntime"
     severity: WARNING
   - id: billing-in-func-name
     languages:
@@ -4561,34 +4744,4 @@ rules:
             - pattern-not-regex: .*uickConnect.*
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - "/internal/service/connect/*_test.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-const-name
-    languages:
-      - go
-    message: Do not use "Connect" in const name inside connect package
-    paths:
-      include:
-        - "/internal/service/connect"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
     severity: WARNING

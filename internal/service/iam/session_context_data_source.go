@@ -27,28 +27,30 @@ func dataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"issuer_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"issuer_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"issuer_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"session_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"issuer_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"issuer_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"issuer_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"session_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

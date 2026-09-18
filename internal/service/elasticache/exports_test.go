@@ -29,6 +29,7 @@ var (
 	ParameterChanges                     = parameterChanges
 	ParameterHash                        = parameterHash
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
+	WaitCacheClusterAvailable            = waitCacheClusterAvailable
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
 	DeleteCacheCluster                                = deleteCacheCluster

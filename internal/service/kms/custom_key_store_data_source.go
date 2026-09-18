@@ -25,35 +25,37 @@ func dataSourceCustomKeyStore() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomKeyStoreRead,
 
-		Schema: map[string]*schema.Schema{
-			"cloud_hsm_cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_key_store_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"custom_key_store_name"},
-			},
-			"custom_key_store_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"custom_key_store_id"},
-			},
-			"trust_anchor_certificate": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cloud_hsm_cluster_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_key_store_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"custom_key_store_name"},
+				},
+				"custom_key_store_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"custom_key_store_id"},
+				},
+				"trust_anchor_certificate": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

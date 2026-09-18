@@ -25,7 +25,7 @@ func TestAccRoute53Zone_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_route53_zone.test[0]"
 	resourceName2 := "aws_route53_zone.test[1]"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -83,7 +83,7 @@ func TestAccRoute53Zone_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_route53_zone.test[0]"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -156,7 +156,7 @@ func TestAccRoute53Zone_List_privateZone(t *testing.T) {
 
 	publicResourceName := "aws_route53_zone.public"
 	privateResourceName := "aws_route53_zone.private"
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	publicIdentity := tfstatecheck.Identity()
 	privateIdentity := tfstatecheck.Identity()

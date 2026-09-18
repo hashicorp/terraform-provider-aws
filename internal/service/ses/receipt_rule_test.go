@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -381,6 +382,14 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -391,7 +400,6 @@ func TestAccSESReceiptRule_Disappears_receiptRuleSet(t *testing.T) {
 	var rule awstypes.ReceiptRule
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
-	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -407,9 +415,17 @@ func TestAccSESReceiptRule_Disappears_receiptRuleSet(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, t, resourceName, &rule),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRuleSet(), "aws_ses_receipt_rule_set.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ses_receipt_rule.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ses_receipt_rule.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -695,7 +711,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
 }
 
 resource "aws_lambda_permission" "test" {

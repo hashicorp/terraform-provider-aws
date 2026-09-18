@@ -27,248 +27,250 @@ func dataSourceBudget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBudgetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_adjust_data": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_adjust_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"historical_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"budget_adjustment_period": {
-										Type:     schema.TypeInt,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_adjust_data": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_adjust_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"historical_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"budget_adjustment_period": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"lookback_available_periods": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
-									"lookback_available_periods": {
-										Type:     schema.TypeInt,
-										Computed: true,
+								},
+							},
+							"last_auto_adjust_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"billing_view_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"budget_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"budget_limit": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amount": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrUnit: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"calculated_spend": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actual_spend": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"amount": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrUnit: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
-						"last_auto_adjust_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 					},
 				},
-			},
-			"billing_view_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"budget_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"budget_limit": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amount": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrUnit: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"calculated_spend": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actual_spend": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"amount": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrUnit: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
+				"cost_filter": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
 								},
 							},
 						},
 					},
 				},
-			},
-			"cost_filter": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"cost_types": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"include_credit": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_discount": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_other_subscription": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_recurring": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_refund": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_subscription": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_support": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_tax": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"include_upfront": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"use_amortized": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"use_blended": {
+								Type:     schema.TypeBool,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			"cost_types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"include_credit": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_discount": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_other_subscription": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_recurring": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_refund": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_subscription": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_support": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_tax": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"include_upfront": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"use_amortized": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"use_blended": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrNamePrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"notification": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"comparison_operator": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"notification_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"subscriber_email_addresses": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"subscriber_sns_topic_arns": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				names.AttrNamePrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"notification": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"comparison_operator": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"notification_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"subscriber_email_addresses": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"subscriber_sns_topic_arns": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"threshold": {
+								Type:     schema.TypeFloat,
+								Computed: true,
+							},
+							"threshold_type": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						"threshold": {
-							Type:     schema.TypeFloat,
-							Computed: true,
-						},
-						"threshold_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+				},
+				"planned_limit": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amount": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStartTime: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrUnit: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"planned_limit": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amount": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStartTime: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrUnit: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"time_period_end": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"time_period_end": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"time_period_start": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"time_unit": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"budget_exceeded": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"time_period_start": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"time_unit": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"budget_exceeded": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

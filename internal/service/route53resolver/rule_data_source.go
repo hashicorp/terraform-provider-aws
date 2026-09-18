@@ -26,77 +26,79 @@ func dataSourceRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 256),
-				ConflictsWith: []string{"resolver_rule_id"},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validResolverName,
-				ConflictsWith: []string{"resolver_rule_id"},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resolver_endpoint_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"resolver_rule_id"},
-			},
-			"resolver_rule_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrDomainName, names.AttrName, "resolver_endpoint_id", "rule_type"},
-			},
-			"rule_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
-				ConflictsWith:    []string{"resolver_rule_id"},
-			},
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_ips": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipv6": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrProtocol: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.StringLenBetween(1, 256),
+					ConflictsWith: []string{"resolver_rule_id"},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validResolverName,
+					ConflictsWith: []string{"resolver_rule_id"},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resolver_endpoint_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"resolver_rule_id"},
+				},
+				"resolver_rule_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrDomainName, names.AttrName, "resolver_endpoint_id", "rule_type"},
+				},
+				"rule_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
+					ConflictsWith:    []string{"resolver_rule_id"},
+				},
+				"share_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_ips": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipv6": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrProtocol: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

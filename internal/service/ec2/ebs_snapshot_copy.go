@@ -38,82 +38,84 @@ func resourceEBSSnapshotCopy() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"completion_duration_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.All(validation.IntDivisibleBy(15), validation.IntAtMost(2880)),
-			},
-			"data_encryption_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permanent_restore": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"source_region": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"source_snapshot_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"storage_tier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), targetStorageTierStandard)...), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"temporary_restore_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVolumeSize: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"completion_duration_minutes": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.All(validation.IntDivisibleBy(15), validation.IntAtMost(2880)),
+				},
+				"data_encryption_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owner_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permanent_restore": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"source_region": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"source_snapshot_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"storage_tier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), targetStorageTierStandard)...), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"temporary_restore_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVolumeSize: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

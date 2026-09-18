@@ -33,13 +33,15 @@ func resourceAuthenticationProfile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"authentication_profile_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"authentication_profile_content": sdkv2.JSONDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authentication_profile_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"authentication_profile_content": sdkv2.JSONDocumentSchemaRequired(),
+			}
 		},
 	}
 }

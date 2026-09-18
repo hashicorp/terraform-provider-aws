@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_sagemaker_endpoint_configuration: Fix panic when empty `async_inference_config.output_config.notification_config` block is specified
-```

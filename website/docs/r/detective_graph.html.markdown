@@ -36,7 +36,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_graph` using the ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_detective_graph.example
+  identity = {
+    graph_arn = "arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d"
+  }
+}
+
+resource "aws_detective_graph" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `graph_arn` (String) ARN of the Detective graph.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Detective graphs using `graph_arn`. For example:
 
 ```terraform
 import {
@@ -45,7 +66,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_detective_graph` using the ARN. For example:
+Using `terraform import`, import Detective graphs using `graph_arn`. For example:
 
 ```console
 % terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d

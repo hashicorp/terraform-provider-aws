@@ -176,7 +176,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the pipeline.
 * `pipeline_type` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
-* `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
+* `role_arn` - (Required) Service role ARN that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) One or more artifact_store blocks. Artifact stores are documented below.
 * `execution_mode` (Optional) The method that the pipeline will use to handle multiple executions. The default mode is `SUPERSEDED`. For value values, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_PipelineDeclaration.html#CodePipeline-Type-PipelineDeclaration-executionMode).
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
@@ -192,7 +192,7 @@ An `artifact_store` block supports the following arguments:
 
 * `location` - (Required) The location where AWS CodePipeline stores artifacts for a pipeline; currently only `S3` is supported.
 * `type` - (Required) The type of the artifact store, such as Amazon S3
-* `encryption_key` - (Optional) The encryption key block AWS CodePipeline uses to encrypt the data in the artifact store, such as an AWS Key Management Service (AWS KMS) key. If you don't specify a key, AWS CodePipeline uses the default key for Amazon Simple Storage Service (Amazon S3). An `encryption_key` block is documented below.
+* `encryption_key` - (Optional) Encryption key block AWS CodePipeline uses to encrypt the data in the artifact store, such as a KMS key. If you don't specify a key, AWS CodePipeline uses the default key for S3. An `encryption_key` block is documented below.
 * `region` - (Optional) The region where the artifact store is located. Required for a cross-region CodePipeline, do not provide for a single-region CodePipeline.
 
 #### `encryption_key`
@@ -218,14 +218,19 @@ A `stage` block supports the following arguments:
 
 An `action` block supports the following arguments:
 
-* `category` - (Required) A category defines what kind of action can be taken in the stage, and constrains the provider type for the action. Possible values are `Approval`, `Build`, `Deploy`, `Invoke`, `Source` and `Test`.
+* `category` - (Required) A category defines what kind of action can be taken in the stage, and constrains the provider type for the action. Possible values are `Approval`, `Build`, `Deploy`, `Invoke`, `Source`, `Compute` and `Test`.
 * `owner` - (Required) The creator of the action being called. Possible values are `AWS`, `Custom` and `ThirdParty`.
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
 * `version` - (Required) A string that identifies the action type.
+* `commands` - (Optional) A list of shell commands to run with the compute action.
 * `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation. Note: The `DetectChanges` parameter (optional, default value is true) in the `configuration` section causes CodePipeline to automatically start your pipeline upon new commits. Please refer to AWS Documentation for more details: https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference-CodestarConnectionSource.html#action-reference-CodestarConnectionSource-config.
 * `input_artifacts` - (Optional) A list of artifact names to be worked on.
-* `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline.
+* `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline. If the action is `Compute`, this argument is ignored.
+* `output_artifacts_for_compute_action` - (Optional) A block of output artifacts for the compute action. If the action is not `Compute`, this argument is ignored.
+    * `name` - (Required) The name of the output artifact.
+    * `files` - (Optional) A list of the files to associate with the output artifact that will be exported from the compute action.
+* `output_variables` - (Optional) A list of variables that are to be exported from the compute action.
 * `role_arn` - (Optional) The ARN of the IAM service role that will perform the declared action. This is assumed through the roleArn for the pipeline.
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
@@ -251,14 +256,14 @@ A `on_failure` block supports the following arguments:
 * `result` - (Optional) The conditions that are configured as failure conditions. Possible values are `ROLLBACK`,  `FAIL`, `RETRY` and `SKIP`.
 * `retry_configuration` - (Optional) The retry configuration specifies automatic retry for a failed stage, along with the configured retry mode. Defined as a `retry_configuration` block below.
 
-##### `condition`
+#### `condition`
 
 A `condition` block supports the following arguments:
 
 * `result` - (Optional) The action to be done when the condition is met. For example, rolling back an execution for a failure condition. Possible values are `ROLLBACK`, `FAIL`, `RETRY` and `SKIP`.
 * `rule` - (Optional) The rules that make up the condition. Defined as a `rule` block below.
 
-##### `rule`
+#### `rule`
 
 A `rule` block supports the following arguments:
 
@@ -271,7 +276,7 @@ A `rule` block supports the following arguments:
 * `role_arn` - (Optional) The pipeline role ARN associated with the rule.
 * `timeout_in_minutes` - (Optional) The action timeout for the rule.
 
-##### `rule_type_id`
+#### `rule_type_id`
 
 A `rule_type_id` block supports the following arguments:
 
@@ -280,7 +285,7 @@ A `rule_type_id` block supports the following arguments:
 * `owner` - (Optional) The creator of the rule being called. The valid value for the Owner field in the rule category is `AWS`.
 * `version` - (Optional) A string that describes the rule version.
 
-##### `retry_configuration`
+#### `retry_configuration`
 
 A `retry_configuration` block supports the following arguments:
 
@@ -301,7 +306,7 @@ A `git_configuration` block supports the following arguments:
 * `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
 * `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
 
-##### `pull_request`
+#### `pull_request`
 
 A `pull_request` block supports the following arguments:
 
@@ -309,7 +314,7 @@ A `pull_request` block supports the following arguments:
 * `branches` - (Optional) The field that specifies to filter on branches for the pull request trigger configuration. A `branches` block is documented below.
 * `file_paths` - (Optional) The field that specifies to filter on file paths for the pull request trigger configuration. A `file_paths` block is documented below.
 
-##### `push`
+#### `push`
 
 A `push` block supports the following arguments:
 
@@ -317,21 +322,21 @@ A `push` block supports the following arguments:
 * `file_paths` - (Optional) The field that specifies to filter on file paths for the push trigger configuration. A `file_paths` block is documented below.
 * `tags` - (Optional) The field that contains the details for the Git tags trigger configuration. A `tags` block is documented below.
 
-##### `branches`
+#### `branches`
 
 A `branches` block supports the following arguments:
 
 * `includes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be included as criteria that starts the pipeline.
 * `excludes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be excluded from starting the pipeline.
 
-##### `file_paths`
+#### `file_paths`
 
 A `file_paths` block supports the following arguments:
 
 * `includes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be included as criteria that starts the pipeline.
 * `excludes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be excluded from starting the pipeline.
 
-##### `tags`
+#### `tags`
 
 A `tags` block supports the following arguments:
 
@@ -356,6 +361,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `trigger_all` - A list of all triggers present on the pipeline, including default triggers added by AWS for `V2` pipelines which omit an explicit `trigger` definition.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codepipeline.example
+  identity = {
+    name = "example-pipeline"
+  }
+}
+
+resource "aws_codepipeline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the pipeline.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipelines using the `name`. For example:
 

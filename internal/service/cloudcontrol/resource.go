@@ -46,35 +46,37 @@ func resourceResource() *schema.Resource {
 			Update: schema.DefaultTimeout(2 * time.Hour),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"desired_state": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrSchema: {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"type_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}`), "must be three alphanumeric sections separated by double colons (::)"),
-			},
-			"type_version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"desired_state": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrProperties: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrSchema: {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"type_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}`), "must be three alphanumeric sections separated by double colons (::)"),
+				},
+				"type_version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

@@ -131,6 +131,14 @@ func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testResourceSlackChannelConfiguration, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testResourceSlackChannelConfiguration, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

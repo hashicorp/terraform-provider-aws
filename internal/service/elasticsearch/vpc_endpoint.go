@@ -45,46 +45,48 @@ func resourceVPCEndpoint() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"domain_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_options": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"domain_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vpc_options": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

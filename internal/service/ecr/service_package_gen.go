@@ -182,6 +182,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newLifecyclePolicyResourceAsListResource,
+			TypeName: "aws_ecr_lifecycle_policy",
+			Name:     "Lifecycle Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("repository", true)),
+		},
+		{
 			Factory:  repositoryResourceAsListResource,
 			TypeName: "aws_ecr_repository",
 			Name:     "Repository",
@@ -190,6 +197,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
+			Factory:  newRepositoryPolicyResourceAsListResource,
+			TypeName: "aws_ecr_repository_policy",
+			Name:     "Repository Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("repository", true)),
 		},
 	})
 }

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_verifiedaccess_instance: Add `fips_enabled` argument
-```

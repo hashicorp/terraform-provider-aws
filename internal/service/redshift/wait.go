@@ -304,3 +304,16 @@ func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.
 
 	return nil, err
 }
+
+func waitInternalDataShareCreated(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region, partition string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"AVAILABLE"},
+		Refresh:    statusInternalDataShare(conn, namespaceID, accountID, region, partition),
+		Timeout:    timeout,
+		MinTimeout: 2 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}

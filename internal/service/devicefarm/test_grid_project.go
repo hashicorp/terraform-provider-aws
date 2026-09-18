@@ -39,48 +39,50 @@ func resourceTestGridProject() *schema.Resource {
 		UpdateWithoutTimeout: resourceTestGridProjectUpdate,
 		DeleteWithoutTimeout: resourceTestGridProjectDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Required: true,
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Required: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

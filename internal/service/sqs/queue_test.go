@@ -159,6 +159,14 @@ func TestAccSQSQueue_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sqs_queue.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sqs_queue.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -479,6 +487,14 @@ func TestAccSQSQueue_recentlyDeleted(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sqs_queue.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sqs_queue.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccQueueConfig_name(rName),

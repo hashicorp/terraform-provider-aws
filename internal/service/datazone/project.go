@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -28,19 +27,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_project", name="Project")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("projectImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetProjectOutput")
+// @Testing(importIgnore="skip_deletion_check;project_status")
+// @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdFunc="testAccProjectImportStateIdFunc")
+// @Testing(preIdentityVersion="v6.47.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
 
@@ -57,6 +65,7 @@ const (
 type projectResource struct {
 	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -142,14 +151,14 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan projectResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	conn := r.Meta().DataZoneClient(ctx)
 
 	in := &datazone.CreateProjectInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, in))
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -161,87 +170,76 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), nil),
-			errors.New("failure when creating").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failure when creating"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 	if !(out.FailureReasons == nil) && len(out.FailureReasons) > 0 {
 		for _, x := range out.FailureReasons {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), nil),
-				errors.New("error message: "+*x.Message+" error code: "+*x.Code).Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("error message: "+*x.Message+" error code: "+*x.Code), smerr.ID, plan.Name.ValueString())
 		}
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitProjectCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameProject, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 	var state projectResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findProjectByID(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString())
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameProject, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	state.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+	state.ProjectStatus = fwtypes.StringEnumValue(out.ProjectStatus)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan, state projectResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	if !plan.Description.Equal(state.Description) || !plan.GlossaryTerms.Equal(state.GlossaryTerms) || !plan.Name.Equal(state.Name) {
 		in := &datazone.UpdateProjectInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, in))
 
 		if resp.Diagnostics.HasError() {
 			return
@@ -249,34 +247,28 @@ func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest
 		in.Identifier = plan.ID.ValueStringPointer()
 		out, err := conn.UpdateProject(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
 		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
-				errors.New("empty output from project update").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output from project update"), smerr.ID, plan.ID.ValueString())
 			return
 		}
 		out.ProjectStatus = "ACTIVE"
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state projectResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -290,14 +282,11 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteProject(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if isResourceMissing(err) {
 		return
 	}
-	if err != nil && !errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is already DELETING") {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameProject, state.ID.String(), err),
-			err.Error(),
-		)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
@@ -305,24 +294,9 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
-}
-
-func (r *projectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 }
 
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
@@ -391,7 +365,7 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	}
 	out, err := conn.GetProject(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+		if isResourceMissing(err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
@@ -404,6 +378,26 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = projectImportID{}
+)
+
+type projectImportID struct{}
+
+func (projectImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, projectID, found := strings.Cut(id, ":")
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, ":")
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrID:        projectID,
+	}
+
+	return id, result, nil
 }
 
 type projectResourceModel struct {

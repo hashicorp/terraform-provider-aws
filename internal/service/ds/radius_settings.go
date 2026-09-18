@@ -42,55 +42,57 @@ func resourceRadiusSettings() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"authentication_protocol": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RadiusAuthenticationProtocol](),
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"display_label": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"radius_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			"radius_retries": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(0, 10),
-			},
-			"radius_servers": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authentication_protocol": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RadiusAuthenticationProtocol](),
 				},
-			},
-			"radius_timeout": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 50),
-			},
-			"shared_secret": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 512),
-			},
-			"use_same_username": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"display_label": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"radius_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				"radius_retries": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(0, 10),
+				},
+				"radius_servers": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 256),
+					},
+				},
+				"radius_timeout": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 50),
+				},
+				"shared_secret": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 512),
+				},
+				"use_same_username": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

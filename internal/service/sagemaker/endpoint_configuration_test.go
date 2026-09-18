@@ -663,6 +663,14 @@ func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_endpoint_configuration.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_endpoint_configuration.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

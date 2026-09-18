@@ -290,7 +290,7 @@ func TestValidSupportedLoginProviders(t *testing.T) {
 	validValues := []string{
 		"foo",
 		"7346241598935552",
-		"123456789012.apps.googleusercontent.com", // nosemgrep:ci.domain-names
+		"123456789012.apps.googleusercontent.com", // nosemgrep:ci.semgrep.domain-names.domain-names
 		"foo_bar",
 		"foo;bar",
 		"foo/bar",

@@ -4,5 +4,7 @@
 package arczonalshift
 
 var (
+	ResourceZonalAutoshiftConfiguration            = newResourceZonalAutoshiftConfiguration
+	FindManagedResourceByIdentifier                = findManagedResourceByIdentifier
 	NewAutoshiftObserverNotificationStatusResource = newAutoshiftObserverNotificationStatusResource
 )

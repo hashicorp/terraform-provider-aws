@@ -41,22 +41,24 @@ func resourceLinkAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"device_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"link_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"device_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"link_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

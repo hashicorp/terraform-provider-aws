@@ -37,18 +37,20 @@ func resourceUserGroupMembership() *schema.Resource {
 			StateContext: resourceUserGroupMembershipImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"groups": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"groups": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

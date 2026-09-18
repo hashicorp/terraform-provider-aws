@@ -27,7 +27,7 @@ func TestAccRoute53ResolverRule_List_basic(t *testing.T) {
 	resourceName1 := "aws_route53_resolver_rule.test[0]"
 	resourceName2 := "aws_route53_resolver_rule.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -86,7 +86,7 @@ func TestAccRoute53ResolverRule_List_includeResource(t *testing.T) {
 
 	resourceName1 := "aws_route53_resolver_rule.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 	id1 := tfstatecheck.StateValue()
@@ -167,7 +167,7 @@ func TestAccRoute53ResolverRule_List_regionOverride(t *testing.T) {
 	resourceName1 := "aws_route53_resolver_rule.test[0]"
 	resourceName2 := "aws_route53_resolver_rule.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()

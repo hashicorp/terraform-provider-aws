@@ -25,33 +25,35 @@ func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
-			},
-			"connection_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
-			},
-			"provider_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				},
+				"connection_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				},
+				"provider_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

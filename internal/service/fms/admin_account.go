@@ -43,14 +43,16 @@ func resourceAdminAccount() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+			}
 		},
 	}
 }

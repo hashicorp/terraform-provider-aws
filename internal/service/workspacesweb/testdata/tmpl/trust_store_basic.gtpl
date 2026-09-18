@@ -1,4 +1,15 @@
+resource "aws_workspacesweb_trust_store" "test" {
+{{- template "region" }}
+  certificate {
+    body = aws_acmpca_certificate.test.certificate
+  }
+{{- template "tags" . }}
+}
+
 resource "aws_acmpca_certificate_authority" "test" {
+{{- template "region" }}
+  permanent_deletion_time_in_days = 7
+
   type = "ROOT"
 
   certificate_authority_configuration {
@@ -12,6 +23,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 }
 
 resource "aws_acmpca_certificate" "test" {
+{{- template "region" }}
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA256WITHRSA"
@@ -22,11 +34,4 @@ resource "aws_acmpca_certificate" "test" {
     type  = "YEARS"
     value = 1
   }
-}
-
-resource "aws_workspacesweb_trust_store" "test" {
-  certificate {
-    body = aws_acmpca_certificate.test.certificate
-  }
-{{- template "tags" . }}
 }

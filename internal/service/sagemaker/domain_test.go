@@ -1244,6 +1244,14 @@ func testAccDomain_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_domain.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_domain.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -1,14 +1,14 @@
 ---
-subcategory: "Pinpoint"
+subcategory: "End User Messaging"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_baidu_channel"
 description: |-
-  Provides a Pinpoint Baidu Channel resource.
+  Provides an End User Messaging Baidu Channel resource.
 ---
 
 # Resource: aws_pinpoint_baidu_channel
 
-Provides a Pinpoint Baidu Channel resource.
+Provides an End User Messaging Baidu Channel resource.
 
 ~> **Note:** All arguments including the Api Key and Secret Key will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
@@ -29,10 +29,10 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `application_id` - (Required) The application ID.
-* `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 * `api_key` - (Required) Platform credential API key from Baidu.
+* `application_id` - (Required) Application ID.
+* `enabled` - (Optional) Whether to enable the channel. Defaults to `true`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
 ## Attribute Reference
@@ -41,7 +41,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Baidu Channel using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import End User Messaging Baidu Channel using the `application-id`. For example:
 
 ```terraform
 import {
@@ -50,7 +50,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Pinpoint Baidu Channel using the `application-id`. For example:
+Using `terraform import`, import End User Messaging Baidu Channel using the `application-id`. For example:
 
 ```console
 % terraform import aws_pinpoint_baidu_channel.channel application-id

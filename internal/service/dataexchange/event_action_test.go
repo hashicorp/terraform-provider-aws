@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -182,6 +183,14 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdataexchange.ResourceEventAction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

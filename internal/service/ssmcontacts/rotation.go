@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -64,7 +65,7 @@ func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRe
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},

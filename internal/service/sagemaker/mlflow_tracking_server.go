@@ -39,55 +39,57 @@ func resourceMlflowTrackingServer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"artifact_store_uri": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validHTTPSOrS3URI,
-			},
-			"automatic_model_registration": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"mlflow_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"tracking_server_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"tracking_server_size": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.TrackingServerSizeS,
-				ValidateDiagFunc: enum.Validate[awstypes.TrackingServerSize](),
-			},
-			"tracking_server_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_window_start": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"artifact_store_uri": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validHTTPSOrS3URI,
+				},
+				"automatic_model_registration": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"mlflow_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"tracking_server_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"tracking_server_size": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.TrackingServerSizeS,
+					ValidateDiagFunc: enum.Validate[awstypes.TrackingServerSize](),
+				},
+				"tracking_server_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"weekly_maintenance_window_start": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

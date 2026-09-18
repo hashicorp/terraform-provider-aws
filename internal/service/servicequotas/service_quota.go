@@ -39,103 +39,105 @@ func resourceServiceQuota() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"adjustable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultValue: {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"quota_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			"quota_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"request_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_metric": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_dimensions": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"class": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"service": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"adjustable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultValue: {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"quota_code": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				"quota_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"request_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"request_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_code": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_metric": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_dimensions": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"class": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"resource": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"service": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrMetricName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_namespace": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_statistic_recommendation": {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrMetricName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_namespace": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_statistic_recommendation": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrValue: {
-				Type:     schema.TypeFloat,
-				Required: true,
-			},
+				names.AttrValue: {
+					Type:     schema.TypeFloat,
+					Required: true,
+				},
+			}
 		},
 	}
 }

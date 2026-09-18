@@ -25,23 +25,25 @@ func dataSourceKafkaVersion() *schema.Resource { // nosemgrep:ci.kafka-in-func-n
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKafkaVersionRead,
 
-		Schema: map[string]*schema.Schema{
-			"preferred_versions": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"preferred_versions": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
+				},
+			}
 		},
 	}
 }

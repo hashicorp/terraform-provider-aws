@@ -113,7 +113,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	var output *dynamodb.CreateBackupOutput
 	var err error
-	for l := backoff.NewLoop(timeout); l.Continue(ctx); {
+	for l := backoff.NewLoop(ctx, timeout); l.Continue(ctx); {
 		output, err = conn.CreateBackup(ctx, &input)
 
 		if err != nil {
@@ -148,7 +148,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		return actionwait.FetchResult[*awstypes.BackupDescription]{Status: actionwait.Status(desc.BackupDetails.BackupStatus), Value: desc}, nil
 	}, actionwait.Options[*awstypes.BackupDescription]{
 		Timeout:            timeout,
-		Interval:           actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay()),
+		Interval:           actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay(ctx)),
 		ProgressInterval:   30 * time.Second,
 		SuccessStates:      []actionwait.Status{actionwait.Status(awstypes.BackupStatusAvailable)},
 		TransitionalStates: []actionwait.Status{actionwait.Status(awstypes.BackupStatusCreating)},

@@ -20,7 +20,7 @@ resource "aws_xray_encryption_config" "example" {
 }
 ```
 
-## Example Usage with KMS Key
+### Example Usage with KMS Key
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -55,9 +55,9 @@ resource "aws_xray_encryption_config" "example" {
 
 This resource supports the following arguments:
 
+* `key_id` - (Optional) AWS KMS customer master key (CMK) ARN.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `type` - (Required) The type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
-* `key_id` - (Optional) An AWS KMS customer master key (CMK) ARN.
+* `type` - (Required) Type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
 
 ## Attribute Reference
 
@@ -66,6 +66,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Region name.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_xray_encryption_config.example
+  identity = {
+    region = "us-west-2"
+  }
+}
+
+resource "aws_xray_encryption_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Encryption Config using the region name. For example:
 

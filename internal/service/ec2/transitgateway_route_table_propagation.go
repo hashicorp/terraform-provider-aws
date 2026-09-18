@@ -34,27 +34,29 @@ func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"transit_gateway_route_table_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }

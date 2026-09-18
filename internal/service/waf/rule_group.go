@@ -38,58 +38,60 @@ func resourceRuleGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"activated_rule": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"activated_rule": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrPriority: {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"rule_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  awstypes.WafRuleTypeRegular,
+							names.AttrPriority: {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"rule_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  awstypes.WafRuleTypeRegular,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMetricName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validMetricName,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMetricName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validMetricName,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

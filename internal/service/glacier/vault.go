@@ -43,53 +43,55 @@ func resourceVault() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_policy": sdkv2.IAMPolicyDocumentSchemaOptional(),
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
-						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
-				),
-			},
-			"notification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									"ArchiveRetrievalCompleted",
-									"InventoryRetrievalCompleted",
-								}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_policy": sdkv2.IAMPolicyDocumentSchemaOptional(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
+							"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+					),
+				},
+				"notification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"events": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringInSlice([]string{
+										"ArchiveRetrievalCompleted",
+										"InventoryRetrievalCompleted",
+									}, false),
+								},
 							},
-						},
-						"sns_topic": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+							"sns_topic": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

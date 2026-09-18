@@ -36,48 +36,50 @@ func resourceInstanceAccessControlAttributes() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"attribute": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrSource: {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"attribute": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrSource: {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

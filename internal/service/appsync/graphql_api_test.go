@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -81,6 +82,14 @@ func TestAccAppSyncGraphQLAPI_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceGraphQLAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1614,7 +1623,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "lambdatest.handler"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 }
 

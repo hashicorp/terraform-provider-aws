@@ -34,8 +34,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `sql_injection_match_tuple` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
 
-### Nested fields
-
 ### `sql_injection_match_tuple`
 
 * `field_to_match` - (Required) Specifies where in a web request to look for snippets of malicious SQL code.

@@ -20,18 +20,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
-	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
+)
+
+const (
+	logAttrKeyBootstrapContextError = "bootstrapContext error"
+	logAttrKeyResource              = "resource"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -46,7 +47,7 @@ type wrappedDataSource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(ctx context.Context, spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -68,7 +69,7 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 		interceptors = append(interceptors, dataSourceTransparentTagging(spec.Tags))
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	return &wrappedDataSource{
 		inner:              inner,
@@ -100,12 +101,7 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		if s := c.RandomnessSource(); s != nil {
-			ctx = vcr.NewContext(ctx, s)
-		}
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if providerMeta != nil {
@@ -139,17 +135,6 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Validate the data source's model against the schema.
-	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("data source model validation error", w.spec.TypeName)
-			return
-		}
-	} else {
-		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -181,8 +166,8 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"data source":            w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"data source":                   w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -215,7 +200,7 @@ type wrappedEphemeralResource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedEphemeralResource(spec *inttypes.ServicePackageEphemeralResource, servicePackageName string) ephemeral.EphemeralResourceWithConfigure {
+func newWrappedEphemeralResource(ctx context.Context, spec *inttypes.ServicePackageEphemeralResource, servicePackageName string) ephemeral.EphemeralResourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -233,7 +218,7 @@ func newWrappedEphemeralResource(spec *inttypes.ServicePackageEphemeralResource,
 		interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	return &wrappedEphemeralResource{
 		inner:              inner,
@@ -265,9 +250,7 @@ func (w *wrappedEphemeralResource) context(ctx context.Context, getAttribute get
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = c.RegisterLogger(ctx)
-		ctx = fwflex.RegisterLogger(ctx)
-		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+		ctx = c.EphemeralRequestContext(ctx)
 	}
 
 	return ctx, diags
@@ -286,17 +269,6 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 	}
 
 	interceptedHandler(w.interceptors.ephemeralResourceSchema(), w.inner.Schema, ephemeralSchemaHasError, w.meta)(ctx, request, response)
-
-	// Validate the ephemeral resource's model against the schema.
-	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("ephemeral resource model validation error", w.spec.TypeName)
-			return
-		}
-	} else {
-		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
@@ -352,8 +324,8 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"ephemeral resource":     w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"ephemeral resource":            w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -386,7 +358,7 @@ type wrappedAction struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
+func newWrappedAction(ctx context.Context, spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -403,7 +375,7 @@ func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName st
 		}
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	return &wrappedAction{
 		inner:              inner,
@@ -435,9 +407,7 @@ func (w *wrappedAction) context(ctx context.Context, getAttribute getAttributeFu
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = c.RegisterLogger(ctx)
-		ctx = fwflex.RegisterLogger(ctx)
-		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+		ctx = c.EphemeralRequestContext(ctx)
 	}
 
 	return ctx, diags
@@ -459,17 +429,6 @@ func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest
 		w.inner.Schema(ctx, request, response)
 	}
 	interceptedHandler(w.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
-
-	// Validate the action's model against the schema.
-	if v, ok := w.inner.(framework.ActionValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("action model validation error", w.spec.TypeName)
-			return
-		}
-	} else {
-		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
@@ -504,8 +463,8 @@ func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigVal
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"action":                 w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				"action":                        w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -538,7 +497,7 @@ type wrappedResource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, servicePackageName string) resource.ResourceWithConfigure {
+func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFrameworkResource, servicePackageName string) resource.ResourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -568,7 +527,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 		interceptors = append(interceptors, resourceValidateRequiredTags())
 	}
 
-	inner, _ := spec.Factory(context.TODO())
+	inner, _ := spec.Factory(ctx)
 
 	if len(spec.Identity.Attributes) == 0 {
 		return &wrappedResource{
@@ -624,9 +583,7 @@ func (w *wrappedResource) context(ctx context.Context, getAttribute getAttribute
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if providerMeta != nil {
@@ -661,17 +618,6 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 
 	interceptedHandler(w.interceptors.resourceSchema(), w.inner.Schema, resourceSchemaHasError, w.meta)(ctx, request, response)
-
-	// Validate the resource's model against the schema.
-	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
-		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
-		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("resource model validation error", w.spec.TypeName)
-			return
-		}
-	} else if w.spec.TypeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
-		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.spec.TypeName)
-	}
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -769,8 +715,8 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -799,8 +745,8 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -817,8 +763,8 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 		ctx, diags := w.context(ctx, nil, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 
 			return nil
@@ -918,9 +864,7 @@ func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if overrideRegion != "" {
@@ -1063,9 +1007,7 @@ func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAt
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-		ctx = c.RegisterLogger(ctx)
-		ctx = fwflex.RegisterLogger(ctx)
+		ctx = c.RequestContext(ctx)
 	}
 
 	if overrideRegion != "" {
@@ -1119,8 +1061,8 @@ func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
-				"resource":               w.spec.TypeName,
-				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+				logAttrKeyResource:              w.spec.TypeName,
+				logAttrKeyBootstrapContextError: fwdiag.DiagnosticsString(diags),
 			})
 		}
 

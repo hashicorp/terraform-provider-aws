@@ -304,7 +304,7 @@ func waitFileSystemCreated(ctx context.Context, conn *s3files.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateError),
-		Refresh:    statusFileSystem(ctx, conn, id),
+		Refresh:    statusFileSystem(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -322,7 +322,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *s3files.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusFileSystem(ctx, conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 	}
 
@@ -335,7 +335,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *s3files.Client, id string,
 	return nil, smarterr.NewError(err)
 }
 
-func statusFileSystem(_ context.Context, conn *s3files.Client, id string) retry.StateRefreshFunc {
+func statusFileSystem(conn *s3files.Client, id string) retry.StateRefreshFunc {
 	const iamPropagationBuffer = 3 * time.Minute
 	firstErrorTime := time.Time{}
 

@@ -52,7 +52,7 @@ func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 
 func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -70,7 +70,7 @@ func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
 
 func TestAccSESDomainIdentityVerification_nonexistent(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

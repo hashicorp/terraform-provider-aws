@@ -125,7 +125,7 @@ func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
 	}
 
 	name := acctest.RandString(t, 10)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"

@@ -36,21 +36,23 @@ func resourceAssessmentTarget() *schema.Resource {
 		UpdateWithoutTimeout: resourceAssessmentTargetUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTargetDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_group_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_group_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

@@ -9,8 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
@@ -38,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -87,9 +90,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -133,6 +138,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/interconnect"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -149,6 +155,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
+	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -157,6 +165,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -206,6 +215,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
+	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -310,6 +320,14 @@ func (c *AWSClient) AccountClient(ctx context.Context) *account.Client {
 	return errs.Must(client[*account.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
+func (c *AWSClient) AccountAccessClient(ctx context.Context) *accountaccess.Client {
+	return errs.Must(client[*accountaccess.Client](ctx, c, names.AccountAccess, make(map[string]any)))
+}
+
+func (c *AWSClient) AgentRegistryClient(ctx context.Context) *agentregistrycontrol.Client {
+	return errs.Must(client[*agentregistrycontrol.Client](ctx, c, names.AgentRegistry, make(map[string]any)))
+}
+
 func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify.Client {
 	return errs.Must(client[*amplify.Client](ctx, c, names.Amplify, make(map[string]any)))
 }
@@ -396,6 +414,10 @@ func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client
 
 func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcorecontrol.Client {
 	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
+}
+
+func (c *AWSClient) BedrockRuntimeClient(ctx context.Context) *bedrockruntime.Client {
+	return errs.Must(client[*bedrockruntime.Client](ctx, c, names.BedrockRuntime, make(map[string]any)))
 }
 
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
@@ -602,6 +624,10 @@ func (c *AWSClient) DetectiveClient(ctx context.Context) *detective.Client {
 	return errs.Must(client[*detective.Client](ctx, c, names.Detective, make(map[string]any)))
 }
 
+func (c *AWSClient) DevOpsAgentClient(ctx context.Context) *devopsagent.Client {
+	return errs.Must(client[*devopsagent.Client](ctx, c, names.DevOpsAgent, make(map[string]any)))
+}
+
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru.Client {
 	return errs.Must(client[*devopsguru.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
 }
@@ -612,6 +638,10 @@ func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm.Client {
 
 func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect.Client {
 	return errs.Must(client[*directconnect.Client](ctx, c, names.DirectConnect, make(map[string]any)))
+}
+
+func (c *AWSClient) DirectoryServiceDataClient(ctx context.Context) *directoryservicedata.Client {
+	return errs.Must(client[*directoryservicedata.Client](ctx, c, names.DirectoryServiceData, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb.Client {
@@ -782,6 +812,10 @@ func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2.Client {
 	return errs.Must(client[*inspector2.Client](ctx, c, names.Inspector2, make(map[string]any)))
 }
 
+func (c *AWSClient) InterconnectClient(ctx context.Context) *interconnect.Client {
+	return errs.Must(client[*interconnect.Client](ctx, c, names.Interconnect, make(map[string]any)))
+}
+
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.Client {
 	return errs.Must(client[*internetmonitor.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
 }
@@ -838,6 +872,14 @@ func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
 }
 
+func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
+	return errs.Must(client[*lambdacore.Client](ctx, c, names.LambdaCore, make(map[string]any)))
+}
+
+func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Client {
+	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
+}
+
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {
 	return errs.Must(client[*launchwizard.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
@@ -888,6 +930,10 @@ func (c *AWSClient) MWAAServerlessClient(ctx context.Context) *mwaaserverless.Cl
 
 func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {
 	return errs.Must(client[*macie2.Client](ctx, c, names.Macie2, make(map[string]any)))
+}
+
+func (c *AWSClient) MailManagerClient(ctx context.Context) *mailmanager.Client {
+	return errs.Must(client[*mailmanager.Client](ctx, c, names.MailManager, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect.Client {
@@ -1072,6 +1118,10 @@ func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition.Client {
 
 func (c *AWSClient) ResilienceHubClient(ctx context.Context) *resiliencehub.Client {
 	return errs.Must(client[*resiliencehub.Client](ctx, c, names.ResilienceHub, make(map[string]any)))
+}
+
+func (c *AWSClient) ResilienceHubV2Client(ctx context.Context) *resiliencehubv2.Client {
+	return errs.Must(client[*resiliencehubv2.Client](ctx, c, names.ResilienceHubV2, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2.Client {

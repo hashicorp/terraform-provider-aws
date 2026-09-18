@@ -7,6 +7,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,8 +31,11 @@ import (
 )
 
 // @SDKResource("aws_flow_log", name="Flow Log")
+// @IdentityAttribute("id")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.55.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes.FlowLog")
 func resourceFlowLog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLogFlowCreate,
@@ -38,128 +43,147 @@ func resourceFlowLog() *schema.Resource {
 		UpdateWithoutTimeout: resourceLogFlowUpdate,
 		DeleteWithoutTimeout: resourceLogFlowDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deliver_cross_account_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"destination_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"file_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DestinationFileFormatPlainText,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DestinationFileFormat](),
-						},
-						"hive_compatible_partitions": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-							ForceNew: true,
-						},
-						"per_hour_partition": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deliver_cross_account_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"destination_options": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"file_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.DestinationFileFormatPlainText,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DestinationFileFormat](),
+							},
+							"hive_compatible_partitions": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+								ForceNew: true,
+							},
+							"per_hour_partition": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"eni_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
-			},
-			names.AttrIAMRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"log_destination": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"log_destination_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.LogDestinationTypeCloudWatchLogs,
-				ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
-			},
-			"log_format": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"max_aggregation_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      600,
-				ValidateFunc: validation.IntInSlice([]int{60, 600}),
-			},
-			"regional_nat_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
-			},
-			names.AttrSubnetID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"traffic_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrafficType](),
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
-			},
-			names.AttrTransitGatewayID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
-			},
-			names.AttrVPCID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
-			},
+				"eni_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+				names.AttrIAMRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"log_destination": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"log_destination_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.LogDestinationTypeCloudWatchLogs,
+					ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
+				},
+				"log_format": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"max_aggregation_interval": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      600,
+					ValidateFunc: validation.IntInSlice([]int{60, 600}),
+				},
+				"regional_nat_gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+				names.AttrSubnetID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+				"tag_field_specification": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TaggableResourceType](),
+							},
+							"tag_keys": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficType](),
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+				names.AttrTransitGatewayID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+				names.AttrVPCID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+			}
 		},
 
 		SchemaVersion: 1,
@@ -215,7 +239,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	input := &ec2.CreateFlowLogsInput{
+	input := ec2.CreateFlowLogsInput{
 		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LogDestinationType: awstypes.LogDestinationType(d.Get("log_destination_type").(string)),
 		ResourceIds:        []string{resourceID},
@@ -253,8 +277,12 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("tag_field_specification"); ok && v.(*schema.Set).Len() > 0 {
+		input.TagFieldSpecifications = expandTagFieldSpecificationRequests(v.(*schema.Set).List())
+	}
+
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateFlowLogs(ctx, input)
+		return conn.CreateFlowLogs(ctx, &input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
 	if err == nil && outputRaw != nil {
@@ -272,10 +300,10 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
-	fl, err := findFlowLogByID(ctx, conn, d.Id())
+	output, err := findFlowLogByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Flow Log %s not found, removing from state", d.Id())
@@ -287,21 +315,37 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Flow Log (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, flowLogARN(ctx, c, d.Id()))
-	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
-	if fl.DestinationOptions != nil {
-		if err := d.Set("destination_options", []any{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)
+	if err := resourceFlowLogFlatten(ctx, awsClient, output, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening Flow Log (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceFlowLogFlatten(ctx context.Context, awsClient *conns.AWSClient, output *awstypes.FlowLog, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, flowLogARN(ctx, awsClient, d.Id()))
+	d.Set("deliver_cross_account_role", output.DeliverCrossAccountRole)
+	if output.DestinationOptions != nil {
+		if err := d.Set("destination_options", []any{flattenDestinationOptionsResponse(output.DestinationOptions)}); err != nil {
+			return fmt.Errorf("setting destination_options: %w", err)
 		}
 	} else {
 		d.Set("destination_options", nil)
 	}
-	d.Set(names.AttrIAMRoleARN, fl.DeliverLogsPermissionArn)
-	d.Set("log_destination", fl.LogDestination)
-	d.Set("log_destination_type", fl.LogDestinationType)
-	d.Set("log_format", fl.LogFormat)
-	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-	switch resourceID := aws.ToString(fl.ResourceId); {
+	d.Set(names.AttrIAMRoleARN, output.DeliverLogsPermissionArn)
+	if output.LogDestinationType == awstypes.LogDestinationTypeCloudWatchLogs && output.LogDestination == nil {
+		// Legacy usage of LogGroupName. Either importing or migrating from old version of the proivder
+		d.Set("log_destination", cloudwatchLogGroupARNFromName(ctx, awsClient, aws.ToString(output.LogGroupName)))
+	} else {
+		d.Set("log_destination", output.LogDestination)
+	}
+	d.Set("log_destination_type", output.LogDestinationType)
+	d.Set("log_format", output.LogFormat)
+	d.Set("max_aggregation_interval", output.MaxAggregationInterval)
+	if err := d.Set("tag_field_specification", flattenTagFieldSpecificationResponses(output.TagFieldSpecifications)); err != nil {
+		return fmt.Errorf("setting tag_field_specification: %w", err)
+	}
+	switch resourceID := aws.ToString(output.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set(names.AttrVPCID, resourceID)
 	case strings.HasPrefix(resourceID, "tgw-"):
@@ -317,13 +361,13 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	case strings.HasPrefix(resourceID, "nat-"):
 		d.Set("regional_nat_gateway_id", resourceID)
 	}
-	if !strings.HasPrefix(aws.ToString(fl.ResourceId), "tgw-") {
-		d.Set("traffic_type", fl.TrafficType)
+	if !strings.HasPrefix(aws.ToString(output.ResourceId), "tgw-") {
+		d.Set("traffic_type", output.TrafficType)
 	}
 
-	setTagsOut(ctx, fl.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -397,6 +441,53 @@ func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsRes
 	return tfMap
 }
 
+func expandTagFieldSpecificationRequests(tfList []any) []awstypes.TagFieldSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.TagFieldSpecificationRequest, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, awstypes.TagFieldSpecificationRequest{
+			ResourceType: awstypes.TaggableResourceType(tfMap[names.AttrResourceType].(string)),
+			TagKeys:      flex.ExpandStringValueList(tfMap["tag_keys"].([]any)),
+		})
+	}
+
+	return apiObjects
+}
+
+func flattenTagFieldSpecificationResponses(apiObjects []awstypes.TagFieldSpecificationResponse) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfList[i] = map[string]any{
+			names.AttrResourceType: apiObject.ResourceType,
+			"tag_keys":             apiObject.TagKeys,
+		}
+	}
+
+	return tfList
+}
+
 func flowLogARN(ctx context.Context, c *conns.AWSClient, flowLogID string) string {
 	return c.RegionalARN(ctx, names.EC2, "vpc-flow-log/"+flowLogID)
+}
+
+func cloudwatchLogGroupARNFromName(ctx context.Context, c regionalARNMaker, logGroupName string) string {
+	return c.RegionalARN(ctx, names.Logs, "log-group:"+logGroupName)
+}
+
+type regionalARNMaker interface {
+	RegionalARN(ctx context.Context, service, resource string) string
 }

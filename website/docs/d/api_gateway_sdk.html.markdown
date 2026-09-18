@@ -29,17 +29,17 @@ data "aws_api_gateway_sdk" "example" {
 
 This data source supports the following arguments:
 
+* `parameters` - (Optional) Key-value map of query string parameters `sdk_type` properties of the SDK. For SDK Type of `objectivec` or `swift`, a parameter named `classPrefix` is required. For SDK Type of `android`, parameters named `groupId`, `artifactId`, `artifactVersion`, and `invokerPackage` are required. For SDK Type of `java`, parameters named `serviceName` and `javaPackageName` are required.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) Identifier of the associated REST API.
-* `stage_name` - (Required) Name of the Stage that will be exported.
 * `sdk_type` - (Required) Language for the generated SDK. Currently `java`, `javascript`, `android`, `objectivec` (for iOS), `swift` (for iOS), and `ruby` are supported.
-* `parameters` - (Optional) Key-value map of query string parameters `sdk_type` properties of the SDK. For SDK Type of `objectivec` or `swift`, a parameter named `classPrefix` is required. For SDK Type of `android`, parameters named `groupId`, `artifactId`, `artifactVersion`, and `invokerPackage` are required. For SDK Type of `java`, parameters named `serviceName` and `javaPackageName` are required.
+* `stage_name` - (Required) Name of the Stage that will be exported.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The `REST-API-ID:STAGE-NAME`
 * `body` - SDK as a string.
-* `content_type` - Content-type header value in the HTTP response.
 * `content_disposition` - Content-disposition header value in the HTTP response.
+* `content_type` - Content-type header value in the HTTP response.
+* `id` - `REST-API-ID:STAGE-NAME`

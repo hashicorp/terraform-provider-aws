@@ -32,94 +32,96 @@ func dataSourceTransitGatewayMulticastDomain() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTransitGatewayAttachmentID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTransitGatewayAttachmentID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"auto_accept_shared_associations": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"igmpv2_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"members": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"group_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"auto_accept_shared_associations": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"igmpv2_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"members": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"group_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sources": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"group_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"group_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"static_sources_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"transit_gateway_multicast_domain_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"static_sources_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transit_gateway_multicast_domain_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

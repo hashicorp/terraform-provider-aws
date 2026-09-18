@@ -28,46 +28,48 @@ func dataSourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePermissionSetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
-				),
-				ExactlyOneOf: []string{names.AttrName, names.AttrARN},
-			},
-			"relay_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"session_duration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 32),
+						validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
+					),
+					ExactlyOneOf: []string{names.AttrName, names.AttrARN},
+				},
+				"relay_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"session_duration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

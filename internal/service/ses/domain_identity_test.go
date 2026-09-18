@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,7 +21,7 @@ import (
 
 func TestAccSESDomainIdentity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_domain_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -45,7 +46,7 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 
 func TestAccSESDomainIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_domain_identity.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -61,6 +62,14 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -70,7 +79,7 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomFQDomainName()
+	domain := acctest.RandomFQDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

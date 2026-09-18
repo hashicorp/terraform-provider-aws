@@ -1,4 +1,5 @@
 resource "aws_appautoscaling_target" "test" {
+{{- template "region" }}
   service_namespace  = "dynamodb"
   resource_id        = "table/${aws_dynamodb_table.test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
@@ -9,6 +10,7 @@ resource "aws_appautoscaling_target" "test" {
 }
 
 resource "aws_dynamodb_table" "test" {
+{{- template "region" }}
   name           = var.rName
   read_capacity  = 5
   write_capacity = 5

@@ -32,7 +32,7 @@ resource "aws_sqs_queue" "terraform_queue" {
 }
 ```
 
-## FIFO queue
+### FIFO queue
 
 ```terraform
 resource "aws_sqs_queue" "terraform_queue" {
@@ -42,7 +42,7 @@ resource "aws_sqs_queue" "terraform_queue" {
 }
 ```
 
-## High-throughput FIFO queue
+### High-throughput FIFO queue
 
 ```terraform
 resource "aws_sqs_queue" "terraform_queue" {
@@ -53,7 +53,7 @@ resource "aws_sqs_queue" "terraform_queue" {
 }
 ```
 
-## Dead-letter queue
+### Dead-letter queue
 
 ```terraform
 resource "aws_sqs_queue" "terraform_queue" {
@@ -79,7 +79,7 @@ resource "aws_sqs_queue_redrive_allow_policy" "terraform_queue_redrive_allow_pol
 }
 ```
 
-## Server-side encryption (SSE)
+### Server-side encryption (SSE)
 
 Using [SSE-SQS](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-sqs-sse-queue.html):
 

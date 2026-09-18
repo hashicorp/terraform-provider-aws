@@ -71,6 +71,7 @@ This data source exports the following attributes in addition to the arguments a
 * `session_timeout_hours` - The maximum VPN session duration time in hours.
 * `split_tunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.
 * `traffic_ip_address_type` - IP address type for traffic within the Client VPN tunnel.
+* `transit_gateway_configuration` - ID of the Transit Gateway to which the Client VPN endpoint is associated.
 * `transport_protocol` - Transport protocol used by the Client VPN endpoint.
 * `vpc_id` - ID of the VPC associated with the Client VPN endpoint.
 * `vpn_port` - Port number for the Client VPN endpoint.

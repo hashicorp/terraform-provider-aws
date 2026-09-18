@@ -24,26 +24,28 @@ func dataSourceLocalDisk() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalDiskRead,
 
-		Schema: map[string]*schema.Schema{
-			"disk_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disk_node": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"disk_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"disk_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disk_node": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"disk_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

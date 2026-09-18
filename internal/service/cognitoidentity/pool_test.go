@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -202,8 +203,8 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := acctest.RandString(t, 10)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
-	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -317,7 +318,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -427,6 +428,14 @@ func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

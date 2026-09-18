@@ -26,32 +26,34 @@ func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
 
-		Schema: map[string]*schema.Schema{
-			"filters": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrField: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"filters": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrField: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"result": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

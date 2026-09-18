@@ -39,28 +39,30 @@ func resourceLifecyclePolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
 		DeleteWithoutTimeout: resourceLifecyclePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsJSON,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentLifecyclePolicyJSON(old, new)
-					return equal
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsJSON,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentLifecyclePolicyJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 				},
-				DiffSuppressOnRefresh: true,
-				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -109,12 +111,20 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
-	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
+	if err := resourceLifecyclePolicyFlatten(d, output); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceLifecyclePolicyFlatten(d *schema.ResourceData, output *ecr.GetLifecyclePolicyOutput) error {
+	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
+		return err
 	} else if !equivalent {
 		policyToSet, err := structure.NormalizeJsonString(aws.ToString(output.LifecyclePolicyText))
 		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return err
 		}
 
 		d.Set(names.AttrPolicy, policyToSet)
@@ -123,7 +133,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("registry_id", output.RegistryId)
 	d.Set("repository", output.RepositoryName)
 
-	return diags
+	return nil
 }
 
 func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

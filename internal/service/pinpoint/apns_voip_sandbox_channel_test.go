@@ -61,7 +61,7 @@ func testAccAPNSVoIPSandboxChannelCertConfigurationFromEnv(t *testing.T) *testAc
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -94,7 +94,20 @@ func testAccAPNSVoIPSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testA
 	return &conf
 }
 
-func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSVoIPSandboxChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSVoIPSandboxChannel_basicCertificate,
+		"basicToken":       testAccAPNSVoIPSandboxChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
@@ -129,7 +142,7 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccPinpointAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
+func testAccAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
@@ -172,7 +185,7 @@ func testAccCheckAPNSVoIPSandboxChannelExists(ctx context.Context, t *testing.T,
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNS VoIP Sandbox Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNS VoIP Sandbox Channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -208,7 +221,7 @@ func testAccCheckAPNSVoIPSandboxChannelDestroy(ctx context.Context, t *testing.T
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS VoIP Sandbox Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS VoIP Sandbox Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

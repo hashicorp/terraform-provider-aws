@@ -63,8 +63,14 @@ The `criterion` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie Findings Filter.
-* `arn` - The Amazon Resource Name (ARN) of the Findings Filter.
+* `arn` - ARN of the Findings Filter.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `4m`)
 
 ## Import
 

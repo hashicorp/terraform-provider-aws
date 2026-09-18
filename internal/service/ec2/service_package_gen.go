@@ -42,6 +42,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newCapacityBlockReservationDataSource,
+			TypeName: "aws_ec2_capacity_block_reservation",
+			Name:     "Capacity Block Reservation",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newHostsDataSource,
+			TypeName: "aws_ec2_hosts",
+			Name:     "Hosts",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newServiceLinkVirtualInterfaceDataSource,
 			TypeName: "aws_ec2_service_link_virtual_interface",
 			Name:     "Service Link Virtual Interface",
@@ -159,6 +172,37 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newLocalGatewayRouteTableResource,
+			TypeName: "aws_ec2_local_gateway_route_table",
+			Name:     "Local Gateway Route Table",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "local_gateway_route_table_id",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newLocalGatewayRouteTableVirtualInterfaceGroupAssociationResource,
+			TypeName: "aws_ec2_local_gateway_route_table_virtual_interface_group_association",
+			Name:     "Local Gateway Route Table Virtual Interface Group Association",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newNetworkInsightsAccessScopeResource,
+			TypeName: "aws_ec2_network_insights_access_scope",
+			Name:     "Network Insights Access Scope",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSecondaryNetworkResource,
 			TypeName: "aws_ec2_secondary_network",
 			Name:     "SecondaryNetwork",
@@ -214,6 +258,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ec2_transit_gateway_metering_policy_entry",
 			Name:     "Transit Gateway Metering Policy Entry",
 			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newTransitGatewayPolicyTableEntryResource,
+			TypeName: "aws_ec2_transit_gateway_policy_table_entry",
+			Name:     "Transit Gateway Policy Table Entry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_policy_table_id", true),
+				inttypes.StringIdentityAttribute("policy_rule_number", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      transitGatewayPolicyTableEntryImportID{},
+			},
 		},
 		{
 			Factory:  newEIPDomainNameResource,
@@ -373,6 +431,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newNetworkInsightsAccessScopeResourceAsListResource,
+			TypeName: "aws_ec2_network_insights_access_scope",
+			Name:     "Network Insights Access Scope",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
 			Factory:  newSecondaryNetworkResourceAsListResource,
 			TypeName: "aws_ec2_secondary_network",
 			Name:     "SecondaryNetwork",
@@ -401,6 +469,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("transit_gateway_metering_policy_id", true)),
+		},
+		{
+			Factory:  newTransitGatewayPolicyTableEntryResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_policy_table_entry",
+			Name:     "Transit Gateway Policy Table Entry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_policy_table_id", true),
+				inttypes.StringIdentityAttribute("policy_rule_number", true),
+			}),
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResourceAsListResource,
@@ -997,6 +1075,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ami_launch_permission",
 			Name:     "AMI Launch Permission",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("image_id", true),
+				inttypes.StringIdentityAttributeWithMappedName("launch_permission_account_id", false, names.AttrAccountID),
+				inttypes.StringIdentityAttribute("group", false),
+				inttypes.StringIdentityAttribute("organization_arn", false),
+				inttypes.StringIdentityAttribute("organizational_unit_arn", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      amiLaunchPermissionImportID{},
+			},
 		},
 		{
 			Factory:  resourceCustomerGateway,
@@ -1050,7 +1139,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceDefaultVPCDHCPOptions,
@@ -1088,6 +1181,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "EBS Snapshot Block Public Access",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingletonIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
 			),
 			Import: inttypes.SDKv2Import{
@@ -1200,7 +1294,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Image Block Public Access",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingletonIdentity(
-				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithVersion(1),
 				inttypes.WithSDKv2IdentityUpgraders(imageBlockPublicAccessIdentityUpgradeV0),
 			),
@@ -1265,7 +1359,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Serial Console Access",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingletonIdentity(
-				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithVersion(1),
 				inttypes.WithSDKv2IdentityUpgraders(serialConsoleAccessIdentityUpgradeV0),
 			),
@@ -1491,7 +1585,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceInstance,
@@ -1532,7 +1630,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "key_pair_id",
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("key_name", true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceLaunchTemplate,
@@ -1573,7 +1675,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceNetworkACLAssociation,
@@ -1604,7 +1710,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceNetworkInterfaceAttachment,
@@ -1857,6 +1967,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_vpc_endpoint_route_table_association",
 			Name:     "VPC Endpoint Route Table Association",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrVPCEndpointID, true),
+				inttypes.StringIdentityAttribute("route_table_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      vpcEndpointRouteTableAssociationImportID{},
+			},
 		},
 		{
 			Factory:  resourceVPCEndpointSecurityGroupAssociation,
@@ -1919,7 +2037,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceIPAMPoolCIDRAllocation,
 			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
 			Name:     "IPAM Pool CIDR Allocation",
-			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "ipam_pool_allocation_id",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceIPAMPreviewNextCIDR,
@@ -2038,6 +2159,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newAMILaunchPermissionResourceAsListResource,
+			TypeName: "aws_ami_launch_permission",
+			Name:     "AMI Launch Permission",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("image_id", true),
+				inttypes.StringIdentityAttributeWithMappedName("launch_permission_account_id", false, names.AttrAccountID),
+				inttypes.StringIdentityAttribute("group", false),
+				inttypes.StringIdentityAttribute("organization_arn", false),
+				inttypes.StringIdentityAttribute("organizational_unit_arn", false),
+			}),
+		},
+		{
 			Factory:  newEBSVolumeResourceAsListResource,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
@@ -2051,6 +2185,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newEIPResourceAsListResource,
 			TypeName: "aws_eip",
 			Name:     "EIP",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newFlowLogResourceAsListResource,
+			TypeName: "aws_flow_log",
+			Name:     "Flow Log",
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
@@ -2078,6 +2222,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newKeyPairResourceAsListResource,
+			TypeName: "aws_key_pair",
+			Name:     "Key Pair",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "key_pair_id",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("key_name", true)),
+		},
+		{
 			Factory:  newLaunchTemplateResourceAsListResource,
 			TypeName: "aws_launch_template",
 			Name:     "Launch Template",
@@ -2091,6 +2245,38 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newNATGatewayResourceAsListResource,
 			TypeName: "aws_nat_gateway",
 			Name:     "NAT Gateway",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newNetworkACLResourceAsListResource,
+			TypeName: "aws_network_acl",
+			Name:     "Network ACL",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newNetworkACLRuleResourceAsListResource,
+			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("network_acl_id", true),
+				inttypes.BoolIdentityAttribute("egress", true),
+				inttypes.IntIdentityAttribute("rule_number", true),
+				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
+			}),
+		},
+		{
+			Factory:  newNetworkInterfaceResourceAsListResource,
+			TypeName: "aws_network_interface",
+			Name:     "Network Interface",
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
@@ -2178,6 +2364,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newVPCEndpointRouteTableAssociationResourceAsListResource,
+			TypeName: "aws_vpc_endpoint_route_table_association",
+			Name:     "VPC Endpoint Route Table Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrVPCEndpointID, true),
+				inttypes.StringIdentityAttribute("route_table_id", true),
+			}),
 		},
 	})
 }

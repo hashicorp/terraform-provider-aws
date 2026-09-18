@@ -38,30 +38,32 @@ func resourceDomainName() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"appsync_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appsync_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
