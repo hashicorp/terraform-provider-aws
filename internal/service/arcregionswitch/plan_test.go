@@ -610,6 +610,19 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 						names.AttrExternalID: "rds-promote-replica-external-id",
 						"timeout_minutes":    "45",
 					}),
+
+					// RdsSwitchoverReadReplica execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "RdsSwitchoverReadReplica",
+						names.AttrName:         "rds-switchover-read-replica-step",
+					}),
+
+					// RdsSwitchoverReadReplica config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_switchover_read_replica_config.*", map[string]string{
+						"cross_account_role": "arn:aws:iam::123456789012:role/RdsSwitchoverRole",
+						names.AttrExternalID: "rds-switchover-external-id",
+						"timeout_minutes":    "30",
+					}),
 				),
 			},
 			{
@@ -1916,6 +1929,27 @@ resource "aws_arcregionswitch_plan" "test" {
       }
     }
 
+    # RDS Switchover Read Replica step
+    step {
+      name                 = "rds-switchover-read-replica-step"
+      execution_block_type = "RdsSwitchoverReadReplica"
+      description          = "RDS Switchover Read Replica step"
+
+      rds_switchover_read_replica_config {
+        db_instance_arn_map = {
+          %[2]q = "arn:aws:rds:%[2]s:123456789012:db:test-switchover-primary"
+          %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-switchover-secondary"
+        }
+        timeout_minutes    = 30
+        cross_account_role = "arn:aws:iam::123456789012:role/RdsSwitchoverRole"
+        external_id        = "rds-switchover-external-id"
+
+        ungraceful {
+          ungraceful = "promoteReadReplica"
+        }
+      }
+    }
+
     # Route53HealthCheck step
     step {
       name                 = "route53-health-check-step-activate"
@@ -2896,6 +2930,104 @@ resource "aws_arcregionswitch_plan" "test" {
       execution_approval_config {
         approval_role   = aws_iam_role.test.arn
         timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
+}
+
+func TestAccARCRegionSwitchPlan_rdsSwitchoverReadReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_rdsSwitchoverReadReplica(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify RdsSwitchoverReadReplica execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "RdsSwitchoverReadReplica",
+						names.AttrName:         "rds-switchover-read-replica-step",
+					}),
+
+					// Verify config values
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_switchover_read_replica_config.*", map[string]string{
+						"timeout_minutes": "30",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func testAccPlanConfig_rdsSwitchoverReadReplica(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "rds-switchover-read-replica-step"
+      execution_block_type = "RdsSwitchoverReadReplica"
+      description          = "RDS Switchover Read Replica step"
+
+      rds_switchover_read_replica_config {
+        db_instance_arn_map = {
+          %[2]q = "arn:aws:rds:%[2]s:123456789012:db:test-db-primary"
+          %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-db-secondary"
+        }
+        timeout_minutes = 30
+
+        ungraceful {
+          ungraceful = "promoteReadReplica"
+        }
       }
     }
   }
