@@ -239,7 +239,7 @@ func goodgo(body []byte) ([]byte, error) {
 	}
 
 	// Run goimports to fix imports.
-	formattedBody, err = imports.Process("<standard input>", formattedBody, nil)
+	formattedBody, err = imports.Process("", formattedBody, nil)
 	if err != nil {
 		return nil, fmt.Errorf("running goimports: %w", err)
 	}
