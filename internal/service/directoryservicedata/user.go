@@ -310,7 +310,6 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
-
 }
 
 func findUserByTwoPartKey(ctx context.Context, conn *directoryservicedata.Client, directoryID, samAccountName string) (*directoryservicedata.DescribeUserOutput, error) {
