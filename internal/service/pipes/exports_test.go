@@ -11,5 +11,5 @@ var (
 	SMKOrARNPattern          = smkOrARNPattern
 	SecretsManagerARNPattern = secretsManagerARNPattern
 
-	ExpandPipeSourceSelfManagedKafkaParameters = expandPipeSourceSelfManagedKafkaParameters
+	ExpandSourceSelfManagedKafkaParameters = expandPipeSourceSelfManagedKafkaParameters
 )

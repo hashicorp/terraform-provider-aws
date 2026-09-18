@@ -3615,7 +3615,7 @@ func TestExpandPipeSourceSelfManagedKafkaParameters_serverRootCACertificate(t *t
 				"topic_name":                 "test-topic",
 			}
 
-			got := tfpipes.ExpandPipeSourceSelfManagedKafkaParameters(tfMap)
+			got := tfpipes.ExpandSourceSelfManagedKafkaParameters(tfMap)
 
 			if diff := cmp.Diff(tc.want, got.ServerRootCaCertificate); diff != "" {
 				t.Errorf("unexpected ServerRootCaCertificate difference: %s", diff)
