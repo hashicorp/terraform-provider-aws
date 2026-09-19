@@ -351,3 +351,145 @@ resource "aws_elastic_beanstalk_application_version" "default" {
 }
 `, randInt, randInt, randInt, process)
 }
+
+func TestAccElasticBeanstalkApplicationVersion_imageSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appVersion awstypes.ApplicationVersionDescription
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_IMAGE_URI")
+	resourceName := "aws_elastic_beanstalk_application_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationVersionConfig_imageSource(acctest.RandInt(t), imageURI),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists(ctx, t, resourceName, &appVersion),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.source.0.uri", imageURI),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.build.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrBucket),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElasticBeanstalkApplicationVersion_imageBuild(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appVersion awstypes.ApplicationVersionDescription
+	serviceRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_CODEBUILD_SERVICE_ROLE_ARN")
+	resourceName := "aws_elastic_beanstalk_application_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationVersionConfig_imageBuild(acctest.RandInt(t), serviceRoleARN),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists(ctx, t, resourceName, &appVersion),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.build.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.build.0.type", "docker"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.build.0.code_build_service_role", serviceRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.source.#", "0"),
+					// The service pushes the built image and reports it back, so the
+					// computed attribute is populated while the request block is not.
+					resource.TestCheckResourceAttrSet(resourceName, "image_uri"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElasticBeanstalkApplicationVersion_imageConfigurationSourceForcesNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after awstypes.ApplicationVersionDescription
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_IMAGE_URI")
+	updatedImageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_IMAGE_URI_UPDATED")
+	resourceName := "aws_elastic_beanstalk_application_version.test"
+	randInt := acctest.RandInt(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationVersionConfig_imageSource(randInt, imageURI),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists(ctx, t, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
+				),
+			},
+			{
+				Config: testAccApplicationVersionConfig_imageSource(randInt, updatedImageURI),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists(ctx, t, resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", updatedImageURI),
+				),
+			},
+		},
+	})
+}
+
+func testAccApplicationVersionConfig_imageSource(randInt int, imageURI string) string {
+	return fmt.Sprintf(`
+resource "aws_elastic_beanstalk_application" "test" {
+  name        = "tf-test-name-%[1]d"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_application_version" "test" {
+  application = aws_elastic_beanstalk_application.test.name
+  name        = "tf-test-version-label-%[1]d"
+
+  image_configuration {
+    source {
+      uri = %[2]q
+    }
+  }
+}
+`, randInt, imageURI)
+}
+
+func testAccApplicationVersionConfig_imageBuild(randInt int, serviceRoleARN string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "tftest.applicationversion.bucket-%[1]d"
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "beanstalk/python-v1.zip"
+  source = "test-fixtures/python-v1.zip"
+}
+
+resource "aws_elastic_beanstalk_application" "test" {
+  name        = "tf-test-name-%[1]d"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_application_version" "test" {
+  application = aws_elastic_beanstalk_application.test.name
+  name        = "tf-test-version-label-%[1]d"
+  bucket      = aws_s3_object.test.bucket
+  key         = aws_s3_object.test.key
+
+  image_configuration {
+    build {
+      type                    = "docker"
+      code_build_service_role = %[2]q
+    }
+  }
+}
+`, randInt, serviceRoleARN)
+}
