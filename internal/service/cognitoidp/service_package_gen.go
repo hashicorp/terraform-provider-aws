@@ -23,6 +23,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newUserDataSource,
+			TypeName: "aws_cognito_user",
+			Name:     "User",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newUserGroupDataSource,
 			TypeName: "aws_cognito_user_group",
 			Name:     "User Group",
