@@ -9,6 +9,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +21,70 @@ import (
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestECSDaemonTaskDefinitionSchema_ipcModePidMode(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	r, err := tfecs.ResourceDaemonTaskDefinition(ctx)
+	if err != nil {
+		t.Fatalf("creating resource: %s", err)
+	}
+
+	response := fwresource.SchemaResponse{}
+	r.Schema(ctx, fwresource.SchemaRequest{}, &response)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("getting schema: %s", response.Diagnostics)
+	}
+
+	for _, name := range []string{"ipc_mode", "pid_mode"} {
+		attr, ok := response.Schema.Attributes[name]
+		if !ok {
+			t.Fatalf("expected %q attribute in schema", name)
+		}
+
+		stringAttr, ok := attr.(fwschema.StringAttribute)
+		if !ok {
+			t.Fatalf("expected %q to be a string attribute, got %T", name, attr)
+		}
+
+		if !stringAttr.Optional {
+			t.Fatalf("expected %q to be optional", name)
+		}
+
+		if len(stringAttr.PlanModifiers) == 0 {
+			t.Fatalf("expected %q to require replacement", name)
+		}
+
+		for _, value := range []string{"none", "shared"} {
+			checkDaemonTaskDefinitionStringEnumValue(t, ctx, name, stringAttr, value, false)
+		}
+
+		for _, value := range []string{"host", "task"} {
+			checkDaemonTaskDefinitionStringEnumValue(t, ctx, name, stringAttr, value, true)
+		}
+	}
+}
+
+func checkDaemonTaskDefinitionStringEnumValue(t *testing.T, ctx context.Context, name string, attr fwschema.StringAttribute, value string, expectError bool) {
+	t.Helper()
+
+	stringValuable, diags := attr.CustomType.ValueFromString(ctx, types.StringValue(value))
+	if diags.HasError() {
+		t.Fatalf("creating %q value %q: %s", name, value, diags)
+	}
+
+	validateable, ok := stringValuable.(xattr.ValidateableAttribute)
+	if !ok {
+		t.Fatalf("expected %q value to be validateable, got %T", name, stringValuable)
+	}
+
+	resp := xattr.ValidateAttributeResponse{}
+	validateable.ValidateAttribute(ctx, xattr.ValidateAttributeRequest{}, &resp)
+	if got := resp.Diagnostics.HasError(); got != expectError {
+		t.Fatalf("expected %q value %q validation error = %t, got %t", name, value, expectError, got)
+	}
+}
 
 func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -45,6 +113,64 @@ func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.memory", "512"),
 					resource.TestCheckResourceAttr(resourceName, "container_definition.0.essential", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_ipcMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_ipcMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ipc_mode", "shared"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_pidMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_pidMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pid_mode", "shared"),
 				),
 			},
 			{
@@ -642,6 +768,44 @@ resource "aws_ecs_daemon_task_definition" "test" {
   family = %[1]q
   cpu    = "512"
   memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_ipcMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family   = %[1]q
+  cpu      = "512"
+  memory   = "1024"
+  ipc_mode = "shared"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_pidMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family   = %[1]q
+  cpu      = "512"
+  memory   = "1024"
+  pid_mode = "shared"
 
   container_definition {
     name      = "nginx"
