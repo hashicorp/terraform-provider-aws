@@ -302,6 +302,10 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
