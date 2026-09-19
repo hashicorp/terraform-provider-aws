@@ -358,6 +358,15 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
 				},
 			},
+			{
+				// Re-import after the update so the recorded platform version is compared
+				// against what GetAgentRuntime reports, not just what was planned.
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
 		},
 	})
 }

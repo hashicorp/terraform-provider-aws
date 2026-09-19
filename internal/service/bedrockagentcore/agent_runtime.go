@@ -817,10 +817,15 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 		new.AuthorizerConfiguration = authorizerConfiguration
 
-		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		updated, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
 		}
+
+		// UpdateAgentRuntime doesn't return the platform version, so take it from the
+		// runtime the waiter read back rather than trusting the planned value.
+		new.PlatformVersion = fwflex.StringToFramework(ctx, updated.PlatformVersion)
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
 	}
