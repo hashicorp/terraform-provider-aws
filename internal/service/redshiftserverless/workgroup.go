@@ -279,8 +279,8 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	// When importing, only `id` will be set.
-	// During a read of an existing resource, `workgroup_id` will be set as it is a required attribute.
-	isImport := d.Get("workgroup_id") == ""
+	// During a read of an existing resource, `workgroup_name` will be set as it is a required attribute.
+	isImport := d.Get("workgroup_name") == ""
 
 	out, err := findWorkgroupByName(ctx, conn, d.Id())
 
