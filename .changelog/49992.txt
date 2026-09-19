@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opensearch_domain: Fix `ValidationException` during `aiml_options` updates on OpenSearch versions prior to 3.1 by omitting `serverless_vector_acceleration`
+```
