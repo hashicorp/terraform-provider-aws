@@ -319,12 +319,24 @@ func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponse
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath(),
+				Config: testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath("Test multi-tenant distribution"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.error_code", "404"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_code"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_page_path"),
+				),
+			},
+			{
+				// Updating a distribution that carries such a block used to fail.
+				Config: testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath("Test multi-tenant distribution updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Test multi-tenant distribution updated"),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.error_code", "404"),
 					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_code"),
@@ -1167,11 +1179,11 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
 `
 }
 
-func testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath() string {
-	return `
+func testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath(comment string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = false
-  comment = "Test multi-tenant distribution"
+  comment = %[1]q
 
   origin {
     domain_name = "example.com"
@@ -1222,7 +1234,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 }
-`
+`, comment)
 }
 
 func testAccMultiTenantDistributionConfig_tags_concurrentUpdate(comment, tagKey1, tagValue1 string) string {
