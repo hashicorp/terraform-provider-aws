@@ -93,7 +93,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapSizeExact(0)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-[a-zA-Z0-9]{10}$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
@@ -254,6 +254,17 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 			},
 			{
 				Config: testAccHarnessConfig_systemPrompt(rName, "You are a coding assistant."),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccHarnessConfig_systemPrompt(rName, "You are a concise coding assistant."),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -988,7 +999,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_environmentVariables(rName, "KEY1", acctest.CtValue1),
+				Config: testAccHarnessConfig_environmentVariables(rName, fmt.Sprintf(`{ KEY1 = %q }`, acctest.CtValue1)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -999,7 +1010,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccHarnessConfig_environmentVariables(rName, "KEY2", acctest.CtValue2),
+				Config: testAccHarnessConfig_environmentVariables(rName, fmt.Sprintf(`{ KEY2 = %q }`, acctest.CtValue2)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -1007,6 +1018,20 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environmentVariables(rName, "null"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"KEY2": knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environmentVariables(rName, "{}"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapSizeExact(0)),
 				},
 			},
 			{
@@ -3104,6 +3129,14 @@ resource "aws_bedrockagentcore_harness" "test" {
     text = %[2]q
   }
 
+  environment {
+    agentcore_runtime_environment {
+      network_configuration {
+        network_mode = "PUBLIC"
+      }
+    }
+  }
+
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, prompt))
@@ -3260,15 +3293,13 @@ resource "aws_bedrockagentcore_harness" "test" {
 `, rName))
 }
 
-func testAccHarnessConfig_environmentVariables(rName, key, value string) string {
+func testAccHarnessConfig_environmentVariables(rName, variables string) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
   execution_role_arn = aws_iam_role.test.arn
 
-  environment_variables = {
-    %[2]q = %[3]q
-  }
+  environment_variables = %[2]s
 
   model {
     bedrock_model_config {
@@ -3282,7 +3313,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 
   depends_on = [aws_iam_role_policy.test]
 }
-`, rName, key, value))
+`, rName, variables))
 }
 
 func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_basic(rName string) string {

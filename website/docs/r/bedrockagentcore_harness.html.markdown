@@ -158,7 +158,7 @@ The following arguments are optional:
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating requests. See [`authorizer_configuration` Block](#authorizer_configuration-block) below.
 * `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below.If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
 * `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact` Block](#environment_artifact-block) below.
-* `environment_variables` - (Optional, Sensitive) Map of environment variables.
+* `environment_variables` - (Optional, Sensitive) Map of environment variables. If omitted, existing environment variables are retained. Set to an empty map (`{}`) to remove all environment variables.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
 * `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.

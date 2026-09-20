@@ -96,6 +96,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
+				Computed:   true,
 				Sensitive:  true,
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
@@ -1089,6 +1090,9 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
+	} else if plan.EnvironmentVariables.IsUnknown() {
+		// Tag-only updates skip UpdateHarness, so retain the last known environment variables.
+		plan.EnvironmentVariables = state.EnvironmentVariables
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
