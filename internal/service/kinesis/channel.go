@@ -8,22 +8,27 @@ package kinesis
 import (
 	"context"
 	"errors"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -113,33 +118,51 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
+			"stream_configuration_list": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[channelSteamConfigurationListModel](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1000), // Currently, one stream is supported per channel but the max constraint is 1000
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
+						"stream_arn": schema.StringAttribute{
 							Required: true,
+							CustomType: fwtypes.ARNType,
 						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
+					},
+					Blocks: map[string]schema.Block{
+						"record_configuration": channelRecordConfigurationBlock(ctx),
+					},
+				},
+			},
+
+			"s3_destination_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[channelS3DestinationConfigurationModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(1),
+					setvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3_tables_destination_configuration")),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"data_freshness_in_seconds": schema.Int64Attribute{
+							Required: false,
+							Default: int64default.StaticInt64(300),
+							Validators: []validator.Int64{
+								int64validator.AtLeast(300),
+								int64validator.AtMost(900),
 							},
 						},
+					},
+					Blocks: map[string]schema.Block {
+						"dead_letter_queue_s3_configuration": channelDeadLetterQueueS3ConfigurationBlock(ctx),
 					},
 				},
 			},
@@ -148,6 +171,69 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Update: true,
 				Delete: true,
 			}),
+		},
+	}
+}
+
+func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context) schema.SetNestedBlock {
+	return schema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[deadLetterQueueS3ConfigurationModel](ctx),
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"bucket_arn": schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"expected_bucket_owner": schema.StringAttribute{
+					CustomType: types.StringType,
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"error_output_prefix": schema.StringAttribute{
+					CustomType: types.StringType,
+					Optional: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func channelRecordConfigurationBlock(ctx context.Context) schema.SetNestedBlock {
+	return schema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[recordConfigurationModel](ctx),
+		Validators: []validator.Set{
+			setvalidator.IsRequired(),
+			setvalidator.SizeAtLeast(1),
+			setvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"record_format_type": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RecordFormatType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"gsr_schema_arn": schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
 		},
 	}
 }
@@ -567,9 +653,34 @@ type channelResourceModel struct {
 	Type            types.String                                          `tfsdk:"type"`
 }
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+type channelSteamConfigurationListModel struct {
+	StreamARN	fwtypes.ARN	`tfsdk:"stream_arn"`
+	RecordConfiguration	fwtypes.SetNestedObjectValueOf[recordConfigurationModel]	`tfsdk:"record_configuration"`
+}
+
+type recordConfigurationModel struct {
+	RecordFormatType fwtypes.StringEnum[awstypes.RecordFormatType]	`tfsdk:"record_format_type"`
+	GSRSchemaARN	fwtypes.ARN	`tfsdk:"gsr_schema_arn"`
+}
+
+type channelS3DestinationConfigurationModel struct {
+	DataFreshnessInSeconds	types.Int64	`tfsdk:"data_freshness_in_seconds"`
+	DeadLetterQueueS3Configuration	fwtypes.SetNestedObjectValueOf[deadLetterQueueS3ConfigurationModel]	`tfsdk:"dead_letter_queue_s3_configuration"`
+	StorageConfiguration	fwtypes.SetNestedObjectValueOf[storageConfigurationModel]	`tfsdk:"storage_configuration"`
+}
+
+type deadLetterQueueS3ConfigurationModel struct {
+	BucketARN	fwtypes.ARN	`tfsdk:"bucket_arn"`
+	ExpectedBucketOwner	types.String	`tfsdk:"expected_bucket_owner"`
+	ErrorOutputPrefix	types.String	`tfsdk:"error_output_prefix"`
+}
+
+type storageConfigurationModel struct {
+	BucketARN	fwtypes.ARN	`tfsdk:"bucket_arn"`
+	ExpectedBucketOwner	types.String	`tfsdk:"expected_bucket_owner"`
+	OutputKeyTemplate	types.String	`tfsdk:"output_key_template"`
+	StorageClass	fwtypes.StringEnum[awstypes.S3StorageClass]	`tfsdk:"storage_class"`
+	CompressionType	fwtypes.StringEnum[awstypes.S3CompressionType]	`tfsdk:"compression_type"`
 }
 
 
