@@ -48,7 +48,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config_parameter"), knownvalue.SetPartial([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("auto_mv"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("datestyle"),
@@ -56,11 +56,11 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("enable_case_sensitive_identifier"),
-							"parameter_value": knownvalue.StringExact("false"),
+							"parameter_value": knownvalue.StringExact(acctest.CtFalse),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("enable_user_activity_logging"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("query_group"),
@@ -68,7 +68,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("require_ssl"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("search_path"),
@@ -76,7 +76,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("use_fips_ssl"),
-							"parameter_value": knownvalue.StringExact("false"),
+							"parameter_value": knownvalue.StringExact(acctest.CtFalse),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("max_query_execution_time"),
@@ -358,11 +358,11 @@ func TestAccRedshiftServerlessWorkgroup_configParameters_partial(t *testing.T) {
 						// }),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("enable_case_sensitive_identifier"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("enable_user_activity_logging"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("query_group"),
@@ -414,11 +414,11 @@ func TestAccRedshiftServerlessWorkgroup_configParameters_partial(t *testing.T) {
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("enable_case_sensitive_identifier"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("enable_user_activity_logging"),
-							"parameter_value": knownvalue.StringExact("true"),
+							"parameter_value": knownvalue.StringExact(acctest.CtTrue),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"parameter_key":   knownvalue.StringExact("query_group"),
