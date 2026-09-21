@@ -3,6 +3,13 @@
 
 package directconnect
 
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+)
+
 // Exports for use in tests only.
 var (
 	ResourceBGPPeer                               = resourceBGPPeer
@@ -25,16 +32,19 @@ var (
 	ResourcePublicVirtualInterface                = resourcePublicVirtualInterface
 	ResourceTransitVirtualInterface               = resourceTransitVirtualInterface
 
-	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
-	FindConnectionByID                 = findConnectionByID
-	FindConnectionLAGAssociation       = findConnectionLAGAssociation
-	FindGatewayAssociationByID         = findGatewayAssociationByID
-	FindGatewayAssociationProposalByID = findGatewayAssociationProposalByID
-	FindGatewayByID                    = findGatewayByID
-	FindHostedConnectionByID           = findHostedConnectionByID
-	FindLagByID                        = findLagByID
-	FindMacSecKeyByTwoPartKey          = findMacSecKeyByTwoPartKey
-	FindVirtualInterfaceByID           = findVirtualInterfaceByID
-	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
-	GatewayAssociationStateUpgradeV1   = gatewayAssociationStateUpgradeV1
+	FindBGPPeerByThreePartKey = func(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) (*awstypes.BGPPeer, error) {
+		return findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, int64(asn))
+	}
+	FindBGPPeerByThreePartKeyWithInt64ASN = findBGPPeerByThreePartKey
+	FindConnectionByID                    = findConnectionByID
+	FindConnectionLAGAssociation          = findConnectionLAGAssociation
+	FindGatewayAssociationByID            = findGatewayAssociationByID
+	FindGatewayAssociationProposalByID    = findGatewayAssociationProposalByID
+	FindGatewayByID                       = findGatewayByID
+	FindHostedConnectionByID              = findHostedConnectionByID
+	FindLagByID                           = findLagByID
+	FindMacSecKeyByTwoPartKey             = findMacSecKeyByTwoPartKey
+	FindVirtualInterfaceByID              = findVirtualInterfaceByID
+	GatewayAssociationStateUpgradeV0      = gatewayAssociationStateUpgradeV0
+	GatewayAssociationStateUpgradeV1      = gatewayAssociationStateUpgradeV1
 )

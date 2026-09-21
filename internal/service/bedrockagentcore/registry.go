@@ -44,6 +44,7 @@ import (
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="registry_id")
 // @Testing(preCheck="testAccPreCheckRegistries")
+// @Testing(identityTest=false)
 func newRegistryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &registryResource{}
 
@@ -99,7 +100,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			"registry_id":  framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,

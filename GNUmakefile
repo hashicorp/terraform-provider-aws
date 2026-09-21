@@ -3,6 +3,7 @@ SHELL := /bin/bash
 ACCTEST_PARALLELISM          ?= 20
 ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
+GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
 P                            ?= 20
 PKG_NAME                     ?= internal
@@ -16,6 +17,10 @@ SWEEP_DIR                    ?= ./internal/sweep
 SWEEP_TIMEOUT                ?= 360m
 TEST                         ?= ./...
 TEST_COUNT                   ?= 1
+
+GOTOOLCHAIN_PIN     := $(or $(addprefix go,$(shell sed -n 's/^go //p' go.mod)),auto)
+GOTOOLCHAIN         ?= $(GOTOOLCHAIN_PIN)
+export GOTOOLCHAIN
 
 # NOTE:
 # 1. Keep targets in alphabetical order
@@ -377,19 +382,19 @@ fix-imports-core: ## Fixing core directory imports with goimports
 		fi; \
 	done
 
-fmt: ## Fix Go source formatting
+fmt: prereq-go ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+	"$(GOFMT)" -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-fmt-core: ## Fix Go source formatting in core directories
+fmt-core: prereq-go ## Fix Go source formatting in core directories
 	@echo "make: Fixing core directory source code with gofmt..."
 	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
-	gofmt -s -w $$core_pkgs
+	"$(GOFMT)" -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
-fmt-check: ## Verify Go source is formatted
+fmt-check: prereq-go ## Verify Go source is formatted
 	@echo "make: Verifying source code with gofmt..."
-	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
+	@GOFMT="$(GOFMT)" sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
@@ -908,6 +913,14 @@ smoke-identity: prereq-go ## Run Resource Identity smoke tests
 	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
 	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
 
+SMOKE_LOGGING_LEVELS := DEBUG WARN
+SMOKE_LOGGING_TARGETS := $(addprefix smoke-logging-,$(SMOKE_LOGGING_LEVELS))
+
+smoke-logging: $(SMOKE_LOGGING_TARGETS) ## Run logging smoke tests at all log levels
+
+smoke-logging-%: prereq-go ## Run logging smoke tests at a specific log level (e.g. make smoke-logging-DEBUG)
+	GO_BIN=$(GO_VER) TF_LOG=$* sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-logging.sh'"
+
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
@@ -1377,6 +1390,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke \
 	smoke-core-services \
 	smoke-identity \
+	smoke-logging \
+	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \

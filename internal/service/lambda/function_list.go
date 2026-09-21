@@ -38,14 +38,6 @@ type listResourceFunction struct {
 func (l *listResourceFunction) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().LambdaClient(ctx)
 
-	var query listFunctionModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Lambda Functions")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input lambda.ListFunctionsInput
@@ -97,10 +89,6 @@ func (l *listResourceFunction) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
-}
-
-type listFunctionModel struct {
-	framework.WithRegionModel
 }
 
 func listFunctions(ctx context.Context, conn *lambda.Client, input *lambda.ListFunctionsInput, optFns ...func(*lambda.Options)) iter.Seq2[awstypes.FunctionConfiguration, error] {

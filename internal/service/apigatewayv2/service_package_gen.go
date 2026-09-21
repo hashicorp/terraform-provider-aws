@@ -115,6 +115,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_apigatewayv2_integration",
 			Name:     "Integration",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+				ImportID:     integrationImportID{},
+			},
 		},
 		{
 			Factory:  resourceIntegrationResponse,
@@ -182,6 +190,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newIntegrationResourceAsListResource,
+			TypeName: "aws_apigatewayv2_integration",
+			Name:     "Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+		},
+		{
 			Factory:  newRouteResourceAsListResource,
 			TypeName: "aws_apigatewayv2_route",
 			Name:     "Route",
@@ -200,7 +218,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*apigatewayv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*apigatewayv2.Options){
 		apigatewayv2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

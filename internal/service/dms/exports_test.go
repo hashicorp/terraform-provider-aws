@@ -10,6 +10,7 @@ var (
 	ResourceEndpoint               = resourceEndpoint
 	ResourceEventSubscription      = resourceEventSubscription
 	ResourceInstanceProfile        = newInstanceProfileResource
+	ResourceMigrationProject       = newMigrationProjectResource
 	ResourceReplicationConfig      = resourceReplicationConfig
 	ResourceReplicationInstance    = resourceReplicationInstance
 	ResourceReplicationSubnetGroup = resourceReplicationSubnetGroup
@@ -21,6 +22,7 @@ var (
 	FindEndpointByID               = findEndpointByID
 	FindEventSubscriptionByName    = findEventSubscriptionByName
 	FindInstanceProfileByARN       = findInstanceProfileByARN
+	FindMigrationProjectByARN      = findMigrationProjectByARN
 	FindReplicationConfigByARN     = findReplicationConfigByARN
 	FindReplicationInstanceByID    = findReplicationInstanceByID
 	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID
