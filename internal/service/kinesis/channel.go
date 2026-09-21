@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	flex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -54,9 +55,9 @@ import (
 func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -77,14 +78,17 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"channel_arn": framework.ARNAttributeComputedOnly(),
 			"channel_id":  framework.IDAttribute(),
 			"channel_creation_timestamp": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Description: "The time at which the channel was created.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
 			},
 			"channel_status": schema.StringAttribute{
-				Computed: true,
+				Description: "The current status of the channel.",
+				Computed:    true,
 			},
 			"channel_status_reason": schema.StringAttribute{
-				Computed: true,
+				Description: "A message describing the reason for a FAILED status.",
+				Computed:    true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -121,7 +125,8 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 		},
 		Blocks: map[string]schema.Block{
 			"stream_configuration_list": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[channelSteamConfigurationListModel](ctx),
+				Description: "The source stream configuration for the channel. Currently, one stream is supported per channel.",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelSteamConfigurationListModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
@@ -133,12 +138,14 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"stream_arn": schema.StringAttribute{
-							Required:   true,
-							CustomType: fwtypes.ARNType,
+							Description: "The Amazon Resource Name (ARN) of the source Kinesis data stream.",
+							Required:    true,
+							CustomType:  fwtypes.ARNType,
 						},
 						"stream_creation_timestamp": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
+							Description: "The time at which the source stream was created.",
+							CustomType:  timetypes.RFC3339Type{},
+							Computed:    true,
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -148,7 +155,8 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 
 			"s3_destination_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[channelS3DestinationConfigurationModel](ctx),
+				Description: "The configuration for delivery to a general purpose Amazon S3 bucket. Present only when the channel destination is a general purpose Amazon S3 bucket.",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelS3DestinationConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 					listvalidator.ExactlyOneOf(
@@ -160,9 +168,10 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"data_freshness_in_seconds": schema.Int64Attribute{
-							Optional: true,
-							Default:  int64default.StaticInt64(300),
-							Computed: true,
+							Description: "The maximum age, in seconds, of undelivered data.",
+							Optional:    true,
+							Default:     int64default.StaticInt64(300),
+							Computed:    true,
 							Validators: []validator.Int64{
 								int64validator.AtLeast(300),
 								int64validator.AtMost(900),
@@ -177,7 +186,8 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 
 			"s3_tables_destination_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[channelS3TablesDestinationConfigurationModel](ctx),
+				Description: "The configuration for delivery to streaming tables on Apache Iceberg in Amazon S3 Tables. Present only when the channel destination is a streaming table.",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelS3TablesDestinationConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 					listvalidator.ExactlyOneOf(
@@ -189,9 +199,10 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"data_freshness_in_seconds": schema.Int64Attribute{
-							Optional: true,
-							Default:  int64default.StaticInt64(300),
-							Computed: true,
+							Description: "The maximum age, in seconds, of undelivered data.",
+							Optional:    true,
+							Default:     int64default.StaticInt64(300),
+							Computed:    true,
 							Validators: []validator.Int64{
 								int64validator.AtLeast(300),
 								int64validator.AtMost(900),
@@ -206,7 +217,8 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 
 			"encryption_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[channelEncryptionConfigurationModel](ctx),
+				Description: "The server-side encryption configuration for the channel.",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelEncryptionConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -216,15 +228,17 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"encryption_type": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.EncryptionType](),
-							Required:   true,
+							Description: "The encryption type. The only valid value is KMS.",
+							CustomType:  fwtypes.StringEnumType[awstypes.EncryptionType](),
+							Required:    true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"key_id": schema.StringAttribute{
-							CustomType: types.StringType,
-							Required:   true,
+							Description: "The identifier of the customer managed Amazon Web Services KMS key. You cannot use the Amazon Kinesis Data Streams service key (aws/kinesis).",
+							CustomType:  types.StringType,
+							Required:    true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 								stringvalidator.LengthAtMost(2048),
@@ -238,14 +252,16 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 
 			"logging_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[channelLoggingConfigurationModel](ctx),
+				Description: "The Amazon CloudWatch Logs configuration for the channel.",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelLoggingConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"cloudwatch_logs": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
+							Description: "The Amazon CloudWatch Logs settings for the channel.",
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.IsRequired(),
@@ -253,12 +269,18 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"enabled": schema.BoolAttribute{
-										CustomType: types.BoolType,
-										Required:   true,
+										Description: "Specifies whether logging to Amazon CloudWatch Logs is enabled.",
+										CustomType:  types.BoolType,
+										Required:    true,
 									},
 									"log_group_name": schema.StringAttribute{
-										CustomType: types.StringType,
-										Required:   true,
+										Description: "The name of the Amazon CloudWatch Logs log group. Defaults to /aws/kinesis/{channelName}/{channelId}.",
+										CustomType:  types.StringType,
+										Optional:    true,
+										Computed:    true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(1),
 											stringvalidator.LengthAtMost(512),
@@ -269,8 +291,13 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 										},
 									},
 									"log_stream_name": schema.StringAttribute{
-										CustomType: types.StringType,
-										Required:   true,
+										Description: "The name of the Amazon CloudWatch Logs log stream. Defaults to DestinationDelivery.",
+										CustomType:  types.StringType,
+										Optional:    true,
+										Computed:    true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(1),
 											stringvalidator.LengthAtMost(512),
@@ -298,7 +325,8 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3TablesConfigurationListModel](ctx),
+		Description: "The list of streaming table configurations.",
+		CustomType:  fwtypes.NewListNestedObjectTypeOf[s3TablesConfigurationListModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
 			listvalidator.SizeAtMost(10000),
@@ -310,8 +338,9 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"table_bucket_arn": schema.StringAttribute{
-					CustomType: fwtypes.ARNType,
-					Required:   true,
+					Description: "The Amazon Resource Name (ARN) of the Amazon S3 table bucket.",
+					CustomType:  fwtypes.ARNType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(2048),
@@ -325,8 +354,9 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 					},
 				},
 				"namespace": schema.StringAttribute{
-					CustomType: types.StringType,
-					Required:   true,
+					Description: "The namespace (database) of the destination table.",
+					CustomType:  types.StringType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(255),
@@ -340,8 +370,9 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 					},
 				},
 				"table_name": schema.StringAttribute{
-					CustomType: types.StringType,
-					Required:   true,
+					Description: "The name of the destination table. Amazon Kinesis Data Streams creates this table in the specified table bucket.",
+					CustomType:  types.StringType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(255),
@@ -355,8 +386,9 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 					},
 				},
 				"compression_type": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.S3CompressionType](),
-					Required:   true,
+					Description: "The compression applied to Parquet data files.",
+					CustomType:  fwtypes.StringEnumType[awstypes.S3CompressionType](),
+					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -371,7 +403,8 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 
 func channelPartitionSpecBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[partitionSpecModel](ctx),
+		Description: "The partitioning specification for the destination table.",
+		CustomType:  fwtypes.NewListNestedObjectTypeOf[partitionSpecModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -388,7 +421,8 @@ func channelPartitionSpecBlock(ctx context.Context) schema.ListNestedBlock {
 
 func channelPartitionFieldsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[partitionFieldModel](ctx),
+		Description: "The list of partition fields.",
+		CustomType:  fwtypes.NewListNestedObjectTypeOf[partitionFieldModel](ctx),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(1),
@@ -400,8 +434,9 @@ func channelPartitionFieldsBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"source_name": schema.StringAttribute{
-					CustomType: types.StringType,
-					Required:   true,
+					Description: "The name of the source column used for partitioning. This column must be of the timestamptz type.",
+					CustomType:  types.StringType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
 						stringvalidator.RegexMatches(
@@ -414,8 +449,9 @@ func channelPartitionFieldsBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"transform": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.PartitionTransform](),
-					Required:   true,
+					Description: "The partition transform to apply. The only valid value is TIME_HOUR.",
+					CustomType:  fwtypes.StringEnumType[awstypes.PartitionTransform](),
+					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -427,7 +463,8 @@ func channelPartitionFieldsBlock(ctx context.Context) schema.ListNestedBlock {
 
 func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[storageConfigurationModel](ctx),
+		Description: "The Amazon S3 storage configuration for the channel.",
+		CustomType:  fwtypes.NewListNestedObjectTypeOf[storageConfigurationModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 			listvalidator.IsRequired(),
@@ -438,8 +475,9 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"bucket_arn": schema.StringAttribute{
-					CustomType: fwtypes.ARNType,
-					Required:   true,
+					Description: "The Amazon Resource Name (ARN) of the destination Amazon S3 bucket.",
+					CustomType:  fwtypes.ARNType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(2048),
@@ -453,8 +491,9 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 					},
 				},
 				"expected_bucket_owner": schema.StringAttribute{
-					CustomType: types.StringType,
-					Required:   true,
+					Description: "The Amazon Web Services account ID of the expected owner of the destination bucket. This value helps prevent delivery to an unintended bucket if ownership changes.",
+					CustomType:  types.StringType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(12),
 						stringvalidator.LengthAtMost(12),
@@ -468,8 +507,9 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 					},
 				},
 				"output_key_template": schema.StringAttribute{
-					CustomType: types.StringType,
-					Optional:   true,
+					Description: "The template used to construct the Amazon S3 object key for delivered objects. If not specified, a default template is used.",
+					CustomType:  types.StringType,
+					Optional:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(1024),
@@ -483,17 +523,19 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 					},
 				},
 				"storage_class": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.S3StorageClass](),
-					Optional:   true,
-					Computed:   true,
-					Default:    fwtypes.StringEnumType[awstypes.S3StorageClass]().AttributeDefault(awstypes.S3StorageClassStandard),
+					Description: "The Amazon S3 storage class for delivered objects. Defaults to STANDARD.",
+					CustomType:  fwtypes.StringEnumType[awstypes.S3StorageClass](),
+					Optional:    true,
+					Computed:    true,
+					Default:     fwtypes.StringEnumType[awstypes.S3StorageClass]().AttributeDefault(awstypes.S3StorageClassStandard),
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"compression_type": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.S3CompressionType](),
-					Required:   true,
+					Description: "The compression applied to delivered objects.",
+					CustomType:  fwtypes.StringEnumType[awstypes.S3CompressionType](),
+					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -511,16 +553,18 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context, required bo
 		validators = append(validators, listvalidator.IsRequired(), listvalidator.SizeAtLeast(1))
 	}
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[deadLetterQueueS3ConfigurationModel](ctx),
-		Validators: validators,
+		Description: "The dead-letter queue configuration for records that cannot be delivered.",
+		CustomType:  fwtypes.NewListNestedObjectTypeOf[deadLetterQueueS3ConfigurationModel](ctx),
+		Validators:  validators,
 		PlanModifiers: []planmodifier.List{
 			listplanmodifier.RequiresReplace(),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"bucket_arn": schema.StringAttribute{
-					CustomType: fwtypes.ARNType,
-					Required:   true,
+					Description: "The Amazon Resource Name (ARN) of the dead-letter queue Amazon S3 bucket.",
+					CustomType:  fwtypes.ARNType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(2048),
@@ -534,8 +578,9 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context, required bo
 					},
 				},
 				"expected_bucket_owner": schema.StringAttribute{
-					CustomType: types.StringType,
-					Required:   true,
+					Description: "The Amazon Web Services account ID of the expected owner of the dead-letter queue bucket.",
+					CustomType:  types.StringType,
+					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(12),
 						stringvalidator.LengthAtMost(12),
@@ -549,8 +594,9 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context, required bo
 					},
 				},
 				"error_output_prefix": schema.StringAttribute{
-					CustomType: types.StringType,
-					Optional:   true,
+					Description: "The Amazon S3 key prefix for error records.",
+					CustomType:  types.StringType,
+					Optional:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(512),
@@ -570,7 +616,8 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context, required bo
 
 func channelRecordConfigurationBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[recordConfigurationModel](ctx),
+		Description: "The record format configuration for the source stream.",
+		CustomType:  fwtypes.NewListNestedObjectTypeOf[recordConfigurationModel](ctx),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(1),
@@ -582,15 +629,41 @@ func channelRecordConfigurationBlock(ctx context.Context) schema.ListNestedBlock
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"record_format_type": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.RecordFormatType](),
-					Required:   true,
+					Description: "The format of records on the source stream. Valid values are GSR_JSON, JSON, STRING, or BYTE_ARRAY. Note that GSR_JSON is supported only for S3 Tables destinations, while STRING and BYTE_ARRAY are supported only for general-purpose S3 destinations.",
+					CustomType:  fwtypes.StringEnumType[awstypes.RecordFormatType](),
+					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
+					Validators: []validator.String{
+						// GSR_JSON cannot be used with regular S3 destinations
+						tfstringvalidator.ConflictsWithWhenEquals(
+							awstypes.RecordFormatTypeGsrJson,
+							path.MatchRoot("s3_destination_configuration"),
+						),
+						// STRING cannot be used with S3 Tables, and cannot have a Glue Schema Registry ARN
+						tfstringvalidator.ConflictsWithWhenEquals(
+							awstypes.RecordFormatTypeString,
+							path.MatchRoot("s3_tables_destination_configuration"),
+							path.MatchRelative().AtParent().AtName("gsr_schema_arn"),
+						),
+						// BYTE_ARRAY cannot be used with S3 Tables, and cannot have a Glue Schema Registry ARN
+						tfstringvalidator.ConflictsWithWhenEquals(
+							awstypes.RecordFormatTypeByteArray,
+							path.MatchRoot("s3_tables_destination_configuration"),
+							path.MatchRelative().AtParent().AtName("gsr_schema_arn"),
+						),
+						// GSR_JSON always requires gsr_schema_arn
+						tfstringvalidator.AlsoRequiresWhenEquals(
+							awstypes.RecordFormatTypeGsrJson,
+							path.MatchRelative().AtParent().AtName("gsr_schema_arn"),
+						),
+					},
 				},
 				"gsr_schema_arn": schema.StringAttribute{
-					CustomType: fwtypes.ARNType,
-					Required:   true,
+					Description: "The Amazon Resource Name (ARN) of the Amazon Web Services Glue Schema Registry schema used to validate records. Required when the channel destination is a streaming table (Amazon S3 Tables), for both the JSON and GSR_JSON record formats.",
+					CustomType:  fwtypes.ARNType,
+					Optional:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(512),
