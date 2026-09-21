@@ -133,6 +133,7 @@ func TestZoneRecordCacheEvict(t *testing.T) {
 	zoneID := "Z_evict_test"
 	key := zoneID + "_www.example.com_A"
 	cache := &zoneRecordCache{
+		loaded:  true,
 		records: make(map[string]awstypes.ResourceRecordSet),
 	}
 	cache.put(key, awstypes.ResourceRecordSet{
@@ -140,7 +141,9 @@ func TestZoneRecordCacheEvict(t *testing.T) {
 		Type: awstypes.RRTypeA,
 	})
 
-	cache.evict(key)
+	recordCacheZones.LoadOrStore(zoneID, cache)
+
+	evictFromZoneRecordCache(zoneID, key)
 
 	if _, ok := cache.get(key); ok {
 		t.Fatal("expected cache miss after eviction")

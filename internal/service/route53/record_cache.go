@@ -5,7 +5,6 @@ package route53
 
 import (
 	"context"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -134,17 +133,15 @@ func readFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, 
 	return &rrs, nil
 }
 
-// evictFromZoneRecordCache removes a record in the zone cache.
+// evictFromZoneRecordCache removes a record from the zone cache.
 //
-// A failure to load the zone cache results in a no-op.
-func evictFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, key string) {
-	cache, err := getOrLoadZoneRecordCache(ctx, conn, zoneID)
-	if err != nil {
-		log.Printf("[WARN] loading Route 53 Hosted Zone (%s) record cache, not evicting %s: %s", zoneID, key, err)
-		return
+// An uncached zone is a no-op: any later scan starts after this write and
+// already reflects it. Otherwise evict blocks on the zone mutex until an
+// in-flight scan completes.
+func evictFromZoneRecordCache(zoneID, key string) {
+	if c, ok := recordCacheZones.Load(zoneID); ok {
+		c.evict(key)
 	}
-
-	cache.evict(key)
 }
 
 // recordCacheKey returns the cache map key for a record within a zone.
