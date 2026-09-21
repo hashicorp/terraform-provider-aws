@@ -4582,6 +4582,12 @@ resource "aws_emr_cluster" "test" {
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,
   ]
+
+  lifecycle {
+    # emr-spark-8.0.0 is AL2023-based; AWS auto-assigns os_release_label even
+    # when unset, which otherwise forces replacement on every subsequent plan.
+    ignore_changes = [os_release_label]
+  }
 }
 `, rName, sessionEnabled))
 }
