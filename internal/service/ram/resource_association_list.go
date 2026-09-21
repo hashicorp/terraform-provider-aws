@@ -51,7 +51,7 @@ func (l *resourceAssociationListResource) List(ctx context.Context, request list
 			resourceShareARN := aws.ToString(item.ResourceShareArn)
 			resourceARN := aws.ToString(item.AssociatedEntity)
 
-			if resourceShareARN == "" || resourceARN == "" {
+			if item.Status == awstypes.ResourceShareAssociationStatusDisassociated || resourceShareARN == "" || resourceARN == "" {
 				continue
 			}
 
