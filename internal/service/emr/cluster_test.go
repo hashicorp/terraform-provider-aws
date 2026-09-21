@@ -4562,7 +4562,7 @@ resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
-  release_label                     = "emr-8.0.0"
+  release_label                     = "emr-spark-8.0.0"
   service_role                      = aws_iam_role.emr_service.arn
   session_enabled                   = %[2]s
 
