@@ -475,7 +475,7 @@ The `memory` block supports one of the following:
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `arn` - (Required) ARN of the AgentCore memory resource.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
-* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`memory.agentcore_memory_configuration.retrieval_config` Block](#memoryagentcore_memory_configurationretrieval_config-block) below.
+* `retrieval_config` - (Optional, Computed) Retrieval configuration parameters. See [`memory.agentcore_memory_configuration.retrieval_config` Block](#memoryagentcore_memory_configurationretrieval_config-block) below.
 
 ### `memory.agentcore_memory_configuration.retrieval_config` Block
 
