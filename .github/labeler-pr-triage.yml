@@ -364,6 +364,12 @@ service/bedrockagentcore:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagentcore/**/*'
               - 'website/**/bedrockagentcore_*'
+service/bedrockruntime:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockruntime/**/*'
+              - 'website/**/bedrockruntime_*'
 service/billing:
   - any:
       - changed-files:

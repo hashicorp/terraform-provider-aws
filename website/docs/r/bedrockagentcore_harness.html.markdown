@@ -147,9 +147,10 @@ resource "aws_bedrockagentcore_harness" "example" {
 
 The following arguments are required:
 
-* `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, alphanumeric and underscores only.
 * `execution_role_arn` - (Required) ARN of the IAM role that the harness assumes to access AWS services.
+* `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, alphanumeric and underscores only.
 * `model` - (Required) Model configuration for the harness. See [`model` Block](#model-block) below.
+* `system_prompt` - (Required) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
 
 The following arguments are optional:
 
@@ -163,7 +164,6 @@ The following arguments are optional:
 * `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill` Block](#skill-block) below.
-* `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout_seconds` - (Optional) Timeout in seconds for the harness execution.
 * `tool` - (Optional) Tool configurations. See [`tool` Block](#tool-block) below.
@@ -174,32 +174,48 @@ The following arguments are optional:
 The `model` block supports exactly one of the following:
 
 * `bedrock_model_config` - (Optional) Amazon Bedrock model configuration. See [`bedrock_model_config` Block](#bedrock_model_config-block) below.
-* `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config` Block](#openai_model_config-block) below.
 * `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config` Block](#gemini_model_config-block) below.
+* `litellm_model_config` - (Optional) LiteLLM model configuration. See [`litellm_model_config` Block](#litellm_model_config-block) below.
+* `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config` Block](#openai_model_config-block) below.
 
 ### `bedrock_model_config` Block
 
-* `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the Bedrock model provider unchanged.
+* `api_format` - (Optional) API format for the model. Valid values are `converse_stream`, `responses`, and `chat_completions`.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
 * `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p (nucleus) sampling parameter. Must be between 0 and 1.
 
-### `openai_model_config` Block
-
-* `model_id` - (Required) OpenAI model ID.
-* `api_key_arn` - (Required) ARN of the secret containing the API key.
-* `max_tokens` - (Optional) Maximum number of tokens to generate.
-* `temperature` - (Optional) Temperature for sampling.
-* `top_p` - (Optional) Top-p sampling parameter.
-
 ### `gemini_model_config` Block
 
-* `model_id` - (Required) Gemini model ID.
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the Gemini model provider unchanged.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `model_id` - (Required) Gemini model ID.
+* `temperature` - (Optional) Temperature for sampling.
+* `top_k` - (Optional) Top-k sampling parameter.
+* `top_p` - (Optional) Top-p sampling parameter.
+
+### `litellm_model_config` Block
+
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the LiteLLM model provider unchanged.
+* `api_base` - (Optional) Base URL of the LiteLLM-compatible API endpoint.
+* `api_key_arn` - (Optional) ARN of the secret containing the API key.
+* `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `model_id` - (Required) LiteLLM model ID.
+* `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
+* `top_p` - (Optional) Top-p sampling parameter. Must be between 0 and 1.
+
+### `openai_model_config` Block
+
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the OpenAI model provider unchanged.
+* `api_format` - (Optional) API format for the model. Valid values are `responses` and `chat_completions`.
+* `api_key_arn` - (Required) ARN of the secret containing the API key.
+* `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `model_id` - (Required) OpenAI model ID.
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
-* `top_k` - (Optional) Top-k sampling parameter.
 
 ### `system_prompt` Block
 
@@ -207,24 +223,24 @@ The `model` block supports exactly one of the following:
 
 ### `tool` Block
 
-* `type` - (Required) Type of tool. Valid values: `remote_mcp`, `agentcore_browser`, `agentcore_gateway`, `inline_function`, `agentcore_code_interpreter`.
+* `config` - (Optional) Tool-specific configuration. See [`tool.config` Block](#toolconfig-block) below.
 * `name` - (Optional) Name of the tool.
-* `config` - (Optional) Tool-specific configuration. See [`tool config`](#tool-config) below.
+* `type` - (Required) Type of tool. Valid values: `remote_mcp`, `agentcore_browser`, `agentcore_gateway`, `inline_function`, `agentcore_code_interpreter`.
 
-### Tool Config
+### `tool.config` Block
 
 The `config` block supports exactly one of the following:
 
-* `remote_mcp` - (Optional) Remote MCP server configuration. See [`remote_mcp` Block](#remote_mcp-block) below.
 * `agentcore_browser` - (Optional) AgentCore browser configuration. See [`agentcore_browser` Block](#agentcore_browser-block) below.
+* `agentcore_code_interpreter` - (Optional) AgentCore code interpreter configuration. See [`agentcore_code_interpreter` Block](#agentcore_code_interpreter-block) below.
 * `agentcore_gateway` - (Optional) AgentCore gateway configuration. See [`agentcore_gateway` Block](#agentcore_gateway-block) below.
 * `inline_function` - (Optional) Inline function configuration. See [`inline_function` Block](#inline_function-block) below.
-* `agentcore_code_interpreter` - (Optional) AgentCore code interpreter configuration. See [`agentcore_code_interpreter` Block](#agentcore_code_interpreter-block) below.
+* `remote_mcp` - (Optional) Remote MCP server configuration. See [`remote_mcp` Block](#remote_mcp-block) below.
 
 ### `remote_mcp` Block
 
-* `url` - (Required, Sensitive) URL of the remote MCP server.
 * `headers` - (Optional, Sensitive) Map of HTTP headers to include in requests to the MCP server.
+* `url` - (Required, Sensitive) URL of the remote MCP server.
 
 ### `agentcore_browser` Block
 
@@ -237,7 +253,7 @@ The `config` block supports exactly one of the following:
 
 ### `outbound_auth` Block
 
-Exactly one of the following must be specified:
+The `outbound_auth` block supports exactly one of the following:
 
 * `aws_iam` - (Optional) Set to `true` to use AWS IAM authentication.
 * `none` - (Optional) Set to `true` to disable authentication.
@@ -245,11 +261,11 @@ Exactly one of the following must be specified:
 
 ### `oauth` Block
 
+* `custom_parameters` - (Optional) Map of custom parameters.
+* `default_return_url` - (Optional) Default return URL for OAuth flow.
+* `grant_type` - (Optional) OAuth grant type.
 * `provider_arn` - (Required) ARN of the OAuth credential provider.
 * `scopes` - (Required) List of OAuth scopes.
-* `custom_parameters` - (Optional) Map of custom parameters.
-* `grant_type` - (Optional) OAuth grant type.
-* `default_return_url` - (Optional) Default return URL for OAuth flow.
 
 ### `agentcore_code_interpreter` Block
 
@@ -262,14 +278,38 @@ Exactly one of the following must be specified:
 
 ### `skill` Block
 
-* `path` - (Required) Path to the skill.
+The `skill` block supports exactly one of the following:
+
+* `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills` Block](#aws_skills-block) below.
+* `git` - (Optional) Git repository source for the skill. See [`git` Block](#git-block) below.
+* `path` - (Optional) Path to the skill.
+* `s3` - (Optional) S3 source for the skill. See [`s3` Block](#s3-block) below.
+
+### `aws_skills` Block
+
+* `paths` - (Optional) List of glob patterns to filter allowed skills (e.g., `["core-skills/*"]`).
+
+### `git` Block
+
+* `auth` - (Optional) Authentication configuration for private repositories. See [`auth` Block](#auth-block) below.
+* `path` - (Optional) Subdirectory within the repository containing the skill.
+* `url` - (Required) HTTPS URL of the git repository.
+
+### `auth` Block
+
+* `credential_arn` - (Required) ARN of the credential in AgentCore Identity containing the password or personal access token.
+* `username` - (Optional) Username for authentication. Defaults to `oauth2` if not specified.
+
+### `s3` Block
+
+* `uri` - (Required) S3 URI of the skill source. Must begin with `s3://`.
 
 ### `truncation` Block
 
+* `config` - (Optional) Strategy-specific configuration. See [`truncation.config` Block](#truncationconfig-block) below.
 * `strategy` - (Required) Truncation strategy. Valid values: `sliding_window`, `summarization`, `none`.
-* `config` - (Optional) Strategy-specific configuration. See [`truncation config`](#truncation-config) below.
 
-### Truncation Config
+### `truncation.config` Block
 
 The `config` block supports exactly one of the following:
 
@@ -282,69 +322,62 @@ The `config` block supports exactly one of the following:
 
 ### `summarization` Block
 
-* `summary_ratio` - (Optional) Ratio of the conversation to summarize (0 to 1).
 * `preserve_recent_messages` - (Optional) Number of recent messages to preserve without summarization.
 * `summarization_system_prompt` - (Optional) Custom system prompt for the summarization model.
+* `summary_ratio` - (Optional) Ratio of the conversation to summarize (0 to 1).
 
 ### `environment` Block
 
-* `agentcore_runtime_environment` - (Required) AgentCore runtime environment configuration. See [`agentcore_runtime_environment` Block](#agentcore_runtime_environment-block) below.
+* `agentcore_runtime_environment` - (Required) AgentCore runtime environment configuration. See [`environment.agentcore_runtime_environment` Block](#environmentagentcore_runtime_environment-block) below.
 
-### `agentcore_runtime_environment` Block
+### `environment.agentcore_runtime_environment` Block
 
-* `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`lifecycle_configuration` Block](#lifecycle_configuration-block) below.
-* `network_configuration` - (Optional) Network configuration. See [`network_configuration` Block](#network_configuration-block) below.
-* `filesystem_configuration` - (Optional) Filesystem configurations. See [`filesystem_configuration` Block](#filesystem_configuration-block) below.
+* `filesystem_configuration` - (Optional) Filesystem configurations. See [`environment.agentcore_runtime_environment.filesystem_configuration` Block](#environmentagentcore_runtime_environmentfilesystem_configuration-block) below.
+* `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`environment.agentcore_runtime_environment.lifecycle_configuration` Block](#environmentagentcore_runtime_environmentlifecycle_configuration-block) below.
+* `network_configuration` - (Optional) Network configuration. See [`environment.agentcore_runtime_environment.network_configuration` Block](#environmentagentcore_runtime_environmentnetwork_configuration-block) below.
 
-The following attributes are exported under `agentcore_runtime_environment`:
-
-* `agent_runtime_arn` - ARN of the agent runtime the service provisions for the harness.
-* `agent_runtime_id` - ID of the agent runtime the service provisions for the harness.
-* `agent_runtime_name` - Name of the agent runtime the service derives for the harness.
-
-### `lifecycle_configuration` Block
-
-* `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle sessions.
-* `max_lifetime` - (Optional) Maximum lifetime of the instance in seconds.
-
-### `network_configuration` Block
-
-* `network_mode` - (Required) Network mode. Valid values: `PUBLIC`, `VPC`.
-* `network_mode_config` - (Optional) VPC configuration. See [`network_mode_config` Block](#network_mode_config-block) below.
-
-### `network_mode_config` Block
-
-* `security_groups` - (Required) Security groups for the VPC.
-* `subnets` - (Required) Subnets for the VPC.
-* `require_service_s3_endpoint` - (Optional) Whether to require an S3 endpoint for the service in the VPC.
-
-### `filesystem_configuration` Block
+### `environment.agentcore_runtime_environment.filesystem_configuration` Block
 
 Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
 
-* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage` Block](#session_storage-block) below.
-* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point` Block](#s3_files_access_point-block) below.
-* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point` Block](#efs_access_point-block) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block](#environmentagentcore_runtime_environmentfilesystem_configurationefs_access_point-block) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block](#environmentagentcore_runtime_environmentfilesystem_configurations3_files_access_point-block) below.
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.session_storage` Block](#environmentagentcore_runtime_environmentfilesystem_configurationsession_storage-block) below.
 
-### `session_storage` Block
+### `environment.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block
 
-The `session_storage` block supports the following:
+The `efs_access_point` block supports the following:
 
-* `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+* `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
+* `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `s3_files_access_point` Block
+### `environment.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block
 
 The `s3_files_access_point` block supports the following:
 
 * `access_point_arn` - (Required) ARN of the Amazon S3 Files access point to mount into the agent runtime.
 * `mount_path` - (Required) Mount path for the S3 Files access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
-### `efs_access_point` Block
+### `environment.agentcore_runtime_environment.filesystem_configuration.session_storage` Block
 
-The `efs_access_point` block supports the following:
+The `session_storage` block supports the following:
 
-* `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
-* `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+* `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `environment.agentcore_runtime_environment.lifecycle_configuration` Block
+
+* `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle sessions.
+* `max_lifetime` - (Optional) Maximum lifetime of the instance in seconds.
+
+### `environment.agentcore_runtime_environment.network_configuration` Block
+
+* `network_mode` - (Required) Network mode. Valid values: `PUBLIC`, `VPC`.
+* `network_mode_config` - (Optional) VPC configuration. See [`environment.agentcore_runtime_environment.network_configuration.network_mode_config` Block](#environmentagentcore_runtime_environmentnetwork_configurationnetwork_mode_config-block) below.
+
+### `environment.agentcore_runtime_environment.network_configuration.network_mode_config` Block
+
+* `security_groups` - (Required) Security groups for the VPC.
+* `subnets` - (Required) Subnets for the VPC.
 
 ### `environment_artifact` Block
 
@@ -364,12 +397,12 @@ The `authorizer_configuration` block supports the following:
 
 The `custom_jwt_authorizer` block supports the following:
 
-* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration` Block](#allowed_workload_configuration-block) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim` Block](#custom_claim-block) below.
+* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint` Block](#private_endpoint-block) below.
 * `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides` Block](#private_endpoint_overrides-block) below.
 
@@ -397,11 +430,11 @@ Exactly one of the following must be specified:
 ### `managed_vpc_resource` Block
 
 * `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
-* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
-* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 * `routing_domain` - (Optional) Routing domain for the endpoint.
 * `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
 * `tags` - (Optional) Tags to assign to the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 
 ### `self_managed_lattice_resource` Block
 
@@ -433,18 +466,18 @@ The `claim_match_value` block supports the following:
 
 The `memory` block supports one of the following:
 
-* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. Use this to connect to an existing AgentCore memory resource. See [`agentcore_memory_configuration` Block](#agentcore_memory_configuration-block) below.
-* `disabled` - (Optional) Explicitly disable memory for this harness. See [`disabled` Block](#disabled-block) below.
-* `managed_memory_configuration` - (Optional) Managed memory configuration. Creates and manages a memory resource automatically. See [`managed_memory_configuration` Block](#managed_memory_configuration-block) below.
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. Use this to connect to an existing AgentCore memory resource. See [`memory.agentcore_memory_configuration` Block](#memoryagentcore_memory_configuration-block) below.
+* `disabled` - (Optional) Explicitly disable memory for this harness. See [`memory.disabled` Block](#memorydisabled-block) below.
+* `managed_memory_configuration` - (Optional) Managed memory configuration. Creates and manages a memory resource automatically. See [`memory.managed_memory_configuration` Block](#memorymanaged_memory_configuration-block) below.
 
-### `agentcore_memory_configuration` Block
+### `memory.agentcore_memory_configuration` Block
 
-* `arn` - (Required) ARN of the AgentCore memory resource.
 * `actor_id` - (Optional) Actor ID for memory sessions.
+* `arn` - (Required) ARN of the AgentCore memory resource.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
-* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config` Block](#retrieval_config-block) below.
+* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`memory.agentcore_memory_configuration.retrieval_config` Block](#memoryagentcore_memory_configurationretrieval_config-block) below.
 
-### `retrieval_config` Block
+### `memory.agentcore_memory_configuration.retrieval_config` Block
 
 `retrieval_config` supports the following:
 
@@ -453,29 +486,151 @@ The `memory` block supports one of the following:
 * `strategy_id` - (Optional) ID of the memory strategy.
 * `top_k` - (Optional) Number of top results to retrieve.
 
-### `disabled` Block
+### `memory.disabled` Block
 
 The `disabled` block takes no arguments. Use this to explicitly opt out of memory for the harness.
 
-### `managed_memory_configuration` Block
+### `memory.managed_memory_configuration` Block
 
 * `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key used to encrypt the memory. Defaults to an AWS-owned key. Cannot be changed after creation.
 * `event_expiry_duration` - (Optional, Computed) Event retention in days. Defaults to `30`.
 * `strategies` - (Optional, Computed) Set of strategy types to enable. Valid values are `SEMANTIC`, `SUMMARIZATION`, and `USER_PREFERENCE`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
-
-In addition, the following attribute is exported:
-
-* `arn` - ARN of the managed memory resource.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Harness.
-* `environment_actual` - Actual deployed environment configuration.
+* `environment_actual` - Actual deployed environment configuration. See [`environment_actual` Block](#environment_actual-block) below.
 * `harness_id` - Unique identifier of the Harness.
-* `memory_actual` - Actual deployed memory configuration.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `memory_actual` - Actual deployed memory configuration. See [`memory_actual` Block](#memory_actual-block) below.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `environment.agentcore_runtime_environment` Block
+
+The `environment.agentcore_runtime_environment` block exports the following attributes in addition to the arguments above:
+
+* `agent_runtime_arn` - ARN of the agent runtime the service provisions for the harness.
+* `agent_runtime_id` - ID of the agent runtime the service provisions for the harness.
+* `agent_runtime_name` - Name of the agent runtime the service derives for the harness.
+
+### `environment.agentcore_runtime_environment.network_configuration.network_mode_config` Block
+
+The `environment.agentcore_runtime_environment.network_configuration.network_mode_config` block exports the following attributes in addition to the arguments above:
+
+* `require_service_s3_endpoint` - Whether an S3 endpoint is required for the service in the VPC.
+
+### `memory.managed_memory_configuration` Block
+
+The `memory.managed_memory_configuration` block exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the managed memory resource.
+
+### `environment_actual` Block
+
+The `environment_actual` block exports the following attributes:
+
+* `agentcore_runtime_environment` - AgentCore runtime environment configuration. See [`environment_actual.agentcore_runtime_environment` Block](#environment_actualagentcore_runtime_environment-block) below.
+
+### `environment_actual.agentcore_runtime_environment` Block
+
+The `environment_actual.agentcore_runtime_environment` block exports the following attributes:
+
+* `agent_runtime_arn` - ARN of the agent runtime the service provisions for the harness.
+* `agent_runtime_id` - ID of the agent runtime the service provisions for the harness.
+* `agent_runtime_name` - Name of the agent runtime the service derives for the harness.
+* `filesystem_configuration` - Filesystem configurations. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration` Block](#environment_actualagentcore_runtime_environmentfilesystem_configuration-block) below.
+* `lifecycle_configuration` - Lifecycle configuration. See [`environment_actual.agentcore_runtime_environment.lifecycle_configuration` Block](#environment_actualagentcore_runtime_environmentlifecycle_configuration-block) below.
+* `network_configuration` - Network configuration. See [`environment_actual.agentcore_runtime_environment.network_configuration` Block](#environment_actualagentcore_runtime_environmentnetwork_configuration-block) below.
+
+### `environment_actual.agentcore_runtime_environment.filesystem_configuration` Block
+
+The `environment_actual.agentcore_runtime_environment.filesystem_configuration` block exports the following attributes:
+
+* `efs_access_point` - Amazon EFS access point mounted as shared file storage. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurationefs_access_point-block) below.
+* `s3_files_access_point` - Amazon S3 Files access point mounted as shared file storage. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurations3_files_access_point-block) below.
+* `session_storage` - Session storage filesystem. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.session_storage` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurationsession_storage-block) below.
+
+### `environment_actual.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block
+
+The `environment_actual.agentcore_runtime_environment.filesystem_configuration.efs_access_point` block exports the following attributes:
+
+* `access_point_arn` - ARN of the Amazon EFS access point mounted into the agent runtime.
+* `mount_path` - Mount path for the EFS access point inside the agent runtime.
+
+### `environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block
+
+The `environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` block exports the following attributes:
+
+* `access_point_arn` - ARN of the Amazon S3 Files access point mounted into the agent runtime.
+* `mount_path` - Mount path for the S3 Files access point inside the agent runtime.
+
+### `environment_actual.agentcore_runtime_environment.filesystem_configuration.session_storage` Block
+
+The `environment_actual.agentcore_runtime_environment.filesystem_configuration.session_storage` block exports the following attributes:
+
+* `mount_path` - Mount path for the session storage filesystem inside the agent runtime.
+
+### `environment_actual.agentcore_runtime_environment.lifecycle_configuration` Block
+
+The `environment_actual.agentcore_runtime_environment.lifecycle_configuration` block exports the following attributes:
+
+* `idle_runtime_session_timeout` - Timeout in seconds for idle sessions.
+* `max_lifetime` - Maximum lifetime of the instance in seconds.
+
+### `environment_actual.agentcore_runtime_environment.network_configuration` Block
+
+The `environment_actual.agentcore_runtime_environment.network_configuration` block exports the following attributes:
+
+* `network_mode` - Network mode.
+* `network_mode_config` - VPC configuration. See [`environment_actual.agentcore_runtime_environment.network_configuration.network_mode_config` Block](#environment_actualagentcore_runtime_environmentnetwork_configurationnetwork_mode_config-block) below.
+
+### `environment_actual.agentcore_runtime_environment.network_configuration.network_mode_config` Block
+
+The `environment_actual.agentcore_runtime_environment.network_configuration.network_mode_config` block exports the following attributes:
+
+* `require_service_s3_endpoint` - Whether an S3 endpoint is required for the service in the VPC.
+* `security_groups` - Security groups for the VPC.
+* `subnets` - Subnets for the VPC.
+
+### `memory_actual` Block
+
+The `memory_actual` block exports the following attributes:
+
+* `agentcore_memory_configuration` - AgentCore memory configuration. See [`memory_actual.agentcore_memory_configuration` Block](#memory_actualagentcore_memory_configuration-block) below.
+* `disabled` - Present when memory is explicitly disabled. See [`memory_actual.disabled` Block](#memory_actualdisabled-block) below.
+* `managed_memory_configuration` - Managed memory configuration. See [`memory_actual.managed_memory_configuration` Block](#memory_actualmanaged_memory_configuration-block) below.
+
+### `memory_actual.agentcore_memory_configuration` Block
+
+The `memory_actual.agentcore_memory_configuration` block exports the following attributes:
+
+* `actor_id` - Actor ID for memory sessions.
+* `arn` - ARN of the AgentCore memory resource.
+* `messages_count` - Number of messages to retrieve from memory.
+* `retrieval_config` - Retrieval configuration parameters. See [`memory_actual.agentcore_memory_configuration.retrieval_config` Block](#memory_actualagentcore_memory_configurationretrieval_config-block) below.
+
+### `memory_actual.agentcore_memory_configuration.retrieval_config` Block
+
+The `memory_actual.agentcore_memory_configuration.retrieval_config` block exports the following attributes:
+
+* `map_block_key` - Namespace path template for retrieval settings.
+* `relevance_score` - Relevance score threshold.
+* `strategy_id` - ID of the memory strategy.
+* `top_k` - Number of top results to retrieve.
+
+### `memory_actual.disabled` Block
+
+The `memory_actual.disabled` block has no attributes. It is present when memory is explicitly disabled for the harness.
+
+### `memory_actual.managed_memory_configuration` Block
+
+The `memory_actual.managed_memory_configuration` block exports the following attributes:
+
+* `arn` - ARN of the managed memory resource.
+* `encryption_key_arn` - ARN of the customer-managed KMS key used to encrypt the memory.
+* `event_expiry_duration` - Event retention in days.
+* `strategies` - Set of strategy types enabled.
 
 ## Timeouts
 

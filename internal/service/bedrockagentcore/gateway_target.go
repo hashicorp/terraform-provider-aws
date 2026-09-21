@@ -83,16 +83,6 @@ type gatewayTargetResource struct {
 	framework.WithImportByIdentity
 }
 
-func jsonAttribute(conflictWith string) schema.StringAttribute {
-	return schema.StringAttribute{
-		Optional:      true,
-		PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-		Validators: []validator.String{
-			stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName(conflictWith)),
-		},
-	}
-}
-
 // headerNameValidators returns validators for HTTP header names in metadata_configuration.
 // Header names must contain only alphanumeric characters, hyphens, and underscores.
 // Certain restricted headers cannot be configured for propagation.
@@ -238,124 +228,291 @@ func restrictedHeaders() []string {
 	}
 }
 
-func createLeafItemsBlock[T any](ctx context.Context) schema.ListNestedBlock {
+func apiSchemaConfigurationBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
-		Validators: []validator.List{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[apiSchemaConfigurationModel](ctx),
+		Validators: append([]validator.List{
 			listvalidator.SizeAtMost(1),
-			listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("property")),
-		},
+		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				names.AttrDescription: schema.StringAttribute{Optional: true},
-				names.AttrType: schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
-				},
-				"items_json":      jsonAttribute("properties_json"),
-				"properties_json": jsonAttribute("items_json"),
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("inline_payload"),
+					path.MatchRelative().AtName("s3"),
+				),
+			},
+			Blocks: map[string]schema.Block{
+				"inline_payload": inlinePayloadBlock(ctx),
+				"s3":             s3ConfigurationBlock(ctx, false),
 			},
 		},
 	}
 }
 
-func createLeafPropertyBlock[T any](ctx context.Context) schema.SetNestedBlock {
-	return schema.SetNestedBlock{
-		CustomType: fwtypes.NewSetNestedObjectTypeOf[T](ctx),
-		Validators: []validator.Set{
-			setvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("items")),
+func inlinePayloadBlock(ctx context.Context, validators ...validator.String) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrName:        schema.StringAttribute{Required: true},
-				names.AttrDescription: schema.StringAttribute{Optional: true},
+				"payload": schema.StringAttribute{
+					Required:   true,
+					Validators: validators,
+				},
+			},
+		},
+	}
+}
+
+func s3ConfigurationBlock(ctx context.Context, uriRequired bool) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"bucket_owner_account_id": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						fwvalidators.AWSAccountID(),
+					},
+				},
+				names.AttrURI: schema.StringAttribute{
+					Optional: !uriRequired,
+					Required: uriRequired,
+					Validators: []validator.String{
+						fwvalidators.S3URI(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func httpAPISchemaConfigurationBlock(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[httpAPISchemaConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				names.AttrSource: apiSchemaConfigurationBlock(ctx, listvalidator.IsRequired(), listvalidator.SizeAtLeast(1)),
+			},
+		},
+	}
+}
+
+func schemaDefinitionBlock(ctx context.Context, validators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[schemaDefinitionModel](ctx),
+		Validators: validators,
+		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.AtMostOneOfChildren(
+					path.MatchRelative().AtName("items"),
+					path.MatchRelative().AtName("property"),
+				),
+			},
+			Attributes: map[string]schema.Attribute{
+				names.AttrDescription: schema.StringAttribute{
+					Optional: true,
+				},
 				names.AttrType: schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
+					Validators: []validator.String{
+						// - items {} is only valid when type = "array"
+						// - property {} is only valid when type = "object"
+						tfstringvalidator.ConflictsWithWhenNotEquals(
+							awstypes.SchemaTypeArray,
+							path.MatchRelative().AtParent().AtName("items"),
+						),
+						tfstringvalidator.ConflictsWithWhenNotEquals(
+							awstypes.SchemaTypeObject,
+							path.MatchRelative().AtParent().AtName("property"),
+						),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"items": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[schemaItemsModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.AtMostOneOfChildren(
+								path.MatchRelative().AtName("items"),
+								path.MatchRelative().AtName("property"),
+							),
+						},
+						Attributes: map[string]schema.Attribute{
+							names.AttrDescription: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrType: schema.StringAttribute{
+								Required:   true,
+								CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"items":    schemaItemsLeafBlock(ctx),
+							"property": schemaPropertyLeafBlock(ctx),
+						},
+					},
+				},
+				"property": schema.SetNestedBlock{
+					CustomType: fwtypes.NewSetNestedObjectTypeOf[schemaPropertyModel](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.AtMostOneOfChildren(
+								path.MatchRelative().AtName("items"),
+								path.MatchRelative().AtName("property"),
+							),
+						},
+						Attributes: map[string]schema.Attribute{
+							names.AttrName: schema.StringAttribute{
+								Required: true,
+							},
+							names.AttrDescription: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrType: schema.StringAttribute{
+								Required:   true,
+								CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
+							},
+							"required": schema.BoolAttribute{
+								Optional: true,
+								Computed: true,
+								Default:  booldefault.StaticBool(false),
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"items": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[schemaItemsModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrDescription: schema.StringAttribute{
+											Optional: true,
+										},
+										names.AttrType: schema.StringAttribute{
+											CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
+											Required:   true,
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"items":    schemaItemsLeafBlock(ctx),
+										"property": schemaPropertyLeafBlock(ctx),
+									},
+								},
+							},
+							"property": schemaPropertyLeafBlock(ctx),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaItemsLeafBlock(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[schemaItemsLeafModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.AtMostOneOfChildren(
+					path.MatchRelative().AtName("items_json"),
+					path.MatchRelative().AtName("properties_json"),
+				),
+			},
+			Attributes: map[string]schema.Attribute{
+				names.AttrDescription: schema.StringAttribute{
+					Optional: true,
+				},
+				"items_json": schema.StringAttribute{
+					CustomType: jsontypes.NormalizedType{},
+					Optional:   true,
+				},
+				"properties_json": schema.StringAttribute{
+					CustomType: jsontypes.NormalizedType{},
+					Optional:   true,
+				},
+				names.AttrType: schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
+					Validators: []validator.String{
+						// - items_json is only valid when type = "array"
+						// - properties_json is only valid when type = "object"
+						tfstringvalidator.ConflictsWithWhenNotEquals(
+							awstypes.SchemaTypeArray,
+							path.MatchRelative().AtParent().AtName("items_json"),
+						),
+						tfstringvalidator.ConflictsWithWhenNotEquals(
+							awstypes.SchemaTypeObject,
+							path.MatchRelative().AtParent().AtName("properties_json"),
+						),
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaPropertyLeafBlock(ctx context.Context) schema.Block {
+	return schema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[schemaPropertyLeafModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.AtMostOneOfChildren(
+					path.MatchRelative().AtName("items_json"),
+					path.MatchRelative().AtName("properties_json"),
+				),
+			},
+			Attributes: map[string]schema.Attribute{
+				names.AttrDescription: schema.StringAttribute{
+					Optional: true,
+				},
+				"items_json": schema.StringAttribute{
+					CustomType: jsontypes.NormalizedType{},
+					Optional:   true,
+				},
+				names.AttrName: schema.StringAttribute{
+					Required: true,
+				},
+				"properties_json": schema.StringAttribute{
+					CustomType: jsontypes.NormalizedType{},
+					Optional:   true,
 				},
 				"required": schema.BoolAttribute{
 					Optional: true,
 					Computed: true,
 					Default:  booldefault.StaticBool(false),
 				},
-				"items_json":      jsonAttribute("properties_json"),
-				"properties_json": jsonAttribute("items_json"),
-			},
-		},
-	}
-}
-
-func schemaDefinitionNestedBlock(ctx context.Context) schema.NestedBlockObject {
-	return schema.NestedBlockObject{
-		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{Optional: true},
-			names.AttrType: schema.StringAttribute{
-				Required:   true,
-				CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"property": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[schemaPropertyModel](ctx),
-				Validators: []validator.Set{
-					setvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("items")),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrName:        schema.StringAttribute{Required: true},
-						names.AttrDescription: schema.StringAttribute{Optional: true},
-						names.AttrType: schema.StringAttribute{
-							Required:   true,
-							CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
-						},
-						"required": schema.BoolAttribute{
-							Optional: true,
-							Computed: true,
-							Default:  booldefault.StaticBool(false),
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"items": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[schemaItemsModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("property")),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrDescription: schema.StringAttribute{Optional: true},
-									names.AttrType: schema.StringAttribute{
-										Required:   true,
-										CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"items":    createLeafItemsBlock[schemaItemsLeafModel](ctx),
-									"property": createLeafPropertyBlock[schemaPropertyLeafModel](ctx),
-								},
-							},
-						},
-						"property": createLeafPropertyBlock[schemaPropertyLeafModel](ctx),
-					},
-				},
-			},
-			"items": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[schemaItemsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-					listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("property")),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrDescription: schema.StringAttribute{Optional: true},
-						names.AttrType: schema.StringAttribute{
-							Required:   true,
-							CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"items":    createLeafItemsBlock[schemaItemsLeafModel](ctx),
-						"property": createLeafPropertyBlock[schemaPropertyLeafModel](ctx),
+				names.AttrType: schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.SchemaType](),
+					Required:   true,
+					Validators: []validator.String{
+						// - items_json is only valid when type = "array"
+						// - properties_json is only valid when type = "object"
+						tfstringvalidator.ConflictsWithWhenNotEquals(
+							awstypes.SchemaTypeArray,
+							path.MatchRelative().AtParent().AtName("items_json"),
+						),
+						tfstringvalidator.ConflictsWithWhenNotEquals(
+							awstypes.SchemaTypeObject,
+							path.MatchRelative().AtParent().AtName("properties_json"),
+						),
 					},
 				},
 			},
@@ -552,7 +709,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"private_endpoint": privateEndpointSchema(ctx),
+			"private_endpoint": privateEndpointBlock(ctx),
 			"target_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[targetConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -564,6 +721,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					Validators: []validator.Object{
 						tfobjectvalidator.ExactlyOneOfChildren(
 							path.MatchRelative().AtName("http"),
+							path.MatchRelative().AtName("inference"),
 							path.MatchRelative().AtName("mcp"),
 						),
 					},
@@ -577,6 +735,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 								Validators: []validator.Object{
 									tfobjectvalidator.ExactlyOneOfChildren(
 										path.MatchRelative().AtName("agentcore_runtime"),
+										path.MatchRelative().AtName("passthrough"),
 									),
 								},
 								Blocks: map[string]schema.Block{
@@ -593,6 +752,201 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												},
 												"qualifier": schema.StringAttribute{
 													Optional: true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												names.AttrSchema: httpAPISchemaConfigurationBlock(ctx),
+											},
+										},
+									},
+									"passthrough": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[passthroughTargetConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrEndpoint: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile(`^https://.+`),
+															"Must start with https://",
+														),
+													},
+												},
+												"protocol_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.PassthroughProtocolType](),
+													Required:   true,
+												},
+												"static_query_parameter_conflict_resolution": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.StaticQueryParameterConflictResolution](),
+													Optional:   true,
+												},
+												"static_query_parameters": schema.MapAttribute{
+													CustomType: fwtypes.MapOfStringType,
+													Optional:   true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												names.AttrSchema: httpAPISchemaConfigurationBlock(ctx),
+												"stickiness_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[stickinessConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"composite_identifier": schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Optional:   true,
+																Validators: []validator.Set{
+																	setvalidator.SizeBetween(1, 5),
+																	setvalidator.ValueStringsAre(
+																		stringvalidator.LengthBetween(1, 256),
+																	),
+																},
+															},
+															names.AttrIdentifier: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 256),
+																},
+															},
+															names.AttrTimeout: schema.Int32Attribute{
+																Optional: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(1, 86400),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"inference": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceTargetConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("connector"),
+										path.MatchRelative().AtName("provider"),
+									),
+								},
+								Blocks: map[string]schema.Block{
+									"connector": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConnectorTargetConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												names.AttrSource: schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConnectorSourceModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"connector_id": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"provider": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProviderTargetConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrEndpoint: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile(`^https://.+`),
+															"Must start with https://",
+														),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"model_mapping": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[modelMappingModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"provider_prefix": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[providerPrefixModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"separator": schema.StringAttribute{
+																			Optional: true,
+																		},
+																		"strip": schema.BoolAttribute{
+																			// SDK ProviderPrefix.Strip is a non-pointer bool that the
+																			// service defaults to false and always returns from Get, so
+																			// a plain Optional yields "inconsistent result after apply"
+																			// (planned null, but now cty.False). Optional+Computed with a
+																			// false default absorbs the server value.
+																			Optional: true,
+																			Computed: true,
+																			Default:  booldefault.StaticBool(false),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"operation": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceOperationConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeBetween(1, 10),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrPath: schema.StringAttribute{
+																Required: true,
+															},
+															"provider_path": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"model": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[modelEntryModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeBetween(1, 100),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"model": schema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -788,6 +1142,12 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("inline_payload"),
+																path.MatchRelative().AtName("s3"),
+															),
+														},
 														Blocks: map[string]schema.Block{
 															"inline_payload": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[toolDefinitionModel](ctx),
@@ -801,41 +1161,18 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 																		},
 																	},
 																	Blocks: map[string]schema.Block{
-																		"input_schema": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[schemaDefinitionModel](ctx),
-																			Validators: []validator.List{
-																				listvalidator.IsRequired(),
-																				listvalidator.SizeAtLeast(1),
-																				listvalidator.SizeAtMost(1),
-																			},
-																			NestedObject: schemaDefinitionNestedBlock(ctx),
-																		},
-																		"output_schema": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[schemaDefinitionModel](ctx),
-																			Validators: []validator.List{
-																				listvalidator.SizeAtMost(1),
-																			},
-																			NestedObject: schemaDefinitionNestedBlock(ctx),
-																		},
+																		"input_schema": schemaDefinitionBlock(ctx,
+																			listvalidator.IsRequired(),
+																			listvalidator.SizeAtLeast(1),
+																			listvalidator.SizeAtMost(1),
+																		),
+																		"output_schema": schemaDefinitionBlock(ctx,
+																			listvalidator.SizeAtMost(1),
+																		),
 																	},
 																},
 															},
-															"s3": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtMost(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		"bucket_owner_account_id": schema.StringAttribute{
-																			Optional: true,
-																		},
-																		names.AttrURI: schema.StringAttribute{
-																			Optional: true,
-																		},
-																	},
-																},
-															},
+															"s3": s3ConfigurationBlock(ctx, false),
 														},
 													},
 												},
@@ -853,7 +1190,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(
-															regexache.MustCompile(`https://.*`),
+															regexache.MustCompile(`^https://.+`),
 															"Must start with https://",
 														),
 													},
@@ -893,138 +1230,18 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															),
 														},
 														Blocks: map[string]schema.Block{
-															"inline_payload": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtMost(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		"payload": schema.StringAttribute{
-																			Required: true,
-																			// An empty payload is rejected by the API ("No MCP tool
-																			// schema found in target configuration"); require content offline.
-																			Validators: []validator.String{
-																				stringvalidator.LengthAtLeast(1),
-																			},
-																		},
-																	},
-																},
-															},
-															"s3": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtMost(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		"bucket_owner_account_id": schema.StringAttribute{
-																			Optional: true,
-																		},
-																		names.AttrURI: schema.StringAttribute{
-																			// uri is required for the mcp_tool_schema s3 source; an s3 {}
-																			// without it is rejected by the API ("No MCP tool schema found").
-																			Required: true,
-																		},
-																	},
-																},
-															},
+															// An empty payload is rejected by the API ("No MCP tool
+															// schema found in target configuration"); require content offline.
+															"inline_payload": inlinePayloadBlock(ctx, stringvalidator.LengthAtLeast(1)),
+															"s3":             s3ConfigurationBlock(ctx, true),
 														},
 													},
 												},
 											},
 										},
 									},
-									"open_api_schema": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[apiSchemaConfigurationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Validators: []validator.Object{
-												tfobjectvalidator.ExactlyOneOfChildren(
-													path.MatchRelative().AtName("inline_payload"),
-													path.MatchRelative().AtName("s3"),
-												),
-											},
-											Blocks: map[string]schema.Block{
-												"inline_payload": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"payload": schema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-												"s3": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"bucket_owner_account_id": schema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrURI: schema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"smithy_model": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[apiSchemaConfigurationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Validators: []validator.Object{
-												tfobjectvalidator.ExactlyOneOfChildren(
-													path.MatchRelative().AtName("inline_payload"),
-													path.MatchRelative().AtName("s3"),
-												),
-											},
-											Blocks: map[string]schema.Block{
-												"inline_payload": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"payload": schema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-												"s3": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"bucket_owner_account_id": schema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrURI: schema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
+									"open_api_schema": apiSchemaConfigurationBlock(ctx),
+									"smithy_model":    apiSchemaConfigurationBlock(ctx),
 								},
 							},
 						},
@@ -1158,7 +1375,20 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := conn.UpdateGatewayTarget(ctx, &input)
+		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateGatewayTarget(ctx, &input)
+
+			// IAM propagation.
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "You don't have sufficient access") {
+				return tfresource.RetryableError(err)
+			}
+
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 			return
@@ -1764,8 +1994,9 @@ func (m selfManagedLatticeResourceModel) Expand(ctx context.Context) (any, diag.
 	var diags diag.Diagnostics
 	switch {
 	case !m.ResourceConfigurationIdentifier.IsNull():
-		var r awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier
-		r.Value = fwflex.StringValueFromFramework(ctx, m.ResourceConfigurationIdentifier)
+		r := awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+			Value: fwflex.StringValueFromFramework(ctx, m.ResourceConfigurationIdentifier),
+		}
 		return &r, diags
 	}
 
@@ -1773,31 +2004,45 @@ func (m selfManagedLatticeResourceModel) Expand(ctx context.Context) (any, diag.
 }
 
 type targetConfigurationModel struct {
-	HTTP fwtypes.ListNestedObjectValueOf[httpTargetConfigurationModel] `tfsdk:"http"`
-	MCP  fwtypes.ListNestedObjectValueOf[mcpTargetConfigurationModel]  `tfsdk:"mcp"`
+	HTTP      fwtypes.ListNestedObjectValueOf[httpTargetConfigurationModel]      `tfsdk:"http"`
+	Inference fwtypes.ListNestedObjectValueOf[inferenceTargetConfigurationModel] `tfsdk:"inference"`
+	MCP       fwtypes.ListNestedObjectValueOf[mcpTargetConfigurationModel]       `tfsdk:"mcp"`
 }
 
 func (m *targetConfigurationModel) TargetType(ctx context.Context) awstypes.TargetType {
 	if !m.HTTP.IsNull() {
-		httpData, _ := m.HTTP.ToPtr(ctx)
+		model, _ := m.HTTP.ToPtr(ctx)
 		switch {
-		case !httpData.AgentcoreRuntime.IsNull():
+		case !model.AgentcoreRuntime.IsNull():
 			return awstypes.TargetTypeAgentcoreRuntime
 		}
 	}
 	if !m.MCP.IsNull() {
-		mcpData, _ := m.MCP.ToPtr(ctx)
+		model, _ := m.MCP.ToPtr(ctx)
 		switch {
-		case !mcpData.Connector.IsNull():
+		case !model.Connector.IsNull():
 			return awstypes.TargetTypeConnector
-		case !mcpData.Lambda.IsNull():
+		case !model.Lambda.IsNull():
 			return awstypes.TargetTypeLambda
-		case !mcpData.MCPServer.IsNull():
+		case !model.MCPServer.IsNull():
 			return awstypes.TargetTypeMcpServer
-		case !mcpData.OpenAPISchema.IsNull():
+		case !model.OpenAPISchema.IsNull():
 			return awstypes.TargetTypeOpenApiSchema
-		case !mcpData.SmithyModel.IsNull():
+		case !model.SmithyModel.IsNull():
 			return awstypes.TargetTypeSmithyModel
+		}
+	}
+	if !m.Inference.IsNull() {
+		const (
+			targetTypeInferenceConnector awstypes.TargetType = "INFERENCE_CONNECTOR"
+			targetTypeInferenceProvider  awstypes.TargetType = "INFERENCE_PROVIDER"
+		)
+		model, _ := m.Inference.ToPtr(ctx)
+		switch {
+		case !model.Connector.IsNull():
+			return targetTypeInferenceConnector
+		case !model.Provider.IsNull():
+			return targetTypeInferenceProvider
 		}
 	}
 	return ""
@@ -1819,6 +2064,16 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 		}
 		var d diag.Diagnostics
 		m.HTTP, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.TargetConfigurationMemberInference:
+		var model inferenceTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Inference, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.TargetConfigurationMemberMcp:
@@ -1857,6 +2112,19 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 		}
 		return &r, diags
 
+	case !m.Inference.IsNull():
+		model, d := m.Inference.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.TargetConfigurationMemberInference
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
 	case !m.MCP.IsNull():
 		model, d := m.MCP.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1875,7 +2143,8 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 }
 
 type httpTargetConfigurationModel struct {
-	AgentcoreRuntime fwtypes.ListNestedObjectValueOf[runtimeTargetConfigurationModel] `tfsdk:"agentcore_runtime"`
+	AgentcoreRuntime fwtypes.ListNestedObjectValueOf[runtimeTargetConfigurationModel]     `tfsdk:"agentcore_runtime"`
+	Passthrough      fwtypes.ListNestedObjectValueOf[passthroughTargetConfigurationModel] `tfsdk:"passthrough"`
 }
 
 var (
@@ -1894,6 +2163,16 @@ func (m *httpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.
 		}
 		var d diag.Diagnostics
 		m.AgentcoreRuntime, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HttpTargetConfigurationMemberPassthrough:
+		var model passthroughTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Passthrough, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -1921,14 +2200,156 @@ func (m httpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 			return nil, diags
 		}
 		return &r, diags
+
+	case !m.Passthrough.IsNull():
+		model, d := m.Passthrough.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HttpTargetConfigurationMemberPassthrough
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	}
 
 	return nil, diags
 }
 
 type runtimeTargetConfigurationModel struct {
-	ARN       fwtypes.ARN  `tfsdk:"arn"`
-	Qualifier types.String `tfsdk:"qualifier"`
+	ARN       fwtypes.ARN                                                      `tfsdk:"arn"`
+	Qualifier types.String                                                     `tfsdk:"qualifier"`
+	Schema    fwtypes.ListNestedObjectValueOf[httpAPISchemaConfigurationModel] `tfsdk:"schema"`
+}
+
+type httpAPISchemaConfigurationModel struct {
+	Source fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"source"`
+}
+
+type passthroughTargetConfigurationModel struct {
+	Endpoint                               types.String                                                        `tfsdk:"endpoint"`
+	ProtocolType                           fwtypes.StringEnum[awstypes.PassthroughProtocolType]                `tfsdk:"protocol_type"`
+	Schema                                 fwtypes.ListNestedObjectValueOf[httpAPISchemaConfigurationModel]    `tfsdk:"schema"`
+	StaticQueryParameterConflictResolution fwtypes.StringEnum[awstypes.StaticQueryParameterConflictResolution] `tfsdk:"static_query_parameter_conflict_resolution"`
+	StaticQueryParameters                  fwtypes.MapOfString                                                 `tfsdk:"static_query_parameters"`
+	StickinessConfiguration                fwtypes.ListNestedObjectValueOf[stickinessConfigurationModel]       `tfsdk:"stickiness_configuration"`
+}
+
+type stickinessConfigurationModel struct {
+	CompositeIdentifier fwtypes.SetOfString `tfsdk:"composite_identifier"`
+	Identifier          types.String        `tfsdk:"identifier"`
+	Timeout             types.Int32         `tfsdk:"timeout"`
+}
+
+type inferenceTargetConfigurationModel struct {
+	Connector fwtypes.ListNestedObjectValueOf[inferenceConnectorTargetConfigurationModel] `tfsdk:"connector"`
+	Provider  fwtypes.ListNestedObjectValueOf[inferenceProviderTargetConfigurationModel]  `tfsdk:"provider"`
+}
+
+var (
+	_ fwflex.Expander  = inferenceTargetConfigurationModel{}
+	_ fwflex.Flattener = &inferenceTargetConfigurationModel{}
+)
+
+func (m *inferenceTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.InferenceTargetConfigurationMemberConnector:
+		var model inferenceConnectorTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Connector, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.InferenceTargetConfigurationMemberProvider:
+		var model inferenceProviderTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Provider, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("inferenceTargetConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m inferenceTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.Connector.IsNull():
+		model, d := m.Connector.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.InferenceTargetConfigurationMemberConnector
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Provider.IsNull():
+		model, d := m.Provider.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.InferenceTargetConfigurationMemberProvider
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type inferenceConnectorTargetConfigurationModel struct {
+	Source fwtypes.ListNestedObjectValueOf[inferenceConnectorSourceModel] `tfsdk:"source"`
+}
+
+type inferenceConnectorSourceModel struct {
+	ConnectorID types.String `tfsdk:"connector_id"`
+}
+
+type inferenceProviderTargetConfigurationModel struct {
+	Endpoint     types.String                                                          `tfsdk:"endpoint"`
+	ModelMapping fwtypes.ListNestedObjectValueOf[modelMappingModel]                    `tfsdk:"model_mapping"`
+	Operations   fwtypes.ListNestedObjectValueOf[inferenceOperationConfigurationModel] `tfsdk:"operation"`
+}
+
+type modelMappingModel struct {
+	ProviderPrefix fwtypes.ListNestedObjectValueOf[providerPrefixModel] `tfsdk:"provider_prefix"`
+}
+
+type providerPrefixModel struct {
+	Separator types.String `tfsdk:"separator"`
+	Strip     types.Bool   `tfsdk:"strip"`
+}
+
+type inferenceOperationConfigurationModel struct {
+	Models       fwtypes.ListNestedObjectValueOf[modelEntryModel] `tfsdk:"model"`
+	Path         types.String                                     `tfsdk:"path"`
+	ProviderPath types.String                                     `tfsdk:"provider_path"`
+}
+
+type modelEntryModel struct {
+	Model types.String `tfsdk:"model"`
 }
 
 type mcpTargetConfigurationModel struct {
@@ -1964,7 +2385,9 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.Connector = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.Connector, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.McpTargetConfigurationMemberLambda:
 		var model mcpLambdaTargetConfigurationModel
@@ -1972,7 +2395,9 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.Lambda = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.Lambda, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.McpTargetConfigurationMemberMcpServer:
 		var model mcpServerTargetConfigurationModel
@@ -1980,7 +2405,9 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.MCPServer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.MCPServer, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.McpTargetConfigurationMemberOpenApiSchema:
 		var model apiSchemaConfigurationModel
@@ -1988,7 +2415,9 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.OpenAPISchema = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.OpenAPISchema, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.McpTargetConfigurationMemberSmithyModel:
 		var model apiSchemaConfigurationModel
@@ -1996,14 +2425,17 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.SmithyModel = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.SmithyModel, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("mcp configuration flatten: %T", v),
+			fmt.Sprintf("mcpTargetConfigurationModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -2011,84 +2443,78 @@ func (m mcpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 	var diags diag.Diagnostics
 	switch {
 	case !m.APIGateway.IsNull():
-		apiGatewayMCPConfigurationData, d := m.APIGateway.ToPtr(ctx)
+		model, d := m.APIGateway.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpTargetConfigurationMemberApiGateway
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, apiGatewayMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 
 	case !m.Connector.IsNull():
-		connectorConfigurationData, d := m.Connector.ToPtr(ctx)
+		model, d := m.Connector.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpTargetConfigurationMemberConnector
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, connectorConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 
 	case !m.Lambda.IsNull():
-		lambdaMCPConfigurationData, d := m.Lambda.ToPtr(ctx)
+		model, d := m.Lambda.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpTargetConfigurationMemberLambda
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, lambdaMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 
 	case !m.MCPServer.IsNull():
-		mcpServerConfigurationData, d := m.MCPServer.ToPtr(ctx)
+		model, d := m.MCPServer.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpTargetConfigurationMemberMcpServer
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, mcpServerConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 
 	case !m.OpenAPISchema.IsNull():
-		openApiMCPConfigurationData, d := m.OpenAPISchema.ToPtr(ctx)
+		model, d := m.OpenAPISchema.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpTargetConfigurationMemberOpenApiSchema
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, openApiMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 
 	case !m.SmithyModel.IsNull():
-		smithyMCPConfigurationData, d := m.SmithyModel.ToPtr(ctx)
+		model, d := m.SmithyModel.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpTargetConfigurationMemberSmithyModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, smithyMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -2139,57 +2565,55 @@ var (
 	_ fwflex.Flattener = &connectorConfigurationModel{}
 )
 
-func (m connectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	var r awstypes.ConnectorConfiguration
-	diags.Append(fwflex.Expand(ctx, m.Description, &r.Description)...)
-	diags.Append(fwflex.Expand(ctx, m.Name, &r.Name)...)
-	diags.Append(fwflex.Expand(ctx, m.ParameterOverrides, &r.ParameterOverrides)...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	if !m.ParameterValues.IsNull() {
-		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ParameterValues), document.NewLazyDocument)
-		if err != nil {
-			diags.Append(diag.NewErrorDiagnostic(
-				"Decoding JSON",
-				err.Error(),
-			))
-			return nil, diags
-		}
-		r.ParameterValues = json
-	}
-
-	return &r, diags
-}
-
 func (m *connectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	if v, ok := v.(awstypes.ConnectorConfiguration); ok {
-		diags.Append(fwflex.Flatten(ctx, v.Description, &m.Description)...)
-		diags.Append(fwflex.Flatten(ctx, v.Name, &m.Name)...)
-		diags.Append(fwflex.Flatten(ctx, v.ParameterOverrides, &m.ParameterOverrides)...)
+	// To prevent infinite recursion...
+	type modelAlias *connectorConfigurationModel
+	alias := modelAlias(m)
+	switch t := v.(type) {
+	case awstypes.ConnectorConfiguration:
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
 		if diags.HasError() {
 			return diags
 		}
-
-		if v.ParameterValues != nil {
-			json, err := tfsmithy.DocumentToJSONString(v.ParameterValues)
+		if t.ParameterValues != nil {
+			json, err := tfsmithy.DocumentToJSONString(t.ParameterValues)
 			if err != nil {
-				diags.Append(diag.NewErrorDiagnostic(
-					"Encoding JSON",
-					err.Error(),
-				))
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
 			m.ParameterValues = jsontypes.NewNormalizedValue(json)
 		}
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("connectorConfigurationModel.Flatten: %T", v),
+		)
 	}
 
 	return diags
+}
+
+func (m connectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ConnectorConfiguration
+	// To prevent infinite recursion...
+	type modelAlias connectorConfigurationModel
+	alias := modelAlias(m)
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
+	if diags.HasError() {
+		return nil, diags
+	}
+	if !m.ParameterValues.IsNull() {
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ParameterValues), document.NewLazyDocument)
+		if err != nil {
+			diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+			return nil, diags
+		}
+		r.ParameterValues = json
+	}
+	return &r, diags
 }
 
 type connectorParameterOverrideModel struct {
@@ -2222,16 +2646,12 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.ToolSchemaMemberInlinePayload:
-		var toolDefModels []*toolDefinitionModel
-		for _, toolDef := range t.Value {
-			var model toolDefinitionModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, toolDef, &model))
-			if diags.HasError() {
-				return diags
-			}
-			toolDefModels = append(toolDefModels, &model)
+		toolDefinitionList := fwtypes.NewListNestedObjectValueOfNull[toolDefinitionModel](ctx)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &toolDefinitionList))
+		if diags.HasError() {
+			return diags
 		}
-		m.InlinePayload = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, toolDefModels)
+		m.InlinePayload = toolDefinitionList
 
 	case awstypes.ToolSchemaMemberS3:
 		var model s3ConfigurationModel
@@ -2239,14 +2659,17 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 		if diags.HasError() {
 			return diags
 		}
-		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("tool schema configuration flatten: %T", v),
+			fmt.Sprintf("toolSchemaModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -2254,40 +2677,27 @@ func (m toolSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
 	case !m.InlinePayload.IsNull():
-		inlinePayloadToolSchemaData, d := m.InlinePayload.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
+		var r awstypes.ToolSchemaMemberInlinePayload
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.InlinePayload, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-
-		var toolDefs []awstypes.ToolDefinition
-		for _, toolDefModel := range inlinePayloadToolSchemaData {
-			var toolDef awstypes.ToolDefinition
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, toolDefModel, &toolDef))
-			if diags.HasError() {
-				return nil, diags
-			}
-			toolDefs = append(toolDefs, toolDef)
-		}
-
-		var r awstypes.ToolSchemaMemberInlinePayload
-		r.Value = toolDefs
 		return &r, diags
 
 	case !m.S3.IsNull():
-		s3ToolSchemaData, d := m.S3.ToPtr(ctx)
+		model, d := m.S3.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.ToolSchemaMemberS3
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, s3ToolSchemaData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 	}
+
 	return nil, diags
 }
 
@@ -2522,8 +2932,8 @@ type schemaItemsLeafCoreModel struct {
 type schemaItemsLeafModel struct {
 	schemaItemsLeafCoreModel
 	// JSON serialized schema for deeper nesting
-	ItemsJSON      types.String `tfsdk:"items_json"`
-	PropertiesJSON types.String `tfsdk:"properties_json"`
+	ItemsJSON      jsontypes.Normalized `tfsdk:"items_json"`
+	PropertiesJSON jsontypes.Normalized `tfsdk:"properties_json"`
 }
 
 var (
@@ -2545,12 +2955,12 @@ func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) diag.Diagnost
 			s, err := tfjson.EncodeToString(jsonItems)
 			if err != nil {
 				diags.AddWarning("Failed to marshal items for items_json", err.Error())
-				m.ItemsJSON = types.StringNull()
+				m.ItemsJSON = jsontypes.NewNormalizedNull()
 			} else {
-				m.ItemsJSON = types.StringValue(s)
+				m.ItemsJSON = jsontypes.NewNormalizedValue(s)
 			}
 		} else {
-			m.ItemsJSON = types.StringNull()
+			m.ItemsJSON = jsontypes.NewNormalizedNull()
 		}
 		// Populate PropertiesJSON
 		if t.Properties != nil || len(t.Required) > 0 {
@@ -2562,12 +2972,12 @@ func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) diag.Diagnost
 			s, err := tfjson.EncodeToString(jsonProps)
 			if err != nil {
 				diags.AddWarning("Failed to marshal properties for properties_json", err.Error())
-				m.PropertiesJSON = types.StringNull()
+				m.PropertiesJSON = jsontypes.NewNormalizedNull()
 			} else {
-				m.PropertiesJSON = types.StringValue(s)
+				m.PropertiesJSON = jsontypes.NewNormalizedValue(s)
 			}
 		} else {
-			m.PropertiesJSON = types.StringNull()
+			m.PropertiesJSON = jsontypes.NewNormalizedNull()
 		}
 	default:
 		diags.AddError(
@@ -2616,10 +3026,10 @@ type schemaPropertyLeafCoreModel struct {
 
 type schemaPropertyLeafModel struct {
 	schemaPropertyLeafCoreModel
-	Required types.Bool `tfsdk:"required"`
 	// JSON serialized schema for deeper nesting
-	ItemsJSON      types.String `tfsdk:"items_json"`
-	PropertiesJSON types.String `tfsdk:"properties_json"`
+	ItemsJSON      jsontypes.Normalized `tfsdk:"items_json"`
+	PropertiesJSON jsontypes.Normalized `tfsdk:"properties_json"`
+	Required       types.Bool           `tfsdk:"required"`
 }
 
 var (
@@ -2641,12 +3051,12 @@ func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) diag.Diagn
 			s, err := tfjson.EncodeToString(jsonItems)
 			if err != nil {
 				diags.AddWarning("Failed to marshal items for items_json", err.Error())
-				m.ItemsJSON = types.StringNull()
+				m.ItemsJSON = jsontypes.NewNormalizedNull()
 			} else {
-				m.ItemsJSON = types.StringValue(strings.TrimSpace(s))
+				m.ItemsJSON = jsontypes.NewNormalizedValue(s)
 			}
 		} else {
-			m.ItemsJSON = types.StringNull()
+			m.ItemsJSON = jsontypes.NewNormalizedNull()
 		}
 		// Populate PropertiesJSON
 		if t.Properties != nil || len(t.Required) > 0 {
@@ -2658,12 +3068,12 @@ func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) diag.Diagn
 			s, err := tfjson.EncodeToString(jsonProps)
 			if err != nil {
 				diags.AddWarning("Failed to marshal properties for properties_json", err.Error())
-				m.PropertiesJSON = types.StringNull()
+				m.PropertiesJSON = jsontypes.NewNormalizedNull()
 			} else {
-				m.PropertiesJSON = types.StringValue(s)
+				m.PropertiesJSON = jsontypes.NewNormalizedValue(s)
 			}
 		} else {
-			m.PropertiesJSON = types.StringNull()
+			m.PropertiesJSON = jsontypes.NewNormalizedNull()
 		}
 	default:
 		diags.AddError(
@@ -2704,14 +3114,14 @@ func (m schemaPropertyLeafModel) Expand(ctx context.Context) (any, diag.Diagnost
 }
 
 type s3ConfigurationModel struct {
-	BucketOwnerAccountId types.String `tfsdk:"bucket_owner_account_id"`
-	Uri                  types.String `tfsdk:"uri"`
+	BucketOwnerAccountID types.String `tfsdk:"bucket_owner_account_id"`
+	URI                  types.String `tfsdk:"uri"`
 }
 
 type mcpServerTargetConfigurationModel struct {
 	Endpoint         types.String                                                     `tfsdk:"endpoint"`
 	ListingMode      fwtypes.StringEnum[awstypes.ListingMode]                         `tfsdk:"listing_mode"`
-	McpToolSchema    fwtypes.ListNestedObjectValueOf[mcpToolSchemaConfigurationModel] `tfsdk:"mcp_tool_schema"`
+	MCPToolSchema    fwtypes.ListNestedObjectValueOf[mcpToolSchemaConfigurationModel] `tfsdk:"mcp_tool_schema"`
 	ResourcePriority types.Int32                                                      `tfsdk:"resource_priority"`
 }
 
@@ -2997,7 +3407,7 @@ func parseJSONSchemaDefinition(s string) (*awstypes.SchemaDefinition, diag.Diagn
 	return &sd, diags
 }
 
-func isNonEmpty(s types.String) bool {
+func isNonEmpty(s jsontypes.Normalized) bool {
 	return !s.IsNull() && !s.IsUnknown() && strings.TrimSpace(s.ValueString()) != ""
 }
 

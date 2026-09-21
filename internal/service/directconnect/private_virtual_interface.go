@@ -106,9 +106,26 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
 				"sitelink_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
+				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -170,8 +187,20 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		input.NewPrivateVirtualInterface.DirectConnectGatewayId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("prefix_pool_allocated_count_ipv4"); ok {
+		input.NewPrivateVirtualInterface.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("prefix_pool_allocated_count_ipv6"); ok {
+		input.NewPrivateVirtualInterface.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("vpn_gateway_id"); ok {
 		input.NewPrivateVirtualInterface.VirtualGatewayId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewPrivateVirtualInterface.RateLimit = aws.String(v.(string))
 	}
 
 	output, err := conn.CreatePrivateVirtualInterface(ctx, input)
@@ -227,7 +256,10 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 

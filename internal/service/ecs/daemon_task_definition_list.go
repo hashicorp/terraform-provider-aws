@@ -39,15 +39,6 @@ func (r *listResourceDaemonTaskDefinition) ListResourceConfigSchema(_ context.Co
 }
 
 func (r *listResourceDaemonTaskDefinition) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query daemonTaskDefinitionListModel
-
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := r.Meta()
 	conn := awsClient.ECSClient(ctx)
 
@@ -116,8 +107,4 @@ func listDaemonTaskDefinitionSummaries(ctx context.Context, conn *ecs.Client, in
 			return
 		}
 	}
-}
-
-type daemonTaskDefinitionListModel struct {
-	framework.WithRegionModel
 }

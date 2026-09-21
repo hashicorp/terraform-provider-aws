@@ -121,6 +121,7 @@ This resource supports the following arguments:
 
 ### `managed_instances_provider` Block
 
+* `auto_repair_configuration` - (Optional) Configuration block for the auto repair configuration. Detailed below.
 * `infrastructure_optimization` - (Optional) Configuration block for how Amazon ECS Managed Instances optimizes the infrastructure in your capacity provider, including whether to turn optimization on or off and how long to delay optimizing idle EC2 instances. Detailed below.
 * `infrastructure_role_arn` - (Required) ARN of the infrastructure role that Amazon ECS uses to manage instances on your behalf. This role must have permissions to launch, terminate, and manage Amazon EC2 instances, as well as access to other AWS services required for Amazon ECS Managed Instances functionality. For more information, see [Amazon ECS infrastructure IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/infrastructure_IAM_role.html) in the Amazon ECS Developer Guide.
 * `instance_launch_template` - (Required) Launch template configuration that specifies how Amazon ECS should launch Amazon EC2 instances. This includes the instance profile, network configuration, storage settings, and instance requirements for attribute-based instance type selection. For more information, see [Store instance launch parameters in Amazon EC2 launch templates](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html) in the Amazon EC2 User Guide. Detailed below.
@@ -230,6 +231,10 @@ This resource supports the following arguments:
 ### `infrastructure_optimization` Block
 
 * `scale_in_after` - (Optional) Number of seconds Amazon ECS Managed Instances waits before optimizing EC2 instances that have become idle or underutilized. A longer delay increases the likelihood of placing new tasks on idle instances, reducing startup time. A shorter delay helps reduce infrastructure costs by optimizing idle instances more quickly. Valid values are `-1` to disable automatic infrastructure optimization, `0` to `3600` (inclusive) to specify the number of seconds to wait before optimizing instances, or leave unset (null) to use the default optimization behavior.
+
+### `auto_repair_configuration` Block
+
+* `actions_status` - (Optional) Whether to use Amazon ECS managed auto repair. Valid values are `ENABLED` and `DISABLED`.
 
 ## Attribute Reference
 

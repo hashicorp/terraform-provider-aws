@@ -482,26 +482,25 @@ var _ fwflex.Expander = loggingModel{}
 
 func (m loggingModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	switch {
 	case !m.CloudWatch.IsNull():
-		data, d := m.CloudWatch.ToPtr(ctx)
+		model, d := m.CloudWatch.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.LoggingMemberCloudWatch
-		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		return &r, diags
+
 	case !m.Disabled.IsNull():
-		return &awstypes.LoggingMemberDisabled{
+		r := awstypes.LoggingMemberDisabled{
 			Value: awstypes.LoggingDisabled{},
-		}, diags
+		}
+		return &r, diags
 	}
 
 	return nil, diags

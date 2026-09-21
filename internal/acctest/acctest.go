@@ -319,15 +319,15 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 func PreCheck(ctx context.Context, t *testing.T) {
 	t.Helper()
 
+	envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
+
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
+	}
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
-
-		if os.Getenv(envvar.AccessKeyId) != "" {
-			envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
-		}
-
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
 		// a provider configuration with a region. This defaults to us-west-2 for provider
 		// developer simplicity and has been in the codebase for a very long time.

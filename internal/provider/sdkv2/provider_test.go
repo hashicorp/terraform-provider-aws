@@ -569,7 +569,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			envvars:   map[string]string{},
 			expectErr: true,
 		},
-		"token envvar token_file config": {
+		"token_file config supersedes token envvar": {
 			tfMap: map[string]any{
 				"duration":                "1h",
 				"policy":                  "my-policy",
@@ -579,9 +579,14 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			envvars: map[string]string{
 				tfWebIdentityTokenEnvVar: "my-token",
 			},
-			expectErr: true,
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
 		},
-		"token config token_file envvar": {
+		"token config supersedes token_file envvar": {
 			tfMap: map[string]any{
 				"duration":           "1h",
 				"policy":             "my-policy",
@@ -591,7 +596,12 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			envvars: map[string]string{
 				awsWebIdentityTokenFileEnvVar: "my-token-file",
 			},
-			expectErr: true,
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
 		},
 		"token envvar token_file envvar": {
 			tfMap: map[string]any{

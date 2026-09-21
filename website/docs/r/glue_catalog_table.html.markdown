@@ -309,7 +309,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `schema_version_id` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schema_id` has to be provided.
 * `schema_version_number` - (Required) Version number of the schema.
 
-##### `schema_id` Block
+#### `schema_id` Block
 
 * `registry_name` - (Optional) Name of the schema registry that contains the schema. Must be provided when `schema_name` is specified and conflicts with `schema_arn`.
 * `schema_arn` - (Optional) ARN of the schema. One of `schema_arn` or `schema_name` has to be provided.
@@ -370,6 +370,36 @@ This resource exports the following attributes in addition to the arguments abov
 * `partition_index[*].index_status` - Status of the partition index.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_catalog_table.MyTable
+  identity = {
+    name          = "MyTable"
+    database_name = "MyDatabase"
+    catalog_id    = "123456789012"
+  }
+}
+
+resource "aws_glue_catalog_table" "MyTable" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `catalog_id` - (String) ID of the Glue Catalog.
+* `database_name` - (String) Name of the Glue Catalog Database.
+* `name` - (String) Name of the Glue Catalog Table.
+
+#### Optional
+
+* `account_id` - (String) AWS Account where this resource is managed.
+* `region` - (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Tables using the catalog ID (usually AWS account ID), database name, and table name. For example:
 

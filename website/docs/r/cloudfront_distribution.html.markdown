@@ -476,14 +476,14 @@ This resource supports the following arguments:
 * `viewer_protocol_policy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
 * `grpc_config` (Optional) - A [config block](#grpc-config-arguments) that sets the grpc config.
 
-##### Forwarded Values Arguments
+#### Forwarded Values Arguments
 
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments) that specifies how CloudFront handles cookies (maximum one).
 * `headers` (Optional) - Headers, if any, that you want CloudFront to vary upon for this cache behavior. Specify `*` to include all headers.
 * `query_string` (Required) - Indicates whether you want CloudFront to forward query strings to the origin that is associated with this cache behavior.
 * `query_string_cache_keys` (Optional) - When specified, along with a value of `true` for `query_string`, all query strings are forwarded, however only the query string keys listed in this argument are cached. When omitted with a value of `true` for `query_string`, all query string keys are cached.
 
-##### Lambda Function Association
+#### Lambda Function Association
 
 Lambda@Edge allows you to associate an AWS Lambda Function with a predefined
 event. You can associate a single function per event type. See [What is
@@ -513,7 +513,7 @@ resource "aws_cloudfront_distribution" "example" {
 * `lambda_arn` (Required) - ARN of the Lambda function.
 * `include_body` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
 
-##### Function Association
+#### Function Association
 
 With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. You can associate a single function per event type. See [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
 for more information.
@@ -539,11 +539,11 @@ resource "aws_cloudfront_distribution" "example" {
 * `event_type` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
 * `function_arn` (Required) - ARN of the CloudFront function.
 
-##### GRPC config arguments
+#### GRPC config arguments
 
 * `enabled` (Required) - Whether Grpc requests are enabled.
 
-##### Cookies Arguments
+#### Cookies Arguments
 
 * `forward` (Required) - Whether you want CloudFront to forward cookies to the origin that is associated with this cache behavior. You can specify `all`, `none` or `whitelist`. If `whitelist`, you must include the subsequent `whitelisted_names`.
 * `whitelisted_names` (Optional) - If you have specified `whitelist` to `forward`, the whitelisted cookies that you want CloudFront to forward to your origin.
@@ -584,7 +584,7 @@ argument should not be specified.
 * `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
 * `vpc_origin_config` - (Optional) The [VPC origin configuration](#vpc-origin-config-arguments).
 
-##### Custom Origin Config Arguments
+#### Custom Origin Config Arguments
 
 * `http_port` (Required) - HTTP port the custom origin listens on.
 * `https_port` (Required) - HTTPS port the custom origin listens on.
@@ -595,20 +595,20 @@ argument should not be specified.
 * `origin_mtls_config` - (Optional) The [origin mTLS configuration](#origin-mtls-config-arguments) for mutual TLS authentication between CloudFront and your origin.
 * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `30`.
 
-##### Origin mTLS Config Arguments
+#### Origin mTLS Config Arguments
 
 * `client_certificate_arn` (Required) - ARN of the ACM certificate to use for mutual TLS authentication with the origin. The certificate must have Extended Key Usage set to TLS Client Authentication.
 
-##### Origin Shield Arguments
+#### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
 * `origin_shield_region` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `us-east-2`.
 
-##### S3 Origin Config Arguments
+#### S3 Origin Config Arguments
 
 * `origin_access_identity` (Required) - The [CloudFront origin access identity](/docs/providers/aws/r/cloudfront_origin_access_identity.html) to associate with the origin.
 
-##### VPC Origin Config Arguments
+#### VPC Origin Config Arguments
 
 * `origin_keepalive_timeout` - (Optional) Specifies how long, in seconds, CloudFront persists its connection to the origin. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `5`.
 * `origin_read_timeout` - (Optional) Specifies how long, in seconds, CloudFront waits for a response from the origin. This is also known as the _origin response timeout_. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `30`.
@@ -621,11 +621,11 @@ argument should not be specified.
 * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin.
 * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. You must specify two members.
 
-##### Failover Criteria Arguments
+#### Failover Criteria Arguments
 
 * `status_codes` (Required) - List of HTTP status codes for the origin group.
 
-##### Member Arguments
+#### Member Arguments
 
 * `origin_id` (Required) - Unique identifier of the member origin.
 
@@ -659,7 +659,7 @@ The arguments of `geo_restriction` are:
 * `mode` (Required) - The mode for viewer mTLS. Valid values: `required`, `optional`.
 * `trust_store_config` (Required) - The [trust store configuration](#trust-store-config-arguments) for viewer mTLS (maximum one).
 
-##### Trust Store Config Arguments
+#### Trust Store Config Arguments
 
 * `trust_store_id` (Required) - Identifier of the trust store to use for viewer mTLS.
 * `advertise_trust_store_ca_names` (Optional) - Whether to advertise the trust store CA names to clients. Defaults to `false`.

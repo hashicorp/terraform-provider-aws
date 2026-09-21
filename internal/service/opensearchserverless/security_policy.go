@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -156,12 +157,16 @@ func (r *securityPolicyResource) Read(ctx context.Context, request resource.Read
 	}
 
 	// Set attributes for import.
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (r *securityPolicyResource) flatten(ctx context.Context, output *awstypes.SecurityPolicyDetail, data *securityPolicyResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, output, data)
 }
 
 func (r *securityPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {

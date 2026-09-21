@@ -22,6 +22,7 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_basic(rName),
@@ -51,6 +52,7 @@ func TestAccECSServiceDataSource_loadBalancer(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_loadBalancer(rName),
@@ -80,6 +82,7 @@ func TestAccECSServiceDataSource_deploymentConfiguration(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_linearDeployment(rName),
@@ -117,6 +120,7 @@ func TestAccECSServiceDataSource_canaryDeployment(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_canaryDeployment(rName),
@@ -135,6 +139,40 @@ func TestAccECSServiceDataSource_canaryDeployment(t *testing.T) {
 	})
 }
 
+func TestAccECSServiceDataSource_pauseLifecycleHook(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	dataSourceName := "data.aws_ecs_service.test"
+	resourceName := "aws_ecs_service.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)[:16]
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_pauseLifecycleHook(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.#", dataSourceName, "deployment_configuration.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.#", dataSourceName, "deployment_configuration.0.lifecycle_hook.#"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"target_type":                                "PAUSE",
+						"timeout_configuration.#":                    "1",
+						"timeout_configuration.0.action":             "ROLLBACK",
+						"timeout_configuration.0.timeout_in_minutes": "60",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSServiceDataSource_fullConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_service.test"
@@ -145,6 +183,7 @@ func TestAccECSServiceDataSource_fullConfiguration(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_fullConfiguration(rName),
@@ -231,6 +270,17 @@ data "aws_ecs_service" "test" {
 func testAccServiceDataSourceConfig_canaryDeployment(rName string) string {
 	return acctest.ConfigCompose(
 		testAccServiceConfig_canaryDeployment_basic(rName, false),
+		`
+data "aws_ecs_service" "test" {
+  service_name = aws_ecs_service.test.name
+  cluster_arn  = aws_ecs_cluster.main.arn
+}
+`)
+}
+
+func testAccServiceDataSourceConfig_pauseLifecycleHook(rName string) string {
+	return acctest.ConfigCompose(
+		testAccServiceConfig_blueGreenDeployment_pauseHook(rName),
 		`
 data "aws_ecs_service" "test" {
   service_name = aws_ecs_service.test.name

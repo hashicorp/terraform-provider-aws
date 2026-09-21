@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrockagentcore_gateway_target" "test" {
+  count              = var.gateway_target_count
   name               = var.rName
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
 
@@ -115,4 +116,9 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "gateway_target_count" {
+  type     = number
+  nullable = false
 }
