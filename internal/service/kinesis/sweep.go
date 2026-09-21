@@ -16,6 +16,8 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_kinesis_channel", sweepChannels)
+
 	resource.AddTestSweepers("aws_kinesis_stream", &resource.Sweeper{
 		Name: "aws_kinesis_stream",
 		F:    sweepStreams,
@@ -57,7 +59,6 @@ func sweepStreams(region string) error {
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
 	if err != nil {
 		return fmt.Errorf("error sweeping Kinesis Streams (%s): %w", region, err)
 	}
