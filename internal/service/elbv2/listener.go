@@ -581,8 +581,8 @@ func resourceListener() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					ValidateFunc: validation.IntBetween(60, 6000),
-					// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
-					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
+					// Attribute only valid for TCP and TCP_UDP (NLB) and GENEVE (GWLB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumTcpUdp),
 				},
 			}
 		},
@@ -917,10 +917,10 @@ type listenerAttributeInfo struct {
 type listenerAttributeMap map[string]listenerAttributeInfo
 
 var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
-	// Attribute only supported on TCP and GENEVE listeners.
+	// Attribute only supported on TCP, TCP_UDP and GENEVE listeners.
 	"tcp_idle_timeout_seconds": {
 		apiAttributeKey:        "tcp.idle_timeout.seconds",
-		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumGeneve},
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumTcpUdp, awstypes.ProtocolEnumGeneve},
 		tfType:                 schema.TypeInt,
 	},
 	// Attributes only supported on HTTPS listeners.
