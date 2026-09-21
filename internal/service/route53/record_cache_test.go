@@ -140,9 +140,6 @@ func TestZoneRecordCacheEvict(t *testing.T) {
 		Type: awstypes.RRTypeA,
 	})
 
-	// Register the cache in the global map so evict can find it.
-	recordCacheZones.LoadOrStore(zoneID, cache)
-
 	cache.evict(key)
 
 	if _, ok := cache.get(key); ok {
