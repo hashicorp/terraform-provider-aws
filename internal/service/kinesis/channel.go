@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -626,59 +627,37 @@ func channelRecordConfigurationBlock(ctx context.Context) schema.ListNestedBlock
 }
 
 func (r *channelResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().KinesisClient(ctx)
 	
-	// TIP: -- 2. Fetch the plan
 	var plan channelResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	var input kinesis.CreateChannelInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `ChannelId`
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Channel")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	
+	input.Tags = getTagsInMap(ctx)
 
-	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CreateChannel(ctx, &input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-	if out == nil || out.Channel == nil {
+	if out == nil || out.ChannelDescription == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ChannelDescription, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitChannelCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
@@ -686,7 +665,6 @@ func (r *channelResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	
-	// TIP: -- 7. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -782,7 +760,7 @@ func (r *channelResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	if diff.HasChanges() {
 		var input kinesis.UpdateChannelInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Channel")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -868,6 +846,15 @@ func (r *channelResource) Delete(ctx context.Context, req resource.DeleteRequest
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
+}
+
+func getTagsInMap(ctx context.Context) map[string]string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := inContext.TagsIn.UnwrapOrDefault().Map(); len(tags) > 0 {
+			return tags
+		}
+	}
+	return nil
 }
 
 // TIP: ==== TERRAFORM IMPORTING ====
