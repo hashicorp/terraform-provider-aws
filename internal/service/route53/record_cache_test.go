@@ -112,13 +112,13 @@ func TestZoneRecordCacheStoreAndLookup(t *testing.T) {
 		Type: awstypes.RRTypeA,
 	}
 
-	if _, ok := lookupInZoneRecordCache(cache, key); ok {
+	if _, ok := cache.get(key); ok {
 		t.Fatal("expected cache miss on empty cache")
 	}
 
-	storeInZoneRecordCache(cache, key, rrs)
+	cache.put(key, rrs)
 
-	got, ok := lookupInZoneRecordCache(cache, key)
+	got, ok := cache.get(key)
 	if !ok {
 		t.Fatal("expected cache hit after store")
 	}
@@ -135,17 +135,17 @@ func TestZoneRecordCacheEvict(t *testing.T) {
 	cache := &zoneRecordCache{
 		records: make(map[string]awstypes.ResourceRecordSet),
 	}
-	storeInZoneRecordCache(cache, key, awstypes.ResourceRecordSet{
+	cache.put(key, awstypes.ResourceRecordSet{
 		Name: aws.String("www.example.com."),
 		Type: awstypes.RRTypeA,
 	})
 
-	// Register the cache in the global map so evictFromZoneRecordCache can find it.
+	// Register the cache in the global map so evict can find it.
 	recordCacheZones.LoadOrStore(zoneID, cache)
 
-	evictFromZoneRecordCache(zoneID, key)
+	cache.evict(key)
 
-	if _, ok := lookupInZoneRecordCache(cache, key); ok {
+	if _, ok := cache.get(key); ok {
 		t.Fatal("expected cache miss after eviction")
 	}
 }
@@ -157,7 +157,7 @@ func TestZoneRecordCacheConcurrentReads(t *testing.T) {
 		records: make(map[string]awstypes.ResourceRecordSet),
 	}
 	key := "Z123456_www.example.com_A"
-	storeInZoneRecordCache(cache, key, awstypes.ResourceRecordSet{
+	cache.put(key, awstypes.ResourceRecordSet{
 		Name: aws.String("www.example.com."),
 		Type: awstypes.RRTypeA,
 	})
@@ -167,7 +167,7 @@ func TestZoneRecordCacheConcurrentReads(t *testing.T) {
 	doneCh := make(chan struct{}, readers)
 	for range readers {
 		go func() {
-			lookupInZoneRecordCache(cache, key)
+			cache.get(key)
 			doneCh <- struct{}{}
 		}()
 	}

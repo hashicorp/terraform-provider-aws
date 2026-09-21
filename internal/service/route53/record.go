@@ -409,7 +409,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if batchReadsEnabled() {
-		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+		evictFromZoneRecordCache(ctx, conn, zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
 	}
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
@@ -423,7 +423,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var record *awstypes.ResourceRecordSet
 	var err error
 	if batchReadsEnabled() {
-		record, err = readRecordFromCache(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+		record, err = readFromZoneRecordCache(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 	} else {
 		record, err = findResourceRecordSetByFourPartKey(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 	}
@@ -729,7 +729,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if batchReadsEnabled() {
 		oldSetID, _ := d.GetChange("set_identifier")
-		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), oldRRType.(string), oldSetID.(string)))
+		evictFromZoneRecordCache(ctx, conn, zoneID, recordCacheKey(zoneID, d.Get(names.AttrName).(string), oldRRType.(string), oldSetID.(string)))
 	}
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
@@ -791,7 +791,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if batchReadsEnabled() {
-		evictFromZoneRecordCache(zoneID, recordCacheKey(zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
+		evictFromZoneRecordCache(ctx, conn, zoneID, recordCacheKey(zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string)))
 	}
 
 	return diags
