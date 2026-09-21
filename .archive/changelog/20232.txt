@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_acm_certificate: Add status attribute
-```

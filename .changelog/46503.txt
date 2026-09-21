@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_iam_outbound_web_identity_federation
-```

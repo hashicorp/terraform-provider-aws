@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_cognito_user_pool_signing_certificate
-```

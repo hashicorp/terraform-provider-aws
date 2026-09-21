@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_rum_app_monitor: Add `app_monitor_id` attribute
-```

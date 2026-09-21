@@ -79,7 +79,7 @@ func (r identityInterceptorSDK) populateSDKIdentity(ctx context.Context, params 
 			}
 
 		default:
-			val, ok := getAttributeOk(params.ResourceData, attr.ResourceAttributeName())
+			val, ok := getAttributeIfSet(params.ResourceData, attr.ResourceAttributeName())
 			if !ok {
 				continue
 			}
@@ -97,11 +97,15 @@ type resourceData interface {
 	GetOk(string) (any, bool)
 }
 
-func getAttributeOk(d resourceData, name string) (any, bool) {
+func getAttributeIfSet(d resourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
+		// check for zero value bool (false), which is a valid value
+		if _, okBool := v.(bool); okBool {
+			return v, true
+		}
 		return nil, false
 	} else {
 		return v, true

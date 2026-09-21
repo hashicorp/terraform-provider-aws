@@ -181,7 +181,7 @@ func targetStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) 
 	}
 
 	if _, ok := rawState["event_bus_name"]; !ok {
-		rawState["event_bus_name"] = DefaultEventBusName
+		rawState["event_bus_name"] = defaultEventBusName
 	}
 
 	return rawState, nil

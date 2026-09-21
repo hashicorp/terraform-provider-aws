@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_key_pair
+```
+
+```release-note:enhancement
+resource/aws_key_pair: Add resource identity support
+```

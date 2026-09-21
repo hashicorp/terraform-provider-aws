@@ -140,6 +140,49 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 	})
 }
 
+func TestAccSyntheticsCanary_kmsKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
+	resourceName := "aws_synthetics_canary.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCanaryConfig_kmsKeyARN(rName, "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+			},
+			{
+				Config: testAccCanaryConfig_kmsKeyARN(rName, "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccCanaryConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1 awstypes.Canary
@@ -242,10 +285,12 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// canary status can change to "stopped" after a successful run.
+				// requires exception for timeline and status
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", names.AttrStatus},
 			},
 			{
 				Config: testAccCanaryConfig_start(rName, false),
@@ -292,10 +337,12 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// canary status can change to "stopped" after a successful run.
+				// requires exception for timeline and status
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", names.AttrStatus},
 			},
 			{
 				Config: testAccCanaryConfig_startZipUpdated(rName, true),
@@ -1234,6 +1281,41 @@ resource "aws_synthetics_canary" "test" {
   depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
+}
+
+func testAccCanaryConfig_kmsKeyARN(rName, keyResourceName string) string {
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "%[1]s-1"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
+  delete_lambda        = true
+  kms_key_arn          = aws_kms_key.%[2]s.arn
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
+}
+`, rName, keyResourceName))
 }
 
 func testAccCanaryConfig_runtimeVersion(rName, version string) string {

@@ -250,7 +250,7 @@ The following arguments are optional:
 * `duration` - (Required) Configuration block for the duration of the Auto-Tune maintenance window. Detailed below.
 * `cron_expression_for_recurrence` - (Required) A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
 
-##### duration
+#### duration
 
 * `value` - (Required) An integer specifying the value of the duration of an Auto-Tune maintenance window.
 * `unit` - (Required) The unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `HOURS`.

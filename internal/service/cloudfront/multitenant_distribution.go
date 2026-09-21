@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -39,15 +40,18 @@ import (
 )
 
 const (
-	defaultConnectionAttempts     = 3
-	defaultConnectionTimeout      = 10
-	defaultOriginKeepaliveTimeout = 5
-	defaultOriginReadTimeout      = 30
+	defaultConnectionAttempts int32 = 3
+	defaultConnectionTimeout  int32 = 10
+
+	defaultOriginKeepaliveTimeout int32 = 5
+	defaultOriginReadTimeout      int32 = 30
 )
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(name="MultiTenantDistribution")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
+// @Testing(generator=false)
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
@@ -92,8 +96,13 @@ type multiTenantDistributionResource struct {
 func (r *multiTenantDistributionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
-			names.AttrDomainName:               schema.StringAttribute{Computed: true},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDomainName: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"etag":                             schema.StringAttribute{Computed: true},
 			names.AttrID:                       framework.IDAttribute(),
 			"in_progress_invalidation_batches": schema.Int32Attribute{Computed: true},
@@ -111,6 +120,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			"connection_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ConnectionMode](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrComment: schema.StringAttribute{
 				Required: true,
@@ -125,6 +137,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				Optional:   true,
 				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.HttpVersion](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -454,6 +469,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"custom_origin_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customOriginConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"http_port": schema.Int32Attribute{
@@ -505,6 +523,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"origin_shield": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[originShieldModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrEnabled: schema.BoolAttribute{
@@ -519,6 +540,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 
 						"vpc_origin_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOriginConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"origin_keepalive_timeout": schema.Int32Attribute{
@@ -687,6 +711,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							Optional:   true,
 							Computed:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.SSLSupportMethod](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 				},
@@ -704,36 +731,35 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.CreateDistributionWithTagsInput{
-		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
-			DistributionConfig: &awstypes.DistributionConfig{},
-			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
-		},
-	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input.DistributionConfigWithTags.DistributionConfig)...)
+	var distributionConfig awstypes.DistributionConfig
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &distributionConfig)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 	// This is needed for S3 origins using Origin Access Control (OAC)
-	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
-
-	// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
-	fixCacheBehaviors(input.DistributionConfigWithTags.DistributionConfig)
-
-	// Set required computed fields that AutoFlex can't handle
-	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
+	fixOriginConfigs(distributionConfig.Origins)
 
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions
-	input.DistributionConfigWithTags.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+	distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+
+	// Set required computed fields that AutoFlex can't handle
+	distributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
+
+	input := cloudfront.CreateDistributionWithTagsInput{
+		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
+			DistributionConfig: &distributionConfig,
+			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
+		},
+	}
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.DistributionConfigWithTags.Tags.Items = tags
 	}
 
-	output, err := conn.CreateDistributionWithTags(ctx, input)
+	output, err := conn.CreateDistributionWithTags(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError("creating CloudFront Multi-tenant Distribution", err.Error())
 		return
@@ -741,7 +767,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	// Set ID immediately
 	data.ID = types.StringValue(aws.ToString(output.Distribution.Id))
-	data.ARN = types.StringValue(aws.ToString(output.Distribution.ARN))
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
 
 	// Wait for distribution to be deployed
 	distro, err := waitDistributionDeployed(ctx, conn, data.ID.ValueString())
@@ -751,13 +777,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		return
 	}
 
-	// Read the distribution to get consistent state
-	data.ETag = fwflex.StringToFramework(ctx, distro.ETag)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(flattenMultiTenantDistribution(ctx, distro, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -789,12 +809,7 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(flattenMultiTenantDistribution(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -816,16 +831,11 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	// Handle tag updates first
-	if !new.Tags.Equal(old.Tags) {
-		if err := updateTags(ctx, conn, new.ARN.ValueString(), old.Tags, new.Tags); err != nil {
-			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution tags", err.Error())
-			return
-		}
-	}
+	hasUpdate := false
 
 	// Check if distribution config needs updating (anything other than tags)
 	if mtDistributionHasChanges(old, new) {
+		hasUpdate = true
 		// Get current distribution to get ETag for update
 		output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
 		if err != nil {
@@ -833,62 +843,59 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
-		// Prepare update input - start with existing config to preserve all fields
-		input := cloudfront.UpdateDistributionInput{
-			Id:                 new.ID.ValueStringPointer(),
-			IfMatch:            output.ETag,
-			DistributionConfig: output.Distribution.DistributionConfig,
-		}
+		new.WebACLID = fwflex.NullAsEmptyString(new.WebACLID)
+
+		// The CloudFront API requires stub values for a number of features that are not supported for Mutli-Tenant Distributions
+		// Reusing the current result and overlaying with configured attributes
+		distributionConfig := output.Distribution.DistributionConfig
 
 		// Expand the new configuration over the existing config
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input.DistributionConfig)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, distributionConfig)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
-		fixOriginConfigs(input.DistributionConfig.Origins)
-
-		// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
-		fixCacheBehaviors(input.DistributionConfig)
+		fixOriginConfigs(distributionConfig.Origins)
 
 		// Ensure ConnectionMode remains tenant-only
-		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+		distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+
+		// Prepare update input - start with existing config to preserve all fields
+		input := cloudfront.UpdateDistributionInput{
+			Id:                 new.ID.ValueStringPointer(),
+			IfMatch:            output.ETag,
+			DistributionConfig: distributionConfig,
+		}
 
 		// Update the distribution
-		updateOutput, err := conn.UpdateDistribution(ctx, &input)
+		_, err = conn.UpdateDistribution(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution", err.Error())
 			return
 		}
+	}
 
-		// Wait for deployment if enabled
-		if new.Enabled.ValueBool() {
-			_, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
-			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
-				return
-			}
+	var output *cloudfront.GetDistributionOutput
+	if hasUpdate {
+		var err error
+		output, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
+			return
 		}
-
-		// Update ETag from response
-		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
+	} else {
+		var err error
+		// Read back the updated distribution to ensure state consistency
+		output, err = findDistributionByID(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution", err.Error())
+			return
+		}
 	}
 
-	// Read back the updated distribution to ensure state consistency
-	output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution after update", err.Error())
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &new)...)
+	response.Diagnostics.Append(flattenMultiTenantDistribution(ctx, output, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -986,6 +993,24 @@ func (r *multiTenantDistributionResource) ImportState(ctx context.Context, reque
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
+func flattenMultiTenantDistribution(ctx context.Context, output *cloudfront.GetDistributionOutput, data *multiTenantDistributionResourceModel) (diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	diags.Append(fwflex.Flatten(ctx, output.Distribution, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.WebACLID = fwflex.EmptyStringAsNull(data.WebACLID)
+
+	return diags
+}
+
 func deleteMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
 	etag, err := distroETag(ctx, conn, id)
 
@@ -1076,7 +1101,7 @@ type multiTenantDistributionResourceModel struct {
 	TenantConfig                  fwtypes.ListNestedObjectValueOf[tenantConfigModel]           `tfsdk:"tenant_config"`
 	Timeouts                      timeouts.Value                                               `tfsdk:"timeouts"`
 	ViewerCertificate             fwtypes.ListNestedObjectValueOf[viewerCertificateModel]      `tfsdk:"viewer_certificate"`
-	WebACLID                      types.String                                                 `tfsdk:"web_acl_id" autoflex:",omitempty"`
+	WebACLID                      types.String                                                 `tfsdk:"web_acl_id"`
 }
 
 type originModel struct {
@@ -1262,38 +1287,6 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
 			origin.S3OriginConfig = &awstypes.S3OriginConfig{
 				OriginAccessIdentity: aws.String(""),
-			}
-		}
-	}
-}
-
-// fixCacheBehaviors ensures lambda function associations have IncludeBody set (even as false) when required by CloudFront.
-func fixCacheBehaviors(config *awstypes.DistributionConfig) {
-	if config == nil {
-		return
-	}
-
-	// Fix default cache behavior
-	if config.DefaultCacheBehavior != nil && config.DefaultCacheBehavior.LambdaFunctionAssociations != nil {
-		for i := range config.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
-			assoc := &config.DefaultCacheBehavior.LambdaFunctionAssociations.Items[i]
-			if assoc.IncludeBody == nil {
-				assoc.IncludeBody = aws.Bool(false)
-			}
-		}
-	}
-
-	// Fix cache behaviors
-	if config.CacheBehaviors != nil {
-		for i := range config.CacheBehaviors.Items {
-			behavior := &config.CacheBehaviors.Items[i]
-			if behavior.LambdaFunctionAssociations != nil {
-				for j := range behavior.LambdaFunctionAssociations.Items {
-					assoc := &behavior.LambdaFunctionAssociations.Items[j]
-					if assoc.IncludeBody == nil {
-						assoc.IncludeBody = aws.Bool(false)
-					}
-				}
 			}
 		}
 	}

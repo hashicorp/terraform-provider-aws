@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
     * `ami_distribution_configuration` - Nested list of AMI distribution configuration.
         * `ami_tags` - Key-value map of tags to apply to distributed AMI.
         * `description` - Description to apply to distributed AMI.
-        * `kms_key_id` - ARN of Key Management Service (KMS) Key to encrypt AMI.
+        * `kms_key_id` - ARN of KMS Key to encrypt AMI.
         * `launch_permission` - Nested list of EC2 launch permissions.
             * `organization_arns` - Set of AWS Organization ARNs.
             * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.
@@ -63,7 +63,7 @@ This data source exports the following attributes in addition to the arguments a
         * `default` - Whether the specified Amazon EC2 launch template is set as the default launch template.
         * `launch_template_id` - ID of the Amazon EC2 launch template.
         * `account_id` - The account ID that this configuration applies to.
-    * `license_configuration_arns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
+    * `license_configuration_arns` - Set of ARNs of License Manager License Configurations.
     * `region` - AWS Region of distribution.
     * `s3_export_configuration` - Nested list of S3 export configuration.
         * `disk_image_format` - The disk image format of the exported image (`RAW`, `VHD`, or `VMDK`)

@@ -48,10 +48,10 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the accelerator.
-* `arn` - The Amazon Resource Name (ARN) of the accelerator.
+* `id` - ARN of the accelerator.
+* `arn` - ARN of the accelerator.
 * `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
-* `dual_stack_dns_name` - The Domain Name System (DNS) name that Global Accelerator creates that points to a dual-stack accelerator's four static IP addresses: two IPv4 addresses and two IPv6 addresses. For example, `a1234567890abcdef.dualstack.awsglobalaccelerator.com`.
+* `dual_stack_dns_name` - DNS name that Global Accelerator creates that points to a dual-stack accelerator's four static IP addresses: two IPv4 addresses and two IPv6 addresses. For example, `a1234567890abcdef.dualstack.awsglobalaccelerator.com`.
 * `hosted_zone_id` --  The Global Accelerator Route 53 zone ID that can be used to
   route an [Alias Resource Record Set](https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html) to the Global Accelerator. This attribute
   is simply an alias for the zone ID `Z2BJ6XQ5FK7U4H`.
@@ -91,7 +91,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator accelerator.
+- `arn` (String) ARN of the Global Accelerator accelerator.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator accelerators using the `arn`. For example:
 

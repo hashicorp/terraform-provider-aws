@@ -129,15 +129,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("zone_id", true),
-				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "fqdn"),
 				inttypes.StringIdentityAttribute(names.AttrType, true),
 				inttypes.StringIdentityAttribute("set_identifier", false),
 			},
 				inttypes.WithMutableIdentity(),
 			),
 			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
-				ImportID:      recordImportID{},
+				CustomImport: true,
+				ImportID:     recordImportID{},
 			},
 		},
 		{
@@ -207,7 +207,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("zone_id", true),
-				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "fqdn"),
 				inttypes.StringIdentityAttribute(names.AttrType, true),
 				inttypes.StringIdentityAttribute("set_identifier", false),
 			},
@@ -255,7 +255,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*route53.Options){
 		route53.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

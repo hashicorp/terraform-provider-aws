@@ -28,26 +28,26 @@ resource "aws_s3files_access_point" "example" {
 The following arguments are required:
 
 * `file_system_id` - (Required) File system ID. Changing this value forces replacement.
-* `posix_user` - (Required) POSIX user configuration. See [`posix_user`](#posix_user) below. Changing this value forces replacement.
+* `posix_user` - (Required) POSIX user configuration. See [`posix_user`](#posix_user-block) below. Changing this value forces replacement.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `root_directory` - (Optional) Root directory configuration. See [`root_directory`](#root_directory) below. Changing this value forces replacement.
+* `root_directory` - (Optional) Root directory configuration. See [`root_directory`](#root_directory-block) below. Changing this value forces replacement.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### posix_user
+### `posix_user` Block
 
 * `gid` - (Required) POSIX group ID. Changing this value forces replacement.
-* `uid` - (Required) POSIX user ID. Changing this value forces replacement.
 * `secondary_gids` - (Optional) Set of secondary POSIX group IDs. Changing this value forces replacement.
+* `uid` - (Required) POSIX user ID. Changing this value forces replacement.
 
-### root_directory
+### `root_directory` Block
 
+* `creation_permissions` - (Optional) Permissions to set when creating the root directory. See [`creation_permissions`](#creation_permissions-block) below. Changing this value forces replacement.
 * `path` - (Optional) Root directory path. Changing this value forces replacement.
-* `creation_permissions` - (Optional) Permissions to set when creating the root directory. See [`creation_permissions`](#creation_permissions) below. Changing this value forces replacement.
 
-### creation_permissions
+### `creation_permissions` Block
 
 * `owner_gid` - (Required) Owner group ID. Changing this value forces replacement.
 * `owner_uid` - (Required) Owner user ID. Changing this value forces replacement.

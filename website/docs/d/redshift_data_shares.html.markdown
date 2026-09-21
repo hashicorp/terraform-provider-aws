@@ -33,6 +33,6 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `data_shares` Attribute Reference
 
-* `data_share_arn` - ARN (Amazon Resource Name) of the data share.
+* `data_share_arn` - ARN of the data share.
 * `managed_by` - Identifier of a datashare to show its managing entity.
-* `producer_arn` - ARN (Amazon Resource Name) of the producer.
+* `producer_arn` - ARN of the producer.

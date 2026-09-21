@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_lambda_function: Increase upper limit of `memory_size` from 10240 MB to 32768 MB
-```

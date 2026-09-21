@@ -8,15 +8,29 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkStreamARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("logs", regexache.MustCompile(`log-group:[0-9A-Za-z_./#-]+:log-stream:`+name))
+}
+
+func checkStreamARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("logs", regexache.MustCompile(`log-group:[0-9A-Za-z_./#-]+:log-stream:`+name))
+}
 
 func TestAccLogsStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -31,16 +45,34 @@ func TestAccLogsStream_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Stream/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, t, resourceName, &ls),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkStreamARN(rName+"-s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLogGroupName), knownvalue.StringExact(rName+"-g")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-s")),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccStreamImportStateIdFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory: config.StaticDirectory("testdata/Stream/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccStreamImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -59,7 +91,10 @@ func TestAccLogsStream_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Stream/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, t, resourceName, &ls),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceStream(), resourceName),
@@ -92,7 +127,10 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Stream/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, t, resourceName, &ls),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
@@ -158,26 +196,6 @@ func testAccCheckStreamDestroy(ctx context.Context, t *testing.T) resource.TestC
 	}
 }
 
-func testAccStreamImportStateIdFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not Found: %s", n)
-		}
-
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID), nil
-	}
-}
-
-func testAccStreamConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_log_stream" "test" {
-  name           = %[1]q
-  log_group_name = aws_cloudwatch_log_group.test.id
-}
-`, rName)
+func testAccStreamImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(n, ":", names.AttrLogGroupName, names.AttrName)
 }

@@ -1,3 +1,0 @@
-```release-note:note
-resource/aws_dynamodb_global_secondary_index: This resource type is no longer experimental. The schema and behavior are now subject to the backwards compatibility guarantee of the provider.
-```

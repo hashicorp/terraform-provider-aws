@@ -301,7 +301,7 @@ func waitInvoiceUnitCreated(ctx context.Context, conn *invoicing.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Refresh: statusInvoiceUnit(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -318,7 +318,7 @@ func waitInvoiceUnitUpdated(ctx context.Context, conn *invoicing.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Refresh: statusInvoiceUnit(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -335,7 +335,7 @@ func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE"},
 		Target:  []string{},
-		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Refresh: statusInvoiceUnit(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -348,7 +348,7 @@ func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn str
 	return nil, smarterr.NewError(err)
 }
 
-func statusInvoiceUnit(_ context.Context, conn *invoicing.Client, arn string) retry.StateRefreshFunc {
+func statusInvoiceUnit(conn *invoicing.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findInvoiceUnitByARN(ctx, conn, arn)
 

@@ -15,27 +15,25 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_cloudwatch_dashboard", name="Dashboard")
+// @IdentityAttribute("dashboard_name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch;cloudwatch.GetDashboardOutput")
+// @Testing(idAttrDuplicates="dashboard_name")
+// @Testing(preIdentityVersion="v6.52.0")
 func resourceDashboard() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDashboardPut,
 		ReadWithoutTimeout:   resourceDashboardRead,
 		UpdateWithoutTimeout: resourceDashboardPut,
 		DeleteWithoutTimeout: resourceDashboardDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		// Note that we specify both the `dashboard_body` and
 		// the `dashboard_name` as being required, even though
@@ -47,17 +45,7 @@ func resourceDashboard() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"dashboard_body": {
-					Type:                  schema.TypeString,
-					Required:              true,
-					ValidateFunc:          validation.StringIsJSON,
-					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-					DiffSuppressOnRefresh: true,
-					StateFunc: func(v any) string {
-						json, _ := structure.NormalizeJsonString(v)
-						return json
-					},
-				},
+				"dashboard_body": sdkv2.JSONDocumentSchemaRequired(),
 				"dashboard_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -74,12 +62,12 @@ func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	name := d.Get("dashboard_name").(string)
-	input := &cloudwatch.PutDashboardInput{
+	input := cloudwatch.PutDashboardInput{
 		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
 		DashboardName: aws.String(name),
 	}
 
-	_, err := conn.PutDashboard(ctx, input)
+	_, err := conn.PutDashboard(ctx, &input)
 
 	if err != nil {
 		return smerr.Append(ctx, diags, err, smerr.ID, name)
@@ -133,10 +121,14 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findDashboardByName(ctx context.Context, conn *cloudwatch.Client, name string) (*cloudwatch.GetDashboardOutput, error) {
-	input := &cloudwatch.GetDashboardInput{
+	input := cloudwatch.GetDashboardInput{
 		DashboardName: aws.String(name),
 	}
 
+	return findDashboard(ctx, conn, &input)
+}
+
+func findDashboard(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetDashboardInput) (*cloudwatch.GetDashboardOutput, error) {
 	output, err := conn.GetDashboard(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFound) {

@@ -71,7 +71,7 @@ func resourceRule() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ValidateFunc: validBusNameOrARN,
-					Default:      DefaultEventBusName,
+					Default:      defaultEventBusName,
 				},
 				"event_pattern": {
 					Type:         schema.TypeString,
@@ -264,24 +264,21 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &eventbridge.DeleteRuleInput{
+	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
+	input := eventbridge.DeleteRuleInput{
 		Name: aws.String(ruleName),
 	}
-
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
 	}
-
 	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.Force = v.(bool)
 	}
-
 	const (
 		timeout = 5 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteRule(ctx, input)
+		return conn.DeleteRule(ctx, &input)
 	}, errCodeValidationException, "Rule can't be deleted since it has targets")
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -296,7 +293,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.PutRuleInput) (string, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*eventbridge.PutRuleOutput, error) {
 		return conn.PutRule(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
@@ -304,17 +301,21 @@ func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbri
 		return "", err
 	}
 
-	return aws.ToString(outputRaw.(*eventbridge.PutRuleOutput).RuleArn), nil
+	return aws.ToString(output.RuleArn), nil
 }
 
 func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBusName, ruleName string) (*eventbridge.DescribeRuleOutput, error) {
-	input := &eventbridge.DescribeRuleInput{
+	input := eventbridge.DescribeRuleInput{
 		Name: aws.String(ruleName),
 	}
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
 	}
 
+	return findRule(ctx, conn, &input)
+}
+
+func findRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeRuleInput) (*eventbridge.DescribeRuleOutput, error) {
 	output, err := conn.DescribeRule(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -342,7 +343,7 @@ var (
 const ruleResourceIDSeparator = "/"
 
 func ruleCreateResourceID(eventBusName, ruleName string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		return ruleName
 	}
 
@@ -356,7 +357,7 @@ func ruleParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ruleResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
+		return defaultEventBusName, parts[0], nil
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

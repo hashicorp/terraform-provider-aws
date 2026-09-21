@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_db_instance: Fix error where Terraform loses track of resource if Blue/Green Deployment is applied outside of Terraform
-```

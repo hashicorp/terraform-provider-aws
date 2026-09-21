@@ -31,29 +31,30 @@ resource "aws_odb_network_peering_connection" "example" {
 
 The following arguments are required:
 
-* `peer_network_id` - (Required) The unique identifier of the ODB peering connection. Changing this will force Terraform to create a new resource. Either odb_network_id or odb_network_arn should be used.
 * `display_name` - (Required) Display name of the ODB network peering connection. Changing this will force Terraform to create a new resource.
+* `peer_network_id` - (Required) Unique identifier of the ODB peering connection. Changing this will force Terraform to create a new resource. Either odb_network_id or odb_network_arn should be used.
 
 The following arguments are optional:
 
-* `odb_network_id` - (Optional) The unique identifier of the ODB network that initiates the peering connection. A sample ID is `odbpcx-abcdefgh12345678`. Changing this will force Terraform to create a new resource.
 * `odb_network_arn` - (Optional) ARN of the ODB network that initiates the peering connection. Changing this will force Terraform to create a new resource. Either odb_network_id or odb_network_arn should be used.
+* `odb_network_id` - (Optional) Unique identifier of the ODB network that initiates the peering connection. A sample ID is `odbpcx-abcdefgh12345678`. Changing this will force Terraform to create a new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
-This data source exports the following attributes in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier of odb network peering connection.
-* `status` - Status of the ODB network peering connection.
-* `status_reason` - The reason for the current status of the ODB peering connection.
-* `peer_network_arn` - ARN of the peer network peering connection.
-* `odb_peering_connection_type` - Type of the ODB peering connection.
-* `peer_network_cidrs` - Set of peer network cidrs. Add remove is only supported during update operation. During create this attribute is compute only.
+* `arn` - ARN of the ODB network peering connection.
 * `created_at` - Created time of the ODB network peering connection.
+* `id` - Unique identifier of odb network peering connection.
+* `odb_peering_connection_type` - Type of the ODB peering connection.
+* `peer_network_arn` - ARN of the peer network peering connection.
+* `peer_network_cidrs` - Set of peer network cidrs. Add remove is only supported during update operation. During create this attribute is compute only.
 * `percent_progress` - Progress of the ODB network peering connection.
-* `tags_all` - A map of tags assigned to the resource, including inherited tags.
+* `status` - Status of the ODB network peering connection.
+* `status_reason` - Reason for the current status of the ODB peering connection.
+* `tags_all` - Map of tags assigned to the resource, including inherited tags.
 
 ## Timeouts
 

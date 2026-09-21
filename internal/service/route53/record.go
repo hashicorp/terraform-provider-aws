@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -37,13 +38,17 @@ import (
 	when `set_identifier` changes. Other changes to Identity-related attributes do not do this.
 */
 
+// For Resource Identity, the fully qualified `fqdn` is used for the `name` attribute to fully, uniquely identify the resource.
+// The `name` of the resource can be partial or fully-qualified so it does not do this.
+
 // @SDKResource("aws_route53_record", name="Record")
 // @IdentityAttribute("zone_id")
-// @IdentityAttribute("name")
+// @IdentityAttribute("name", resourceAttributeName="fqdn")
 // @IdentityAttribute("type")
 // @IdentityAttribute("set_identifier", optional="true")
 // @MutableIdentity
 // @ImportIDHandler("recordImportID")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
@@ -55,6 +60,21 @@ func resourceRecord() *schema.Resource {
 		ReadWithoutTimeout:   resourceRecordRead,
 		UpdateWithoutTimeout: resourceRecordUpdate,
 		DeleteWithoutTimeout: resourceRecordDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				if v, ok := d.GetOk("fqdn"); ok {
+					d.Set(names.AttrName, v)
+					d.SetId(createRecordImportID(d))
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
@@ -294,7 +314,6 @@ func resourceRecord() *schema.Resource {
 				names.AttrType: {
 					Type:             schema.TypeString,
 					Required:         true,
-					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.RRType](),
 				},
 				"weighted_routing_policy": {
@@ -402,12 +421,11 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	zoneID := cleanZoneID(d.Get("zone_id").(string))
 	var record *awstypes.ResourceRecordSet
-	var fqdn *string
 	var err error
 	if batchReadsEnabled() {
-		record, fqdn, err = readRecordFromCache(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+		record, err = readRecordFromCache(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 	} else {
-		record, fqdn, err = findResourceRecordSetByFourPartKey(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+		record, err = findResourceRecordSetByFourPartKey(ctx, conn, zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -419,6 +437,12 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route 53 Record (%s): %s", d.Id(), err)
 	}
+
+	return resourceRecordFlatten(d, record)
+}
+
+func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceRecordSet) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	if alias := record.AliasTarget; alias != nil {
 		tfList := []any{map[string]any{
@@ -450,13 +474,10 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			return sdkdiag.AppendErrorf(diags, "setting failover_routing_policy: %s", err)
 		}
 	}
-	// findResourceRecordSetByFourPartKey returns the FQDN in API-normalized form.
-	// For backwards compatibility, restore any '*' as the leftmost label in the domain name.
-	// \052 is the octal representation of '*'.
-	if v := aws.ToString(fqdn); strings.HasPrefix(v, `\052.`) {
-		fqdn = aws.String(`*.` + strings.TrimPrefix(v, `\052.`))
-	}
+
+	fqdn := denormalizeDomainName(record.Name)
 	d.Set("fqdn", fqdn)
+
 	if geoLocation := record.GeoLocation; geoLocation != nil {
 		tfList := []any{map[string]any{
 			"continent":   aws.ToString(geoLocation.ContinentCode),
@@ -665,6 +686,11 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		oldRec.SetIdentifier = aws.String(v.(string))
 	}
 
+	newRecAction := awstypes.ChangeActionCreate
+	if d.Get("allow_overwrite").(bool) {
+		newRecAction = awstypes.ChangeActionUpsert
+	}
+
 	// Delete the old and create the new records in a single batch.
 	input := &route53.ChangeResourceRecordSetsInput{
 		ChangeBatch: &awstypes.ChangeBatch{
@@ -674,7 +700,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 					ResourceRecordSet: oldRec,
 				},
 				{
-					Action:            awstypes.ChangeActionCreate,
+					Action:            newRecAction,
 					ResourceRecordSet: expandResourceRecordSet(d, aws.ToString(zoneRecord.HostedZone.Name)),
 				},
 			},
@@ -723,7 +749,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		name = d.Get(names.AttrName).(string)
 	}
-	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	rec, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
 	if retry.NotFound(err) {
 		return diags
@@ -797,11 +823,11 @@ func recordParseResourceID(id string) [4]string {
 	return [4]string{recZone, recName, recType, recSet}
 }
 
-func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Client, zoneID, recordName, recordType, recordSetID string) (*awstypes.ResourceRecordSet, *string, error) {
+func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Client, zoneID, recordName, recordType, recordSetID string) (*awstypes.ResourceRecordSet, error) {
 	zone, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
@@ -832,10 +858,10 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return output, &name, nil
+	return output, nil
 }
 
 func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, morePages tfslices.Predicate[*route53.ListResourceRecordSetsOutput], filter tfslices.Predicate[*awstypes.ResourceRecordSet]) (*awstypes.ResourceRecordSet, error) {

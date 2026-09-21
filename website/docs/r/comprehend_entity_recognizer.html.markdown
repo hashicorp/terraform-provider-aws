@@ -178,7 +178,7 @@ resource "aws_comprehend_entity_recognizer" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Comprehend entity recognizer.
+- `arn` (String) ARN of the Comprehend entity recognizer.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
 

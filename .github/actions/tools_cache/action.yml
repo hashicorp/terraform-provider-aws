@@ -1,0 +1,60 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Tools Cache
+description: >-
+  Set up Go for the .ci/tools module and restore the tools cache lane (installed
+  binaries + build cache) read-only. The cache is written by the tools_cache
+  writer job in provider.yml on refs/heads/main. On a cache miss, the requested
+  tools are installed as a fallback. See .github/workflows/README.md for the
+  overall caching strategy.
+
+inputs:
+  tools:
+    description: >-
+      Space- or newline-separated list of .ci/tools import paths to install as a
+      fallback when the tools cache is missed (e.g.
+      github.com/client9/misspell/cmd/misspell).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: .ci/tools/go.mod
+        # Disabled: this action manages the tools cache lane itself.
+        cache: false
+
+    - name: Capture Go cache locations
+      shell: bash
+      run: |
+        echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_ENV"
+        echo "GOBIN_PATH=$(go env GOPATH)/bin" >> "$GITHUB_ENV"
+
+    # Read-only restore. key: nonexistent forces a restore-keys prefix match
+    # against the writer's key, so this job never writes to the cache.
+    - name: Restore tools cache
+      id: cache-tools
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      continue-on-error: true
+      with:
+        path: |
+          ${{ env.GOBIN_PATH }}
+          ${{ env.GOCACHE }}
+        key: nonexistent
+        restore-keys: |
+          ${{ runner.os }}-tools-go-
+
+    # Fallback install only on a true miss. With restore-keys, a partial hit
+    # leaves cache-hit == 'false' but sets cache-matched-key, so gate on the
+    # matched key being empty rather than on cache-hit.
+    - name: Install tools (cache miss fallback)
+      if: steps.cache-tools.outputs.cache-matched-key == ''
+      shell: bash
+      env:
+        TOOLS: ${{ inputs.tools }}
+      run: |
+        cd .ci/tools
+        # shellcheck disable=SC2086
+        go install $TOOLS

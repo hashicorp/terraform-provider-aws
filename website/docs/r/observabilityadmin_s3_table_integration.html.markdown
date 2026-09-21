@@ -107,7 +107,7 @@ This resource supports the following arguments:
 
 * `encryption` - (Required, Forces new resource) Encryption configuration block. [Documented below](#encryption-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `role_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the IAM role that grants the S3 Table integration permissions to access necessary resources.
+* `role_arn` - (Required, Forces new resource) ARN of the IAM role that grants the S3 Table integration permissions to access necessary resources.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `encryption` Block
@@ -119,7 +119,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the S3 Table integration.
+* `arn` - ARN of the S3 Table integration.
 * `destination_table_bucket_arn` - ARN of the S3 Table bucket where CloudWatch data is stored. AWS automatically creates a bucket named `_aws-cloudwatch_` if one does not already exist.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

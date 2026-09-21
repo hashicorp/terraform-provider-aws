@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_dynamodb_table: Add `import_table` configuration block
-```

@@ -38,36 +38,34 @@ resource "aws_bedrock_inference_profile" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) The name of the inference profile.
-* `model_source` - (Required) The source of the model this inference profile will track metrics and cost for. See [`model_source`](#model_source).
+* `model_source` - (Required) Source of the model this inference profile will track metrics and cost for. See [`model_source`](#model_source-block).
+* `name` - (Required) Name of the inference profile.
 
 The following arguments are optional:
 
+* `description` - (Optional) Description of the inference profile.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) The description of the inference profile.
 * `tags` - (Optional) Key-value mapping of resource tags for the inference profile.
 
-### `model_source`
+### `model_source` Block
 
-- `copy_from` - The Amazon Resource Name (ARN) of the model.
+- `copy_from` - (Required) ARN of the model.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `arn` - The Amazon Resource Name (ARN) of the inference profile.
-- `id` - The unique identifier of the inference profile.
-- `name` - The unique identifier of the inference profile.
-- `models` - A list of information about each model in the inference profile. See [`models`](#models).
-- `status` - The status of the inference profile. `ACTIVE` means that the inference profile is available to use.
-- `type` - The type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock. `APPLICATION` means that the inference profile is defined by the user.
-- `created_at` - The time at which the inference profile was created.
-- `description` - The description of the inference profile.
-- `updated_at` - The time at which the inference profile was last updated.
+- `arn` - ARN of the inference profile.
+- `created_at` - Time at which the inference profile was created.
+- `id` - Unique identifier of the inference profile.
+- `models` - List of information about each model in the inference profile. See [`models`](#models-block).
+- `status` - Status of the inference profile. `ACTIVE` means that the inference profile is available to use.
+- `type` - Type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock. `APPLICATION` means that the inference profile is defined by the user.
+- `updated_at` - Time at which the inference profile was last updated.
 
-### `models`
+### `models` Block
 
-- `model_arn` - The Amazon Resource Name (ARN) of the model.
+- `model_arn` - ARN of the model.
 
 ## Timeouts
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_sqs_queue: Don't timeout when a queue policy `Condition` value contains an empty array
-```

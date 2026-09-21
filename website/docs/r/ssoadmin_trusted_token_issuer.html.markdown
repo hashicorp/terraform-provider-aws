@@ -63,7 +63,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the trusted token issuer.
-* `id` - ARN of the trusted token issuer.
+* `id` - (**Deprecated**) ARN of the trusted token issuer.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

@@ -30,21 +30,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_catalog_table", name="Catalog Table")
+// @IdentityAttribute("name")
+// @IdentityAttribute("database_name")
+// @IdentityAttribute("catalog_id")
+// @ImportIDHandler("catalogTableImportID")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogTableCreate,
 		ReadWithoutTimeout:   resourceCatalogTableRead,
 		UpdateWithoutTimeout: resourceCatalogTableUpdate,
 		DeleteWithoutTimeout: resourceCatalogTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -334,11 +336,13 @@ func resourceCatalogTable() *schema.Resource {
 							"additional_locations": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"bucket_columns": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
 									ValidateFunc: validation.StringLenBetween(1, 255),
@@ -363,6 +367,7 @@ func resourceCatalogTable() *schema.Resource {
 										names.AttrParameters: {
 											Type:     schema.TypeMap,
 											Optional: true,
+											Computed: true,
 											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 										names.AttrType: {
@@ -396,11 +401,13 @@ func resourceCatalogTable() *schema.Resource {
 							names.AttrParameters: {
 								Type:     schema.TypeMap,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"ser_de_info": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -412,6 +419,7 @@ func resourceCatalogTable() *schema.Resource {
 										names.AttrParameters: {
 											Type:     schema.TypeMap,
 											Optional: true,
+											Computed: true,
 											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 										"serialization_library": {
@@ -552,6 +560,7 @@ func resourceCatalogTable() *schema.Resource {
 				"view_definition": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -592,16 +601,19 @@ func resourceCatalogTable() *schema.Resource {
 										"validation_connection": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 										"view_expanded_text": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.StringLenBetween(0, 409600),
 										},
 										"view_original_text": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.StringLenBetween(0, 409600),
 										},
 									},
@@ -610,11 +622,13 @@ func resourceCatalogTable() *schema.Resource {
 							"sub_object_version_ids": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeInt},
 							},
 							"sub_objects": {
 								Type:     schema.TypeList,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"view_version_id": {
@@ -709,6 +723,16 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceCatalogTableFlatten(ctx, c, catalogID, dbName, name, table, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceCatalogTableFlatten(ctx context.Context, c *conns.AWSClient, catalogID, dbName, name string, table *awstypes.Table, d *schema.ResourceData) error {
+	conn := c.GlueClient(ctx)
+
 	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
@@ -716,26 +740,39 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, table.Name)
 	d.Set(names.AttrOwner, table.Owner)
 	if err := d.Set(names.AttrParameters, flattenNonManagedParameters(table.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
+		return fmt.Errorf("setting parameters: %w", err)
 	}
 	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
+		return fmt.Errorf("setting partition_keys: %w", err)
 	}
 	d.Set("retention", table.Retention)
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
+		return fmt.Errorf("setting storage_descriptor: %w", err)
 	}
 	d.Set("table_type", table.TableType)
 	if table.TargetTable != nil {
 		if err := d.Set("target_table", []any{flattenTableIdentifier(table.TargetTable)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
+			return fmt.Errorf("setting target_table: %w", err)
 		}
 	} else {
 		d.Set("target_table", nil)
 	}
 	if table.ViewDefinition != nil {
-		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
+		// Glue does not echo back ValidationConnection, ViewOriginalText, or
+		// ViewExpandedText for validated ATHENA views — GetTable returns them as
+		// null. Preserve user supplied values.
+		var priorRepresentations []any
+		if v, ok := d.GetOk("view_definition"); ok {
+			vdList := v.([]any)
+			if len(vdList) > 0 && vdList[0] != nil {
+				vdMap := vdList[0].(map[string]any)
+				if reps, ok := vdMap["representations"].([]any); ok {
+					priorRepresentations = reps
+				}
+			}
+		}
+		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, priorRepresentations)}); err != nil {
+			return fmt.Errorf("setting view_definition: %w", err)
 		}
 	} else {
 		d.Set("view_definition", nil)
@@ -754,14 +791,14 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	case errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Operation not supported"):
 		d.Set("partition_index", nil)
 	case err != nil:
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
+		return fmt.Errorf("reading partition indexes: %w", err)
 	default:
 		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
+			return fmt.Errorf("setting partition_index: %w", err)
 		}
 	}
 
-	return diags
+	return nil
 }
 
 func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -802,6 +839,19 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 				}
 			}
 		}
+	}
+
+	// AWS Glue rejects UpdateTable on a multi-dialect view (one configured via
+	// the `view_definition` block) unless ViewUpdateAction is set; conversely,
+	// it rejects ViewUpdateAction on a legacy view (view_original_text /
+	// view_expanded_text only) with "View update action is only supported on
+	// multi-dialect views." Gate on TableInput.ViewDefinition to pick the right
+	// branch. Force=true mirrors `aws glue update-table ... --force` and is
+	// required to apply in-place updates that preserve Lake Formation grants on
+	// the view (especially in cross-account sharing).
+	if input.TableInput != nil && input.TableInput.ViewDefinition != nil {
+		input.ViewUpdateAction = awstypes.ViewUpdateActionReplace
+		input.Force = true
 	}
 
 	_, err = conn.UpdateTable(ctx, &input)
@@ -939,6 +989,31 @@ func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, d
 	return output, err
 }
 
+// viewDefinitionHasDialect returns true if view_definition.representations
+// contains at least one entry whose dialect matches the given value.
+func viewDefinitionHasDialect(d *schema.ResourceData, dialect awstypes.ViewDialect) bool {
+	v, ok := d.GetOk("view_definition")
+	if !ok {
+		return false
+	}
+	vdList := v.([]any)
+	if len(vdList) == 0 || vdList[0] == nil {
+		return false
+	}
+	reps, ok := vdList[0].(map[string]any)["representations"].([]any)
+	if !ok {
+		return false
+	}
+	for _, raw := range reps {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d == string(dialect) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 	apiObject := &awstypes.TableInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
@@ -966,7 +1041,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.Retention = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("storage_descriptor"); ok {
+	// For validated ATHENA views, Glue forbids StorageDescriptor on both
+	// CreateTable and UpdateTable. Skip it when any representation carries
+	// dialect = ATHENA, regardless of what is in state.
+	if v, ok := d.GetOk("storage_descriptor"); ok && !viewDefinitionHasDialect(d, awstypes.ViewDialectAthena) {
 		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
@@ -980,6 +1058,16 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 
 	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
+	}
+
+	// SPARK-dialect views require a StorageDescriptor with columns on both
+	// CreateTable and UpdateTable. If the user did not supply one explicitly,
+	// synthesise a minimal descriptor so Glue accepts the request. Glue will
+	// populate the actual columns after validating the view SQL.
+	if viewDefinitionHasDialect(d, awstypes.ViewDialectSpark) && apiObject.StorageDescriptor == nil {
+		apiObject.StorageDescriptor = &awstypes.StorageDescriptor{
+			Columns: []awstypes.Column{},
+		}
 	}
 
 	if v, ok := d.GetOk("view_expanded_text"); ok {
@@ -1536,7 +1624,7 @@ func expandSchemaId(tfList []any) *awstypes.SchemaId {
 
 func flattenStorageDescriptor(apiObject *awstypes.StorageDescriptor) []any {
 	if apiObject == nil {
-		return make([]any, 0)
+		return nil
 	}
 
 	tfList := make([]any, 1)
@@ -1857,7 +1945,7 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 	return apiObjects
 }
 
-func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
+func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentations []any) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1881,7 +1969,7 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	}
 
 	if v := apiObject.Representations; len(v) > 0 {
-		tfMap["representations"] = flattenViewRepresentations(v)
+		tfMap["representations"] = flattenViewRepresentations(v, priorRepresentations)
 	}
 
 	tfMap["view_version_id"] = apiObject.ViewVersionId
@@ -1893,15 +1981,34 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	return tfMap
 }
 
-func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation) []any {
+// flattenViewRepresentations flattens API representations, falling back to
+// prior state values for fields Glue does not echo back on GetTable
+// (ValidationConnection, ViewOriginalText, ViewExpandedText). Matching is by
+// dialect so the merge is order-independent.
+func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, prior []any) []any {
+	// Build a lookup of prior state representations keyed by dialect string.
+	priorByDialect := make(map[string]map[string]any, len(prior))
+	for _, raw := range prior {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d != "" {
+				priorByDialect[d] = m
+			}
+		}
+	}
+
 	tfList := make([]any, len(apiObjects))
 	for i, v := range apiObjects {
-		tfList[i] = flattenViewRepresentation(v)
+		tfList[i] = flattenViewRepresentation(v, priorByDialect[string(v.Dialect)])
 	}
 	return tfList
 }
 
-func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string]any {
+// flattenViewRepresentation flattens one API representation. For the three
+// fields Glue strips on validated views (ValidationConnection,
+// ViewOriginalText, ViewExpandedText), the API value takes precedence when
+// non-empty; otherwise the prior state value is preserved so state stays
+// consistent with what the user configured.
+func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[string]any) map[string]any {
 	tfMap := make(map[string]any)
 
 	if v := apiObject.Dialect; v != "" {
@@ -1912,16 +2019,30 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 		tfMap["dialect_version"] = v
 	}
 
+	// Glue does not store these fields back for validated ATHENA views.
+	// Use the API value when present; fall back to prior state otherwise.
 	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
 		tfMap["validation_connection"] = v
+	} else if prior != nil {
+		if v, ok := prior["validation_connection"].(string); ok && v != "" {
+			tfMap["validation_connection"] = v
+		}
 	}
 
 	if v := aws.ToString(apiObject.ViewExpandedText); v != "" {
 		tfMap["view_expanded_text"] = v
+	} else if prior != nil {
+		if v, ok := prior["view_expanded_text"].(string); ok && v != "" {
+			tfMap["view_expanded_text"] = v
+		}
 	}
 
 	if v := aws.ToString(apiObject.ViewOriginalText); v != "" {
 		tfMap["view_original_text"] = v
+	} else if prior != nil {
+		if v, ok := prior["view_original_text"].(string); ok && v != "" {
+			tfMap["view_original_text"] = v
+		}
 	}
 
 	return tfMap
@@ -1929,4 +2050,27 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
 	return c.RegionalARN(ctx, "glue", "table/"+dbName+"/"+name)
+}
+
+var _ inttypes.SDKv2ImportID = catalogTableImportID{}
+
+type catalogTableImportID struct{}
+
+func (catalogTableImportID) Create(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s:%s:%s", d.Get(names.AttrCatalogID).(string), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string))
+}
+
+func (catalogTableImportID) Parse(id string) (string, map[string]any, error) {
+	catalogId, databaseName, tableName, err := catalogTableParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrCatalogID:    catalogId,
+		names.AttrDatabaseName: databaseName,
+		names.AttrName:         tableName,
+	}
+
+	return id, result, nil
 }

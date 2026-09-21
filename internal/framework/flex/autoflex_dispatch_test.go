@@ -37,7 +37,11 @@ type tfObjectValue[T any] struct {
 }
 
 type tfInterfaceFlexer struct {
-	Field1 types.String `tfsdk:"field1"`
+	Impl fwtypes.ListNestedObjectValueOf[tfImpl] `tfsdk:"impl"`
+}
+
+type tfImpl struct {
+	ImplField1 types.String `tfsdk:"impl_field1"`
 }
 
 var (
@@ -46,20 +50,32 @@ var (
 )
 
 func (t tfInterfaceFlexer) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	return &awsInterfaceInterfaceImpl{
-		AWSField: StringValueFromFramework(ctx, t.Field1),
-	}, nil
+	var v awsInterfaceInterface
+	switch {
+	case !t.Impl.IsNull():
+		data, _ := t.Impl.ToPtr(ctx)
+		v = &awsInterfaceInterfaceImpl{
+			Value: awsInterfaceInterfaceImplValue{
+				ImplField1: StringValueFromFramework(ctx, data.ImplField1),
+			},
+		}
+	}
+
+	return v, nil
 }
 
 func (t *tfInterfaceFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch val := v.(type) {
 	case awsInterfaceInterfaceImpl:
-		t.Field1 = StringValueToFramework(ctx, val.AWSField)
-		return diags
+		data := tfImpl{
+			ImplField1: StringValueToFramework(ctx, val.Value.ImplField1),
+		}
+		t.Impl = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 
-	default:
-		return diags
+		// awsInterfaceInterfaceUnmappedImpl is intentionally not mapped
 	}
+
+	return diags
 }
 
 type tfInterfaceIncompatibleExpander struct {
@@ -91,12 +107,30 @@ type awsInterfaceInterface interface {
 }
 
 type awsInterfaceInterfaceImpl struct {
-	AWSField string
+	Value awsInterfaceInterfaceImplValue
+}
+
+type awsInterfaceInterfaceImplValue struct {
+	ImplField1 string
 }
 
 var _ awsInterfaceInterface = &awsInterfaceInterfaceImpl{}
 
 func (t *awsInterfaceInterfaceImpl) isAWSInterfaceInterface() {} // nosemgrep:ci.aws-in-func-name
+
+// awsInterfaceInterfaceUnmappedImpl should not be mapped in tfInterfaceFlexer's Flatten function
+// to simulate silently ignoring cases, such as unrecognized tagged union types.
+type awsInterfaceInterfaceUnmappedImpl struct {
+	Value awsInterfaceInterfaceUnmappedImplValue
+}
+
+var _ awsInterfaceInterface = &awsInterfaceInterfaceUnmappedImpl{}
+
+func (t *awsInterfaceInterfaceUnmappedImpl) isAWSInterfaceInterface() {} // nosemgrep:ci.aws-in-func-name
+
+type awsInterfaceInterfaceUnmappedImplValue struct {
+	UnmappedField1 string
+}
 
 type tfFlexer struct {
 	Field1 types.String `tfsdk:"field1"`
@@ -187,7 +221,7 @@ func (t tfTypedExpanderToNil) ExpandTo(ctx context.Context, targetType reflect.T
 }
 
 type tfInterfaceTypedExpander struct {
-	Field1 types.String `tfsdk:"field1"`
+	Impl fwtypes.ListNestedObjectValueOf[tfImpl] `tfsdk:"impl"`
 }
 
 var _ TypedExpander = tfInterfaceTypedExpander{}
@@ -195,9 +229,17 @@ var _ TypedExpander = tfInterfaceTypedExpander{}
 func (t tfInterfaceTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	switch targetType {
 	case reflect.TypeFor[awsInterfaceInterface]():
-		return &awsInterfaceInterfaceImpl{
-			AWSField: StringValueFromFramework(ctx, t.Field1),
-		}, nil
+		var v awsInterfaceInterface
+		switch {
+		case !t.Impl.IsNull():
+			data, _ := t.Impl.ToPtr(ctx)
+			v = &awsInterfaceInterfaceImpl{
+				Value: awsInterfaceInterfaceImplValue{
+					ImplField1: StringValueFromFramework(ctx, data.ImplField1),
+				},
+			}
+		}
+		return v, nil
 	}
 
 	return nil, nil
@@ -574,11 +616,17 @@ func TestExpandInterface(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"top level": {
 			Source: tfInterfaceFlexer{
-				Field1: types.StringValue("value1"),
+				Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+					{
+						ImplField1: types.StringValue("value1"),
+					},
+				}),
 			},
 			Target: &targetInterface,
 			WantTarget: testFlexAWSInterfaceInterfacePtr(&awsInterfaceInterfaceImpl{
-				AWSField: "value1",
+				Value: awsInterfaceInterfaceImplValue{
+					ImplField1: "value1",
+				},
 			}),
 		},
 		"top level return value does not implement target interface": {
@@ -592,14 +640,20 @@ func TestExpandInterface(t *testing.T) {
 			Source: tfListNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 				}),
 			},
 			Target: &awsInterfaceSingle{},
 			WantTarget: &awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 		},
@@ -620,14 +674,20 @@ func TestExpandInterface(t *testing.T) {
 			Source: tfSetNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 				}),
 			},
 			Target: &awsInterfaceSingle{},
 			WantTarget: &awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 		},
@@ -644,10 +704,18 @@ func TestExpandInterface(t *testing.T) {
 			Source: tfListNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 					{
-						Field1: types.StringValue("value2"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value2"),
+							},
+						}),
 					},
 				}),
 			},
@@ -655,10 +723,14 @@ func TestExpandInterface(t *testing.T) {
 			WantTarget: &awsInterfaceSlice{
 				Field1: []awsInterfaceInterface{
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value1",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value1",
+						},
 					},
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value2",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value2",
+						},
 					},
 				},
 			},
@@ -676,10 +748,18 @@ func TestExpandInterface(t *testing.T) {
 			Source: tfSetNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 					{
-						Field1: types.StringValue("value2"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value2"),
+							},
+						}),
 					},
 				}),
 			},
@@ -687,10 +767,14 @@ func TestExpandInterface(t *testing.T) {
 			WantTarget: &awsInterfaceSlice{
 				Field1: []awsInterfaceInterface{
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value1",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value1",
+						},
 					},
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value2",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value2",
+						},
 					},
 				},
 			},
@@ -698,13 +782,19 @@ func TestExpandInterface(t *testing.T) {
 		"object value Source and struct Target": {
 			Source: tfObjectValue[tfInterfaceFlexer]{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfInterfaceFlexer{
-					Field1: types.StringValue("value1"),
+					Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+						{
+							ImplField1: types.StringValue("value1"),
+						},
+					}),
 				}),
 			},
 			Target: &awsInterfaceSingle{},
 			WantTarget: &awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 		},
@@ -722,11 +812,17 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"top level": {
 			Source: tfInterfaceTypedExpander{
-				Field1: types.StringValue("value1"),
+				Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+					{
+						ImplField1: types.StringValue("value1"),
+					},
+				}),
 			},
 			Target: &targetInterface,
 			WantTarget: testFlexAWSInterfaceInterfacePtr(&awsInterfaceInterfaceImpl{
-				AWSField: "value1",
+				Value: awsInterfaceInterfaceImplValue{
+					ImplField1: "value1",
+				},
 			}),
 		},
 		"top level return value does not implement target interface": {
@@ -740,14 +836,20 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			Source: tfListNestedObject[tfInterfaceTypedExpander]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 				}),
 			},
 			Target: &awsInterfaceSingle{},
 			WantTarget: &awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 		},
@@ -768,14 +870,20 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			Source: tfSetNestedObject[tfInterfaceTypedExpander]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 				}),
 			},
 			Target: &awsInterfaceSingle{},
 			WantTarget: &awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 		},
@@ -792,10 +900,18 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			Source: tfListNestedObject[tfInterfaceTypedExpander]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 					{
-						Field1: types.StringValue("value2"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value2"),
+							},
+						}),
 					},
 				}),
 			},
@@ -803,10 +919,14 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			WantTarget: &awsInterfaceSlice{
 				Field1: []awsInterfaceInterface{
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value1",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value1",
+						},
 					},
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value2",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value2",
+						},
 					},
 				},
 			},
@@ -824,10 +944,18 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			Source: tfSetNestedObject[tfInterfaceTypedExpander]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 					{
-						Field1: types.StringValue("value2"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value2"),
+							},
+						}),
 					},
 				}),
 			},
@@ -835,10 +963,14 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			WantTarget: &awsInterfaceSlice{
 				Field1: []awsInterfaceInterface{
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value1",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value1",
+						},
 					},
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value2",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value2",
+						},
 					},
 				},
 			},
@@ -846,13 +978,19 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 		"object value Source and struct Target": {
 			Source: tfObjectValue[tfInterfaceTypedExpander]{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfInterfaceTypedExpander{
-					Field1: types.StringValue("value1"),
+					Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+						{
+							ImplField1: types.StringValue("value1"),
+						},
+					}),
 				}),
 			},
 			Target: &awsInterfaceSingle{},
 			WantTarget: &awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 		},
@@ -1217,16 +1355,35 @@ func TestFlattenInterface(t *testing.T) {
 		"single interface Source and single list Target": {
 			Source: awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 			Target: &tfListNestedObject[tfInterfaceFlexer]{},
 			WantTarget: &tfListNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 				}),
+			},
+		},
+		"single unmapped interface Source and list Target": {
+			Source: awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceUnmappedImpl{
+					Value: awsInterfaceInterfaceUnmappedImplValue{
+						UnmappedField1: "value1",
+					},
+				},
+			},
+			Target: &tfListNestedObject[tfInterfaceFlexer]{},
+			WantTarget: &tfListNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[tfInterfaceFlexer](ctx),
 			},
 		},
 		"nil interface Source and non-Flattener list Target": {
@@ -1241,7 +1398,9 @@ func TestFlattenInterface(t *testing.T) {
 		"single interface Source and non-Flattener list Target": {
 			Source: awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 			Target: &tfListNestedObject[tfSingleStringField]{},
@@ -1262,16 +1421,35 @@ func TestFlattenInterface(t *testing.T) {
 		"single interface Source and single set Target": {
 			Source: awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 			Target: &tfSetNestedObject[tfInterfaceFlexer]{},
 			WantTarget: &tfSetNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 				}),
+			},
+		},
+		"single unmapped interface Source and set Target": {
+			Source: awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceUnmappedImpl{
+					Value: awsInterfaceInterfaceUnmappedImplValue{
+						UnmappedField1: "value1",
+					},
+				},
+			},
+			Target: &tfSetNestedObject[tfInterfaceFlexer]{},
+			WantTarget: &tfSetNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewSetNestedObjectValueOfNull[tfInterfaceFlexer](ctx),
 			},
 		},
 
@@ -1297,10 +1475,14 @@ func TestFlattenInterface(t *testing.T) {
 			Source: awsInterfaceSlice{
 				Field1: []awsInterfaceInterface{
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value1",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value1",
+						},
 					},
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value2",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value2",
+						},
 					},
 				},
 			},
@@ -1308,10 +1490,18 @@ func TestFlattenInterface(t *testing.T) {
 			WantTarget: &tfListNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 					{
-						Field1: types.StringValue("value2"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value2"),
+							},
+						}),
 					},
 				}),
 			},
@@ -1339,10 +1529,14 @@ func TestFlattenInterface(t *testing.T) {
 			Source: awsInterfaceSlice{
 				Field1: []awsInterfaceInterface{
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value1",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value1",
+						},
 					},
 					&awsInterfaceInterfaceImpl{
-						AWSField: "value2",
+						Value: awsInterfaceInterfaceImplValue{
+							ImplField1: "value2",
+						},
 					},
 				},
 			},
@@ -1350,10 +1544,18 @@ func TestFlattenInterface(t *testing.T) {
 			WantTarget: &tfSetNestedObject[tfInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
-						Field1: types.StringValue("value1"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value1"),
+							},
+						}),
 					},
 					{
-						Field1: types.StringValue("value2"),
+						Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+							{
+								ImplField1: types.StringValue("value2"),
+							},
+						}),
 					},
 				}),
 			},
@@ -1370,13 +1572,19 @@ func TestFlattenInterface(t *testing.T) {
 		"interface Source and nested object Target": {
 			Source: awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 			Target: &tfObjectValue[tfInterfaceFlexer]{},
 			WantTarget: &tfObjectValue[tfInterfaceFlexer]{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfInterfaceFlexer{
-					Field1: types.StringValue("value1"),
+					Impl: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfImpl{
+						{
+							ImplField1: types.StringValue("value1"),
+						},
+					}),
 				}),
 			},
 		},

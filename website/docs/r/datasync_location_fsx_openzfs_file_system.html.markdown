@@ -32,9 +32,9 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for OpenZfs file system.
+* `fsx_filesystem_arn` - (Required) ARN for the FSx for OpenZfs file system.
 * `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See below.
-* `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for openzfs file system.
+* `security_group_arns` - (Optional) ARNs of the security groups that are to use to configure the FSx for openzfs file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Must start with `/fsx`.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -54,8 +54,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the DataSync Location.
-* `arn` - Amazon Resource Name (ARN) of the DataSync Location.
+* `id` - ARN of the DataSync Location.
+* `arn` - ARN of the DataSync Location.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uri` - The URL of the FSx for openzfs location that was described.
 * `creation_time` - The time that the FSx for openzfs location was created.

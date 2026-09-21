@@ -169,6 +169,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
+			Factory:  newSecretPolicyResourceAsListResource,
+			TypeName: "aws_secretsmanager_secret_policy",
+			Name:     "Secret Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("secret_arn"),
+		},
+		{
 			Factory:  secretVersionResourceAsListResource,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
@@ -187,7 +194,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*secretsmanager.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*secretsmanager.Options){
 		secretsmanager.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

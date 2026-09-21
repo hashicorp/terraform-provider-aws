@@ -120,25 +120,22 @@ func evictFromZoneRecordCache(zoneID, key string) {
 // readRecordFromCache looks up a record in the zone cache, falling back to a
 // direct API call on a cache miss. A miss result is stored back into the cache
 // fallback behavior is to ensure resource data is refreshed from the API after a record is updated or deleted
-func readRecordFromCache(ctx context.Context, conn *route53.Client, zoneID, name, rrType, setID string) (*awstypes.ResourceRecordSet, *string, error) {
+func readRecordFromCache(ctx context.Context, conn *route53.Client, zoneID, name, rrType, setID string) (*awstypes.ResourceRecordSet, error) {
 	cache, err := getOrLoadZoneRecordCache(ctx, conn, zoneID)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	key := recordCacheKey(zoneID, name, rrType, setID)
 	rrs, ok := lookupInZoneRecordCache(cache, key)
 	if !ok {
-		record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, rrType, setID)
+		record, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, rrType, setID)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		storeInZoneRecordCache(cache, key, *record)
-		return record, fqdn, nil
+		return record, nil
 	}
 
-	// Derive the FQDN string in the same form returned by findResourceRecordSetByFourPartKey:
-	// normalized (no trailing dot, octal escape codes preserved).
-	fqdnStr := normalizeDomainName(aws.ToString(rrs.Name))
-	return &rrs, &fqdnStr, nil
+	return &rrs, nil
 }

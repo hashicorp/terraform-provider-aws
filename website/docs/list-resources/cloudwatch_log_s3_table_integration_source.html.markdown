@@ -1,7 +1,7 @@
 ---
 subcategory: "CloudWatch Logs"
 layout: "aws"
-page_title: "AWS: aws_logs_s3_table_integration_source"
+page_title: "AWS: aws_cloudwatch_log_s3_table_integration_source"
 description: |-
   Lists CloudWatch Logs S3 Table Integration Source resources.
 ---

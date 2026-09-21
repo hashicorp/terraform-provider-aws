@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,8 +24,8 @@ func TestAccLogsDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
-	streamResourceName := "aws_kinesis_stream.test.0"
-	roleResourceName := "aws_iam_role.test.0"
+	streamResourceName := "aws_kinesis_stream.test"
+	roleResourceName := "aws_iam_role.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -34,7 +35,10 @@ func TestAccLogsDestination_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Destination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
@@ -44,6 +48,10 @@ func TestAccLogsDestination_basic(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Destination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -65,7 +73,10 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Destination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceDestination(), resourceName),
@@ -275,18 +286,6 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.policy[count.index].json
 }
 `, rName, n)
-}
-
-func testAccDestinationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 1), fmt.Sprintf(`
-resource "aws_cloudwatch_log_destination" "test" {
-  name       = %[1]q
-  target_arn = aws_kinesis_stream.test[0].arn
-  role_arn   = aws_iam_role.test[0].arn
-
-  depends_on = [aws_iam_role_policy.test[0]]
-}
-`, rName))
 }
 
 func testAccDestinationConfig_update(rName string, idx int) string {

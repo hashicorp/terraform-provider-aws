@@ -38,7 +38,7 @@ You can send query logs to an [S3 bucket](s3_bucket.html), a [CloudWatch Logs lo
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Route 53 Resolver query logging configuration.
-* `arn` - The ARN (Amazon Resource Name) of the Route 53 Resolver query logging configuration.
+* `arn` - ARN of the Route 53 Resolver query logging configuration.
 * `owner_id` - The AWS account ID of the account that created the query logging configuration.
 * `share_status` - An indication of whether the query logging configuration is shared with other AWS accounts, or was shared with the current account by another AWS account.
 Sharing is configured through AWS Resource Access Manager (AWS RAM).

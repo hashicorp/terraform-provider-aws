@@ -13,12 +13,8 @@ import (
 	"path"
 	"strings"
 	"text/template"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/hashicorp/cli"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 type Generator struct {
@@ -179,24 +175,9 @@ func (d *baseDestination) BufferTemplate(templateName, templateBody string, temp
 
 func parseTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) ([]byte, error) {
 	funcMap := template.FuncMap{
-		// FirstLower returns a string with the first character as lower case.
-		"FirstLower": func(s string) string {
-			if s == "" {
-				return ""
-			}
-			r, n := utf8.DecodeRuneInString(s)
-			return string(unicode.ToLower(r)) + s[n:]
-		},
-		// FirstUpper returns a string with the first character as upper case.
-		"FirstUpper": func(s string) string {
-			if s == "" {
-				return ""
-			}
-			r, n := utf8.DecodeRuneInString(s)
-			return string(unicode.ToUpper(r)) + s[n:]
-		},
-		// Title returns a string with the first character of each word as upper case.
-		"Title": cases.Title(language.Und, cases.NoLower).String,
+		"FirstLower": FirstLower,
+		"FirstUpper": FirstUpper,
+		"Title":      Title,
 	}
 	for _, v := range funcMaps {
 		maps.Copy(funcMap, v) // Extras overwrite defaults.

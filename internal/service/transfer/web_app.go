@@ -75,7 +75,7 @@ func (r *webAppResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 			},
 			"web_app_id":    framework.IDAttribute(),
-			"web_app_units": framework.ResourceOptionalComputedListOfObjectsAttribute[webAppUnitsModel](ctx, 1, nil),
+			"web_app_units": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithValidators[webAppUnitsModel](listvalidator.SizeAtMost(1))),
 		},
 		Blocks: map[string]schema.Block{
 			"endpoint_details": schema.ListNestedBlock{
