@@ -263,6 +263,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Description: "The Amazon CloudWatch Logs settings for the channel.",
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
 							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 								listvalidator.IsRequired(),
 							},
