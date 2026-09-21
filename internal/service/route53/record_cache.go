@@ -32,54 +32,60 @@ func batchReadsEnabled() bool {
 // zoneRecordCache holds all cached ResourceRecordSets for a single hosted zone,
 // keyed by the record set resource ID.
 type zoneRecordCache struct {
-	once    sync.Once
-	loadErr error
 	mu      sync.RWMutex
+	loaded  bool
 	records map[string]awstypes.ResourceRecordSet
 }
 
 // recordCacheZones maps cleaned hosted zone ID to its populated record cache.
 var recordCacheZones tfsync.Map[string, *zoneRecordCache]
 
-// getOrLoadZoneRecordCache returns the existing zone record cache or loads it.
+// getOrLoadZoneRecordCache returns the record cache for zoneID, performing a
+// full ListResourceRecordSets scan if the zone has not been loaded yet.
 //
-// If the cache is not yet loaded, a full ListResourceRecordSets scan is
-// performed to populate the cache for future callers.
+// Concurrent callers for the same zone serialize on that zone's mutex, so only
+// the first pays for the scan. Scans of different zones proceed in parallel. A
+// failed scan is not cached: partial results are discarded and the next caller
+// retries.
 //
-// The full scan, wrapped by once.Do, will execute only for the first caller
-// to reach it. Subsequent callers will block until the function has completed,
-// ensuring this zone's records are loaded before the outer function returns.
-//
-// A failure during loading will result in an empty or incomplete cache and a
-// non-nil loadErr.
+// The scan runs on the calling goroutine's context, so a caller whose context
+// is cancelled mid-scan surfaces that cancellation to the callers blocked
+// behind it.
 func getOrLoadZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID string) (*zoneRecordCache, error) {
-	v, _ := recordCacheZones.LoadOrStore(zoneID, &zoneRecordCache{records: make(map[string]awstypes.ResourceRecordSet)})
+	c, _ := recordCacheZones.LoadOrStore(zoneID, &zoneRecordCache{records: make(map[string]awstypes.ResourceRecordSet)})
 
-	v.once.Do(func() {
-		v.load(ctx, conn, zoneID)
-	})
-	return v, v.loadErr
-}
-
-// load fetches all record sets in a hosted zone.
-//
-// This should only be called within zoneRecordCache.once.Do to ensure
-// the List operation is performed once per Terraform operation.
-func (c *zoneRecordCache) load(ctx context.Context, conn *route53.Client, zoneID string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.loaded {
+		return c, nil
+	}
+
+	if err := c.load(ctx, conn, zoneID); err != nil {
+		clear(c.records)
+		return nil, err
+	}
+	c.loaded = true
+
+	return c, nil
+}
+
+// load fetches all record sets in a hosted zone into the cache.
+//
+// The caller must hold c.mu for writing.
+func (c *zoneRecordCache) load(ctx context.Context, conn *route53.Client, zoneID string) error {
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId: aws.String(zoneID),
 	}
 	for rrs, err := range listRecords(ctx, conn, input) {
 		if err != nil {
-			c.loadErr = err
-			return
+			return err
 		}
 		key := recordCacheKey(zoneID, aws.ToString(rrs.Name), string(rrs.Type), aws.ToString(rrs.SetIdentifier))
 		c.records[key] = rrs
 	}
+
+	return nil
 }
 
 // get retrieves a single record from the zone cache.
@@ -134,7 +140,7 @@ func readFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, 
 func evictFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, key string) {
 	cache, err := getOrLoadZoneRecordCache(ctx, conn, zoneID)
 	if err != nil {
-		log.Printf("[WARN] Failed to load zone record cache for \"%s\". Key \"%s\" not evicted.", zoneID, key)
+		log.Printf("[WARN] loading Route 53 Hosted Zone (%s) record cache, not evicting %s: %s", zoneID, key, err)
 		return
 	}
 
