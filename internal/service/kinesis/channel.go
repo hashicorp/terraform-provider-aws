@@ -47,11 +47,9 @@ import (
 )
 
 // @FrameworkResource("aws_kinesis_channel", name="Channel")
-// @IdentityAttribute("channel")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kinesis;kinesis.DescribeChannelResponse")
-// @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
-// @Testing(hasNoPreExistingResource=true)
+// @Tags(identifierAttribute="channel_arn")
+// @ArnIdentity("channel_arn")
+// @Testing(hasNoPreExistingResource=true, generator=false, tagsTest=false)
 func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelResource{}
 
@@ -177,10 +175,10 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 								int64validator.AtMost(900),
 							},
 						},
+						"dead_letter_queue_s3_configuration": channelDeadLetterQueueS3ConfigurationAttribute(ctx),
 					},
 					Blocks: map[string]schema.Block{
-						"dead_letter_queue_s3_configuration": channelDeadLetterQueueS3ConfigurationBlock(ctx, false),
-						"storage_configuration":              channelStorageConfigurationBlock(ctx),
+						"storage_configuration": channelStorageConfigurationBlock(ctx),
 					},
 				},
 			},
@@ -210,7 +208,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"dead_letter_queue_s3_configuration": channelDeadLetterQueueS3ConfigurationBlock(ctx, true),
+						"dead_letter_queue_s3_configuration": channelDeadLetterQueueS3ConfigurationBlock(ctx),
 						"s3_tables_configuration_list":       channelS3TablesConfigurationListBlock(ctx),
 					},
 				},
@@ -511,6 +509,7 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 					Description: "The template used to construct the Amazon S3 object key for delivered objects. If not specified, a default template is used.",
 					CustomType:  types.StringType,
 					Optional:    true,
+					Computed:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 						stringvalidator.LengthAtMost(1024),
@@ -521,6 +520,7 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
+						stringplanmodifier.UseStateForUnknown(),
 					},
 				},
 				"storage_class": schema.StringAttribute{
@@ -546,17 +546,21 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 	}
 }
 
-func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context, required bool) schema.ListNestedBlock {
-	validators := []validator.List{
-		listvalidator.SizeAtMost(1),
-	}
-	if required {
-		validators = append(validators, listvalidator.IsRequired(), listvalidator.SizeAtLeast(1))
-	}
+func channelDeadLetterQueueS3ConfigurationAttribute(ctx context.Context) schema.ListAttribute {
+	attr := framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[deadLetterQueueS3ConfigurationModel](ctx)
+	attr.Description = "The dead-letter queue configuration for records that cannot be delivered. If not specified, defaults to the destination bucket with an error prefix."
+	return attr
+}
+
+func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		Description: "The dead-letter queue configuration for records that cannot be delivered.",
 		CustomType:  fwtypes.NewListNestedObjectTypeOf[deadLetterQueueS3ConfigurationModel](ctx),
-		Validators:  validators,
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
+		},
 		PlanModifiers: []planmodifier.List{
 			listplanmodifier.RequiresReplace(),
 		},
@@ -699,7 +703,26 @@ func (r *channelResource) Create(ctx context.Context, req resource.CreateRequest
 
 	input.Tags = getTagsInMap(ctx)
 
-	out, err := conn.CreateChannel(ctx, &input)
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	out, err := tfresource.RetryWhen(
+		ctx, createTimeout,
+		func(ctx context.Context) (*kinesis.CreateChannelOutput, error) {
+			return conn.CreateChannel(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*awstypes.ValidationException](err) {
+				if errs.Contains(err, "Unable to access the S3 bucket") ||
+					errs.Contains(err, "service execution role") ||
+					errs.Contains(err, "AccessDenied") {
+					return true, err
+				}
+			}
+			if errs.IsA[*awstypes.AccessDeniedException](err) {
+				return true, err
+			}
+			return false, err
+		},
+	)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -709,15 +732,16 @@ func (r *channelResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ChannelDescription, &plan))
-	if resp.Diagnostics.HasError() {
+	arn := aws.ToString(out.ChannelDescription.ChannelARN)
+
+	channel, err := waitChannelCreated(ctx, conn, arn, createTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitChannelCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, channel, &plan))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -781,6 +805,14 @@ func (r *channelResource) Update(ctx context.Context, req resource.UpdateRequest
 			}
 			input.ChannelARN = plan.ARN.ValueStringPointer()
 
+			if plan.LoggingConfiguration.IsNull() && !state.LoggingConfiguration.IsNull() {
+				input.LoggingConfiguration = &awstypes.ChannelLoggingUpdateInput{
+					CloudWatchLogs: &awstypes.CloudWatchLogsUpdateInput{
+						Enabled: aws.Bool(false),
+					},
+				}
+			}
+
 			out, err := conn.UpdateChannel(ctx, &input)
 			if err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
@@ -840,7 +872,17 @@ func (r *channelResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *channelResource) flatten(ctx context.Context, channel *awstypes.ChannelDescription, data *channelResourceModel) (diags diag.Diagnostics) {
-	diags.Append(flex.Flatten(ctx, channel, data)...)
+	hadLoggingConfig := !data.LoggingConfiguration.IsNull() && len(data.LoggingConfiguration.Elements()) > 0
+
+	diags.Append(flex.Flatten(ctx, channel, data, flex.WithFieldNamePrefix("Channel"))...)
+	data.ARN = types.StringPointerValue(channel.ChannelARN)
+	data.ID = types.StringPointerValue(channel.ChannelId)
+	data.Name = types.StringPointerValue(channel.ChannelName)
+
+	if !hadLoggingConfig && (channel.LoggingConfiguration == nil || channel.LoggingConfiguration.CloudWatchLogs == nil || !aws.ToBool(channel.LoggingConfiguration.CloudWatchLogs.Enabled)) {
+		data.LoggingConfiguration = fwtypes.NewListNestedObjectValueOfNull[channelLoggingConfigurationModel](ctx)
+	}
+
 	return diags
 }
 
@@ -945,7 +987,7 @@ func findChannelByArn(ctx context.Context, conn *kinesis.Client, arn string) (*a
 
 type channelResourceModel struct {
 	framework.WithRegionModel
-	ARN                              fwtypes.ARN                                                                   `tfsdk:"channel_arn"`
+	ARN                              types.String                                                                  `tfsdk:"channel_arn"`
 	ID                               types.String                                                                  `tfsdk:"channel_id"`
 	Name                             types.String                                                                  `tfsdk:"channel_name"`
 	ServiceExecutionRoleARN          types.String                                                                  `tfsdk:"service_execution_role_arn"`

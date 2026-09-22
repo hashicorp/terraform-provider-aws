@@ -6,6 +6,7 @@ package kinesis
 // Exports for use in tests only.
 var (
 	ResourceAccountSettings = newAccountSettingsResource
+	ResourceChannel         = newChannelResource
 	ResourceResourcePolicy  = newResourcePolicyResource
 	ResourceStream          = resourceStream
 	ResourceStreamConsumer  = resourceStreamConsumer
@@ -15,4 +16,5 @@ var (
 	FindResourcePolicyByARN = findResourcePolicyByARN
 	FindStreamByName        = findStreamByName
 	FindStreamConsumerByARN = findStreamConsumerByARN
+	FindChannelByArn        = findChannelByArn
 )
