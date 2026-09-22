@@ -708,6 +708,18 @@ func TestAccElastiCacheGlobalReplicationGroup_primaryReplicationGroupID_update(t
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplcationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_replication_group_id", secondaryReplicationGroupResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(primaryReplicationGroupResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(secondaryReplicationGroupResourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
