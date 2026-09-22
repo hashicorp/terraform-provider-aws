@@ -5,7 +5,7 @@ resource "aws_directoryservicedata_user" "test" {
   count  = var.resource_count
   region = var.region
 
-  directory_id = aws_directory_service_directory.test.id
+  directory_id     = aws_directory_service_directory.test.id
   sam_account_name = "${var.rName}-${count.index}"
 }
 
