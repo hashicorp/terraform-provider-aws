@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -325,11 +326,24 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (any, error) {
 			return conn.CreateDBInstance(ctx, input)
 		},
-		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			// InvalidDBClusterStateFault: The database cluster has been modified by a concurrent operation. Please check the cluster's status and try again.
+			// Returned when several instances of the same cluster are created in parallel.
+			if errs.IsAErrorMessageContains[*types.InvalidDBClusterStateFault](err, "modified by a concurrent operation") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s) Instance (%s): %s", clusterID, identifier, err)
 	}
