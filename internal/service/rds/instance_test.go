@@ -14932,7 +14932,7 @@ func TestAccRDSInstance_engineVersion_outOfBand(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 					current := aws.ToString(v1.EngineVersion)
 
