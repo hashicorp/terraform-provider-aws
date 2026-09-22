@@ -140,10 +140,9 @@ func TestZoneRecordCacheKeySymmetry(t *testing.T) {
 	// API). Both must produce the same key or the record is never served from
 	// the cache.
 	cases := []struct {
-		name       string
-		fromState  string
-		fromAPI    string
-		fromAPIDot string
+		name      string
+		fromState string
+		fromAPI   string
 	}{
 		{
 			name:      "wildcard",
