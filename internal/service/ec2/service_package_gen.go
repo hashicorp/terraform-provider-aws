@@ -1117,11 +1117,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceDefaultSecurityGroup,
 			TypeName: "aws_default_security_group",
-			Name:     "Security Group",
+			Name:     "Default Security Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceDefaultSubnet,
@@ -2170,6 +2174,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute("organization_arn", false),
 				inttypes.StringIdentityAttribute("organizational_unit_arn", false),
 			}),
+		},
+		{
+			Factory:  newDefaultSecurityGroupResourceAsListResource,
+			TypeName: "aws_default_security_group",
+			Name:     "Default Security Group",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
 			Factory:  newEBSVolumeResourceAsListResource,
