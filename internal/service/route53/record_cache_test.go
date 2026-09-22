@@ -210,11 +210,12 @@ func TestZoneRecordCacheEvict(t *testing.T) {
 	t.Parallel()
 
 	zoneID := "Z_evict_test"
-	cache := &zoneRecordCache{
+	cache, _ := recordCacheZones.LoadOrStore(zoneID, &zoneRecordCache{
 		loaded:   true,
 		zoneName: "example.com.",
 		records:  make(map[string]awstypes.ResourceRecordSet),
-	}
+	})
+
 	// Stored under the fully qualified key the zone scan would produce, then
 	// evicted using the relative name a configuration would supply.
 	key := cache.key(zoneID, "www.example.com.", "A", "")
@@ -222,8 +223,6 @@ func TestZoneRecordCacheEvict(t *testing.T) {
 		Name: aws.String("www.example.com."),
 		Type: awstypes.RRTypeA,
 	})
-
-	recordCacheZones.LoadOrStore(zoneID, cache)
 
 	evictFromZoneRecordCache(zoneID, "www", "A", "")
 
