@@ -48,7 +48,7 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 				}
 
 				for _, user := range page.Users {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newUserResource, client, 
+					sweepResources = append(sweepResources, framework.NewSweepResource(newUserResource, client,
 						framework.NewAttribute("directory_id", directoryID), framework.NewAttribute("sam_account_name", aws.ToString(user.SAMAccountName))),
 					)
 				}
