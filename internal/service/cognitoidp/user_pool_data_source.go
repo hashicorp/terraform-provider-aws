@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -63,8 +64,9 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			"estimated_number_of_users": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrID:    framework.IDAttribute(),
-			"lambda_config": framework.DataSourceComputedListOfObjectAttribute[lambdaConfigTypeModel](ctx),
+			names.AttrID:        framework.IDAttribute(),
+			"key_configuration": framework.DataSourceComputedListOfObjectAttribute[keyConfigurationTypeModel](ctx),
+			"lambda_config":     framework.DataSourceComputedListOfObjectAttribute[lambdaConfigTypeModel](ctx),
 			"last_modified_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -151,6 +153,7 @@ type userPoolDataSourceModel struct {
 	EmailConfiguration       fwtypes.ListNestedObjectValueOf[emailConfigurationTypeModel]     `tfsdk:"email_configuration"`
 	EstimatedNumberOfUsers   types.Int64                                                      `tfsdk:"estimated_number_of_users"`
 	ID                       types.String                                                     `tfsdk:"id"`
+	KeyConfiguration         fwtypes.ListNestedObjectValueOf[keyConfigurationTypeModel]       `tfsdk:"key_configuration"`
 	LambdaConfig             fwtypes.ListNestedObjectValueOf[lambdaConfigTypeModel]           `tfsdk:"lambda_config"`
 	LastModifiedDate         timetypes.RFC3339                                                `tfsdk:"last_modified_date"`
 	MFAConfiguration         types.String                                                     `tfsdk:"mfa_configuration"`
@@ -198,6 +201,11 @@ type emailConfigurationTypeModel struct {
 	From                types.String `tfsdk:"from"`
 	ReplyToEmailAddress types.String `tfsdk:"reply_to_email_address"`
 	SourceARN           types.String `tfsdk:"source_arn"`
+}
+
+type keyConfigurationTypeModel struct {
+	KeyType   fwtypes.StringEnum[awstypes.EncryptionKeyType] `tfsdk:"key_type"`
+	KmsKeyArn fwtypes.ARN                                    `tfsdk:"kms_key_arn"`
 }
 
 type lambdaConfigTypeModel struct {

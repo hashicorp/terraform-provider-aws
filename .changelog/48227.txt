@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_cognito_user_pool: Add `key_configuration` configuration block
+```
+```release-note:enhancement
+data-source/aws_cognito_user_pool: Add `key_configuration` attribute
+```
+```release-note:new-resource
+aws_cognito_user_pool_replica
+```
