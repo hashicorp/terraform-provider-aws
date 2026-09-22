@@ -2486,7 +2486,7 @@ func TestAccRoute53Record_BatchReads_setIdentifier(t *testing.T) {
 					})),
 					statecheck.ExpectKnownValue(primaryResourceName, tfjsonpath.New("weighted_routing_policy"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"weight": knownvalue.Int64Exact(10),
+							names.AttrWeight: knownvalue.Int64Exact(10),
 						}),
 					})),
 					statecheck.ExpectKnownValue(secondaryResourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("secondary")),
@@ -2495,7 +2495,7 @@ func TestAccRoute53Record_BatchReads_setIdentifier(t *testing.T) {
 					})),
 					statecheck.ExpectKnownValue(secondaryResourceName, tfjsonpath.New("weighted_routing_policy"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"weight": knownvalue.Int64Exact(90),
+							names.AttrWeight: knownvalue.Int64Exact(90),
 						}),
 					})),
 				},
@@ -2516,7 +2516,7 @@ func TestAccRoute53Record_BatchReads_setIdentifier(t *testing.T) {
 					})),
 					statecheck.ExpectKnownValue(primaryResourceName, tfjsonpath.New("weighted_routing_policy"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"weight": knownvalue.Int64Exact(50),
+							names.AttrWeight: knownvalue.Int64Exact(50),
 						}),
 					})),
 					statecheck.ExpectKnownValue(secondaryResourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("secondary")),
@@ -2525,7 +2525,7 @@ func TestAccRoute53Record_BatchReads_setIdentifier(t *testing.T) {
 					})),
 					statecheck.ExpectKnownValue(secondaryResourceName, tfjsonpath.New("weighted_routing_policy"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"weight": knownvalue.Int64Exact(90),
+							names.AttrWeight: knownvalue.Int64Exact(90),
 						}),
 					})),
 				},
