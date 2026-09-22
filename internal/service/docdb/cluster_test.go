@@ -64,6 +64,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
@@ -542,6 +543,91 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 	})
 }
 
+func TestAccDocDBCluster_copyTagsToSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "master_password"},
+			},
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBCluster_copyTagsToSnapshot_restoreFromSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.restore"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckClusterDestroy(ctx, t),
+			testAccCheckClusterSnapshotDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshotRestoreFromSnapshot(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"snapshot_identifier"},
+			},
+		},
+	})
+}
+
 func TestAccDocDBCluster_pointInTimeRestore(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
@@ -560,6 +646,7 @@ func TestAccDocDBCluster_pointInTimeRestore(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, sourceResourceName, &dbCluster),
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			{
@@ -1572,6 +1659,31 @@ resource "aws_docdb_cluster" "test" {
 `, rName, port))
 }
 
+func testAccClusterConfig_copyTagsToSnapshot(rName string, copyTagsToSnapshot bool) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier    = %[1]q
+  copy_tags_to_snapshot = %[2]t
+  master_username       = "tfacctest"
+  master_password       = "avoid-plaintext-passwords"
+  skip_final_snapshot   = true
+  apply_immediately     = true
+}
+`, rName, copyTagsToSnapshot)
+}
+
+func testAccClusterConfig_copyTagsToSnapshotRestoreFromSnapshot(rName string) string {
+	return acctest.ConfigCompose(testAccClusterSnapshotConfig_basic(rName), fmt.Sprintf(`
+resource "aws_docdb_cluster" "restore" {
+  cluster_identifier    = "%[1]s-restore"
+  copy_tags_to_snapshot = true
+  db_subnet_group_name  = aws_docdb_subnet_group.test.name
+  snapshot_identifier   = aws_docdb_cluster_snapshot.test.id
+  skip_final_snapshot   = true
+}
+`, rName))
+}
+
 func testAccClusterConfig_baseForPITR(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
@@ -1598,7 +1710,8 @@ resource "aws_docdb_cluster" "test" {
 func testAccClusterConfig_pointInTimeRestoreSource(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
 resource "aws_docdb_cluster" "restore" {
-  cluster_identifier = "%[1]s-restore"
+  cluster_identifier    = "%[1]s-restore"
+  copy_tags_to_snapshot = true
 
   restore_to_point_in_time {
     source_cluster_identifier  = aws_docdb_cluster.test.cluster_identifier
