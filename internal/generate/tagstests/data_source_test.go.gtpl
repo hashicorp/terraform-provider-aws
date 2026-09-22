@@ -10,6 +10,14 @@
 	{{ template "CommonTestCaseChecks" . -}}
 {{- end }}
 
+{{ define "TestStepAlternateProvider" -}}
+	{{ if .AlternateRegionProvider -}}
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+	{{ else if .UseAlternateAccount -}}
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+	{{ end -}}
+{{- end}}
+
 {{ define "TagsKnownValueForNull" -}}
 {{ if eq .Implementation "framework" -}}
 knownvalue.Null()
@@ -84,9 +92,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				{{ end -}}
+				{{ template "TestStepAlternateProvider" . -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/data.tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -115,9 +121,7 @@ func {{ template "testname" . }}_Tags_nullMap(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				{{ end -}}
+				{{ template "TestStepAlternateProvider" . -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/data.tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:        config.StringVariable(rName),{{ end }}
@@ -142,9 +146,7 @@ func {{ template "testname" . }}_Tags_emptyMap(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				{{ end -}}
+				{{ template "TestStepAlternateProvider" . -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/data.tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:        config.StringVariable(rName),{{ end }}
