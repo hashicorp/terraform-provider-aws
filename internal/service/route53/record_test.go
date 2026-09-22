@@ -4463,6 +4463,9 @@ resource "aws_route53_record" "test" {
 `, zoneName, recordName)
 }
 
+// Record names here are deliberately relative to the zone to verify the cache
+// key is built from the fully qualified name and does not trigger a fall back
+// to the per-record API call.
 func testAccRecordConfig_batchReadsMultiple(zoneName, ttlA string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
@@ -4471,7 +4474,7 @@ resource "aws_route53_zone" "test" {
 
 resource "aws_route53_record" "a" {
   zone_id = aws_route53_zone.test.zone_id
-  name    = "a.%[1]s"
+  name    = "a"
   type    = "A"
   ttl     = %[2]q
   records = ["127.0.0.1"]
@@ -4479,7 +4482,7 @@ resource "aws_route53_record" "a" {
 
 resource "aws_route53_record" "b" {
   zone_id = aws_route53_zone.test.zone_id
-  name    = "b.%[1]s"
+  name    = "b"
   type    = "A"
   ttl     = "30"
   records = ["127.0.0.2"]
@@ -4487,7 +4490,7 @@ resource "aws_route53_record" "b" {
 
 resource "aws_route53_record" "c" {
   zone_id = aws_route53_zone.test.zone_id
-  name    = "c.%[1]s"
+  name    = "c"
   type    = "A"
   ttl     = "30"
   records = ["127.0.0.3"]

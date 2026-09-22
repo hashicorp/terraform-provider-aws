@@ -29,11 +29,12 @@ func batchReadsEnabled() bool {
 }
 
 // zoneRecordCache holds all cached ResourceRecordSets for a single hosted zone,
-// keyed by the record set resource ID.
+// keyed by zoneRecordCache.key.
 type zoneRecordCache struct {
-	mu      sync.RWMutex
-	loaded  bool
-	records map[string]awstypes.ResourceRecordSet
+	mu       sync.RWMutex
+	loaded   bool
+	zoneName string
+	records  map[string]awstypes.ResourceRecordSet
 }
 
 // recordCacheZones maps cleaned hosted zone ID to its populated record cache.
@@ -71,8 +72,17 @@ func getOrLoadZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID 
 
 // load fetches all record sets in a hosted zone into the cache.
 //
+// The zone name is resolved first because keys are built from fully qualified
+// record names, and configuration may name a record relative to its zone.
+//
 // The caller must hold c.mu for writing.
 func (c *zoneRecordCache) load(ctx context.Context, conn *route53.Client, zoneID string) error {
+	zone, err := findHostedZoneByID(ctx, conn, zoneID)
+	if err != nil {
+		return err
+	}
+	c.zoneName = aws.ToString(zone.HostedZone.Name)
+
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId: aws.String(zoneID),
 	}
@@ -80,11 +90,29 @@ func (c *zoneRecordCache) load(ctx context.Context, conn *route53.Client, zoneID
 		if err != nil {
 			return err
 		}
-		key := recordCacheKey(zoneID, aws.ToString(rrs.Name), string(rrs.Type), aws.ToString(rrs.SetIdentifier))
+		key := c.key(zoneID, aws.ToString(rrs.Name), string(rrs.Type), aws.ToString(rrs.SetIdentifier))
 		c.records[key] = rrs
 	}
 
 	return nil
+}
+
+// key returns the cache map key for a record within this zone.
+//
+// The name is expanded against the zone name so that a record configured
+// relative to its zone ("www") produces the same key as the fully qualified
+// name the API returns ("www.example.com."). expandRecordName is a no-op for
+// names that already carry the suffix, so the same call serves both sides.
+func (c *zoneRecordCache) key(zoneID, name, rrType, setIdentifier string) string {
+	parts := []string{
+		zoneID,
+		expandRecordName(name, c.zoneName),
+		rrType,
+	}
+	if setIdentifier != "" {
+		parts = append(parts, setIdentifier)
+	}
+	return strings.Join(parts, "_")
 }
 
 // get retrieves a single record from the zone cache.
@@ -103,26 +131,26 @@ func (c *zoneRecordCache) put(key string, rrs awstypes.ResourceRecordSet) {
 }
 
 // evict removes a single record from the zone cache.
-func (c *zoneRecordCache) evict(key string) {
+func (c *zoneRecordCache) evict(zoneID, name, rrType, setIdentifier string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	delete(c.records, key)
+	delete(c.records, c.key(zoneID, name, rrType, setIdentifier))
 }
 
 // readFromZoneRecordCache looks up a record in the zone cache.
 //
 // A cache miss falls back to a direct API call. The miss result is stored in
 // the cache once retrieved.
-func readFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, name, rrType, setID string) (*awstypes.ResourceRecordSet, error) {
+func readFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, name, rrType, setIdentifier string) (*awstypes.ResourceRecordSet, error) {
 	cache, err := getOrLoadZoneRecordCache(ctx, conn, zoneID)
 	if err != nil {
 		return nil, err
 	}
 
-	key := recordCacheKey(zoneID, name, rrType, setID)
+	key := cache.key(zoneID, name, rrType, setIdentifier)
 	rrs, ok := cache.get(key)
 	if !ok {
-		record, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, rrType, setID)
+		record, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, rrType, setIdentifier)
 		if err != nil {
 			return nil, err
 		}
@@ -138,21 +166,8 @@ func readFromZoneRecordCache(ctx context.Context, conn *route53.Client, zoneID, 
 // An uncached zone is a no-op: any later scan starts after this write and
 // already reflects it. Otherwise evict blocks on the zone mutex until an
 // in-flight scan completes.
-func evictFromZoneRecordCache(zoneID, key string) {
+func evictFromZoneRecordCache(zoneID, name, rrType, setIdentifier string) {
 	if c, ok := recordCacheZones.Load(zoneID); ok {
-		c.evict(key)
+		c.evict(zoneID, name, rrType, setIdentifier)
 	}
-}
-
-// recordCacheKey returns the cache map key for a record within a zone.
-func recordCacheKey(zoneID, name, rrType, setIdentifier string) string {
-	parts := []string{
-		zoneID,
-		normalizeDomainName(name),
-		rrType,
-	}
-	if setIdentifier != "" {
-		parts = append(parts, setIdentifier)
-	}
-	return strings.Join(parts, "_")
 }
