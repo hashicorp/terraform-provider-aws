@@ -682,7 +682,8 @@ func TestAccElastiCacheGlobalReplicationGroup_primaryReplicationGroupID_update(t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var globalReplcationGroup awstypes.GlobalReplicationGroup
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_global_replication_group.test"
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.primary"
@@ -701,14 +702,14 @@ func TestAccElastiCacheGlobalReplicationGroup_primaryReplicationGroupID_update(t
 			{
 				Config: testAccGlobalReplicationGroupConfig_primaryReplicationGroupIDUpdateSetup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplcationGroup),
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_replication_group_id", primaryReplicationGroupResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccGlobalReplicationGroupConfig_primaryReplicationGroupIDUpdateFailover(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplcationGroup),
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_replication_group_id", secondaryReplicationGroupResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
