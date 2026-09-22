@@ -46,7 +46,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `distinguished_name` - Distinguished name of the user.
 * `enabled` - Whether the user is active.
-* `id` - Unique identifier of the user.
 * `realm` - Realm of the user.
 * `sid` - Unique Security identifier (SID) of the user.
 * `user_principal_name` - User principal name of the user.
