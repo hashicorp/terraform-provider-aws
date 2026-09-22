@@ -60,7 +60,7 @@ resource "aws_apprunner_vpc_connector" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the App Runner VPC connector.
+- `arn` (String) ARN of the App Runner VPC connector.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner vpc connector using the `arn`. For example:
 

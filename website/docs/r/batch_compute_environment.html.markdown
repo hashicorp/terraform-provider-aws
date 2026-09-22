@@ -189,76 +189,76 @@ resource "aws_batch_compute_environment" "sample" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
-* `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
 * `eks_configuration` - (Optional) Details for the Amazon EKS cluster that supports the compute environment. See details below.
-* `service_role` - (Optional) The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
-* `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
+* `name` - (Optional, Forces new resource) Name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `service_role` - (Optional) Full ARN of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
+* `state` - (Optional) State of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Required) The type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
-* `update_policy` - (Optional) Specifies the infrastructure update policy for the compute environment. See details below.
+* `type` - (Required) Type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
+* `update_policy` - (Optional) Infrastructure update policy for the compute environment. See details below.
 
-### compute_resources
+### `compute_resources` Block
 
-* `allocation_strategy` - (Optional) The allocation strategy to use for the compute resource in case not enough instances of the best fitting instance type can be allocated. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/batch/latest/APIReference/API_ComputeResource.html#Batch-Type-ComputeResource-allocationStrategy). Defaults to `BEST_FIT`. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `allocation_strategy` - (Optional) Allocation strategy to use for the compute resource in case not enough instances of the best fitting instance type can be allocated. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/batch/latest/APIReference/API_ComputeResource.html#Batch-Type-ComputeResource-allocationStrategy). Defaults to `BEST_FIT`. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `bid_percentage` - (Optional) Integer of maximum percentage that a Spot Instance price can be when compared with the On-Demand price for that instance type before instances are launched. For example, if your bid percentage is 20% (`20`), then the Spot price must be below 20% of the current On-Demand price for that EC2 instance. If you leave this field empty, the default value is 100% of the On-Demand price. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `desired_vcpus` - (Optional) The desired number of EC2 vCPUS in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `ec2_configuration` - (Optional) Provides information used to select Amazon Machine Images (AMIs) for EC2 instances in the compute environment. If Ec2Configuration isn't specified, the default is ECS_AL2. This parameter isn't applicable to jobs that are running on Fargate resources, and shouldn't be specified.
-* `ec2_key_pair` - (Optional) The EC2 key pair that is used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `image_id` - (Optional) The Amazon Machine Image (AMI) ID used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. (Deprecated, use [`ec2_configuration`](#ec2_configuration) `image_id_override` instead)
-* `instance_role` - (Optional) The Amazon ECS instance role applied to Amazon EC2 instances in a compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `instance_type` - (Optional) A list of instance types that may be launched. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `launch_template` - (Optional) The launch template to use for your compute resources. See details below. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `max_vcpus` - (Required) The maximum number of EC2 vCPUs that an environment can reach.
-* `min_vcpus` - (Optional) The minimum number of EC2 vCPUs that an environment should maintain. For `EC2` or `SPOT` compute environments, if the parameter is not explicitly defined, a `0` default value will be set. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `placement_group` - (Optional) The Amazon EC2 placement group to associate with your compute resources.
-* `security_group_ids` - (Optional) A list of EC2 security group that are associated with instances launched in the compute environment. This parameter is required for Fargate compute environments.
-* `spot_iam_fleet_role` - (Optional) The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied to a SPOT compute environment. This parameter is required for SPOT compute environments. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
+* `desired_vcpus` - (Optional) Desired number of EC2 vCPUS in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `ec2_configuration` - (Optional) Provides information used to select AMIs for EC2 instances in the compute environment. If Ec2Configuration isn't specified, the default is ECS_AL2. This parameter isn't applicable to jobs that are running on Fargate resources, and shouldn't be specified.
+* `ec2_key_pair` - (Optional) EC2 key pair that is used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `image_id` - (Optional) AMI ID used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. (Deprecated, use [`ec2_configuration`](#ec2_configuration-block) `image_id_override` instead)
+* `instance_role` - (Optional) Amazon ECS instance role applied to Amazon EC2 instances in a compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `instance_type` - (Optional) List of instance types that may be launched. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `launch_template` - (Optional) Launch template to use for your compute resources. See details below. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `max_vcpus` - (Required) Maximum number of EC2 vCPUs that an environment can reach.
+* `min_vcpus` - (Optional) Minimum number of EC2 vCPUs that an environment should maintain. For `EC2` or `SPOT` compute environments, if the parameter is not explicitly defined, a `0` default value will be set. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `placement_group` - (Optional) Amazon EC2 placement group to associate with your compute resources.
+* `security_group_ids` - (Optional) List of EC2 security group that are associated with instances launched in the compute environment. This parameter is required for Fargate compute environments.
+* `spot_iam_fleet_role` - (Optional) ARN of the Amazon EC2 Spot Fleet IAM role applied to a SPOT compute environment. This parameter is required for SPOT compute environments. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `subnets` - (Required) List of VPC subnets into which the compute resources are launched.
 * `tags` - (Optional) Key-value pair tags to be applied to resources that are launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `type` - (Required) The type of compute environment. Valid items are `EC2`, `SPOT`, `FARGATE` or `FARGATE_SPOT`.
+* `type` - (Required) Type of compute environment. Valid items are `EC2`, `SPOT`, `FARGATE` or `FARGATE_SPOT`.
 
-### ec2_configuration
+### `ec2_configuration` Block
 
 `ec2_configuration` supports the following:
 
-* `image_id_override` - (Optional) The AMI ID used for instances launched in the compute environment that match the image type. This setting overrides the `image_id` argument in the [`compute_resources`](#compute_resources) block.
-* `image_kubernetes_version` - (Optional) The Kubernetes version for the compute environment. If you don't specify a value, the latest version that AWS Batch supports is used. See [Supported Kubernetes versions](https://docs.aws.amazon.com/batch/latest/userguide/supported_kubernetes_version.html) for the list of Kubernetes versions supported by AWS Batch on Amazon EKS.
-* `image_type` - (Optional) The image type to match with the instance type to select an AMI. If the `image_id_override` parameter isn't specified, then a recent [Amazon ECS-optimized Amazon Linux 2 AMI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami) (`ECS_AL2`) is used.
+* `image_id_override` - (Optional) AMI ID used for instances launched in the compute environment that match the image type. This setting overrides the `image_id` argument in the [`compute_resources`](#compute_resources-block) block.
+* `image_kubernetes_version` - (Optional) Kubernetes version for the compute environment. If you don't specify a value, the latest version that AWS Batch supports is used. See [Supported Kubernetes versions](https://docs.aws.amazon.com/batch/latest/userguide/supported_kubernetes_version.html) for the list of Kubernetes versions supported by AWS Batch on Amazon EKS.
+* `image_type` - (Optional) Image type to match with the instance type to select an AMI. If the `image_id_override` parameter isn't specified, then a recent [Amazon ECS-optimized Amazon Linux 2 AMI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami) (`ECS_AL2`) is used.
 
-### launch_template
+### `launch_template` Block
 
 `launch_template` supports the following:
 
 * `launch_template_id` - (Optional) ID of the launch template. You must specify either the launch template ID or launch template name in the request, but not both.
 * `launch_template_name` - (Optional) Name of the launch template.
-* `version` - (Optional) The version number of the launch template. Default: The default version of the launch template.
+* `version` - (Optional) Version number of the launch template. Default: The default version of the launch template.
 
-### eks_configuration
+### `eks_configuration` Block
 
 `eks_configuration` supports the following:
 
-* `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EKS cluster.
-* `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
+* `eks_cluster_arn` - (Required) ARN of the Amazon EKS cluster.
+* `kubernetes_namespace` - (Required) Namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
 
-### update_policy
+### `update_policy` Block
 
 `update_policy` supports the following:
 
-* `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
-* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the compute environment infrastructure is updated.
+* `job_execution_timeout_minutes` - (Required) Job timeout (in minutes) when the compute environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Whether jobs are automatically terminated when the compute environment infrastructure is updated.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the compute environment.
-* `ecs_cluster_arn` - The Amazon Resource Name (ARN) of the underlying Amazon ECS cluster used by the compute environment.
-* `status` - The current status of the compute environment (for example, CREATING or VALID).
-* `status_reason` - A short, human-readable string to provide additional details about the current status of the compute environment.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the compute environment.
+* `ecs_cluster_arn` - ARN of the underlying Amazon ECS cluster used by the compute environment.
+* `status` - Current status of the compute environment (for example, CREATING or VALID).
+* `status_reason` - Short, human-readable string to provide additional details about the current status of the compute environment.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -281,7 +281,7 @@ resource "aws_batch_compute_environment" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the compute environment.
+- `arn` (String) ARN of the compute environment.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `name`. For example:
 

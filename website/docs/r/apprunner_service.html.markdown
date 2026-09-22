@@ -117,14 +117,14 @@ resource "aws_apprunner_observability_configuration" "example" {
 This resource supports the following arguments:
 
 * `auto_scaling_configuration_arn` - (Optional) ARN of an App Runner automatic scaling configuration resource that you want to associate with your service. If not provided, App Runner associates the latest revision of a default auto scaling configuration.
-* `encryption_configuration` - (Optional, Forces new resource) Custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [`encryption_configuration`](#encryption_configuration) below.
-* `health_check_configuration` - (Optional) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [`health_check_configuration`](#health_check_configuration) below.
-* `instance_configuration` - (Optional) Runtime configuration of instances (scaling units) of the App Runner service. See [`instance_configuration`](#instance_configuration) below.
-* `network_configuration` - (Optional) Configuration settings related to network traffic of the web application that the App Runner service runs. See [`network_configuration`](#network_configuration) below.
-* `observability_configuration` - (Optional) Observability configuration of your service. See [`observability_configuration`](#observability_configuration) below.
+* `encryption_configuration` - (Optional, Forces new resource) Custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [`encryption_configuration`](#encryption_configuration-block) below.
+* `health_check_configuration` - (Optional) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [`health_check_configuration`](#health_check_configuration-block) below.
+* `instance_configuration` - (Optional) Runtime configuration of instances (scaling units) of the App Runner service. See [`instance_configuration`](#instance_configuration-block) below.
+* `network_configuration` - (Optional) Configuration settings related to network traffic of the web application that the App Runner service runs. See [`network_configuration`](#network_configuration-block) below.
+* `observability_configuration` - (Optional) Observability configuration of your service. See [`observability_configuration`](#observability_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_name` - (Required, Forces new resource) Name of the service.
-* `source_configuration` - (Required) Source to deploy to the App Runner service. Can be a code or an image repository. See [`source_configuration`](#source_configuration) below.
+* `source_configuration` - (Required) Source to deploy to the App Runner service. Can be a code or an image repository. See [`source_configuration`](#source_configuration-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `encryption_configuration` Block
@@ -158,10 +158,10 @@ The `source_configuration` block supports the following arguments:
 
 ~>**Note:** Either `code_repository` or `image_repository` must be specified (but not both).
 
-* `authentication_configuration` - (Optional) Configuration for resources needed to authenticate access to some source repositories. See [`authentication_configuration`](#authentication_configuration) below.
+* `authentication_configuration` - (Optional) Configuration for resources needed to authenticate access to some source repositories. See [`authentication_configuration`](#authentication_configuration-block) below.
 * `auto_deployments_enabled` - (Optional) Whether continuous integration from the source repository is enabled for the App Runner service. If set to `true`, each repository change (source code commit or new image version) starts a deployment. Defaults to `true`.
-* `code_repository` - (Optional) Description of a source code repository. See [`code_repository`](#code_repository) below.
-* `image_repository` - (Optional) Description of a source image repository. See [`image_repository`](#image_repository) below.
+* `code_repository` - (Optional) Description of a source code repository. See [`code_repository`](#code_repository-block) below.
+* `image_repository` - (Optional) Description of a source image repository. See [`image_repository`](#image_repository-block) below.
 
 ### `authentication_configuration` Block
 
@@ -174,16 +174,16 @@ The `authentication_configuration` block supports the following arguments:
 
 The `network_configuration` block supports the following arguments:
 
-* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [`egress_configuration`](#egress_configuration) below.
-* `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [`ingress_configuration`](#ingress_configuration) below.
-* `ip_address_type` - (Optional) App Runner provides you with the option to choose between Internet Protocol version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
+* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [`egress_configuration`](#egress_configuration-block) below.
+* `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [`ingress_configuration`](#ingress_configuration-block) below.
+* `ip_address_type` - (Optional) App Runner provides you with the option to choose between IP version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
 
 ### `egress_configuration` Block
 
 The `egress_configuration` block supports the following arguments:
 
 * `egress_type` - (Optional) Type of egress configuration. Valid values are: `DEFAULT` and `VPC`.
-* `vpc_connector_arn` - (Optional) Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when `EgressType = VPC`.
+* `vpc_connector_arn` - (Optional) ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when `EgressType = VPC`.
 
 ### `ingress_configuration` Block
 
@@ -202,16 +202,16 @@ The `observability_configuration` block supports the following arguments:
 
 The `code_repository` block supports the following arguments:
 
-* `code_configuration` - (Optional) Configuration for building and running the service from a source code repository. See [`code_configuration`](#code_configuration) below.
+* `code_configuration` - (Optional) Configuration for building and running the service from a source code repository. See [`code_configuration`](#code_configuration-block) below.
 * `repository_url` - (Required) Location of the repository that contains the source code.
-* `source_code_version` - (Required) Version that should be used within the source code repository. See [`source_code_version`](#source_code_version) below.
+* `source_code_version` - (Required) Version that should be used within the source code repository. See [`source_code_version`](#source_code_version-block) below.
 * `source_directory` - (Optional) Path of the directory that stores source code and configuration files. The build and start commands also execute from here. The path is absolute from root and, if not specified, defaults to the repository root.
 
 ### `image_repository` Block
 
 The `image_repository` block supports the following arguments:
 
-* `image_configuration` - (Optional) Configuration for running the identified image. See [`image_configuration`](#image_configuration) below.
+* `image_configuration` - (Optional) Configuration for running the identified image. See [`image_configuration`](#image_configuration-block) below.
 * `image_identifier` - (Required) Identifier of an image. For an image in Amazon Elastic Container Registry (Amazon ECR), this is an image name. For the image name format, see Pulling an image in the Amazon ECR User Guide.
 * `image_repository_type` - (Required) Type of the image repository. This reflects the repository provider and whether the repository is private or public. Valid values: `ECR`, `ECR_PUBLIC`.
 
@@ -219,7 +219,7 @@ The `image_repository` block supports the following arguments:
 
 The `code_configuration` block supports the following arguments:
 
-* `code_configuration_values` - (Optional) Basic configuration for building and running the App Runner service. Use this parameter to quickly launch an App Runner service without providing an apprunner.yaml file in the source code repository (or ignoring the file if it exists). See [`code_configuration_values`](#code_configuration_values) below.
+* `code_configuration_values` - (Optional) Basic configuration for building and running the App Runner service. Use this parameter to quickly launch an App Runner service without providing an apprunner.yaml file in the source code repository (or ignoring the file if it exists). See [`code_configuration_values`](#code_configuration_values-block) below.
 * `configuration_source` - (Required) Source of the App Runner configuration. Valid values: `REPOSITORY`, `API`. Use `REPOSITORY` to have App Runner read configuration values from the `apprunner.yaml` file in the source code repository and ignore `code_configuration_values`. Use `API` to have App Runner use the configuration values provided in `code_configuration_values` and ignore the `apprunner.yaml` file in the source code repository.
 
 ### `code_configuration_values` Block
@@ -280,7 +280,7 @@ resource "aws_apprunner_service" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the App Runner service.
+- `arn` (String) ARN of the App Runner service.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Services using the `arn`. For example:
 

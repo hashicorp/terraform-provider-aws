@@ -55,7 +55,7 @@ For more information about the Upgrade Rollout Policy syntax, see the [Upgrade R
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the policy.
-* `arn` - Amazon Resource Name (ARN) of the policy.
+* `arn` - ARN of the policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

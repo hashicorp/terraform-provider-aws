@@ -52,6 +52,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newKeywordResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity_arn", true),
+				inttypes.StringIdentityAttribute("keyword", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      keywordImportID{},
+			},
+		},
+		{
 			Factory:  newOptOutListResource,
 			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
 			Name:     "Opt-out List",
@@ -125,6 +139,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 		},
 		{
+			Factory:  newKeywordResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity_arn", true),
+				inttypes.StringIdentityAttribute("keyword", true),
+			}),
+		},
+		{
 			Factory:  newPoolResourceAsListResource,
 			TypeName: "aws_pinpointsmsvoicev2_pool",
 			Name:     "Pool",
@@ -171,7 +195,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*pinpointsmsvoicev2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*pinpointsmsvoicev2.Options){
 		pinpointsmsvoicev2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

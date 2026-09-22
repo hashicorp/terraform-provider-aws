@@ -537,6 +537,15 @@ This resource supports the following arguments:
   to the specified Auto Scaling group. Defined [below](#warm_pool-block)
 - `force_delete_warm_pool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
 
+### Waiting for Capacity
+
+A newly-created Auto Scaling Group takes time to initialize the instances that make up the group. If Terraform is behind a load balancer, it also takes time for instances to register and pass health checks. The following arguments control how long Terraform waits for instances to become healthy before considering the create or update operation complete:
+
+* `min_size` and `desired_capacity` set the target number of instances Terraform waits for.
+* `wait_for_capacity_timeout` sets the maximum duration Terraform waits for the target number of instances to become healthy. Setting this to `"0"` skips all capacity waiting behavior.
+* `min_elb_capacity` and `wait_for_elb_capacity` extend the wait to require a number of instances to be healthy in all attached load balancers.
+* `ignore_failed_scaling_activities` controls whether a failed scaling activity encountered while waiting causes an error.
+
 ### `availability_zone_distribution` Block
 
 - `capacity_distribution_strategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only`, `balanced-best-effort`, and `reservations-then-balanced`. Default is `balanced-best-effort`. When `reservations-then-balanced` is set, you must also specify Capacity Reservations to prioritize through `capacity_reservation_specification` (or via a launch template) using a Capacity Reservation ID or Capacity Reservation resource group ARN.
@@ -586,7 +595,7 @@ This configuration block supports the following:
 - `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
 - `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
 
-##### `mixed_instances_policy.launch_template.launch_template_specification` Block
+#### `mixed_instances_policy.launch_template.launch_template_specification` Block
 
 ~> **NOTE:** Either `launch_template_id` or `launch_template_name` must be specified.
 
@@ -596,7 +605,7 @@ This configuration block supports the following:
 - `launch_template_name` - (Optional) Name of the launch template. Conflicts with `launch_template_id`.
 - `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-##### `mixed_instances_policy.launch_template.override` Block
+#### `mixed_instances_policy.launch_template.override` Block
 
 This configuration block supports the following:
 
@@ -605,7 +614,7 @@ This configuration block supports the following:
 - `launch_template_specification` - (Optional) Override the instance launch template specification in the Launch Template.
 - `weighted_capacity` - (Optional) Number of capacity units, which gives the instance type a proportional weight to other instance types.
 
-###### `mixed_instances_policy.launch_template.override.instance_requirements` Block
+#### `mixed_instances_policy.launch_template.override.instance_requirements` Block
 
 This configuration block supports the following:
 
@@ -662,7 +671,7 @@ This configuration block supports the following:
 - `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 - `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-  ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+  ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 
   ```
   Valid names:
@@ -791,14 +800,14 @@ This configuration block supports the following:
 
 ### `traffic_source` Block
 
-- `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+- `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 - `type` - Provides additional context for the value of Identifier.
   The following lists the valid values:
   `elb` if `identifier` is the name of a Classic Load Balancer.
   `elbv2` if `identifier` is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group.
   `vpc-lattice` if `identifier` is the ARN of a VPC Lattice target group.
 
-##### `warm_pool.instance_reuse_policy` Block
+#### `warm_pool.instance_reuse_policy` Block
 
 This configuration block supports the following:
 

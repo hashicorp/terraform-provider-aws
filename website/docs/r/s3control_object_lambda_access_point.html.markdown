@@ -77,7 +77,7 @@ The `content_transformation` block supports the following:
 
 The `aws_lambda` block supports the following:
 
-* `function_arn` - (Required) Amazon Resource Name (ARN) of the AWS Lambda function.
+* `function_arn` - (Required) ARN of the AWS Lambda function.
 * `function_payload` - (Optional) Additional JSON that provides supplemental data to the Lambda function used to transform objects.
 
 ## Attribute Reference
@@ -85,7 +85,7 @@ The `aws_lambda` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `alias` - Alias for the S3 Object Lambda Access Point.
-* `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
+* `arn` - ARN of the Object Lambda Access Point.
 * `id` - AWS account ID and access point name separated by a colon (`:`).
 
 ## Import

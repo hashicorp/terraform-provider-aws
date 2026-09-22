@@ -94,7 +94,7 @@ The following arguments are optional:
 
 ### `grant` Block
 
--> For more information on header grants, see the Amazon Simple Storage Service (S3) [API Reference: PutObjectAcl](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectAcl.html).
+-> For more information on header grants, see the S3 [API Reference: PutObjectAcl](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectAcl.html).
 
 One of `email`, `id`, or `uri` is required.
 

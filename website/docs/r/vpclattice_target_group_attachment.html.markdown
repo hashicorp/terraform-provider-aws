@@ -31,7 +31,7 @@ This resource supports the following arguments:
 
 - `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `target` - (Required) Target to register with the target group. See [`target` Block](#target-block) for details.
-- `target_group_identifier` - (Required) ID or Amazon Resource Name (ARN) of the target group.
+- `target_group_identifier` - (Required) ID or ARN of the target group.
 
 ### `target` Block
 

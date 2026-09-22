@@ -112,6 +112,11 @@ func ResourceCanary() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -337,6 +342,10 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.VpcConfig = expandCanaryVPCConfig(v.([]any))
 	}
 
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		input.KmsKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("failure_retention_period"); ok {
 		input.FailureRetentionPeriodInDays = aws.Int32(int32(v.(int)))
 	}
@@ -368,8 +377,10 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
 			if err != nil && time.Now().Before(iamwaiterStopTime) {
-				// This error synthesized from the Status object and not an AWS SDK Go error type.
-				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda"), err
+				// These errors are synthesized from the Status object and not AWS SDK Go error types.
+				// Both represent IAM propagation delays: role assumption and KMS CreateGrant permission.
+				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda") ||
+					strings.Contains(err.Error(), "KMS key is invalid for CreateGrant"), err
 			}
 
 			return false, err
@@ -422,6 +433,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
+	d.Set(names.AttrKMSKeyARN, canary.KmsKeyArn)
 	d.Set(names.AttrName, canary.Name)
 	d.Set("runtime_version", canary.RuntimeVersion)
 	d.Set("source_location_arn", canary.Code.SourceLocationArn)
@@ -473,6 +485,10 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("artifact_config") {
 			input.ArtifactConfig = expandCanaryArtifactConfig(d.Get("artifact_config").([]any))
+		}
+
+		if d.HasChange(names.AttrKMSKeyARN) {
+			input.KmsKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 
 		if d.HasChange("runtime_version") {

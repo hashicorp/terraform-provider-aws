@@ -81,7 +81,7 @@ The `magnetic_store_rejected_data_location` block supports the following argumen
 
 * `s3_configuration` - (Optional) Configuration of an S3 location to write error reports for records rejected, asynchronously, during magnetic store writes. See [S3 Configuration](#s3-configuration) below for more details.
 
-##### S3 Configuration
+#### S3 Configuration
 
 The `s3_configuration` block supports the following arguments:
 

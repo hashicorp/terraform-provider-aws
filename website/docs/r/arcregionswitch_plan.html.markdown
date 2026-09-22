@@ -555,7 +555,7 @@ resource "aws_arcregionswitch_plan" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the ARC Region Switch Plan.
+- `arn` (String) ARN of the ARC Region Switch Plan.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application Recovery Controller Region Switch Plan using the `arn`. For example:
 

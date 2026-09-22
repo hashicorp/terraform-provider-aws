@@ -135,6 +135,12 @@ service/account:
           - any-glob-to-any-file:
               - 'internal/service/account/**/*'
               - 'website/**/account_*'
+service/accountaccess:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/accountaccess/**/*'
+              - 'website/**/accountaccess_*'
 service/acm:
   - any:
       - changed-files:
@@ -358,6 +364,12 @@ service/bedrockagentcore:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagentcore/**/*'
               - 'website/**/bedrockagentcore_*'
+service/bedrockruntime:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockruntime/**/*'
+              - 'website/**/bedrockruntime_*'
 service/billing:
   - any:
       - changed-files:

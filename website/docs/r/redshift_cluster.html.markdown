@@ -54,28 +54,18 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.
   If you do not provide a name, Amazon Redshift will create a default database called `dev`.
-* `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
+* `default_iam_role_arn` - (Optional) ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
-* `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
-  Conflicts with `master_password` and `master_password_wo`.
-  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
-* `master_password` - (Optional) Password for the master DB user.
-  Conflicts with `manage_master_password` and `master_password_wo`.
-  One of `master_password`, `master_password_wo` or `manage_master_password` is required unless `snapshot_identifier` is provided.
-  Note that this may show up in logs, and it will be stored in the state file.
-  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
-* `master_password_wo` - (Optional, Write-Only) Password for the master DB user.
-  Conflicts with `manage_master_password` and `master_password`.
-  One of `master_password_wo`, `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
-  Note that this may show up in logs.
-  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
-* `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
+* `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials. Conflicts with `master_password` and `master_password_wo`. One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+* `master_password` - (Optional) Password for the master DB user. Conflicts with `manage_master_password` and `master_password_wo`. One of `master_password`, `master_password_wo` or `manage_master_password` is required unless `snapshot_identifier` is provided. Note that this will show up in logs, and it will be stored in the state file. Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `master_password_wo` - (Optional, Write-Only) Password for the master DB user. Conflicts with `manage_master_password` and `master_password`. One of `master_password_wo`, `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided. Note that this may show up in logs. Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number. If set, requires `master_password_wo_version` to be set.
+* `master_password_wo_version` - (Optional) Required when `master_password_wo` is set. Changing this value triggers an update to `master_password_wo`.
 * `master_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `multi_az` - (Optional) Specifies if the Redshift cluster is multi-AZ.
-* `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
-* `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
+* `vpc_security_group_ids` - (Optional) List of VPC security groups to be associated with the cluster.
+* `cluster_subnet_group_name` - (Optional) Name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside VPC.
 * `availability_zone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availability_zone_relocation_enabled` is `true`.
 * `availability_zone_relocation_enabled` - (Optional) If true, the cluster can be relocated to another availabity zone, either automatically by AWS or when requested. Default is `false`. Available for use on clusters from the RA3 instance family.
 * `preferred_maintenance_window` - (Optional) The weekly time range (in UTC) during which automated cluster maintenance can occur.
@@ -106,7 +96,7 @@ This resource supports the following arguments:
 * `snapshot_identifier` - (Optional) The name of the snapshot from which to create the new cluster.  Conflicts with `snapshot_arn`.
 * `snapshot_cluster_identifier` - (Optional) The name of the cluster the source snapshot was created from.
 * `owner_account` - (Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot.
-* `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
+* `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A maximum of 50 (or 10 in ISO regions) can be associated with the cluster at any time.
 * `maintenance_track_name` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -118,7 +108,7 @@ the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier
 * `cluster_type` - The cluster type
@@ -139,7 +129,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
 * `cluster_nodes` - The nodes in the cluster. Cluster node blocks are documented below
-* `cluster_namespace_arn` - The namespace Amazon Resource Name (ARN) of the cluster
+* `cluster_namespace_arn` - Namespace ARN of the cluster
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 Cluster nodes (for `cluster_nodes`) support the following attributes:

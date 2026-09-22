@@ -468,7 +468,7 @@ The processing guidance for a Rule, used by AWS WAF to determine whether a web r
 The `statement` block supports the following arguments:
 
 * `and_statement` - (Optional) A logical rule statement used to combine other rule statements with AND logic. See [AND Statement](#and-statement) below for details.
-* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [`asn_match_statement`](#asn_match_statement-block) below for details.
+* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [ASN Match Statement](#asn-match-statement) below for details.
 * `byte_match_statement` - (Optional) A rule statement that defines a string match search for AWS WAF to apply to web requests. See [Byte Match Statement](#byte-match-statement) below for details.
 * `geo_match_statement` - (Optional) A rule statement used to identify web requests based on country of origin. See [GEO Match Statement](#geo-match-statement) below for details.
 * `label_match_statement` - (Optional) A rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.
@@ -533,7 +533,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 
 The `ip_set_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
+* `arn` - (Required) ARN of the IP Set that this statement references.
 * `ip_set_forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [IPSet Forwarded IP Config](#ipset-forwarded-ip-config) below for more details.
 
 ### NOT Statement
@@ -588,7 +588,7 @@ A rule statement used to search web request components for matches with regular 
 
 The `regex_pattern_set_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
+* `arn` - (Required) ARN of the Regex Pattern Set that this statement references.
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
@@ -728,7 +728,7 @@ Inspect a single header. Provide the name of the header to inspect, for example,
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Optional) The name of the header to inspect. Maximum length of 64. AWS returns header names in lower case, so provide the name as lower case characters to avoid a perpetual diff.
 
 ### Single Query Argument
 
@@ -736,7 +736,7 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Optional) The name of the query argument to inspect. Maximum length of 30. AWS returns query argument names in lower case, so provide the name as lower case characters to avoid a perpetual diff.
 
 ### URI Fragment
 

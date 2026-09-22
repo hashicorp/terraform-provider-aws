@@ -681,35 +681,44 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=true) specified, but resource type supports transparent tagging", v.packageName, v.functionName))
 			return
 		} else if generateTests != common.TriBooleanFalse {
-			if err := tests.Configure(&d.CommonArgs); err != nil {
-				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-				return
-			}
-			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
-				v.errs = append(v.errs, fmt.Errorf("%s.%s: @Tags specification does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
-				return
-			}
-			if d.HasInherentRegionIdentity() {
-				if d.Implementation == common.ImplementationFramework {
-					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
-						d.SetImportStateIDAttribute(d.IdentityAttributeName())
-					}
-				}
-			}
-			if d.IsSingletonIdentity() {
-				d.Serialize = true
-			}
-
-			v.taggedResources = append(v.taggedResources, d)
+			v.addTaggedResource(d, hasIdentifierAttribute)
 		}
 	} else {
-		if generateTests == common.TriBooleanFalse {
+		if generateTests == common.TriBooleanTrue {
+			// Resource manages tags manually but opts in to tagging tests with @Testing(tagsTest=true).
+			v.addTaggedResource(d, hasIdentifierAttribute)
+		} else if generateTests == common.TriBooleanFalse {
 			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=false) specified, but resource type doesn't support tags", v.packageName, v.functionName))
 			return
 		}
 	}
 
 	v.functionName = ""
+}
+
+// addTaggedResource configures the resource's test arguments and records it for
+// tagging test generation. Any error is accumulated on the visitor.
+func (v *visitor) addTaggedResource(d ResourceDatum, hasIdentifierAttribute bool) {
+	if err := tests.Configure(&d.CommonArgs); err != nil {
+		v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+		return
+	}
+	if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
+		v.errs = append(v.errs, fmt.Errorf("%s.%s: tagging tests require an identifier attribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
+		return
+	}
+	if d.HasInherentRegionIdentity() {
+		if d.Implementation == common.ImplementationFramework {
+			if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+				d.SetImportStateIDAttribute(d.IdentityAttributeName())
+			}
+		}
+	}
+	if d.IsSingletonIdentity() {
+		d.Serialize = true
+	}
+
+	v.taggedResources = append(v.taggedResources, d)
 }
 
 // Visit is called for each node visited by ast.Walk.

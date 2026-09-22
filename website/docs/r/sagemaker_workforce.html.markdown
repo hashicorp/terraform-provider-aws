@@ -102,7 +102,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workforce.
+* `arn` - ARN assigned by AWS to this Workforce.
 * `id` - The name of the Workforce.
 * `subdomain` - The subdomain for your OIDC Identity Provider.
 * `workforce_vpc_config.0.vpc_endpoint_id` - The IDs for the VPC service endpoints of your VPC workforce.

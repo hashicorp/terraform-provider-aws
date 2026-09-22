@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ebs_volume
 
-Lists EC2 (Elastic Compute Cloud) EBS Volume resources.
+Lists EC2 EBS Volume resources.
 
 ## Example Usage
 

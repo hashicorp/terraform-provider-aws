@@ -138,6 +138,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newModelInvocationJobResource,
+			TypeName: "aws_bedrock_model_invocation_job",
+			Name:     "Model Invocation Job",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newModelInvocationLoggingConfigurationResource,
 			TypeName: "aws_bedrock_model_invocation_logging_configuration",
 			Name:     "Model Invocation Logging Configuration",
@@ -185,6 +195,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
 		},
+		{
+			Factory:  newModelInvocationJobResourceAsListResource,
+			TypeName: "aws_bedrock_model_invocation_job",
+			Name:     "Model Invocation Job",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+		},
 	})
 }
 
@@ -202,7 +219,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrock.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*bedrock.Options){
 		bedrock.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

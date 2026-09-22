@@ -51,6 +51,35 @@ service "account" {
   is_global = true
 }
 
+service "accountaccess" {
+  cli_v2_command {
+    aws_cli_v2_command           = "account-access"
+    aws_cli_v2_command_no_dashes = "accountaccess"
+  }
+
+  sdk {
+    id            = "Account Access"
+    arn_namespace = "account-access"
+  }
+
+  names {
+    provider_name_upper = "AccountAccess"
+    human_friendly      = "Account Access"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
+  }
+
+  resource_prefix {
+    correct = "aws_accountaccess_"
+  }
+
+  provider_package_correct = "accountaccess"
+  doc_prefix               = ["accountaccess_"]
+  brand                    = "AWS"
+}
+
 service "acm" {
   sdk {
     id            = "ACM"
@@ -1000,6 +1029,36 @@ service "bedrockagentcore" {
 
   provider_package_correct = "bedrockagentcore"
   doc_prefix               = ["bedrockagentcore_"]
+  brand                    = "Amazon"
+}
+
+service "bedrockruntime" {
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-runtime"
+    aws_cli_v2_command_no_dashes = "bedrockruntime"
+  }
+
+  sdk {
+    id            = "Bedrock Runtime"
+    arn_namespace = "bedrock"
+  }
+
+  names {
+    provider_name_upper = "BedrockRuntime"
+    human_friendly      = "Bedrock Runtime"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "InvokeModel"
+    endpoint_api_params = "Body: []byte(\"{}\"), ModelId: aws.String(\"test\")"
+  }
+
+  resource_prefix {
+    correct = "aws_bedrockruntime_"
+  }
+
+  provider_package_correct = "bedrockruntime"
+  doc_prefix               = ["bedrockruntime_"]
   brand                    = "Amazon"
 }
 
@@ -5187,7 +5246,7 @@ service "lambdamicrovms" {
   }
 
   names {
-    provider_name_upper = "LambdaMicrovms"
+    provider_name_upper = "LambdaMicroVMs"
     human_friendly      = "Lambda MicroVMs"
   }
 

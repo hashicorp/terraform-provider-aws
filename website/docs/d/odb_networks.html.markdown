@@ -33,7 +33,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `odb_networks` Block
 
-* `arn` - Amazon Resource Name (ARN) of the odb network resource.
+* `arn` - ARN of the odb network resource.
 * `display_name` - Display name for the network resource.
 * `id` - Unique identifier of the odb network resource.
 * `oci_network_anchor_id` - Unique identifier of the OCI network anchor for the ODB network.

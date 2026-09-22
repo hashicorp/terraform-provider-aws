@@ -415,14 +415,14 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 
 		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
 			p.dataSources = append(p.dataSources, func() datasource.DataSource { //nolint:contextcheck // must be a func()
-				return newWrappedDataSource(dataSourceSpec, servicePackageName)
+				return newWrappedDataSource(ctx, dataSourceSpec, servicePackageName)
 			})
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
 			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource { //nolint:contextcheck // must be a func()
-					return newWrappedEphemeralResource(ephemeralResourceSpec, servicePackageName)
+					return newWrappedEphemeralResource(ctx, ephemeralResourceSpec, servicePackageName)
 				})
 			}
 		}
@@ -444,14 +444,14 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 
 		for _, resourceSpec := range sp.FrameworkResources(ctx) {
 			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
-				return newWrappedResource(resourceSpec, servicePackageName)
+				return newWrappedResource(ctx, resourceSpec, servicePackageName)
 			})
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithActions); ok {
 			for _, actionSpec := range v.Actions(ctx) {
 				p.actions = append(p.actions, func() action.Action { //nolint:contextcheck // must be a func()
-					return newWrappedAction(actionSpec, servicePackageName)
+					return newWrappedAction(ctx, actionSpec, servicePackageName)
 				})
 			}
 		}

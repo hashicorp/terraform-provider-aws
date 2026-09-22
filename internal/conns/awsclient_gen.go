@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
@@ -39,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -318,6 +320,10 @@ func (c *AWSClient) AccountClient(ctx context.Context) *account.Client {
 	return errs.Must(client[*account.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
+func (c *AWSClient) AccountAccessClient(ctx context.Context) *accountaccess.Client {
+	return errs.Must(client[*accountaccess.Client](ctx, c, names.AccountAccess, make(map[string]any)))
+}
+
 func (c *AWSClient) AgentRegistryClient(ctx context.Context) *agentregistrycontrol.Client {
 	return errs.Must(client[*agentregistrycontrol.Client](ctx, c, names.AgentRegistry, make(map[string]any)))
 }
@@ -408,6 +414,10 @@ func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client
 
 func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcorecontrol.Client {
 	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
+}
+
+func (c *AWSClient) BedrockRuntimeClient(ctx context.Context) *bedrockruntime.Client {
+	return errs.Must(client[*bedrockruntime.Client](ctx, c, names.BedrockRuntime, make(map[string]any)))
 }
 
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
@@ -866,8 +876,8 @@ func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
 	return errs.Must(client[*lambdacore.Client](ctx, c, names.LambdaCore, make(map[string]any)))
 }
 
-func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
-	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicrovms, make(map[string]any)))
+func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Client {
+	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
 }
 
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {

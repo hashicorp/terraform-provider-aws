@@ -35,7 +35,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the odb network resource.
+* `arn` - ARN of the odb network resource.
 * `availability_zone` - Availability zone where the ODB network is located.
 * `availability_zone_id` - AZ ID of the AZ where the ODB network is located.
 * `backup_subnet_cidr` - CIDR range of the backup subnet for the ODB network.

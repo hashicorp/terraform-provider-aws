@@ -1959,7 +1959,7 @@ func TestAccEKSCluster_kubeControllerManagerConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_kubeControllerManagerConfig(rName, "10s"),
+				Config: testAccClusterConfig_kubeControllerManagerConfig(rName, "10s", 12500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
@@ -1973,6 +1973,9 @@ func TestAccEKSCluster_kubeControllerManagerConfig(t *testing.T) {
 						"horizontal_pod_autoscaler_controller_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"horizontal_pod_autoscaler_sync_period": knownvalue.StringExact("10s"),
 						})}),
+						"pod_gc_controller_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"terminated_pod_gc_threshold": knownvalue.Int64Exact(12500),
+						})}),
 					})})),
 				},
 			},
@@ -1983,7 +1986,7 @@ func TestAccEKSCluster_kubeControllerManagerConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
-				Config: testAccClusterConfig_kubeControllerManagerConfig(rName, "13s"),
+				Config: testAccClusterConfig_kubeControllerManagerConfig(rName, "13s", 10000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
@@ -1996,6 +1999,9 @@ func TestAccEKSCluster_kubeControllerManagerConfig(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_controller_manager_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"horizontal_pod_autoscaler_controller_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"horizontal_pod_autoscaler_sync_period": knownvalue.StringExact("13s"),
+						})}),
+						"pod_gc_controller_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"terminated_pod_gc_threshold": knownvalue.Int64Exact(10000),
 						})}),
 					})})),
 				},
@@ -3209,7 +3215,7 @@ resource "aws_eks_cluster" "test" {
 `, rName, strategyType))
 }
 
-func testAccClusterConfig_kubeControllerManagerConfig(rName, syncPeriod string) string {
+func testAccClusterConfig_kubeControllerManagerConfig(rName, syncPeriod string, terminatedPodGCThreshold int) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -3227,9 +3233,13 @@ resource "aws_eks_cluster" "test" {
     horizontal_pod_autoscaler_controller_config {
       horizontal_pod_autoscaler_sync_period = %[2]q
     }
+
+    pod_gc_controller_config {
+      terminated_pod_gc_threshold = %[3]d
+    }
   }
 
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
-`, rName, syncPeriod))
+`, rName, syncPeriod, terminatedPodGCThreshold))
 }

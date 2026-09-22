@@ -77,7 +77,7 @@ The `self_managed_active_directory_configuration` configuration block supports t
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the storage virtual machine.
+* `arn` - ARN of the storage virtual machine.
 * `endpoints` - Endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [`endpoints`](#endpoints-block) below.
 * `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
 * `subtype` - SVM's subtype, e.g. `DEFAULT`

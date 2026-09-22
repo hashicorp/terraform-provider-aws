@@ -388,6 +388,10 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 	})
 }
 
+func testAccClusterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrImportStateIdFunc(resourceName, names.AttrName)
+}
+
 func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)

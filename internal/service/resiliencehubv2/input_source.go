@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -143,13 +144,13 @@ func (r *inputSourceResource) Schema(ctx context.Context, req resource.SchemaReq
 								},
 							},
 						},
-						"resource_tag": fwschema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[resourceTagModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 10),
+						"resource_tag": fwschema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[resourceTagModel](ctx),
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 10),
 							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
 							},
 							NestedObject: fwschema.NestedBlockObject{
 								Attributes: map[string]fwschema.Attribute{
@@ -229,6 +230,7 @@ func (r *inputSourceResource) Read(ctx context.Context, req resource.ReadRequest
 	serviceARN, inputSourceID := fwflex.StringValueFromFramework(ctx, state.ServiceARN), fwflex.StringValueFromFramework(ctx, state.InputSourceID)
 	is, err := findInputSourceByTwoPartKey(ctx, conn, serviceARN, inputSourceID)
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -394,11 +396,11 @@ type inputSourceResourceModel struct {
 }
 
 type resourceConfigurationModel struct {
-	CFNStackARN     fwtypes.ARN                                       `tfsdk:"cfn_stack_arn"`
-	DesignFileS3URL types.String                                      `tfsdk:"design_file_s3_url"`
-	EKS             fwtypes.ListNestedObjectValueOf[eksSourceModel]   `tfsdk:"eks"`
-	ResourceTags    fwtypes.ListNestedObjectValueOf[resourceTagModel] `tfsdk:"resource_tag"`
-	TFStateFileURL  types.String                                      `tfsdk:"tf_state_file_url"`
+	CFNStackARN     fwtypes.ARN                                      `tfsdk:"cfn_stack_arn"`
+	DesignFileS3URL types.String                                     `tfsdk:"design_file_s3_url"`
+	EKS             fwtypes.ListNestedObjectValueOf[eksSourceModel]  `tfsdk:"eks"`
+	ResourceTags    fwtypes.SetNestedObjectValueOf[resourceTagModel] `tfsdk:"resource_tag"`
+	TFStateFileURL  types.String                                     `tfsdk:"tf_state_file_url"`
 }
 
 var (
@@ -428,7 +430,7 @@ func (m *resourceConfigurationModel) Flatten(ctx context.Context, v any) diag.Di
 		if diags.HasError() {
 			return diags
 		}
-		m.ResourceTags = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		m.ResourceTags = fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &data)
 
 	case awstypes.ResourceConfigurationMemberTfStateFileUrl:
 		m.TFStateFileURL = fwflex.StringValueToFramework(ctx, t.Value)

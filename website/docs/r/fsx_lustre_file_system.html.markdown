@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 The `log_configuration` configuration block supports the following arguments:
 
-* `destination` - (Optional) Amazon Resource Name (ARN) that specifies the destination of the logs. The name of the Amazon CloudWatch Logs log group must begin with the `/aws/fsx` prefix. If you do not provide a destination, Amazon FSx will create and use a log stream in the CloudWatch Logs `/aws/fsx/lustre` log group.
+* `destination` - (Optional) ARN that specifies the destination of the logs. The name of the Amazon CloudWatch Logs log group must begin with the `/aws/fsx` prefix. If you do not provide a destination, Amazon FSx will create and use a log stream in the CloudWatch Logs `/aws/fsx/lustre` log group.
 * `level` - (Optional) Sets which data repository events are logged by Amazon FSx. Valid values are `WARN_ONLY`, `FAILURE_ONLY`, `ERROR_ONLY`, `WARN_ERROR` and `DISABLED`. Default value is `DISABLED`.
 
 ### `metadata_configuration` Block
@@ -93,14 +93,14 @@ The `data_read_cache_configuration` configuration block supports the following a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
 * `id` - Identifier of the file system, e.g., `fs-12345678`
 * `mount_name` - Value to be used when mounting the filesystem.
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible. As explained in the [documentation](https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html), the first network interface returned is the primary network interface.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
+* `vpc_id` - Identifier of the VPC for the file system.
 
 ## Timeouts
 

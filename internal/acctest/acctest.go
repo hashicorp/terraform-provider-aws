@@ -319,15 +319,15 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 func PreCheck(ctx context.Context, t *testing.T) {
 	t.Helper()
 
+	envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
+
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
+	}
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
-
-		if os.Getenv(envvar.AccessKeyId) != "" {
-			envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
-		}
-
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
 		// a provider configuration with a region. This defaults to us-west-2 for provider
 		// developer simplicity and has been in the codebase for a very long time.
@@ -1488,7 +1488,8 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 
 	_, err := conn.CreateDirectory(ctx, &input)
 
-	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") ||
+		errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD is no longer open to new customers") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -2357,7 +2358,15 @@ func ListOfStrings[E ~string](s ...E) string {
 	}), ", ")
 }
 
-func ListOfStringVariables[E ~string](s ...E) []config.Variable {
+func ListOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.ListVariable(listOfStringVariables(s...)...)
+}
+
+func SetOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.SetVariable(listOfStringVariables(s...)...)
+}
+
+func listOfStringVariables[E ~string](s ...E) []config.Variable {
 	return tfslices.ApplyToAll(s, func(e E) config.Variable {
 		return config.StringVariable(string(e))
 	})

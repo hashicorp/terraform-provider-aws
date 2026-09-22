@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the snapshot.
+* `arn` - ARN of the snapshot.
 * `creation_time` - Time that the snapshot was created.
 * `id` - Identifier of the snapshot, e.g., `fsvolsnap-12345678`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

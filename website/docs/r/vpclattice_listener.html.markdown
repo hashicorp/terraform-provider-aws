@@ -120,7 +120,7 @@ This resource supports the following arguments:
 * `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
 * `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP`, `HTTPS` or `TLS_PASSTHROUGH`
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `service_arn` - (Optional) Amazon Resource Name (ARN) of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
+* `service_arn` - (Optional) ARN of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 * `service_identifier` - (Optional) ID of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 -> **NOTE:** You must specify one of the following arguments: `service_arn` or `service_identifier`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -150,7 +150,7 @@ Forward blocks (for `forward`) must include the following arguments:
 
 Target group blocks (for `target_groups`) must include the following arguments:
 
-* `target_group_identifier` - (Required) ID or Amazon Resource Name (ARN) of the target group.
+* `target_group_identifier` - (Required) ID or ARN of the target group.
 * `weight` - (Optional) Weight that controls how requests are distributed to the target group. Only required if you specify multiple target groups for a forward action. For example, if you specify two target groups, one with a weight of 10 and the other with a weight of 20, the target group with a weight of 20 receives twice as many requests as the other target group. See [Listener rules](https://docs.aws.amazon.com/vpc-lattice/latest/ug/listeners.html#listener-rules) in the AWS documentation for additional examples. Default: `100`.
 
 ## Attribute Reference

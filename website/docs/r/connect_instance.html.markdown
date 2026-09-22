@@ -74,7 +74,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the instance.
-* `arn` - Amazon Resource Name (ARN) of the instance.
+* `arn` - ARN of the instance.
 * `created_time` - When the instance was created.
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.

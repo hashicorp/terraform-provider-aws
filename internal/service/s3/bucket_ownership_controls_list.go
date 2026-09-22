@@ -31,9 +31,9 @@ func newBucketOwnershipControlsResourceAsListResource() inttypes.ListResourceFor
 	)
 }
 
-var _ bucketPropertyListHandlerSDK = bucketOwnershipControlsListHandler{}
+var _ bucketPropertyListHandler = bucketOwnershipControlsListHandler{}
 
-func newBucketOwnershipControlsListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+func newBucketOwnershipControlsListHandler(lister listResourceSDK) bucketPropertyListHandler {
 	return bucketOwnershipControlsListHandler{
 		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
 	}

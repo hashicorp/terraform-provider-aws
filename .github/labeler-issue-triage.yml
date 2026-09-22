@@ -34,6 +34,8 @@ service/accessanalyzer:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accessanalyzer_'
 service/account:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_account_'
+service/accountaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accountaccess_'
 service/acm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acm_'
 service/acmpca:
@@ -108,6 +110,8 @@ service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/bedrockagentcore:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagentcore_'
+service/bedrockruntime:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockruntime_'
 service/billing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:

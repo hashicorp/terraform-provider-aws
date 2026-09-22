@@ -57,7 +57,7 @@ This resource supports the following arguments:
 backend and the Cognito service to communicate about the developer provider.
 * `cognito_identity_providers` (Optional) - An array of [Amazon Cognito Identity user pools](#cognito-identity-providers) and their client IDs.
 * `openid_connect_provider_arns` (Optional) - Set of OpendID Connect provider ARNs.
-* `saml_provider_arns` (Optional) - An array of Amazon Resource Names (ARNs) of the SAML provider for your identity.
+* `saml_provider_arns` (Optional) - An array of ARNs of the SAML provider for your identity.
 * `supported_login_providers` (Optional) - Key-Value pairs mapping provider names to provider app IDs.
 * `tags` - (Optional) A map of tags to assign to the Identity Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

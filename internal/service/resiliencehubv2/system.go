@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -106,6 +107,7 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreateSystemInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -118,7 +120,7 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	output, err := conn.CreateSystem(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -143,6 +145,7 @@ func (r *systemResource) Read(ctx context.Context, req resource.ReadRequest, res
 	arn := fwflex.StringValueFromFramework(ctx, state.SystemARN)
 	system, err := findSystemByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}

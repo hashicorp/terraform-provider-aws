@@ -40,7 +40,7 @@ resource "aws_prometheus_query_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
-* `destination` - (Required) Configuration block for the logging destinations. See [`destinations`](#destinations).
+* `destination` - (Required) Configuration block for the logging destinations. See [`destination`](#destination).
 * `workspace_id` - (Required) The ID of the AMP workspace for which to configure query logging.
 
 The following arguments are optional:

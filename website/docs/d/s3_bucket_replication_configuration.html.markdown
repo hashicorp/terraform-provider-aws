@@ -66,7 +66,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `encryption_configuration` Block
 
-* `replica_kms_key_id` - ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in AWS Key Management Service (KMS) for the destination bucket.
+* `replica_kms_key_id` - ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in KMS for the destination bucket.
 
 ### `metrics` Block
 
@@ -117,4 +117,4 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `sse_kms_encrypted_objects` Block
 
-* `status` - Whether Amazon S3 replicates objects created with server-side encryption using an AWS KMS key stored in AWS Key Management Service.
+* `status` - Whether Amazon S3 replicates objects created with server-side encryption using an AWS KMS key stored in KMS.

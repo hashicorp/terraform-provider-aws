@@ -104,6 +104,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newDataSourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_iam_role_association",
+			Name:     "IAM Role Association",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
@@ -163,6 +169,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newResourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_iam_role_association",
+			Name:     "IAM Role Association",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
@@ -197,7 +209,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*odb.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*odb.Options){
 		odb.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

@@ -36,6 +36,6 @@ This data source exports the following attributes in addition to the arguments a
 * `attached_eni_id` - Attached elastic network interface of the broker
 * `broker_id` - ID of the broker
 * `client_subnet` - Client subnet to which this broker node belongs
-* `client_vpc_ip_address` - The client virtual private cloud (VPC) IP address
+* `client_vpc_ip_address` - Client VPC IP address
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports
 * `node_arn` - ARN of the node

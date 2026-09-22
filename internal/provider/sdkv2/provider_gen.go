@@ -38,6 +38,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// accountaccess
+
+				"accountaccess": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// acm
 
 				"acm": {
@@ -297,6 +305,14 @@ func endpointsSchema() *schema.Schema {
 				// bedrockagentcore
 
 				"bedrockagentcore": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// bedrockruntime
+
+				"bedrockruntime": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

@@ -137,7 +137,7 @@ The `tiering_policy` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `aggregate_configuration.total_constituents` - Total amount of constituents for a `FLEXGROUP` volume. This would equal constituents_per_aggregate x aggregates.
-* `arn` - Amazon Resource Name of the volune.
+* `arn` - ARN of the volune.
 * `file_system_id` - File system for the volume, e.g. `fs-12345679`
 * `flexcache_endpoint_type` - FlexCache endpoint type of the volume, Valid values are `NONE`, `ORIGIN`, `CACHE`. Default value is `NONE`. These can be set by the ONTAP CLI or API and are use with FlexCache feature.
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`

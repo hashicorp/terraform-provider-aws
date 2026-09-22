@@ -16,7 +16,7 @@ A system represents a business application or platform that delivers value to yo
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_system" "example" {
   name = "example-system"
 }
@@ -24,7 +24,7 @@ resource "aws_resiliencehubv2_system" "example" {
 
 ### With Sharing Enabled
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_system" "example" {
   name            = "example-system"
   description     = "Production system grouping"
@@ -81,7 +81,7 @@ resource "aws_resiliencehubv2_system" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Resilience Hub V2 System.
+- `arn` (String) ARN of the Resilience Hub V2 System.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resilience Hub V2 System using the `arn`. For example:
 

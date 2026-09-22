@@ -114,7 +114,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - Progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `available_autonomous_data_storage_size_in_tbs` - Available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.
 * `available_container_databases` - Number of Autonomous CDBs that you can create with the currently available storage.

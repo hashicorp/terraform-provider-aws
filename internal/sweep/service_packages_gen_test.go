@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
@@ -42,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockruntime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
@@ -288,6 +290,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 	v := []conns.ServicePackage{
 		accessanalyzer.ServicePackage(ctx),
 		account.ServicePackage(ctx),
+		accountaccess.ServicePackage(ctx),
 		acm.ServicePackage(ctx),
 		acmpca.ServicePackage(ctx),
 		agentregistry.ServicePackage(ctx),
@@ -318,6 +321,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		bedrockagentcore.ServicePackage(ctx),
+		bedrockruntime.ServicePackage(ctx),
 		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),

@@ -69,7 +69,7 @@ The `grantee` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `access_grant_arn` - Amazon Resource Name (ARN) of the S3 Access Grant.
+* `access_grant_arn` - ARN of the S3 Access Grant.
 * `access_grant_id` - Unique ID of the S3 Access Grant.
 * `grant_scope` - Access grant's scope.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

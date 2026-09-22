@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_msk_replicator: Support self-managed and on-premises Apache Kafka clusters as a replication source or target, via the `kafka_cluster.apache_kafka_cluster` block and the `replication_info_list.source_kafka_cluster_id` and `target_kafka_cluster_id` arguments
+```
+
+```release-note:enhancement
+resource/aws_msk_replicator: Add `kafka_cluster.client_authentication` to configure `mtls` or `sasl_scram` authentication to an Apache Kafka cluster
+```
+
+```release-note:enhancement
+resource/aws_msk_replicator: Add `kafka_cluster.encryption_in_transit` to supply a custom root CA certificate for an Apache Kafka cluster
+```

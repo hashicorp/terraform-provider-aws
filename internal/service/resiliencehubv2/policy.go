@@ -189,6 +189,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreatePolicyInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -201,7 +202,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	output, err := conn.CreatePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 

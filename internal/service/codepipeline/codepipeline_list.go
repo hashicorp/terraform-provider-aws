@@ -36,21 +36,9 @@ type pipelineListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type pipelineListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *pipelineListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.CodePipelineClient(ctx)
-
-	var query pipelineListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input codepipeline.ListPipelinesInput
 

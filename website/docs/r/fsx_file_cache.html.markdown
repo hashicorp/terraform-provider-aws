@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `data_repository_association` - (Optional) Configurations for up to 8 data repository associations (DRAs) to create during cache creation. All configurations must be of the same data repository type, either all S3 or all NFS. Maximum of 8. See [`data_repository_association` Block](#data_repository_association-block) below.
 * `file_cache_type` - (Required) Type of cache to create. The only supported value is `LUSTRE`.
 * `file_cache_type_version` - (Required) Version for the type of cache to create. The only supported value is `2.12`.
-* `kms_key_id` - (Optional) ID of the AWS Key Management Service (KMS) key to use for encrypting data on the cache. Defaults to the Amazon FSx-managed KMS key for your account.
+* `kms_key_id` - (Optional) ID of the KMS key to use for encrypting data on the cache. Defaults to the Amazon FSx-managed KMS key for your account.
 * `lustre_configuration` - (Optional) Configuration for the Lustre cache. Required when `file_cache_type` is `LUSTRE`. See [`lustre_configuration` Block](#lustre_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_ids` - (Optional) IDs of the security groups to apply to all network interfaces created for cache access.
@@ -95,14 +95,14 @@ The `metadata_configuration` configuration block supports the following argument
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the cache.
+* `arn` - ARN of the cache.
 * `data_repository_association_ids` - IDs of data repository associations that are associated with the cache.
-* `dns_name` - Domain Name System (DNS) name for the cache.
+* `dns_name` - DNS name for the cache.
 * `file_cache_id` - System-generated, unique ID of the cache.
 * `id` - System-generated, unique ID of the cache.
 * `network_interface_ids` - IDs of the network interfaces.
 * `owner_id` - AWS account that created the cache.
-* `vpc_id` - ID of your virtual private cloud (VPC).
+* `vpc_id` - ID of your VPC.
 
 ### `data_repository_association` Block
 
@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `file_system_id` - ID of the file system for an NFS data repository association.
 * `file_system_path` - Path to the data repository on the file system.
 * `imported_file_chunk_size` - Size, in mebibytes (MiB), of the data blocks used to represent imported files.
-* `resource_arn` - Amazon Resource Name (ARN) of the data repository association.
+* `resource_arn` - ARN of the data repository association.
 * `tags` - Map of tags assigned to the data repository association.
 
 ### `lustre_configuration` Block
@@ -121,7 +121,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `lustre_configuration.log_configuration` Block
 
-* `destination` - Amazon Resource Name (ARN) of the destination that receives the logs.
+* `destination` - ARN of the destination that receives the logs.
 * `level` - Level of logging that Lustre logs write to the destination.
 
 ## Timeouts

@@ -177,7 +177,7 @@ The `tickerplant_log_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX cluster.
+* `arn` - ARN identifier of the KX cluster.
 * `created_timestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - Comma-delimited string joining environment ID and cluster name.
 * `last_modified_timestamp` - Last timestamp at which the cluster was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.

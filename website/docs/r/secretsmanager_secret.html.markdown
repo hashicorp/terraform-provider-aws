@@ -88,9 +88,9 @@ resource "aws_secretsmanager_secret" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
+- `arn` (String) ARN of the Secrets Manager secret.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret` using the secret Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret` using the secret ARN. For example:
 
 ```terraform
 import {
@@ -99,7 +99,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_secretsmanager_secret` using the secret Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_secretsmanager_secret` using the secret ARN. For example:
 
 ```console
 % terraform import aws_secretsmanager_secret.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456

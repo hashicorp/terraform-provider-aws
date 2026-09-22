@@ -297,7 +297,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
 * `file_system_type` - (Optional) Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
 * `iops` - (Optional) Number of I/O operations per second (IOPS).
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+* `kms_key_id` - (Optional) ARN identifier of the Amazon Web Services KMS key to use for Amazon EBS encryption.
 * `role_arn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
@@ -329,9 +329,18 @@ The `deployment_configuration` configuration block supports the following:
 The `lifecycle_hook` configuration block supports the following:
 
 * `hook_details` - (Optional) Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
-* `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
+* `hook_target_arn` - (Optional) ARN of the Lambda function to invoke for the lifecycle hook. Required when `target_type` is `AWS_LAMBDA`. Not used when `target_type` is `PAUSE`.
 * `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
-* `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
+* `role_arn` - (Optional) ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when `target_type` is `AWS_LAMBDA`. Not used when `target_type` is `PAUSE`.
+* `target_type` - (Optional) Type of hook target. Valid values: `AWS_LAMBDA`, `PAUSE`. Default: `AWS_LAMBDA`. `PAUSE` hooks cannot use the `TEST_TRAFFIC_SHIFT` or `PRODUCTION_TRAFFIC_SHIFT` lifecycle stages.
+* `timeout_configuration` - (Optional) Configuration block defining the timeout behavior for a `PAUSE` hook. Only valid when `target_type` is `PAUSE`. [See below](#timeout_configuration).
+
+### timeout_configuration
+
+The `timeout_configuration` configuration block supports the following:
+
+* `action` - (Optional) Action ECS takes when the pause hook times out. Valid values: `ROLLBACK`, `CONTINUE`. Default: `ROLLBACK`.
+* `timeout_in_minutes` - (Optional) Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes. Default: `1440` (24 hours).
 
 ### `linear_configuration` Block
 
@@ -461,7 +470,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `ingress_port_override` - (Optional) Port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) Name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
 * `timeout` - (Optional) Configuration timeouts for Service Connect
-* `tls` - (Optional) Configuration for enabling Transport Layer Security (TLS)
+* `tls` - (Optional) Configuration for enabling TLS
 
 ### `timeout` Block
 
