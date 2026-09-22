@@ -133,6 +133,58 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 	})
 }
 
+func TestAccDataZoneEnvironmentBlueprintConfiguration_environmentRolePermissionBoundary(t *testing.T) {
+	ctx := acctest.Context(t)
+	var configuration datazone.GetEnvironmentBlueprintConfigurationOutput
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment_blueprint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_environmentRolePermissionBoundary(domainName, "ReadOnlyAccess"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &configuration),
+					acctest.CheckResourceAttrGlobalARNAccountID(resourceName, "environment_role_permission_boundary", "aws", "iam", "policy/ReadOnlyAccess"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+			},
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_environmentRolePermissionBoundary(domainName, "AmazonS3ReadOnlyAccess"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &configuration),
+					acctest.CheckResourceAttrGlobalARNAccountID(resourceName, "environment_role_permission_boundary", "aws", "iam", "policy/AmazonS3ReadOnlyAccess"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+			},
+		},
+	})
+}
+
 func TestAccDataZoneEnvironmentBlueprintConfiguration_manage_access_role_arn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
@@ -508,5 +560,21 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   }
 }
 `, key, value),
+	)
+}
+
+func testAccEnvironmentBlueprintConfigurationConfig_environmentRolePermissionBoundary(domainName, policyName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentBlueprintDataSourceConfig_basic(domainName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_datazone_environment_blueprint_configuration" "test" {
+  domain_id                            = aws_datazone_domain.test.id
+  environment_blueprint_id             = data.aws_datazone_environment_blueprint.test.id
+  enabled_regions                      = []
+  environment_role_permission_boundary = "arn:${data.aws_partition.current.partition}:iam::aws:policy/%[1]s"
+}
+`, policyName),
 	)
 }
