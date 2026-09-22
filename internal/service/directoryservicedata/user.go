@@ -292,10 +292,7 @@ func findUserByTwoPartKey(ctx context.Context, conn *directoryservicedata.Client
 	}
 
 	out, err := conn.DescribeUser(ctx, &input)
-	// Once the parent Directory Service directory is deleted, DescribeUser
-	// can no longer resolve authorization and returns AccessDeniedException
-	// instead of ResourceNotFoundException.
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
