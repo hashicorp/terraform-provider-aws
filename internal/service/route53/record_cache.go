@@ -103,6 +103,11 @@ func (c *zoneRecordCache) load(ctx context.Context, conn *route53.Client, zoneID
 // relative to its zone ("www") produces the same key as the fully qualified
 // name the API returns ("www.example.com."). expandRecordName is a no-op for
 // names that already carry the suffix, so the same call serves both sides.
+//
+// key does not lock, so callers must either hold c.mu or have already
+// synchronized through getOrLoadZoneRecordCache. zoneName is written once
+// during load and never again, so a reader that has passed through the mutex
+// sees a stable value.
 func (c *zoneRecordCache) key(zoneID, name, rrType, setIdentifier string) string {
 	parts := []string{
 		zoneID,
