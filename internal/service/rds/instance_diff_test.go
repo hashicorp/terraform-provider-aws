@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,7 +100,7 @@ func TestInstanceEngineVersionDiffSuppress(t *testing.T) {
 		"same-plan false->true relaxes to major prefix": {
 			stateEngineVersion:       "14.22",
 			stateEngineVersionActual: "14.22",
-			stateAutoMinor:           "false",
+			stateAutoMinor:           acctest.CtFalse,
 			configEngineVersion:      "14",
 			configAutoMinor:          true,
 			wantEngineVersionDiff:    false,
@@ -110,7 +111,7 @@ func TestInstanceEngineVersionDiffSuppress(t *testing.T) {
 		"auto minor enabled, actual ahead of config": {
 			stateEngineVersion:       "14.22",
 			stateEngineVersionActual: "14.25",
-			stateAutoMinor:           "true",
+			stateAutoMinor:           acctest.CtTrue,
 			configEngineVersion:      "14.22",
 			configAutoMinor:          true,
 			wantEngineVersionDiff:    false,
@@ -121,7 +122,7 @@ func TestInstanceEngineVersionDiffSuppress(t *testing.T) {
 		"explicit pin downgrade preserved": {
 			stateEngineVersion:       "14.23",
 			stateEngineVersionActual: "14.23",
-			stateAutoMinor:           "false",
+			stateAutoMinor:           acctest.CtFalse,
 			configEngineVersion:      "14.22",
 			configAutoMinor:          false,
 			wantEngineVersionDiff:    true,
@@ -131,7 +132,7 @@ func TestInstanceEngineVersionDiffSuppress(t *testing.T) {
 		"intentional forward upgrade preserved": {
 			stateEngineVersion:       "14.22",
 			stateEngineVersionActual: "14.22",
-			stateAutoMinor:           "true",
+			stateAutoMinor:           acctest.CtTrue,
 			configEngineVersion:      "14.23",
 			configAutoMinor:          true,
 			wantEngineVersionDiff:    true,
@@ -145,7 +146,7 @@ func TestInstanceEngineVersionDiffSuppress(t *testing.T) {
 		"auto minor disabled with prefix surfaces downgrade": {
 			stateEngineVersion:       "14.22",
 			stateEngineVersionActual: "14.22",
-			stateAutoMinor:           "true",
+			stateAutoMinor:           acctest.CtTrue,
 			configEngineVersion:      "14",
 			configAutoMinor:          false,
 			wantEngineVersionDiff:    true,
