@@ -43,6 +43,9 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 
 			for userPages.HasMorePages() {
 				page, err := userPages.NextPage(ctx)
+				if awsv2.SkipSweepError(err) {
+					break
+				}
 				if err != nil {
 					return nil, smarterr.NewError(err)
 				}
