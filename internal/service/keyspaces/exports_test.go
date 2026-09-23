@@ -8,8 +8,18 @@ var (
 	ResourceKeyspace = resourceKeyspace
 	ResourceTable    = resourceTable
 
-	FindKeyspaceByName    = findKeyspaceByName
-	FindTableByTwoPartKey = findTableByTwoPartKey
+	FindKeyspaceByName                       = findKeyspaceByName
+	FindTableByTwoPartKey                    = findTableByTwoPartKey
+	FindTableAutoScalingSettingsByTwoPartKey = findTableAutoScalingSettingsByTwoPartKey
 
 	TableParseResourceID = tableParseResourceID
+
+	ExpandAutoScalingSpecification                 = expandAutoScalingSpecification
+	ExpandAutoScalingSpecificationDisabled         = expandAutoScalingSpecificationDisabled
+	ExpandAutoScalingSettings                      = expandAutoScalingSettings
+	ExpandTargetTrackingScalingPolicyConfiguration = expandTargetTrackingScalingPolicyConfiguration
+
+	FlattenAutoScalingSpecification                 = flattenAutoScalingSpecification
+	FlattenAutoScalingSettings                      = flattenAutoScalingSettings
+	FlattenTargetTrackingScalingPolicyConfiguration = flattenTargetTrackingScalingPolicyConfiguration
 )
