@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,18 +26,18 @@ func TestFlattenClusterEndpoints(t *testing.T) {
 		},
 		"sorted by region": {
 			input: []awstypes.ClusterEndpoint{
-				{Endpoint: aws.String("https://c.us-west-2"), Region: aws.String("us-west-2")},
-				{Endpoint: aws.String("https://a.eu-west-1"), Region: aws.String("eu-west-1")},
-				{Endpoint: aws.String("https://e.us-east-1"), Region: aws.String("us-east-1")},
-				{Endpoint: aws.String("https://b.ap-southeast-2"), Region: aws.String("ap-southeast-2")},
-				{Endpoint: aws.String("https://d.ap-northeast-1"), Region: aws.String("ap-northeast-1")},
+				{Endpoint: aws.String("https://c"), Region: aws.String(endpoints.UsWest2RegionID)},
+				{Endpoint: aws.String("https://a"), Region: aws.String(endpoints.EuWest1RegionID)},
+				{Endpoint: aws.String("https://e"), Region: aws.String(endpoints.UsEast1RegionID)},
+				{Endpoint: aws.String("https://b"), Region: aws.String(endpoints.ApSoutheast2RegionID)},
+				{Endpoint: aws.String("https://d"), Region: aws.String(endpoints.ApNortheast1RegionID)},
 			},
 			expected: []any{
-				map[string]any{names.AttrEndpoint: "https://d.ap-northeast-1", names.AttrRegion: "ap-northeast-1"},
-				map[string]any{names.AttrEndpoint: "https://b.ap-southeast-2", names.AttrRegion: "ap-southeast-2"},
-				map[string]any{names.AttrEndpoint: "https://a.eu-west-1", names.AttrRegion: "eu-west-1"},
-				map[string]any{names.AttrEndpoint: "https://e.us-east-1", names.AttrRegion: "us-east-1"},
-				map[string]any{names.AttrEndpoint: "https://c.us-west-2", names.AttrRegion: "us-west-2"},
+				map[string]any{names.AttrEndpoint: "https://d", names.AttrRegion: endpoints.ApNortheast1RegionID},
+				map[string]any{names.AttrEndpoint: "https://b", names.AttrRegion: endpoints.ApSoutheast2RegionID},
+				map[string]any{names.AttrEndpoint: "https://a", names.AttrRegion: endpoints.EuWest1RegionID},
+				map[string]any{names.AttrEndpoint: "https://e", names.AttrRegion: endpoints.UsEast1RegionID},
+				map[string]any{names.AttrEndpoint: "https://c", names.AttrRegion: endpoints.UsWest2RegionID},
 			},
 		},
 	}
