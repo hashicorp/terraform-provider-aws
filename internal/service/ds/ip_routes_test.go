@@ -45,7 +45,7 @@ func TestAccDSIPRoutes_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ip_route.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_route.*", map[string]string{
-						"cidr_ip":             "192.168.100.0/24",
+						"cidr_ip":             "192.0.2.0/24",
 						names.AttrDescription: "example",
 					}),
 				),
@@ -94,11 +94,11 @@ func TestAccDSIPRoutes_update(t *testing.T) {
 					testAccCheckIPRoutesExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_route.*", map[string]string{
-						"cidr_ip":             "192.168.100.0/24",
+						"cidr_ip":             "192.0.2.0/24",
 						names.AttrDescription: "updated",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_route.*", map[string]string{
-						"cidr_ip":             "192.168.200.0/24",
+						"cidr_ip":             "198.51.100.0/24",
 						names.AttrDescription: "second",
 					}),
 				),
@@ -236,7 +236,7 @@ resource "aws_directory_service_ip_routes" "test" {
   directory_id = aws_directory_service_directory.test.id
 
   ip_route {
-    cidr_ip     = "192.168.100.0/24"
+    cidr_ip     = "192.0.2.0/24"
     description = "example"
   }
 }
@@ -249,12 +249,12 @@ resource "aws_directory_service_ip_routes" "test" {
   directory_id = aws_directory_service_directory.test.id
 
   ip_route {
-    cidr_ip     = "192.168.100.0/24"
+    cidr_ip     = "192.0.2.0/24"
     description = "updated"
   }
 
   ip_route {
-    cidr_ip     = "192.168.200.0/24"
+    cidr_ip     = "198.51.100.0/24"
     description = "second"
   }
 }

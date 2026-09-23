@@ -7,7 +7,7 @@ resource "aws_directory_service_ip_routes" "test" {
   directory_id = aws_directory_service_directory.test.id
 
   ip_route {
-    cidr_ip     = "192.168.100.0/24"
+    cidr_ip     = "192.0.2.0/24"
     description = var.rName
   }
 }
