@@ -41,7 +41,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceTrustAnchor,
@@ -50,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
 }
