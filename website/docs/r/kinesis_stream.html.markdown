@@ -41,7 +41,7 @@ resource "aws_kinesis_stream" "test_stream" {
 This resource supports the following arguments:
 
 * `encryption_type` - (Optional) Encryption type to use. The only acceptable values are `NONE` or `KMS`. The default value is `NONE`.
-* `enforce_consumer_deletion` - (Optional) Boolean that indicates all registered consumers should be deregistered from the stream so that the stream can be destroyed without error. The default value is `false`.
+* `enforce_consumer_deletion` - (Optional) Whether to deregister all registered consumers from the stream so that the stream can be destroyed without error. The default value is `false`.
 * `kms_key_id` - (Optional) Identifier for the customer-managed KMS key to use for encryption. This can be a Key ID (UUID), a Key ARN, an Alias Name (prefixed with `alias/`), or an Alias ARN. You can also use a master key owned by Kinesis Data Streams by specifying the alias `aws/kinesis`.
 * `max_record_size_in_kib` - (Optional) Maximum size for a single data record in KiB. The minimum value is 1024. The maximum value is 10240.
 * `name` - (Required) Name to identify the stream. This is unique to the AWS account and region the Stream is created in.
