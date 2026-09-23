@@ -729,7 +729,12 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if batchReadsEnabled() {
 		oldSetID, _ := d.GetChange("set_identifier")
+
+		// Both old and new records are evicted to ensure the cache does not
+		// retain stale data. The updated record will be read fresh (including
+		// any modified attributes) on the next read.
 		evictFromZoneRecordCache(zoneID, d.Get(names.AttrName).(string), oldRRType.(string), oldSetID.(string))
+		evictFromZoneRecordCache(zoneID, d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 	}
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
