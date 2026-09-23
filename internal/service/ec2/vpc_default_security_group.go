@@ -18,9 +18,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_default_security_group", name="Security Group")
+// @SDKResource("aws_default_security_group", name="Default Security Group")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroup")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(importIgnore="revoke_rules_on_delete", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.66.0")
 func resourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -28,10 +34,6 @@ func resourceDefaultSecurityGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceSecurityGroupRead,
 		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
 		MigrateState:  securityGroupMigrateState,
