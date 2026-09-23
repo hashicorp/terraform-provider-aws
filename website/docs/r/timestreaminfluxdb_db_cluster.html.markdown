@@ -207,6 +207,52 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 }
 ```
 
+### Usage with Automated Backups
+
+You can define up to four automated backup schedules for a DB cluster. Each schedule has its own type and retention period.
+
+```terraform
+resource "aws_timestreaminfluxdb_db_cluster" "example" {
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  username               = "admin"
+  password               = "example-password"
+  organization           = "organization"
+  vpc_subnet_ids         = [aws_subnet.example_1.id, aws_subnet.example_2.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
+  name                   = "example-db-cluster"
+
+  db_backup_configuration {
+    enabled        = true
+    type           = "DAILY"
+    retention_days = 7
+  }
+}
+```
+
+### Usage with Restore
+
+You can create a DB cluster by restoring an existing backup that was taken from a cluster. When the `restore` block is configured, the source configuration is inherited from the backup and must be omitted.
+
+```terraform
+resource "aws_timestreaminfluxdb_db_backup" "example" {
+  db_resource_id = aws_timestreaminfluxdb_db_cluster.source.id
+  name           = "example-backup"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "example" {
+  name                   = "example-db-cluster-restored"
+  vpc_subnet_ids         = [aws_subnet.example_1.id, aws_subnet.example_2.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
+
+  restore {
+    source_db_backup_id = aws_timestreaminfluxdb_db_backup.example.id
+    restore_mode        = "NEW_RESOURCE"
+  }
+}
+```
+
 ### Cluster Type Requirements
 
 #### InfluxDB V2 Clusters (default)
@@ -242,6 +288,8 @@ The following arguments are required:
 * `vpc_security_group_ids` - (Required) List of VPC security group IDs to associate with the cluster.
 * `vpc_subnet_ids` - (Required) List of VPC subnet IDs to associate with the cluster. Provide at least two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.
 
+~> **Note:** When the [`restore`](#restore) block is configured, `db_instance_type` and the InfluxDB V2 credential arguments are inherited from the backup and must be omitted. `name` is always required, and `vpc_security_group_ids` and `vpc_subnet_ids` may optionally be provided to override the values from the backup.
+
 The following arguments are optional:
 
 * `allocated_storage` - (Optional) Amount of storage in GiB (gibibytes). The minimum value is `20`, the maximum value is `16384`. The argument `db_storage_type` places restrictions on this argument's minimum value. The following is a list of `db_storage_type` values and the corresponding minimum value for `allocated_storage`: `"InfluxIOIncludedT1": `20`, `"InfluxIOIncludedT2" and `"InfluxIOIncludedT3": `400`. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
@@ -251,8 +299,10 @@ The following arguments are optional:
 * `deployment_type` - (Default `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters) Specifies the type of cluster to create. Valid options are: `"MULTI_NODE_READ_REPLICAS"`. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 * `failover_mode` - (Default `"AUTOMATIC"`) Specifies the behavior of failure recovery when the primary node of the cluster fails. Valid options are: `"AUTOMATIC"` and `"NO_FAILOVER"`.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket. This argument is updatable.
+* `db_backup_configuration` - (Optional) Automated backup schedules for the DB cluster. Up to four blocks are supported. This argument is updatable. See [`db_backup_configuration`](#db_backup_configuration) below.
 * `maintenance_schedule` - (Optional) Maintenance schedule for the DB cluster, including the preferred maintenance window and timezone. This argument is updatable. This field is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 * `network_type` - (Optional) Specifies whether the network type of the Timestream for InfluxDB cluster is IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate over both IPv4 and IPv6 protocols.
+* `restore` - (Optional, Forces new resource) Restore the DB cluster from an existing backup instead of creating a new one. See [`restore`](#restore) below.
 * `organization` - (Optional) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
 * `password` - (Optional) Password of the initial admin user created in InfluxDB. This password will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `username`, and `organization`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group) as the AWS API rejects it.
 * `port` - (Default `8086`) The port on which the cluster accepts connections. Valid values: `1024`-`65535`. Cannot be `2375`-`2376`, `7788`-`7799`, `8090`, or `51678`-`51680`. This argument is updatable.
@@ -275,7 +325,20 @@ The following arguments are optional:
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Indicates whether log delivery to the S3 bucket is enabled.
 
-**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `db_instance_type`, `failover_mode`, and `tags`. Changes to any other argument after a cluster has been deployed will cause destruction and re-creation of the cluster. Additionally, when `db_parameter_group_identifier` is added to a cluster or modified, the cluster will be updated in-place but if `db_parameter_group_identifier` is removed from a cluster, the cluster will be destroyed and re-created.
+#### `db_backup_configuration`
+
+* `enabled` - (Required) Whether this automated backup configuration is enabled.
+* `retention_days` - (Required) Number of days to retain automated backups. Valid values are `1` to `365`.
+* `type` - (Required) Automated backup schedule type. Valid values are `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_SCHEDULE`, and `CONTINUOUS`.
+* `custom_schedule` - (Optional) Cron expression defining the backup schedule. Required when `type` is `CUSTOM_SCHEDULE` and must not be set otherwise.
+
+#### `restore`
+
+* `source_db_backup_id` - (Required, Forces new resource) Identifier of the backup to restore from. The backup must have been taken from a DB cluster.
+* `restore_mode` - (Optional, Forces new resource) Whether to restore to a new resource (`NEW_RESOURCE`, the default) or replace an existing resource (`REPLACE_EXISTING`). Only `NEW_RESOURCE` is currently supported.
+* `restore_to_time` - (Optional, Forces new resource) Point in time to restore to, in RFC3339 format. Only applies to `CONTINUOUS` backups.
+
+**Note**: The following arguments do updates in-place: `db_backup_configuration`, `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `db_instance_type`, `failover_mode`, and `tags`. Changes to any other argument after a cluster has been deployed will cause destruction and re-creation of the cluster. Additionally, when `db_parameter_group_identifier` is added to a cluster or modified, the cluster will be updated in-place but if `db_parameter_group_identifier` is removed from a cluster, the cluster will be destroyed and re-created.
 
 ## Attribute Reference
 
