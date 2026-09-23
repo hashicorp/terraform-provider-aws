@@ -547,7 +547,7 @@ resource "aws_iam_role" "test" {
           "s3:ListBucket",
           "s3:ListBucketVersions",
         ]
-        Resource = ["${aws_s3_bucket.test.arn}", "${aws_s3_bucket.test.arn}/*"]
+        Resource = [aws_s3_bucket.test.arn, "${aws_s3_bucket.test.arn}/*"]
       }]
     })
   }
