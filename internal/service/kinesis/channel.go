@@ -144,6 +144,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Description: "The time at which the source stream was created.",
 							CustomType:  timetypes.RFC3339Type{},
 							Computed:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{

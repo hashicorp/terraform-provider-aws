@@ -116,6 +116,105 @@ func TestAccKinesisChannel_disappears(t *testing.T) {
 	})
 }
 
+func TestAccKinesisChannel_updateLogging(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kinesis)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+				),
+			},
+			{
+				Config: testAccChannelConfig_updateLogging(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.cloudwatch_logs.0.log_stream_name", rName),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "channel_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "channel_arn",
+			},
+		},
+	})
+}
+
+func TestAccKinesisChannel_updateFreshness(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kinesis)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+				),
+			},
+			{
+				Config: testAccChannelConfig_updateFreshness(rName, 420),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.data_freshness_in_seconds", "420"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "channel_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "channel_arn",
+			},
+		},
+	})
+}
+
 func testAccCheckChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
@@ -216,6 +315,228 @@ resource "aws_iam_role_policy" "policy" {
         ]
         Resource = aws_kinesis_stream.stream.arn
       },
+	  {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "${aws_cloudwatch_log_group.test.arn}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:*"]
+        Resource = [
+          "${aws_s3_bucket.bucket.arn}",
+          "${aws_s3_bucket.bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kinesis_stream" "stream" {
+  name                      = %[1]q
+  encryption_type           = "NONE"
+  enforce_consumer_deletion = false
+  max_record_size_in_kib    = 1024
+  retention_period          = 24
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/kinesis/%[1]s"
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_kinesis_channel" "test" {
+  channel_name               = %[1]q
+  service_execution_role_arn = aws_iam_role.role.arn
+
+  stream_configuration_list {
+    stream_arn = aws_kinesis_stream.stream.arn
+
+    record_configuration {
+      record_format_type = "JSON"
+    }
+  }
+
+  s3_destination_configuration {
+    storage_configuration {
+      bucket_arn            = aws_s3_bucket.bucket.arn
+      expected_bucket_owner = data.aws_caller_identity.current.account_id
+      compression_type      = "NONE"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.policy,
+  ]
+}
+`, rName)
+}
+
+func testAccChannelConfig_updateLogging(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "kinesis.amazonaws.com",
+            "s3.amazonaws.com"
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "policy" {
+  name = %[1]q
+  role = aws_iam_role.role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kinesis:*"
+        ]
+        Resource = aws_kinesis_stream.stream.arn
+      },
+	  {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "${aws_cloudwatch_log_group.test.arn}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:*"]
+        Resource = [
+          "${aws_s3_bucket.bucket.arn}",
+          "${aws_s3_bucket.bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kinesis_stream" "stream" {
+  name                      = %[1]q
+  encryption_type           = "NONE"
+  enforce_consumer_deletion = false
+  max_record_size_in_kib    = 1024
+  retention_period          = 24
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/kinesis/%[1]s"
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_kinesis_channel" "test" {
+  channel_name               = %[1]q
+  service_execution_role_arn = aws_iam_role.role.arn
+
+  stream_configuration_list {
+    stream_arn = aws_kinesis_stream.stream.arn
+
+    record_configuration {
+      record_format_type = "JSON"
+    }
+  }
+
+  s3_destination_configuration {
+    storage_configuration {
+      bucket_arn            = aws_s3_bucket.bucket.arn
+      expected_bucket_owner = data.aws_caller_identity.current.account_id
+      compression_type      = "NONE"
+    }
+  }
+
+  logging_configuration {
+    cloudwatch_logs {
+      enabled 		  = true
+	  log_group_name  = aws_cloudwatch_log_group.test.name
+	  log_stream_name = %[1]q
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.policy,
+  ]
+}
+`, rName)
+}
+
+func testAccChannelConfig_updateFreshness(rName string, freshness int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "kinesis.amazonaws.com",
+            "s3.amazonaws.com"
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "policy" {
+  name = %[1]q
+  role = aws_iam_role.role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kinesis:*"
+        ]
+        Resource = aws_kinesis_stream.stream.arn
+      },
       {
         Effect = "Allow"
         Action = ["s3:*"]
@@ -259,6 +580,7 @@ resource "aws_kinesis_channel" "test" {
   }
 
   s3_destination_configuration {
+    data_freshness_in_seconds = %[2]d
     storage_configuration {
       bucket_arn            = aws_s3_bucket.bucket.arn
       expected_bucket_owner = data.aws_caller_identity.current.account_id
@@ -270,5 +592,5 @@ resource "aws_kinesis_channel" "test" {
     aws_iam_role_policy.policy,
   ]
 }
-`, rName)
+`, rName, freshness)
 }
