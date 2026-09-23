@@ -157,7 +157,7 @@ This resource supports the following arguments:
 * `reference_data_sources` - (Optional) S3 Reference Data Source for the application. See [`reference_data_sources` Block](#reference_data_sources-block) below for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_application` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `starting_position` must be configured. To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
-* `tags` - (Optional) Key-value map of tags for the Kinesis Analytics Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `cloudwatch_logging_options` Block
 
