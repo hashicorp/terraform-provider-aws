@@ -7,6 +7,7 @@ package ds
 var (
 	ResourceConditionalForwarder    = resourceConditionalForwarder
 	ResourceDirectory               = resourceDirectory
+	ResourceIPRoutes                = newIPRoutesResource
 	ResourceLogSubscription         = resourceLogSubscription
 	ResourceRadiusSettings          = resourceRadiusSettings
 	ResourceRegion                  = resourceRegion
@@ -16,6 +17,7 @@ var (
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
+	FindIPRoutesByDirectoryID            = findIPRoutesByDirectoryID
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
