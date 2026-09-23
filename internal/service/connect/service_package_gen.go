@@ -7,6 +7,8 @@ package connect
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -27,12 +29,29 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newApprovedOriginResource,
+			TypeName: "aws_connect_approved_origin",
+			Name:     "Approved Origin",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newPhoneNumberContactFlowAssociationResource,
 			TypeName: "aws_connect_phone_number_contact_flow_association",
 			Name:     "Phone Number Contact Flow Association",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newApprovedOriginResourceAsListResource,
+			TypeName: "aws_connect_approved_origin",
+			Name:     "Approved Origin",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

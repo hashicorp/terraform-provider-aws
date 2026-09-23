@@ -5,6 +5,7 @@ package connect
 
 // Exports for use in tests only.
 var (
+	ResourceApprovedOrigin                    = newApprovedOriginResource
 	ResourceBotAssociation                    = resourceBotAssociation
 	ResourceContactFlow                       = resourceContactFlow
 	ResourceContactFlowModule                 = resourceContactFlowModule
@@ -23,6 +24,7 @@ var (
 	ResourceUserHierarchyStructure            = resourceUserHierarchyStructure
 	ResourceVocabulary                        = resourceVocabulary
 
+	FindApprovedOriginByTwoPartKey                      = findApprovedOriginByTwoPartKey
 	FindBotAssociationByThreePartKey                    = findBotAssociationByThreePartKey
 	FindContactFlowByTwoPartKey                         = findContactFlowByTwoPartKey
 	FindContactFlowModuleByTwoPartKey                   = findContactFlowModuleByTwoPartKey
