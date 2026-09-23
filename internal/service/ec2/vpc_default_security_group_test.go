@@ -106,8 +106,7 @@ func testAccCheckDefaultSecurityGroupARN(ctx context.Context, resourceName strin
 }
 
 // testAccCheckDefaultSecurityGroupExists is the standard-named wrapper required
-// by Resource Identity generated tests. It reuses the shared Security Group
-// existence check.
+// by Resource Identity generated tests.
 func testAccCheckDefaultSecurityGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return testAccCheckSecurityGroupExists(ctx, t, n, v)
 }
