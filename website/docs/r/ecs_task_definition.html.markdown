@@ -270,7 +270,7 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 
 For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
 
-* `authorization_config` - (Optional) Configuration block for [authorization](#efs_volume_configuration.authorization_config) for the Amazon EFS file system. Detailed below.
+* `authorization_config` - (Optional) Configuration block for [authorization](#efs_volume_configurationauthorization_config-block) for the Amazon EFS file system. Detailed below.
 * `file_system_id` - (Required) ID of the EFS File System.
 * `root_directory` - (Optional) Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorization_config`.
 * `transit_encryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
@@ -290,7 +290,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
 
-* `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configuration.authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
+* `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configurationauthorization_config-block) for the Amazon FSx for Windows File Server file system detailed below.
 * `file_system_id` - (Required) Amazon FSx for Windows File Server file system ID to use.
 * `root_directory` - (Required) Directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
 
