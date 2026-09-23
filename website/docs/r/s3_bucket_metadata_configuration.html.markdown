@@ -33,6 +33,68 @@ resource "aws_s3_bucket_metadata_configuration" "example" {
 }
 ```
 
+### Annotation Table
+
+`annotation_table_configuration` is set as an attribute (`=`), not a block, and every argument must be present in the object literal (use `null` for any you don't want to set):
+
+```terraform
+resource "aws_iam_role" "example" {
+  name = "example-s3-annotation-table-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "metadata.s3.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "example" {
+  role = aws_iam_role.example.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "s3:GetObjectAnnotation",
+        "s3:GetObjectVersionAnnotation",
+        "s3:ListBucket",
+        "s3:ListBucketVersions",
+      ]
+      Resource = [aws_s3_bucket.example.arn, "${aws_s3_bucket.example.arn}/*"]
+    }]
+  })
+}
+
+resource "aws_s3_bucket_metadata_configuration" "example" {
+  bucket = aws_s3_bucket.example.bucket
+
+  metadata_configuration {
+    annotation_table_configuration = [{
+      configuration_state      = "ENABLED"
+      role                     = aws_iam_role.example.arn
+      encryption_configuration = null
+    }]
+
+    inventory_table_configuration {
+      configuration_state = "ENABLED"
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        days       = 7
+        expiration = "ENABLED"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -58,11 +120,11 @@ The following arguments are optional:
 
 ### `annotation_table_configuration` Block
 
-The `annotation_table_configuration` configuration block supports the following arguments:
+Unlike the other blocks under `metadata_configuration`, `annotation_table_configuration` is set as an attribute (`annotation_table_configuration = [{ ... }]`), not with block syntax. Every argument below must be present in the object literal; use `null` for any you don't want to set.
 
 * `configuration_state` - (Required) Configuration state of the annotation table, indicating whether the annotation table is enabled or disabled. Valid values: `ENABLED`, `DISABLED`.
-* `encryption_configuration` - (Optional) Encryption configuration for the annotation table. See [`encryption_configuration` Block](#encryption_configuration-block) for details.
-* `role` - (Optional) ARN of the IAM role used to manage the annotation table.
+* `encryption_configuration` - (Optional) Encryption configuration for the annotation table. Set to `null` if not configuring encryption. See [`encryption_configuration` Block](#encryption_configuration-block) for details.
+* `role` - (Optional) ARN of the IAM role used to manage the annotation table. Required when `configuration_state` is `ENABLED`; must be `null` when `configuration_state` is `DISABLED`. The role's trust policy must allow `metadata.s3.amazonaws.com` to assume it, and its permissions policy must grant `s3:GetObjectAnnotation`, `s3:GetObjectVersionAnnotation`, `s3:ListBucket`, and `s3:ListBucketVersions` on the bucket (plus `kms:Decrypt` if the bucket or annotations are encrypted with a KMS key).
 
 ### `inventory_table_configuration` Block
 
@@ -98,6 +160,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `metadata_configuration` Block
 
+* `annotation_table_arn` - Annotation table ARN.
+* `annotation_table_name` - Annotation table name.
 * `destination` - Destination information for the S3 Metadata configuration. See [`destination` Block](#destination-block) for details.
 
 ### `destination` Block
@@ -105,11 +169,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
 * `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
 * `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
-
-### `annotation_table_configuration` Block
-
-* `table_arn` - Annotation table ARN.
-* `table_name` - Annotation table name.
 
 ### `inventory_table_configuration` Block
 
