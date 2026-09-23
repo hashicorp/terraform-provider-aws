@@ -65,6 +65,8 @@ func TestAccVPCDefaultSecurityGroup_List_basic(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_default_security_group.test", identity1.Checks()),
 					tfquerycheck.ExpectIdentityFunc("aws_default_security_group.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_default_security_group.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^default \(sg-.+\)$`))),
+					querycheck.ExpectResourceDisplayName("aws_default_security_group.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^default \(sg-.+\)$`))),
 				},
 			},
 		},
@@ -111,6 +113,7 @@ func TestAccVPCDefaultSecurityGroup_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_default_security_group.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_default_security_group.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-0 \(sg-.+\)$`))),
 					querycheck.ExpectResourceKnownValues("aws_default_security_group.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`security-group/sg-.+`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("default VPC security group")),
@@ -177,6 +180,8 @@ func TestAccVPCDefaultSecurityGroup_List_regionOverride(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_default_security_group.test", identity1.Checks()),
 					tfquerycheck.ExpectIdentityFunc("aws_default_security_group.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_default_security_group.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^default \(sg-.+\)$`))),
+					querycheck.ExpectResourceDisplayName("aws_default_security_group.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^default \(sg-.+\)$`))),
 				},
 			},
 		},

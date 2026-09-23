@@ -118,7 +118,7 @@ func (l *listResourceDefaultSecurityGroup) List(ctx context.Context, request lis
 			if v, ok := tags["Name"]; ok {
 				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), groupID)
 			} else {
-				result.DisplayName = aws.ToString(item.GroupName)
+				result.DisplayName = fmt.Sprintf("%s (%s)", aws.ToString(item.GroupName), groupID)
 			}
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
