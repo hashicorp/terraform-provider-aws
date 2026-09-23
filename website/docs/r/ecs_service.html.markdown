@@ -333,9 +333,9 @@ The `lifecycle_hook` configuration block supports the following:
 * `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
 * `role_arn` - (Optional) ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when `target_type` is `AWS_LAMBDA`. Not used when `target_type` is `PAUSE`.
 * `target_type` - (Optional) Type of hook target. Valid values: `AWS_LAMBDA`, `PAUSE`. Default: `AWS_LAMBDA`. `PAUSE` hooks cannot use the `TEST_TRAFFIC_SHIFT` or `PRODUCTION_TRAFFIC_SHIFT` lifecycle stages.
-* `timeout_configuration` - (Optional) Configuration block defining the timeout behavior for a `PAUSE` hook. Only valid when `target_type` is `PAUSE`. [See below](#timeout_configuration).
+* `timeout_configuration` - (Optional) Configuration block defining the timeout behavior for a `PAUSE` hook. Only valid when `target_type` is `PAUSE`. [See below](#timeout_configuration-block).
 
-### timeout_configuration
+### `timeout_configuration` Block
 
 The `timeout_configuration` configuration block supports the following:
 

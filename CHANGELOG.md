@@ -1,5 +1,15 @@
 ## 6.66.0 (September 21, 2026)
 
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+## 6.66.0 (September 21, 2026)
+
 NOTES:
 
 * resource/aws_iam_openid_connect_provider: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024))
