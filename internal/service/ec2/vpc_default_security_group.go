@@ -26,7 +26,7 @@ import (
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="revoke_rules_on_delete", plannableImportAction="NoOp")
-// @Testing(preIdentityVersion="v6.65.0")
+// @Testing(preIdentityVersion="v6.66.0")
 func resourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
