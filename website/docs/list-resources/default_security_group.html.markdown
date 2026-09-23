@@ -26,9 +26,11 @@ list "aws_default_security_group" "example" {
 list "aws_default_security_group" "example" {
   provider = aws
 
-  filter {
-    name   = "vpc-id"
-    values = ["vpc-12345678"]
+  config {
+    filter {
+      name   = "vpc-id"
+      values = ["vpc-12345678"]
+    }
   }
 }
 ```

@@ -13,7 +13,6 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -107,12 +106,13 @@ func (l *listResourceDefaultSecurityGroup) List(ctx context.Context, request lis
 			rd := l.ResourceData()
 			rd.SetId(groupID)
 
-			diags := resourceSecurityGroupFlatten(ctx, awsClient, rd, &item)
-			if diags.HasError() {
+			result.Diagnostics.Append(translateDiags(resourceSecurityGroupFlatten(ctx, awsClient, rd, &item))...)
+			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Reading resource", map[string]any{
-					"diags": sdkdiag.DiagnosticsString(diags),
+					"diags": result.Diagnostics,
 				})
-				continue
+				yield(result)
+				return
 			}
 
 			if v, ok := tags["Name"]; ok {
@@ -127,7 +127,8 @@ func (l *listResourceDefaultSecurityGroup) List(ctx context.Context, request lis
 					names.AttrID: groupID,
 					"diags":      result.Diagnostics,
 				})
-				continue
+				yield(result)
+				return
 			}
 
 			if !yield(result) {
