@@ -168,7 +168,7 @@ Setting the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to `true` c
 % TF_AWS_ROUTE53_RECORD_BATCH_READS=true terraform plan
 ```
 
-~> **Warning:** When `TF_AWS_ROUTE53_RECORD_BATCH_READS` is set, the provider caches a zone's full record set the first time a record in that zone is read, then serves all subsequent reads from that cache. The caching layer ensures removal of cache entries for any records that are updated during Terraform apply operations; however, any changes made to records outside of Terraform (e.g. via the AWS Console or CLI) after the cache is populated will not be detected for the duration of that plan or apply. To pick up out-of-band changes, run `terraform refresh` or a new `terraform plan` to start with a fresh cache.
+~> **Warning:** When `TF_AWS_ROUTE53_RECORD_BATCH_READS` is set to a true value, the provider caches a zone's full record set the first time a record in that zone is read, then serves all subsequent reads from that cache. The caching layer ensures removal of cache entries for any records that are updated during Terraform apply operations; however, any changes made to records outside of Terraform (e.g. via the AWS Console or CLI) after the cache is populated will not be detected for the duration of that plan or apply. To pick up out-of-band changes, run `terraform refresh` or a new `terraform plan` to start with a fresh cache.
 
 ## Argument Reference
 
