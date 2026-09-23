@@ -160,6 +160,8 @@ resource "aws_route53_record" "example" {
 
 ### Batched reads for zones with many records
 
+!> Batched reads is an experimental feature. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider.
+
 AWS Route 53 enforces a [5 requests-per-second rate limit](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html#limits-api-requests) on all AWS Route 53 APIs for an AWS account. Plans that manage many records in the same AWS account trigger throttling and cause slow plan and apply times because each record issues its own API calls during read/write operations.
 
 Setting the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to `true` causes the provider to fetch all records for hosted zones referenced by `aws_route53_record` once and cache the results in memory for the duration of the plan or apply, regardless of how many records are managed. No per-resource configuration is required.
