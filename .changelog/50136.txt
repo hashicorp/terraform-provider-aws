@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster_instance: Retry `CreateDBInstance` on `InvalidDBClusterStateFault` when the cluster is modified by a concurrent operation, so several instances can be created against one cluster in a single apply
+```
