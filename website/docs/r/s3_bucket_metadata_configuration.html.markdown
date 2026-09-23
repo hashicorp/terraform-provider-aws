@@ -111,12 +111,9 @@ The following arguments are optional:
 
 The `metadata_configuration` configuration block supports the following arguments:
 
+* `annotation_table_configuration` - (Optional) Annotation table configuration. See [`annotation_table_configuration` Block](#annotation_table_configuration-block) for details.
 * `inventory_table_configuration` - (Required) Inventory table configuration. See [`inventory_table_configuration` Block](#inventory_table_configuration-block) for details.
 * `journal_table_configuration` - (Required) Journal table configuration. See [`journal_table_configuration` Block](#journal_table_configuration-block) for details.
-
-The following arguments are optional:
-
-* `annotation_table_configuration` - (Optional) Annotation table configuration. See [`annotation_table_configuration` Block](#annotation_table_configuration-block) for details.
 
 ### `annotation_table_configuration` Block
 
