@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_lambda_function: Fix `response_streaming_invoke_arn` to use an unqualified function name instead of a qualified one
+```
