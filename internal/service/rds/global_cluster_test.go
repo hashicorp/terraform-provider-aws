@@ -640,9 +640,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_crossRegionReplica(t *tes
 	}
 
 	var globalCluster types.GlobalCluster
-	rNameSource := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameGlobal := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameSecondary := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
 	sourceResourceName := "aws_rds_cluster.source"
 	secondaryResourceName := "aws_rds_cluster.secondary"
@@ -658,7 +656,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_crossRegionReplica(t *tes
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rNameSource, rNameGlobal, rNameSecondary, tfrds.ClusterEngineAuroraPostgreSQL),
+				Config: testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rName, tfrds.ClusterEngineAuroraPostgreSQL),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster),
 					testAccCheckGlobalClusterHasWriterMember(&globalCluster, sourceResourceName),
@@ -1400,7 +1398,7 @@ resource "aws_rds_global_cluster" "test" {
 `, rName)
 }
 
-func testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rNameSource, rNameGlobal, rNameSecondary, engine string) string {
+func testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rName, engine string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
   provider = "awsalternate"
@@ -1413,20 +1411,20 @@ data "aws_availability_zones" "alternate" {
 }
 
 data "aws_rds_engine_version" "test" {
-  engine = %[4]q
+  engine = %[2]q
   latest = true
 }
 
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version_actual
-  preferred_instance_classes = [%[5]s]
+  preferred_instance_classes = [%[3]s]
   supports_clusters          = true
   supports_global_databases  = true
 }
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = %[1]q
+  cluster_identifier  = "%[1]s-source"
   engine              = data.aws_rds_engine_version.test.engine
   engine_version      = data.aws_rds_engine_version.test.version_actual
   master_password     = "avoid-plaintext-passwords"
@@ -1439,7 +1437,7 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_rds_cluster_instance" "source" {
-  identifier         = %[1]q
+  identifier         = "%[1]s-source"
   cluster_identifier = aws_rds_cluster.source.id
   engine             = aws_rds_cluster.source.engine
   engine_version     = aws_rds_cluster.source.engine_version
@@ -1448,7 +1446,7 @@ resource "aws_rds_cluster_instance" "source" {
 
 resource "aws_rds_global_cluster" "test" {
   force_destroy                = true
-  global_cluster_identifier    = %[2]q
+  global_cluster_identifier    = "%[1]s-global"
   source_db_cluster_identifier = aws_rds_cluster.source.arn
 
   depends_on = [aws_rds_cluster_instance.source]
@@ -1457,10 +1455,6 @@ resource "aws_rds_global_cluster" "test" {
 resource "aws_vpc" "alternate" {
   provider   = "awsalternate"
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[3]q
-  }
 }
 
 resource "aws_subnet" "alternate" {
@@ -1469,22 +1463,18 @@ resource "aws_subnet" "alternate" {
   vpc_id            = aws_vpc.alternate.id
   availability_zone = data.aws_availability_zones.alternate.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-
-  tags = {
-    Name = %[3]q
-  }
 }
 
 resource "aws_db_subnet_group" "alternate" {
   provider   = "awsalternate"
-  name       = %[3]q
+  name       = "%[1]s-secondary"
   subnet_ids = aws_subnet.alternate[*].id
 }
 
 # Fails with InvalidDBClusterStateFault if the source has not finished promoting.
 resource "aws_rds_cluster" "secondary" {
   provider                  = "awsalternate"
-  cluster_identifier        = %[3]q
+  cluster_identifier        = "%[1]s-secondary"
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
   global_cluster_identifier = aws_rds_global_cluster.test.id
@@ -1498,13 +1488,13 @@ resource "aws_rds_cluster" "secondary" {
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider           = "awsalternate"
-  identifier         = %[3]q
+  identifier         = "%[1]s-secondary"
   cluster_identifier = aws_rds_cluster.secondary.id
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, rNameSource, rNameGlobal, rNameSecondary, engine, mainInstanceClasses))
+`, rName, engine, mainInstanceClasses))
 }
 
 func testAccGlobalClusterConfig_sourceClusterIDStorageEncrypted(rName string) string {
