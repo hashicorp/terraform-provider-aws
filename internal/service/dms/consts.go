@@ -9,6 +9,11 @@ import (
 
 const (
 	propagationTimeout = 2 * time.Minute
+
+	// replicationTaskDefaultTimeout bounds replication task state changes when
+	// the context carries no deadline, e.g. aws_dms_endpoint stopping and
+	// starting the tasks that use an endpoint.
+	replicationTaskDefaultTimeout = 5 * time.Minute
 )
 
 const (
