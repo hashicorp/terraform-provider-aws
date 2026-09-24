@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cleanrooms_collaboration: Add `allowed_result_regions`, `auto_approved_change_request_types`, `creator_ml_member_abilities`, `creator_payment_configuration`, `is_metrics_enabled`, `job_log_status`, `membership_arn`, and `membership_id` arguments and attributes
+```
+
+```release-note:enhancement
+resource/aws_cleanrooms_collaboration: Add `ml_member_abilities` and `payment_configuration` to the `member` block
+```
