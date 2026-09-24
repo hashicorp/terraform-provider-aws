@@ -24,20 +24,23 @@ resource "aws_keyspaces_keyspace" "example" {
 
 This resource supports the following arguments:
 
+* `name` - (Required, Forces new resource) Name of the keyspace to be created.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required, Forces new resource) The name of the keyspace to be created.
-* `replication_specification` - (Optional) The replication specification of the keyspace.
-    * `region_list` - (Optional) Replication regions. If `replication_strategy` is `MULTI_REGION`, `region_list` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
-    * `replication_strategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `replication_specification` - (Optional) Replication specification of the keyspace. [See below](#replication_specification-block).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `replication_specification` Block
+
+* `region_list` - (Optional) Replication regions. If `replication_strategy` is `MULTI_REGION`, `region_list` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
+* `replication_strategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the keyspace.
-* `arn` - The ARN of the keyspace.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the keyspace.
+* `id` - Name of the keyspace.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
