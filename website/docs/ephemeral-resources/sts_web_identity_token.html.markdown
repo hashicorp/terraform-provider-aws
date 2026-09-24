@@ -58,19 +58,16 @@ ephemeral "aws_sts_web_identity_token" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+This ephemeral resource supports the following arguments:
 
-* `audience` - (Required) The intended recipients of the token. This value populates the `aud` claim in the JWT and should identify the service or application that will validate and use the token. Must contain between 1 and 10 items, each with a maximum length of 1000 characters.
-* `signing_algorithm` - (Required) The cryptographic algorithm to use for signing the JWT. Valid values are `RS256` (RSA with SHA-256) and `ES384` (ECDSA using P-384 curve with SHA-384).
-
-The following arguments are optional:
-
-* `duration_seconds` - (Optional) The duration, in seconds, for which the JWT will remain valid. Value can range from 60 seconds (1 minute) to 3600 seconds (1 hour). If not specified, the default duration is 300 seconds (5 minutes).
+* `audience` - (Required) Intended recipients of the token. This value populates the `aud` claim in the JWT and should identify the service or application that will validate and use the token. Must contain between 1 and 10 items, each with a maximum length of 1000 characters.
+* `duration_seconds` - (Optional) Duration, in seconds, for which the JWT will remain valid. Value can range from 60 seconds (1 minute) to 3600 seconds (1 hour). If not specified, the default duration is 300 seconds (5 minutes).
+* `signing_algorithm` - (Required) Cryptographic algorithm to use for signing the JWT. Valid values are `RS256` (RSA with SHA-256) and `ES384` (ECDSA using P-384 curve with SHA-384).
 * `tags` - (Optional) Custom claims to include in the JWT. These tags are added as custom claims to the JWT and can be used by the downstream service for authorization decisions. Maximum of 50 tags, with key length between 1-128 characters and value length between 1-256 characters.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+This ephemeral resource exports the following attributes in addition to the arguments above:
 
-* `web_identity_token` - The signed JWT token. This value is sensitive.
-* `expiration` - The expiration time of the token in RFC3339 format.
+* `expiration` - Expiration time of the token in RFC3339 format.
+* `web_identity_token` - Signed JWT token. This value is sensitive.

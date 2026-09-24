@@ -616,8 +616,8 @@ This resource supports the following arguments:
 
 A `capacity_units` block supports the following arguments:
 
-* `query_capacity_units` - (Required) Amount of extra query capacity for an index and GetQuerySuggestions capacity. For more information, refer to [QueryCapacityUnits](https://docs.aws.amazon.com/kendra/latest/dg/API_CapacityUnitsConfiguration.html#Kendra-Type-CapacityUnitsConfiguration-QueryCapacityUnits).
-* `storage_capacity_units` - (Required) Amount of extra storage capacity for an index. A single capacity unit provides 30 GB of storage space or 100,000 documents, whichever is reached first. Minimum value of 0.
+* `query_capacity_units` - (Optional) Amount of extra query capacity for an index and GetQuerySuggestions capacity. For more information, refer to [QueryCapacityUnits](https://docs.aws.amazon.com/kendra/latest/dg/API_CapacityUnitsConfiguration.html#Kendra-Type-CapacityUnitsConfiguration-QueryCapacityUnits).
+* `storage_capacity_units` - (Optional) Amount of extra storage capacity for an index. A single capacity unit provides 30 GB of storage space or 100,000 documents, whichever is reached first. Minimum value of 0.
 
 ### `document_metadata_configuration_updates` Block
 
@@ -642,10 +642,10 @@ A `relevance` block supports the following arguments:
 
 A `search` block supports the following arguments:
 
-* `displayable` - (Required) Whether the field is returned in the query response. The default is `true`.
-* `facetable` - (Required) Whether the field can be used to create search facets, a count of results for each value in the field. The default is `false`.
-* `searchable` - (Required) Whether the field is used in the search. If the Searchable field is true, you can use relevance tuning to manually tune how Amazon Kendra weights the field in the search. The default is `true` for `string` fields and `false` for `number` and `date` fields.
-* `sortable` - (Required) Whether the field can be used to sort the results of a query. If you specify sorting on a field that does not have Sortable set to true, Amazon Kendra returns an exception. The default is `false`.
+* `displayable` - (Optional) Whether the field is returned in the query response. The default is `true`.
+* `facetable` - (Optional) Whether the field can be used to create search facets, a count of results for each value in the field. The default is `false`.
+* `searchable` - (Optional) Whether the field is used in the search. If the Searchable field is true, you can use relevance tuning to manually tune how Amazon Kendra weights the field in the search. The default is `true` for `string` fields and `false` for `number` and `date` fields.
+* `sortable` - (Optional) Whether the field can be used to sort the results of a query. If you specify sorting on a field that does not have Sortable set to true, Amazon Kendra returns an exception. The default is `false`.
 
 ### `server_side_encryption_configuration` Block
 
