@@ -140,7 +140,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	input := &dynamodb.UpdateTableInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(d.Get("global_table_arn").(string)),
 		ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
 			Create: replicaInput,
 		}},
@@ -180,7 +180,13 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(tableReplicaCreateResourceID(tableName, mainRegion))
 
-	repARN, err := arnForNewRegion(d.Get("global_table_arn").(string), replicaRegion)
+	// Cross-Account: The replica is created in the current account (replicaRegion),
+	// so we must use the current AccountID, not the one from the Global Table ARN (which is the main table's account).
+	repARN, err := arnForNewRegionAndAccount(
+		d.Get("global_table_arn").(string),
+		replicaRegion,
+		meta.(*conns.AWSClient).AccountID(ctx),
+	)
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Id(), err)
 	}
@@ -205,14 +211,19 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), err)
 	}
 
-	globalTableARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    mainRegion,
-		Resource:  fmt.Sprintf("table/%s", tableName),
-		Service:   "dynamodb",
-	}.String()
-	d.Set("global_table_arn", globalTableARN)
+	// If we have the ARN from state/config, use it. Otherwise construct a default (which might be wrong for cross-account import)
+	if v, ok := d.GetOk("global_table_arn"); ok {
+		d.Set("global_table_arn", v.(string))
+	} else {
+		globalTableARN := arn.ARN{
+			AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
+			Region:    mainRegion,
+			Resource:  fmt.Sprintf("table/%s", tableName),
+			Service:   "dynamodb",
+		}.String()
+		d.Set("global_table_arn", globalTableARN)
+	}
 
 	if mainRegion == replicaRegion {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
@@ -276,7 +287,13 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), err)
 	}
 
-	table, err := findTableByName(ctx, conn, tableName)
+	// Use ARN if available (critical for cross-account), else Name
+	tableIdentifier := tableName
+	if v, ok := d.GetOk("global_table_arn"); ok {
+		tableIdentifier = v.(string)
+	}
+
+	table, err := findTableByName(ctx, conn, tableIdentifier)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Replica (%s) not found, removing from state", d.Id())
@@ -355,7 +372,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
 				Update: viaMainInput,
 			}},
-			TableName: aws.String(tableName),
+			TableName: aws.String(d.Get("global_table_arn").(string)),
 		}
 
 		err := tfresource.Retry(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func(ctx context.Context) *tfresource.RetryError {
@@ -400,7 +417,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
 
 			input := dynamodb.UpdateTableInput{
-				TableName:                 aws.String(tableName),
+				TableName:                 aws.String(d.Get("global_table_arn").(string)),
 				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
 			}
 			if _, err := conn.UpdateTable(ctx, &input); err != nil {
@@ -436,7 +453,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	input := &dynamodb.UpdateTableInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(d.Get("global_table_arn").(string)),
 		ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
 			{
 				Delete: &awstypes.DeleteReplicationGroupMemberAction{
