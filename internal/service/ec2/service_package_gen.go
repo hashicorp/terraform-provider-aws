@@ -55,6 +55,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newInstanceEventWindowDataSource,
+			TypeName: "aws_ec2_instance_event_window",
+			Name:     "Instance Event Window",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newServiceLinkVirtualInterfaceDataSource,
 			TypeName: "aws_ec2_service_link_virtual_interface",
 			Name:     "Service Link Virtual Interface",
@@ -164,6 +171,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newInstanceEventWindowResource,
+			TypeName: "aws_ec2_instance_event_window",
+			Name:     "Instance Event Window",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newInstanceEventWindowAssociationResource,
+			TypeName: "aws_ec2_instance_event_window_association",
+			Name:     "Instance Event Window Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newInstanceMetadataDefaultsResource,
