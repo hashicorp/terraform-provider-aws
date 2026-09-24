@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -145,10 +146,25 @@ func resourceDirectory() *schema.Resource {
 					ValidateFunc: domainValidator,
 				},
 				names.AttrPassword: {
-					Type:      schema.TypeString,
-					Required:  true,
-					ForceNew:  true,
-					Sensitive: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{names.AttrPassword, "password_wo"},
+				},
+				"password_wo": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					WriteOnly:    true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{names.AttrPassword, "password_wo"},
+					RequiredWith: []string{"password_wo_version"},
+				},
+				"password_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"password_wo"},
 				},
 				"security_group_id": {
 					Type:     schema.TypeString,
@@ -217,6 +233,17 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
+
+	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+	password := d.Get(names.AttrPassword).(string)
+	if passwordWO != "" {
+		password = passwordWO
+	}
+
 	var creator directoryCreator
 	switch directoryType := awstypes.DirectoryType(d.Get(names.AttrType).(string)); directoryType {
 	case awstypes.DirectoryTypeAdConnector:
@@ -234,7 +261,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	// When it fails, it will typically be within the first few minutes of creation, so there is no need
 	// to wait for deletion.
 	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
-		if err := creator.Create(ctx, conn, name, d); err != nil {
+		if err := creator.Create(ctx, conn, name, password, d); err != nil {
 			return tfresource.NonRetryableError(err)
 		}
 
@@ -467,7 +494,7 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 type directoryCreator interface {
 	TypeName() string
-	Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error
+	Create(ctx context.Context, conn *directoryservice.Client, name, password string, d *schema.ResourceData) error
 }
 
 type adConnectorCreator struct{}
@@ -476,10 +503,10 @@ func (c adConnectorCreator) TypeName() string {
 	return "AD Connector"
 }
 
-func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.Client, name, password string, d *schema.ResourceData) error {
 	input := &directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(name),
-		Password: aws.String(d.Get(names.AttrPassword).(string)),
+		Password: aws.String(password),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -518,10 +545,10 @@ func (c microsoftADCreator) TypeName() string {
 	return "Microsoft AD"
 }
 
-func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.Client, name, password string, d *schema.ResourceData) error {
 	input := &directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(name),
-		Password: aws.String(d.Get(names.AttrPassword).(string)),
+		Password: aws.String(password),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -557,10 +584,10 @@ func (c simpleADCreator) TypeName() string {
 	return "Simple AD"
 }
 
-func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Client, name, password string, d *schema.ResourceData) error {
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String(name),
-		Password: aws.String(d.Get(names.AttrPassword).(string)),
+		Password: aws.String(password),
 		Tags:     getTagsIn(ctx),
 	}
 

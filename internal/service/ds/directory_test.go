@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
@@ -66,6 +67,62 @@ func TestAccDSDirectory_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					names.AttrPassword,
 				},
+			},
+		},
+	})
+}
+
+func TestAccDSDirectory_passwordWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DirectoryDescription
+	resourceName := "aws_directory_service_directory.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDirectoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_passwordWriteOnly(rName, domainName, "SuperSecretPassw0rd", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &v),
+					resource.TestCheckNoResourceAttr(resourceName, "password_wo"),
+					resource.TestCheckResourceAttr(resourceName, "password_wo_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPassword,
+					"password_wo",
+					"password_wo_version",
+				},
+			},
+			{
+				// password_wo_version is ForceNew, so a bump replaces the directory.
+				Config: testAccDirectoryConfig_passwordWriteOnly(rName, domainName, "SuperSecretPassw0rd-2", 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "password_wo_version", "2"),
+				),
 			},
 		},
 	})
@@ -565,6 +622,25 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 `, domain),
+	)
+}
+
+func testAccDirectoryConfig_passwordWriteOnly(rName, domain, password string, passwordVersion int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name                = %[1]q
+  password_wo         = %[2]q
+  password_wo_version = %[3]d
+  size                = "Small"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+`, domain, password, passwordVersion),
 	)
 }
 
