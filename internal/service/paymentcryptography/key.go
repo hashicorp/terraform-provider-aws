@@ -273,14 +273,14 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 	out, err := conn.CreateKey(ctx, in)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionCreating, ResNameKey, "FIXME", err),
+			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionCreating, ResNameKey, plan.KeyARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Key == nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionCreating, ResNameKey, "FIXME", nil),
+			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionCreating, ResNameKey, plan.KeyARN.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
