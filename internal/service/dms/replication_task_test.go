@@ -486,6 +486,40 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 	})
 }
 
+func TestAccDMSReplicationTask_timeouts(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+	var v awstypes.ReplicationTask
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationTaskConfig_timeouts(rName, "testrule"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
+				),
+			},
+			{
+				Config: testAccReplicationTaskConfig_timeouts(rName, "changedtestrule"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1057,6 +1091,55 @@ resource "aws_dms_replication_instance" "test" {
 `, rName, startTask, ruleName))
 }
 
+func testAccReplicationTaskConfig_timeouts(rName, ruleName string) string {
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base_ValidDatabase(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load-and-cdc"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = %[2]q,
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+
+  start_replication_task = true
+
+  timeouts {
+    create = "45m"
+    update = "45m"
+    delete = "45m"
+  }
+
+  depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
+}
+
+resource "aws_dms_replication_instance" "test" {
+  allocated_storage            = 5
+  auto_minor_version_upgrade   = true
+  replication_instance_class   = "dms.t3.medium"
+  replication_instance_id      = %[1]q
+  preferred_maintenance_window = "sun:00:30-sun:02:30"
+  publicly_accessible          = false
+  replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+  vpc_security_group_ids       = [aws_security_group.test.id]
+}
+`, rName, ruleName))
+}
+
 func testAccReplicationTaskConfig_s3ToRDS(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), testAccS3EndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_task" "test" {
@@ -1305,3 +1388,60 @@ var (
 	//go:embed testdata/replication_task/defaults/full-load-and-cdc.json
 	defaultReplicationTaskFullLoadAndCdcSettings string
 )
+
+func TestReplicationTaskWaitTimeout(t *testing.T) {
+	t.Parallel()
+
+	t.Run("no deadline", func(t *testing.T) {
+		t.Parallel()
+
+		if got, want := tfdms.ReplicationTaskWaitTimeout(context.Background()), 5*time.Minute; got != want {
+			t.Errorf("got %s, want %s", got, want)
+		}
+	})
+
+	t.Run("deadline", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
+		defer cancel()
+
+		got := tfdms.ReplicationTaskWaitTimeout(ctx)
+		if got <= 44*time.Minute || got > 45*time.Minute {
+			t.Errorf("got %s, want just under 45m", got)
+		}
+	})
+
+	t.Run("expired deadline", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), -time.Second)
+		defer cancel()
+
+		if got := tfdms.ReplicationTaskWaitTimeout(ctx); got != 0 {
+			t.Errorf("got %s, want 0", got)
+		}
+	})
+}
+
+func TestReplicationTaskTimeoutDefaults(t *testing.T) {
+	t.Parallel()
+
+	timeouts := tfdms.ResourceReplicationTask().Timeouts
+	if timeouts == nil {
+		t.Fatal("resource declares no Timeouts")
+	}
+
+	for name, testCase := range map[string]struct {
+		got  *time.Duration
+		want time.Duration
+	}{
+		"create": {got: timeouts.Create, want: 30 * time.Minute},
+		"update": {got: timeouts.Update, want: 60 * time.Minute},
+		"delete": {got: timeouts.Delete, want: 30 * time.Minute},
+	} {
+		if testCase.got == nil || *testCase.got != testCase.want {
+			t.Errorf("%s: got %v, want %s", name, testCase.got, testCase.want)
+		}
+	}
+}
