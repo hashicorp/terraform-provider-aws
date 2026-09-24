@@ -77,45 +77,6 @@ func TestAccKinesisChannel_basic(t *testing.T) {
 	})
 }
 
-func TestAccKinesisChannel_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kinesis_channel.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Kinesis)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccChannelConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkinesis.ResourceChannel, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-		},
-	})
-}
-
 func TestAccKinesisChannel_updateLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -275,6 +236,191 @@ func TestAccKinesisChannel_streamingTable(t *testing.T) {
 	})
 }
 
+func TestAccKinesisChannel_replaceChannel(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kinesis)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_status", "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_creation_timestamp"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role_arn", "aws_iam_role.role", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "stream_configuration_list.0.stream_arn", "aws_kinesis_stream.stream", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.0.record_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.0.record_configuration.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.data_freshness_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.storage_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination_configuration.0.storage_configuration.0.bucket_arn", "aws_s3_bucket.bucket", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination_configuration.0.storage_configuration.0.expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.storage_configuration.0.compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.storage_configuration.0.storage_class", "STANDARD"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_destination_configuration.0.storage_configuration.0.output_key_template"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.dead_letter_queue_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_destination_configuration.0.dead_letter_queue_s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+				),
+			},
+			{
+				Config: testAccChannelConfig_streamingTable(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_status", "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_creation_timestamp"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role_arn", "aws_iam_role.role", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "stream_configuration_list.0.stream_arn", "aws_kinesis_stream.stream", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.0.record_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.0.record_configuration.0.record_format_type", "GSR_JSON"),
+					resource.TestCheckResourceAttrPair(resourceName, "stream_configuration_list.0.record_configuration.0.gsr_schema_arn", "aws_glue_schema.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.dead_letter_queue_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_tables_destination_configuration.0.dead_letter_queue_s3_configuration.0.bucket_arn", "aws_s3_bucket.bucket", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_tables_destination_configuration.0.dead_letter_queue_s3_configuration.0.expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.dead_letter_queue_s3_configuration.0.error_output_prefix", "errors/"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.table_bucket_arn", "aws_s3tables_table_bucket.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.namespace", "aws_s3tables_namespace.test", "namespace"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.table_name", "test_table"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.compression_type", "ZSTD"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.partition_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.partition_spec.0.partition_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.partition_spec.0.partition_fields.0.source_name", "event_time"),
+					resource.TestCheckResourceAttr(resourceName, "s3_tables_destination_configuration.0.s3_tables_configuration_list.0.partition_spec.0.partition_fields.0.transform", "TIME_HOUR"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "channel_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "channel_arn",
+			},
+		},
+	})
+}
+
+func TestAccKinesisChannel_encryption(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kinesis)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_encryption(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "channel_arn", "kinesis", regexache.MustCompile(`channel/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_status", "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_creation_timestamp"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role_arn", "aws_iam_role.role", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "stream_configuration_list.0.stream_arn", "aws_kinesis_stream.stream", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.0.record_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_configuration_list.0.record_configuration.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.data_freshness_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.storage_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination_configuration.0.storage_configuration.0.bucket_arn", "aws_s3_bucket.bucket", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination_configuration.0.storage_configuration.0.expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.storage_configuration.0.compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.storage_configuration.0.storage_class", "STANDARD"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_destination_configuration.0.storage_configuration.0.output_key_template"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination_configuration.0.dead_letter_queue_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_destination_configuration.0.dead_letter_queue_s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", "KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "channel_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "channel_arn",
+			},
+		},
+	})
+}
+
+func TestAccKinesisChannel_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kinesis)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkinesis.ResourceChannel, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
@@ -379,6 +525,13 @@ resource "aws_iam_role_policy" "policy" {
 	  {
         Effect = "Allow"
         Action = [
+          "kms:*"
+        ]
+        Resource = ["*"]
+      },
+	  {
+        Effect = "Allow"
+        Action = [
           "glue:*"
         ]
         Resource = ["*"]
@@ -408,42 +561,6 @@ resource "aws_iam_role_policy" "policy" {
         ]
       }
     ]
-  })
-}
-
-resource "aws_s3tables_namespace" "test" {
-  namespace        = "test_namespace"
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
-}
-
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[1]q
-}
-
-resource "aws_glue_registry" "test" {
-  registry_name = %[1]q
-}
-
-resource "aws_glue_schema" "test" {
-  schema_name       = %[1]q
-  registry_arn      = aws_glue_registry.test.arn
-  data_format       = "JSON"
-  compatibility     = "NONE"
-  schema_definition = jsonencode({
-    "$id": "https://example.com/record.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Record",
-    "type": "object",
-    "properties": {
-      "event_time": {
-        "type": "string",
-        "format": "date-time"
-      },
-      "data": {
-        "type": "string"
-      }
-    },
-    "required": ["event_time"]
   })
 }
 
@@ -553,6 +670,7 @@ resource "aws_kinesis_channel" "test" {
 
   s3_destination_configuration {
     data_freshness_in_seconds = %[2]d
+
     storage_configuration {
       bucket_arn            = aws_s3_bucket.bucket.arn
       expected_bucket_owner = data.aws_caller_identity.current.account_id
@@ -569,6 +687,42 @@ resource "aws_kinesis_channel" "test" {
 
 func testAccChannelConfig_streamingTable(rName string) string {
 	return acctest.ConfigCompose(testAccChannelConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3tables_namespace" "test" {
+  namespace        = "test_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_registry" "test" {
+  registry_name = %[1]q
+}
+
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "JSON"
+  compatibility     = "NONE"
+  schema_definition = jsonencode({
+    "$id": "https://example.com/record.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Record",
+    "type": "object",
+    "properties": {
+      "event_time": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "data": {
+        "type": "string"
+      }
+    },
+    "required": ["event_time"]
+  })
+}
+
 resource "aws_kinesis_channel" "test" {
   channel_name               = %[1]q
   service_execution_role_arn = aws_iam_role.role.arn
@@ -594,6 +748,7 @@ resource "aws_kinesis_channel" "test" {
       namespace        = aws_s3tables_namespace.test.namespace
       table_name       = "test_table"
       compression_type = "ZSTD"
+
 	  partition_spec {
 		partition_fields {
 		  source_name = "event_time"
@@ -608,4 +763,74 @@ resource "aws_kinesis_channel" "test" {
   ]
 }
 	`, rName))
+}
+
+func testAccChannelConfig_encryption(rName string) string {
+	return acctest.ConfigCompose(testAccChannelConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "An example symmetric encryption KMS key"
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = %[1]q
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.role.arn
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:CreateGrant"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_kinesis_channel" "test" {
+  channel_name               = %[1]q
+  service_execution_role_arn = aws_iam_role.role.arn
+
+  stream_configuration_list {
+    stream_arn = aws_kinesis_stream.stream.arn
+
+    record_configuration {
+      record_format_type = "JSON"
+    }
+  }
+
+  s3_destination_configuration {
+    storage_configuration {
+      bucket_arn            = aws_s3_bucket.bucket.arn
+      expected_bucket_owner = data.aws_caller_identity.current.account_id
+      compression_type      = "NONE"
+    }
+  }
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    key_id          = aws_kms_key.test.arn
+  }
+
+  depends_on = [
+    aws_iam_role_policy.policy,
+  ]
+}
+`, rName))
 }
