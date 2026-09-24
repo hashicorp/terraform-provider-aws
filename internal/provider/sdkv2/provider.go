@@ -559,7 +559,9 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorInvocations
+			// Pre-size to the maximum number of interceptors added below to avoid
+			// reallocating the backing array as interceptors are appended.
+			interceptors := make(interceptorInvocations, 0, 3)
 
 			if isRegionOverrideEnabled {
 				v := v.Region.Value()
@@ -591,7 +593,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				})
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if v.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
@@ -649,7 +651,9 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorInvocations
+			// Pre-size to the maximum number of interceptors added below to avoid
+			// reallocating the backing array as interceptors are appended.
+			interceptors := make(interceptorInvocations, 0, 9)
 
 			if isRegionOverrideEnabled {
 				v := resource.Region.Value()
@@ -704,7 +708,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				}
 			}
 
-			if !tfunique.IsHandleNil(resource.Tags) {
+			if resource.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,

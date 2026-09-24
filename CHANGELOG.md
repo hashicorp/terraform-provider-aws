@@ -1,4 +1,91 @@
-## 6.66.0 (Unreleased)
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
+* resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+## 6.66.0 (September 21, 2026)
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+## 6.66.0 (September 21, 2026)
 
 NOTES:
 
@@ -27,6 +114,7 @@ BUG FIXES:
 
 * list-resource/aws_rds_cluster_instance: Cache cluster using the DBClusterIdentifier as the key ([#50040](https://github.com/hashicorp/terraform-provider-aws/issues/50040))
 * resource/aws_pipes_pipe: Fix `source_parameters.self_managed_kafka_parameters.server_root_ca_certificate` being sent to the API as an empty string instead of being omitted, which caused `UpdatePipe` to fail with a `ValidationException` when the attribute was unset ([#40116](https://github.com/hashicorp/terraform-provider-aws/issues/40116))
+* resource/aws_redshiftserverless_workgroup: Filter server-only `config_parameter` entries from state and allow newly returned config parameter keys without a provider update ([#49939](https://github.com/hashicorp/terraform-provider-aws/issues/49939))
 
 ## 6.65.0 (September 16, 2026)
 

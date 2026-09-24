@@ -8,7 +8,6 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,8 +226,5 @@ func TestAccServiceCatalogPortfolioDataSource_Tags_IgnoreTags_Overlap_resourceTa
 }
 
 func expectFullPortfolioDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrID,
-		ResourceType:        "Portfolio",
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("Portfolio", names.AttrID), knownValue)
 }

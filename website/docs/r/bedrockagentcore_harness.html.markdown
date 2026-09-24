@@ -219,7 +219,7 @@ The `model` block supports exactly one of the following:
 
 ### `system_prompt` Block
 
-* `text` - (Required, Sensitive) Text content of the system prompt.
+* `text` - (Optional, Sensitive) Text content of the system prompt.
 
 ### `tool` Block
 

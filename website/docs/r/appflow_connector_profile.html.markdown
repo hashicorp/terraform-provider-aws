@@ -349,7 +349,7 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Optional) Unique ID that's assigned to an Amazon Redshift cluster.
 * `data_api_role_arn` - (Optional) ARN of the IAM role that permits AppFlow to access the database through Data API.
 * `database_name` - (Optional) Name of an Amazon Redshift database.
-* `database_url` - (Required) JDBC URL of the Amazon Redshift cluster.
+* `database_url` - (Optional) JDBC URL of the Amazon Redshift cluster.
 * `role_arn` - (Required) ARN of the IAM role.
 
 ### `connector_profile_config.connector_profile_properties.salesforce` Block

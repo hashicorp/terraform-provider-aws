@@ -39,7 +39,7 @@ This resource supports the following arguments:
 
 The `trace_configuration` block supports the following argument:
 
-* `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
+* `vendor` - (Optional) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
 
 ## Attribute Reference
 

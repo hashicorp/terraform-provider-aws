@@ -312,7 +312,7 @@ The `capacity_provider_strategy` configuration block supports the following:
 
 * `base` - (Optional) Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
 * `capacity_provider` - (Required) Short name of the capacity provider.
-* `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+* `weight` - (Optional) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
 
 ### `deployment_configuration` Block
 
@@ -333,9 +333,9 @@ The `lifecycle_hook` configuration block supports the following:
 * `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
 * `role_arn` - (Optional) ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when `target_type` is `AWS_LAMBDA`. Not used when `target_type` is `PAUSE`.
 * `target_type` - (Optional) Type of hook target. Valid values: `AWS_LAMBDA`, `PAUSE`. Default: `AWS_LAMBDA`. `PAUSE` hooks cannot use the `TEST_TRAFFIC_SHIFT` or `PRODUCTION_TRAFFIC_SHIFT` lifecycle stages.
-* `timeout_configuration` - (Optional) Configuration block defining the timeout behavior for a `PAUSE` hook. Only valid when `target_type` is `PAUSE`. [See below](#timeout_configuration).
+* `timeout_configuration` - (Optional) Configuration block defining the timeout behavior for a `PAUSE` hook. Only valid when `target_type` is `PAUSE`. [See below](#timeout_configuration-block).
 
-### timeout_configuration
+### `timeout_configuration` Block
 
 The `timeout_configuration` configuration block supports the following:
 
@@ -347,14 +347,14 @@ The `timeout_configuration` configuration block supports the following:
 The `linear_configuration` configuration block supports the following:
 
 * `step_bake_time_in_minutes` - (Optional) Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
-* `step_percent` - (Required) Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
+* `step_percent` - (Optional) Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
 
 ### `canary_configuration` Block
 
 The `canary_configuration` configuration block supports the following:
 
 * `canary_bake_time_in_minutes` - (Optional) Number of minutes to wait before shifting all traffic to the new deployment. Valid range: 0-1440 minutes.
-* `canary_percent` - (Required) Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
+* `canary_percent` - (Optional) Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
 
 ### `deployment_circuit_breaker` Block
 
@@ -491,7 +491,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `issuer_cert_authority` supports the following:
 
-* `aws_pca_authority_arn` - (Optional) ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
+* `aws_pca_authority_arn` - (Required) ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
 
 ### `client_alias` Block
 
