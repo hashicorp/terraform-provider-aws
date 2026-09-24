@@ -11,7 +11,8 @@ var (
 	ResourceImageBuilder          = resourceImageBuilder
 	ResourceStack                 = resourceStack
 	ResourceUser                  = resourceUser
-	ResourceUserStackAssociation  = resourceUserStackAssociation
+	ResourceUsageReportSubscription = resourceUsageReportSubscription
+	ResourceUserStackAssociation    = resourceUserStackAssociation
 
 	FindDirectoryConfigByID                = findDirectoryConfigByID
 	FindFleetByID                          = findFleetByID
@@ -19,5 +20,6 @@ var (
 	FindImageBuilderByID                   = findImageBuilderByID
 	FindStackByID                          = findStackByID
 	FindUserByTwoPartKey                   = findUserByTwoPartKey
+	FindUsageReportSubscription            = findUsageReportSubscription
 	FindUserStackAssociationByThreePartKey = findUserStackAssociationByThreePartKey
 )
