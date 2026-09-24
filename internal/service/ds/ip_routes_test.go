@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -101,6 +102,22 @@ func TestAccDSIPRoutes_update(t *testing.T) {
 						"cidr_ip":             "198.51.100.0/24",
 						names.AttrDescription: "second",
 					}),
+				),
+			},
+			{
+				// Toggling the flag forces replacement (it is only consumed by
+				// AddIpRoutes) and exercises the mapping to
+				// AddIpRoutesInput.UpdateSecurityGroupForDirectoryControllers.
+				Config: testAccIPRoutesConfig_updateSecurityGroup(rName, domainName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIPRoutesExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "update_security_group_for_directory_controllers", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ip_route.#", "1"),
 				),
 			},
 		},
@@ -256,6 +273,21 @@ resource "aws_directory_service_ip_routes" "test" {
   ip_route {
     cidr_ip     = "198.51.100.0/24"
     description = "second"
+  }
+}
+`)
+}
+
+func testAccIPRoutesConfig_updateSecurityGroup(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccIPRoutesConfig_base(rName, domainName), `
+resource "aws_directory_service_ip_routes" "test" {
+  directory_id = aws_directory_service_directory.test.id
+
+  update_security_group_for_directory_controllers = true
+
+  ip_route {
+    cidr_ip     = "192.0.2.0/24"
+    description = "example"
   }
 }
 `)

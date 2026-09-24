@@ -14,6 +14,8 @@ Manages IP routes for an AWS Directory Service directory. IP routes are used to 
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_directory_service_directory" "example" {
   name     = "corp.example.com"

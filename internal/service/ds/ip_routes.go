@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,6 +38,7 @@ import (
 // @IdentityAttribute("directory_id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="directory_id")
+// @Testing(importIgnore="update_security_group_for_directory_controllers")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directoryservice/types;awstypes;awstypes.IpRouteInfo")
 func newIPRoutesResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ipRoutesResource{}
@@ -60,6 +63,9 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					directoryIDValidator,
+				},
 			},
 			"update_security_group_for_directory_controllers": schema.BoolAttribute{
 				Optional: true,
@@ -83,6 +89,9 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 					Attributes: map[string]schema.Attribute{
 						"cidr_ip": schema.StringAttribute{
 							Required: true,
+							Validators: []validator.String{
+								fwvalidators.IPv4CIDRNetworkAddress(),
+							},
 						},
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
@@ -125,18 +134,10 @@ func (r *ipRoutesResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	// Read back to populate any Computed attributes (e.g. description).
-	output, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+	// No attribute is populated by the API, so the plan is the authoritative
+	// desired state. Any out-of-band routes are surfaced as drift on the next
+	// refresh rather than merged in here (which would produce an inconsistent
+	// result for the configured "ip_route" set).
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
@@ -251,17 +252,6 @@ func (r *ipRoutesResource) Update(ctx context.Context, request resource.UpdateRe
 		}
 	}
 
-	output, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &plan))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
@@ -324,10 +314,10 @@ func ipRoutesCIDRs(routes []awstypes.IpRoute) []string {
 	return cidrs
 }
 
-// findIPRoutesByDirectoryID returns the IPv4 IP routes for a directory. A
-// directory with no routes (all removed) is treated as not found so the
-// resource is removed from state.
-func findIPRoutesByDirectoryID(ctx context.Context, conn *directoryservice.Client, directoryID string) ([]awstypes.IpRouteInfo, error) {
+// findIPRoutes returns all IPv4 IP routes for a directory regardless of status.
+// It is used by the waiters, which must observe in-progress ("Adding"/"Removing")
+// routes. Errors are wrapped with smarterr per the finder contract.
+func findIPRoutes(ctx context.Context, conn *directoryservice.Client, directoryID string) ([]awstypes.IpRouteInfo, error) {
 	input := directoryservice.ListIpRoutesInput{
 		DirectoryId: aws.String(directoryID),
 	}
@@ -338,32 +328,50 @@ func findIPRoutesByDirectoryID(ctx context.Context, conn *directoryservice.Clien
 		page, err := paginator.NextPage(ctx)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) || errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
-			}
+			})
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, v := range page.IpRoutesInfo {
-			// Only manage IPv4 CIDR routes; ignore any that are being removed.
+			// Only manage IPv4 CIDR routes.
 			if v.CidrIp == nil {
-				continue
-			}
-			if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoved || v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoving {
 				continue
 			}
 			output = append(output, v)
 		}
 	}
 
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
+	return output, nil
+}
+
+// findIPRoutesByDirectoryID returns the active IPv4 IP routes for a directory.
+// Routes that are being removed (or have been removed) are excluded, and a
+// directory with no active routes is treated as not found so the resource is
+// removed from state. Used by Read and the list resource.
+func findIPRoutesByDirectoryID(ctx context.Context, conn *directoryservice.Client, directoryID string) ([]awstypes.IpRouteInfo, error) {
+	routes, err := findIPRoutes(ctx, conn, directoryID)
+	if err != nil {
+		return nil, err
 	}
 
-	return output, nil
+	var active []awstypes.IpRouteInfo
+	for _, v := range routes {
+		if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoved || v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoving {
+			continue
+		}
+		active = append(active, v)
+	}
+
+	if len(active) == 0 {
+		return nil, smarterr.NewError(&retry.NotFoundError{})
+	}
+
+	return active, nil
 }
 
 const (
@@ -380,7 +388,7 @@ func statusIPRoutesAdded(conn *directoryservice.Client, directoryID string, cidr
 	}
 
 	return func(ctx context.Context) (any, string, error) {
-		routes, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
+		routes, err := findIPRoutes(ctx, conn, directoryID)
 
 		if retry.NotFound(err) {
 			return []awstypes.IpRouteInfo{}, ipRoutesStatusAdding, nil
@@ -425,7 +433,7 @@ func statusIPRoutesRemoved(conn *directoryservice.Client, directoryID string, ci
 	}
 
 	return func(ctx context.Context) (any, string, error) {
-		routes, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
+		routes, err := findIPRoutes(ctx, conn, directoryID)
 
 		if retry.NotFound(err) {
 			return []awstypes.IpRouteInfo{}, ipRoutesStatusRemoved, nil
@@ -442,6 +450,11 @@ func statusIPRoutesRemoved(conn *directoryservice.Client, directoryID string, ci
 			}
 			if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoveFailed {
 				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to remove", aws.ToString(v.CidrIp))
+			}
+			// A route still present in any non-Removed state (including
+			// "Removing") means removal is not yet complete.
+			if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoved {
+				continue
 			}
 			remaining = true
 		}

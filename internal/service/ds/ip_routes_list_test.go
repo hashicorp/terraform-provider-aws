@@ -125,6 +125,9 @@ func TestAccDSIPRoutes_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues(listResourceName, tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("directory_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						// The list implementation never populates this write-only
+						// flag, so it is expected to be null in list results.
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("update_security_group_for_directory_controllers"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("ip_route"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"cidr_ip":             knownvalue.StringExact("192.0.2.0/24"),
