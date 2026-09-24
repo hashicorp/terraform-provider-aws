@@ -5,6 +5,7 @@ package directoryservicedata
 
 import (
 	"context"
+	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,6 +25,7 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 	dsConn := client.DSClient(ctx)
 	directoryServiceDataConn := client.DirectoryServiceDataClient(ctx)
 	var sweepResources []sweep.Sweepable
+	const acctestUserPrefix = "tfacctest"
 
 	directoryPages := directoryservice.NewDescribeDirectoriesPaginator(dsConn, &directoryservice.DescribeDirectoriesInput{})
 	for directoryPages.HasMorePages() {
@@ -51,6 +53,10 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 				}
 
 				for _, user := range page.Users {
+					samAccountName := aws.ToString(user.SAMAccountName)
+					if !strings.HasPrefix(samAccountName, acctestUserPrefix) {
+						continue
+					}
 					sweepResources = append(sweepResources, framework.NewSweepResource(newUserResource, client,
 						framework.NewAttribute("directory_id", directoryID), framework.NewAttribute("sam_account_name", aws.ToString(user.SAMAccountName))),
 					)
