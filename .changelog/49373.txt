@@ -1,0 +1,1 @@
+resource/aws_dynamodb_table_replica: Add `consistency_mode` argument to support multi-region strong consistency for global table replicas
