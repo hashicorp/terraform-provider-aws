@@ -96,6 +96,43 @@ func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameterDataSource_version(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssm_parameter.test"
+	dataSourceName := "data.aws_ssm_parameter.test"
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "String", "value-v1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value-v1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+				),
+			},
+			{
+				Config: testAccParameterConfig_basic(name, "String", "value-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value-v2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
+				),
+			},
+			{
+				Config: testAccParameterConfig_basic(name, "String", "value-v2") + "\n" + testAccParameterDataSourceConfig_version(name, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrValue, "value-v1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccParameterDataSourceConfig_basic(name string, withDecryption bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
@@ -123,4 +160,12 @@ data "aws_ssm_parameter" "test" {
   name = aws_ssm_parameter.test.name
 }
 `, rName, pType)
+}
+
+func testAccParameterDataSourceConfig_version(name string, version int) string {
+	return fmt.Sprintf(`
+data "aws_ssm_parameter" "test" {
+  name = "%[1]s:%[2]d"
+}
+`, name, version)
 }
