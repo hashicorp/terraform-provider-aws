@@ -131,6 +131,7 @@ func TestAccDSIPRoutes_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("ip_route"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"cidr_ip":             knownvalue.StringExact("192.0.2.0/24"),
+								"cidr_ipv6":           knownvalue.Null(),
 								names.AttrDescription: knownvalue.StringExact(rName),
 							}),
 						})),

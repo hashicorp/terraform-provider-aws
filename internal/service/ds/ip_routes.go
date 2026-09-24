@@ -6,6 +6,7 @@ package ds
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -30,6 +31,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -91,14 +93,26 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"cidr_ip": schema.StringAttribute{
-							Required: true,
+							Optional: true,
 							Validators: []validator.String{
 								fwvalidators.IPv4CIDRNetworkAddress(),
+							},
+						},
+						"cidr_ipv6": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								fwvalidators.IPv6CIDRNetworkAddress(),
 							},
 						},
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
+					},
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("cidr_ip"),
+							path.MatchRelative().AtName("cidr_ipv6"),
+						),
 					},
 				},
 			},
@@ -127,20 +141,21 @@ func (r *ipRoutesResource) ValidateConfig(ctx context.Context, request resource.
 		return
 	}
 
-	// A set only deduplicates whole objects, so two blocks with the same
-	// cidr_ip but different descriptions would both be kept. Because routes are
-	// keyed by CIDR internally, that is ambiguous; require cidr_ip to be unique.
+	// A set only deduplicates whole objects, so two blocks with the same CIDR
+	// but different descriptions would both be kept. Because routes are keyed by
+	// CIDR internally, that is ambiguous; require each route's CIDR (IPv4 or
+	// IPv6) to be unique.
 	seen := make(map[string]struct{}, len(routes))
 	for _, route := range routes {
-		if route.CidrIP.IsNull() || route.CidrIP.IsUnknown() {
+		cidr := route.routeKey()
+		if cidr == "" {
 			continue
 		}
-		cidr := route.CidrIP.ValueString()
 		if _, ok := seen[cidr]; ok {
 			response.Diagnostics.AddAttributeError(
 				path.Root("ip_route"),
-				"Duplicate cidr_ip",
-				fmt.Sprintf("cidr_ip %q is configured in more than one ip_route block; each cidr_ip must be unique.", cidr),
+				"Duplicate CIDR",
+				fmt.Sprintf("CIDR %q is configured in more than one ip_route block; each cidr_ip/cidr_ipv6 must be unique.", cidr),
 			)
 			return
 		}
@@ -239,39 +254,48 @@ func (r *ipRoutesResource) Update(ctx context.Context, request resource.UpdateRe
 	// there is no update API, so a changed description is a remove + add.
 	planByCIDR := make(map[string]*ipRouteModel, len(planRoutes))
 	for _, v := range planRoutes {
-		planByCIDR[v.CidrIP.ValueString()] = v
+		planByCIDR[v.routeKey()] = v
 	}
 	stateByCIDR := make(map[string]*ipRouteModel, len(stateRoutes))
 	for _, v := range stateRoutes {
-		stateByCIDR[v.CidrIP.ValueString()] = v
+		stateByCIDR[v.routeKey()] = v
 	}
 
 	var add []awstypes.IpRoute
-	var removeCIDRs []string
-	for cidr, pr := range planByCIDR {
-		if sr, ok := stateByCIDR[cidr]; !ok || !sr.Description.Equal(pr.Description) {
-			add = append(add, awstypes.IpRoute{
-				CidrIp:      aws.String(cidr),
-				Description: fwflex.StringFromFramework(ctx, pr.Description),
-			})
-		}
-	}
-	for cidr := range stateByCIDR {
-		if pr, ok := planByCIDR[cidr]; !ok || !pr.Description.Equal(stateByCIDR[cidr].Description) {
-			removeCIDRs = append(removeCIDRs, cidr)
+	for key, pr := range planByCIDR {
+		if sr, ok := stateByCIDR[key]; !ok || !sr.Description.Equal(pr.Description) {
+			var route awstypes.IpRoute
+			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, pr, &route))
+			if response.Diagnostics.HasError() {
+				return
+			}
+			add = append(add, route)
 		}
 	}
 
-	if len(removeCIDRs) > 0 {
+	var removeV4, removeV6 []string
+	for key, sr := range stateByCIDR {
+		if pr, ok := planByCIDR[key]; !ok || !pr.Description.Equal(sr.Description) {
+			if sr.isIPv6() {
+				removeV6 = append(removeV6, key)
+			} else {
+				removeV4 = append(removeV4, key)
+			}
+		}
+	}
+
+	if len(removeV4) > 0 || len(removeV6) > 0 {
 		_, err := conn.RemoveIpRoutes(ctx, &directoryservice.RemoveIpRoutesInput{
 			DirectoryId: aws.String(directoryID),
-			CidrIps:     removeCIDRs,
+			CidrIps:     removeV4,
+			CidrIpv6s:   removeV6,
 		})
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
 			return
 		}
-		if err := waitIPRoutesRemoved(ctx, conn, directoryID, removeCIDRs, r.DeleteTimeout(ctx, plan.Timeouts)); err != nil {
+		removeKeys := slices.Concat(removeV4, removeV6)
+		if err := waitIPRoutesRemoved(ctx, conn, directoryID, removeKeys, r.DeleteTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
 			return
 		}
@@ -312,18 +336,23 @@ func (r *ipRoutesResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	cidrs := make([]string, 0, len(routes))
+	var removeV4, removeV6 []string
 	for _, v := range routes {
-		cidrs = append(cidrs, v.CidrIP.ValueString())
+		if v.isIPv6() {
+			removeV6 = append(removeV6, v.CidrIPv6.ValueString())
+		} else {
+			removeV4 = append(removeV4, v.CidrIP.ValueString())
+		}
 	}
 
-	if len(cidrs) == 0 {
+	if len(removeV4) == 0 && len(removeV6) == 0 {
 		return
 	}
 
 	_, err := conn.RemoveIpRoutes(ctx, &directoryservice.RemoveIpRoutesInput{
 		DirectoryId: aws.String(directoryID),
-		CidrIps:     cidrs,
+		CidrIps:     removeV4,
+		CidrIpv6s:   removeV6,
 	})
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) || errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
@@ -335,7 +364,8 @@ func (r *ipRoutesResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	if err := waitIPRoutesRemoved(ctx, conn, directoryID, cidrs, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	removeKeys := slices.Concat(removeV4, removeV6)
+	if err := waitIPRoutesRemoved(ctx, conn, directoryID, removeKeys, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
 		return
 	}
@@ -347,17 +377,33 @@ func (r *ipRoutesResource) flatten(ctx context.Context, routes []awstypes.IpRout
 	return diags
 }
 
+// ipRoutesCIDRs returns the identifying CIDR (IPv4 or IPv6) of each route.
 func ipRoutesCIDRs(routes []awstypes.IpRoute) []string {
 	cidrs := make([]string, 0, len(routes))
 	for _, v := range routes {
-		cidrs = append(cidrs, aws.ToString(v.CidrIp))
+		cidrs = append(cidrs, ipRouteKey(v))
 	}
 	return cidrs
 }
 
-// findIPRoutes returns all IPv4 IP routes for a directory regardless of status.
-// It is used by the waiters, which must observe in-progress ("Adding"/"Removing")
-// routes. Errors are wrapped with smarterr per the finder contract.
+func ipRouteKey(v awstypes.IpRoute) string {
+	if v.CidrIp != nil {
+		return aws.ToString(v.CidrIp)
+	}
+	return aws.ToString(v.CidrIpv6)
+}
+
+func ipRouteInfoKey(v awstypes.IpRouteInfo) string {
+	if v.CidrIp != nil {
+		return aws.ToString(v.CidrIp)
+	}
+	return aws.ToString(v.CidrIpv6)
+}
+
+// findIPRoutes returns all IP routes (IPv4 and IPv6) for a directory regardless
+// of status. It is used by the waiters, which must observe in-progress
+// ("Adding"/"Removing") routes. Errors are wrapped with smarterr per the finder
+// contract.
 func findIPRoutes(ctx context.Context, conn *directoryservice.Client, directoryID string) ([]awstypes.IpRouteInfo, error) {
 	input := directoryservice.ListIpRoutesInput{
 		DirectoryId: aws.String(directoryID),
@@ -379,8 +425,8 @@ func findIPRoutes(ctx context.Context, conn *directoryservice.Client, directoryI
 		}
 
 		for _, v := range page.IpRoutesInfo {
-			// Only manage IPv4 CIDR routes.
-			if v.CidrIp == nil {
+			// Skip anything without an identifying CIDR.
+			if v.CidrIp == nil && v.CidrIpv6 == nil {
 				continue
 			}
 			output = append(output, v)
@@ -390,10 +436,10 @@ func findIPRoutes(ctx context.Context, conn *directoryservice.Client, directoryI
 	return output, nil
 }
 
-// findIPRoutesByDirectoryID returns the active IPv4 IP routes for a directory.
-// Routes that are being removed (or have been removed) are excluded, and a
-// directory with no active routes is treated as not found so the resource is
-// removed from state. Used by Read and the list resource.
+// findIPRoutesByDirectoryID returns the active IP routes (IPv4 and IPv6) for a
+// directory. Routes that are being removed (or have been removed) are excluded,
+// and a directory with no active routes is treated as not found so the resource
+// is removed from state. Used by Read and the list resource.
 func findIPRoutesByDirectoryID(ctx context.Context, conn *directoryservice.Client, directoryID string) ([]awstypes.IpRouteInfo, error) {
 	routes, err := findIPRoutes(ctx, conn, directoryID)
 	if err != nil {
@@ -448,7 +494,7 @@ func statusIPRoutesAdded(conn *directoryservice.Client, directoryID string, cidr
 
 		got := make(map[string]awstypes.IpRouteStatusMsg, len(routes))
 		for _, v := range routes {
-			got[aws.ToString(v.CidrIp)] = v.IpRouteStatusMsg
+			got[ipRouteInfoKey(v)] = v.IpRouteStatusMsg
 		}
 
 		added := true
@@ -493,11 +539,11 @@ func statusIPRoutesRemoved(conn *directoryservice.Client, directoryID string, ci
 
 		remaining := false
 		for _, v := range routes {
-			if _, ok := want[aws.ToString(v.CidrIp)]; !ok {
+			if _, ok := want[ipRouteInfoKey(v)]; !ok {
 				continue
 			}
 			if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoveFailed {
-				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to remove", aws.ToString(v.CidrIp))
+				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to remove", ipRouteInfoKey(v))
 			}
 			// A route still present in any non-Removed state (including
 			// "Removing") means removal is not yet complete.
@@ -550,5 +596,18 @@ type ipRoutesResourceModel struct {
 
 type ipRouteModel struct {
 	CidrIP      types.String `tfsdk:"cidr_ip"`
+	CidrIPv6    types.String `tfsdk:"cidr_ipv6"`
 	Description types.String `tfsdk:"description"`
+}
+
+// routeKey returns the CIDR that identifies a route model (IPv4 or IPv6).
+func (m ipRouteModel) routeKey() string {
+	if !m.CidrIP.IsNull() && !m.CidrIP.IsUnknown() && m.CidrIP.ValueString() != "" {
+		return m.CidrIP.ValueString()
+	}
+	return m.CidrIPv6.ValueString()
+}
+
+func (m ipRouteModel) isIPv6() bool {
+	return m.CidrIP.IsNull() || m.CidrIP.ValueString() == ""
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -186,15 +187,20 @@ func sweepIPRoutes(region string) error {
 				return fmt.Errorf("error listing Directory Service IP Routes (%s): %w", directoryID, err)
 			}
 
-			cidrs := make([]string, 0, len(routes))
+			var cidrIPs, cidrIPv6s []string
 			for _, route := range routes {
-				cidrs = append(cidrs, aws.ToString(route.CidrIp))
+				if route.CidrIp != nil {
+					cidrIPs = append(cidrIPs, aws.ToString(route.CidrIp))
+				} else if route.CidrIpv6 != nil {
+					cidrIPv6s = append(cidrIPv6s, aws.ToString(route.CidrIpv6))
+				}
 			}
 
 			sweepResources = append(sweepResources, &ipRoutesSweeper{
 				conn:        conn,
 				directoryID: directoryID,
-				cidrs:       cidrs,
+				cidrIPs:     cidrIPs,
+				cidrIPv6s:   cidrIPv6s,
 			})
 		}
 	}
@@ -216,13 +222,15 @@ const ipRoutesSweepTimeout = 30 * time.Minute
 type ipRoutesSweeper struct {
 	conn        *directoryservice.Client
 	directoryID string
-	cidrs       []string
+	cidrIPs     []string
+	cidrIPv6s   []string
 }
 
 func (s *ipRoutesSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	_, err := s.conn.RemoveIpRoutes(ctx, &directoryservice.RemoveIpRoutesInput{
 		DirectoryId: aws.String(s.directoryID),
-		CidrIps:     s.cidrs,
+		CidrIps:     s.cidrIPs,
+		CidrIpv6s:   s.cidrIPv6s,
 	})
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) || errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
@@ -235,5 +243,5 @@ func (s *ipRoutesSweeper) Delete(ctx context.Context, optFns ...tfresource.Optio
 
 	// RemoveIpRoutes is asynchronous. Wait for the routes to finish removing so
 	// the dependent directory sweeper does not race an in-progress removal.
-	return waitIPRoutesRemoved(ctx, s.conn, s.directoryID, s.cidrs, ipRoutesSweepTimeout)
+	return waitIPRoutesRemoved(ctx, s.conn, s.directoryID, slices.Concat(s.cidrIPs, s.cidrIPv6s), ipRoutesSweepTimeout)
 }

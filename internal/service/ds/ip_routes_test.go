@@ -158,6 +158,53 @@ func TestAccDSIPRoutes_disappears(t *testing.T) {
 	})
 }
 
+func TestAccDSIPRoutes_ipv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v awstypes.IpRouteInfo
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	resourceName := "aws_directory_service_ip_routes.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPRoutesDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPRoutesConfig_ipv6(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIPRoutesExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ip_route.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_route.*", map[string]string{
+						"cidr_ip":             "192.0.2.0/24",
+						names.AttrDescription: "ipv4",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_route.*", map[string]string{
+						"cidr_ipv6":           "2001:db8::/64",
+						names.AttrDescription: "ipv6",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateVerifyIdentifierAttribute: "directory_id",
+				ImportStateVerifyIgnore:              []string{"update_security_group_for_directory_controllers"},
+			},
+		},
+	})
+}
+
 func testAccCheckIPRoutesDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
@@ -294,4 +341,56 @@ resource "aws_directory_service_ip_routes" "test" {
   }
 }
 `)
+}
+
+func testAccIPRoutesConfig_ipv6(rName, domainName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_directory_service_ip_routes" "test" {
+  directory_id = aws_directory_service_directory.test.id
+
+  ip_route {
+    cidr_ip     = "192.0.2.0/24"
+    description = "ipv4"
+  }
+
+  ip_route {
+    cidr_ipv6   = "2001:db8::/64"
+    description = "ipv6"
+  }
+}
+`, rName, domainName))
 }

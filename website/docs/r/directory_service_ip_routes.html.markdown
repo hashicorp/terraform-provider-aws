@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_directory_service_ip_routes
 
-Manages IPv4 IP routes for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to a CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
+Manages IP routes for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to an IPv4 or IPv6 CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
 
-~> **Note:** This resource manages the complete set of IPv4 IP routes for a directory. Any IPv4 IP routes added outside of Terraform are removed on the next apply. IPv6 routes are not managed by this resource.
+~> **Note:** This resource manages the complete set of IP routes for a directory. Any IP routes added outside of Terraform are removed on the next apply.
 
 ## Example Usage
 
@@ -42,6 +42,11 @@ resource "aws_directory_service_ip_routes" "example" {
     cidr_ip     = "192.168.100.0/24"
     description = "Peered VPC"
   }
+
+  ip_route {
+    cidr_ipv6   = "2001:db8::/64"
+    description = "On-premises IPv6 network"
+  }
 }
 ```
 
@@ -59,7 +64,10 @@ The following arguments are optional:
 
 ### `ip_route` Block
 
-* `cidr_ip` - (Required) IPv4 CIDR block, such as `10.0.0.0/24`. For a single IP address, use a `/32` CIDR block, such as `10.0.0.0/32`. Each `cidr_ip` must be unique.
+Exactly one of `cidr_ip` or `cidr_ipv6` must be set.
+
+* `cidr_ip` - (Optional) IPv4 CIDR block, such as `10.0.0.0/24`. For a single address, use a `/32` block, such as `10.0.0.0/32`. Must be unique across all `ip_route` blocks.
+* `cidr_ipv6` - (Optional) IPv6 CIDR block, such as `2001:db8::/64`. For a single address, use a `/128` block. Must be unique across all `ip_route` blocks.
 * `description` - (Optional) Description of the address block.
 
 ## Attribute Reference
