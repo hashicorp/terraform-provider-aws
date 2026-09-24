@@ -1208,6 +1208,24 @@ type customErrorResponseModel struct {
 	ResponsePagePath   types.String `tfsdk:"response_page_path" autoflex:",omitempty"`
 }
 
+var (
+	_ fwflex.Expander = customErrorResponseModel{}
+)
+
+// UpdateDistribution rejects a custom error response with a nil ResponseCode or ResponsePagePath,
+// which is what AutoFlex expands the unset optional attributes to. Send empty strings, as the SDKv2
+// aws_cloudfront_distribution resource does.
+func (m customErrorResponseModel) Expand(_ context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return &awstypes.CustomErrorResponse{
+		ErrorCachingMinTTL: m.ErrorCachingMinTtl.ValueInt64Pointer(),
+		ErrorCode:          aws.Int32(int32(m.ErrorCode.ValueInt64())),
+		ResponseCode:       aws.String(m.ResponseCode.ValueString()),
+		ResponsePagePath:   aws.String(m.ResponsePagePath.ValueString()),
+	}, diags
+}
+
 type restrictionsModel struct {
 	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionModel] `tfsdk:"geo_restriction"`
 }
