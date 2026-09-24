@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_directory_service_ip_routes
 
-Manages IP routes for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to a CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
+Manages IPv4 IP routes for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to a CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
 
-~> **Note:** This resource manages the complete set of IP routes for a directory. Any IP routes added outside of Terraform are removed on the next apply.
+~> **Note:** This resource manages the complete set of IPv4 IP routes for a directory. Any IPv4 IP routes added outside of Terraform are removed on the next apply. IPv6 routes are not managed by this resource.
 
 ## Example Usage
 
@@ -47,16 +47,19 @@ resource "aws_directory_service_ip_routes" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `directory_id` - (Required) Identifier of the directory to which to add the IP routes. Changing this forces a new resource to be created.
 * `ip_route` - (Required) Set of IP routes to add to the directory. Detailed below.
+
+The following arguments are optional:
+
 * `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `update_security_group_for_directory_controllers` - (Optional) Whether to update the security group of the directory controllers to allow traffic to and from the added CIDR blocks. Changing this forces a new resource to be created. Defaults to `false`.
 
-### ip_route
+### `ip_route` Block
 
-* `cidr_ip` - (Required) IP address block in CIDR format, such as `10.0.0.0/24`. For a single IP address, use a `/32` CIDR block, such as `10.0.0.0/32`.
+* `cidr_ip` - (Required) IPv4 CIDR block, such as `10.0.0.0/24`. For a single IP address, use a `/32` CIDR block, such as `10.0.0.0/32`. Each `cidr_ip` must be unique.
 * `description` - (Optional) Description of the address block.
 
 ## Attribute Reference

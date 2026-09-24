@@ -208,6 +208,8 @@ func sweepIPRoutes(region string) error {
 	return nil
 }
 
+const ipRoutesSweepTimeout = 30 * time.Minute
+
 // ipRoutesSweeper removes IP routes directly. The resource's Delete relies on
 // the configured route set from state, which a sweeper does not have, so the
 // removal is issued against the CIDRs discovered by ListIpRoutes.
@@ -227,5 +229,11 @@ func (s *ipRoutesSweeper) Delete(ctx context.Context, optFns ...tfresource.Optio
 		return nil
 	}
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	// RemoveIpRoutes is asynchronous. Wait for the routes to finish removing so
+	// the dependent directory sweeper does not race an in-progress removal.
+	return waitIPRoutesRemoved(ctx, s.conn, s.directoryID, s.cidrs, ipRoutesSweepTimeout)
 }

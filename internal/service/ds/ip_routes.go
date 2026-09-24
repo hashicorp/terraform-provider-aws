@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -72,9 +73,11 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					// Only consumed by AddIpRoutes; not returned by the API, so changes
-					// require the routes to be re-created with the new value.
-					boolplanmodifier.RequiresReplace(),
+					// Only consumed by AddIpRoutes and never returned by the API.
+					// Use the configured-only variant so an omitted/defaulted value
+					// (e.g. after import) does not force replacement, while an
+					// explicit change still does.
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 		},
@@ -104,6 +107,44 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *ipRoutesResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data ipRoutesResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.IPRoutes.IsNull() || data.IPRoutes.IsUnknown() {
+		return
+	}
+
+	routes, diags := data.IPRoutes.ToSlice(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// A set only deduplicates whole objects, so two blocks with the same
+	// cidr_ip but different descriptions would both be kept. Because routes are
+	// keyed by CIDR internally, that is ambiguous; require cidr_ip to be unique.
+	seen := make(map[string]struct{}, len(routes))
+	for _, route := range routes {
+		if route.CidrIP.IsNull() || route.CidrIP.IsUnknown() {
+			continue
+		}
+		cidr := route.CidrIP.ValueString()
+		if _, ok := seen[cidr]; ok {
+			response.Diagnostics.AddAttributeError(
+				path.Root("ip_route"),
+				"Duplicate cidr_ip",
+				fmt.Sprintf("cidr_ip %q is configured in more than one ip_route block; each cidr_ip must be unique.", cidr),
+			)
+			return
+		}
+		seen[cidr] = struct{}{}
 	}
 }
 
@@ -361,7 +402,14 @@ func findIPRoutesByDirectoryID(ctx context.Context, conn *directoryservice.Clien
 
 	var active []awstypes.IpRouteInfo
 	for _, v := range routes {
-		if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoved || v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoving {
+		switch v.IpRouteStatusMsg {
+		case awstypes.IpRouteStatusMsgRemoved, awstypes.IpRouteStatusMsgRemoving:
+			// Being removed or already gone.
+			continue
+		case awstypes.IpRouteStatusMsgAddFailed:
+			// A failed addition was never successfully added, so it must not
+			// appear in state; leaving it out preserves the configuration diff
+			// so the next apply retries it.
 			continue
 		}
 		active = append(active, v)
