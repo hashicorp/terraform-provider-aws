@@ -260,6 +260,10 @@ func expandVPCOptions(tfMap map[string]any) *awstypes.VPCOptions {
 
 	apiObject := &awstypes.VPCOptions{}
 
+	if v, ok := tfMap["egress_enabled"]; ok {
+		apiObject.EgressEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
@@ -280,6 +284,10 @@ func flattenVPCDerivedInfo(apiObject *awstypes.VPCDerivedInfo) map[string]any {
 
 	if v := apiObject.AvailabilityZones; v != nil {
 		tfMap[names.AttrAvailabilityZones] = v
+	}
+
+	if v := apiObject.EgressEnabled; v != nil {
+		tfMap["egress_enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
