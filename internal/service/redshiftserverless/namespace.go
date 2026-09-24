@@ -132,6 +132,13 @@ func resourceNamespace() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				// Accepted only by CreateNamespace and not returned by GetNamespace.
+				"redshift_idc_application_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
@@ -193,6 +200,10 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if v, ok := d.GetOk("manage_admin_password"); ok {
 		input.ManageAdminPassword = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("redshift_idc_application_arn"); ok {
+		input.RedshiftIdcApplicationArn = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateNamespace(ctx, input)
