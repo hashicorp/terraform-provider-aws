@@ -202,13 +202,15 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.ToString(output.GlobalCluster.GlobalClusterIdentifier))
 
-	if _, err := waitGlobalClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
+
+	if _, err := waitGlobalClusterCreated(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
 		sourceARN := v.(string)
-		if _, err := waitGlobalClusterSourcePromoted(ctx, conn, d.Id(), sourceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitGlobalClusterSourcePromoted(ctx, conn, d.Id(), sourceARN, deadline.Remaining()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) source cluster promotion: %s", d.Id(), err)
 		}
 	}
