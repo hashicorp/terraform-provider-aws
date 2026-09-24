@@ -13,6 +13,7 @@ var (
 	ResourceCodeInterpreter          = newCodeInterpreterResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
+	ResourceGatewayRateLimit         = newGatewayRateLimitResource
 	ResourceGatewayRule              = newGatewayRuleResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceMemory                   = newMemoryResource
@@ -35,6 +36,7 @@ var (
 	FindCodeInterpreterByID              = findCodeInterpreterByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
+	FindGatewayRateLimitByTwoPartKey     = findGatewayRateLimitByTwoPartKey
 	FindGatewayRuleByTwoPartKey          = findGatewayRuleByTwoPartKey
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
