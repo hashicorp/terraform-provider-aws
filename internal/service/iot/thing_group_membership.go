@@ -92,7 +92,9 @@ func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = findThingGroupMembershipByTwoPartKey(ctx, conn, thingGroupName, thingName)
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.GroupNameAndArn, error) {
+		return findThingGroupMembershipByTwoPartKey(ctx, conn, thingGroupName, thingName)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Group Membership (%s) not found, removing from state", d.Id())

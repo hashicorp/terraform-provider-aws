@@ -100,7 +100,9 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 	thing := parts[0]
 	principal := parts[1]
 
-	out, err := findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
+	out, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.ThingPrincipalObject, error) {
+		return findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Principal Attachment (%s) not found, removing from state", d.Id())
