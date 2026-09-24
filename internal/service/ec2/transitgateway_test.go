@@ -194,6 +194,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"securityGroupReferencingSupportExistingResource":                  testAccTransitGatewayVPCAttachment_securityGroupReferencingSupportExistingResource,
 			"sharedTransitGateway":                                             testAccTransitGatewayVPCAttachment_sharedTransitGateway,
 			"subnetIDs":                                                        testAccTransitGatewayVPCAttachment_subnetIDs,
+			"subnetDeletion":                                                   testAccTransitGatewayVPCAttachment_subnetDeletion,
 			"transitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTableAssociation,
 			"transitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"transitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTablePropagation,
