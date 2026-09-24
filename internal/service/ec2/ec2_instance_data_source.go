@@ -137,6 +137,10 @@ func dataSourceInstance() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
+				"ena_queue_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				"enclave_options": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -514,6 +518,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
 				d.Set(names.AttrSubnetID, ni.SubnetId)
+				d.Set("ena_queue_count", ni.Attachment.EnaQueueCount)
 				d.Set(names.AttrNetworkInterfaceID, ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 
