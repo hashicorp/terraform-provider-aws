@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Retry `UpdateTable` on `ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found` when updating server-side encryption with replicas configured
+```
