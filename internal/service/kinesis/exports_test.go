@@ -16,5 +16,5 @@ var (
 	FindResourcePolicyByARN = findResourcePolicyByARN
 	FindStreamByName        = findStreamByName
 	FindStreamConsumerByARN = findStreamConsumerByARN
-	FindChannelByArn        = findChannelByArn
+	FindChannelByARN        = findChannelByARN
 )

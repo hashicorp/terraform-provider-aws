@@ -53,7 +53,7 @@ func (l *channelListResource) List(ctx context.Context, request list.ListRequest
 
 			var out *awstypes.ChannelDescription
 			if request.IncludeResource {
-				out, err = findChannelByArn(ctx, conn, arn)
+				out, err = findChannelByARN(ctx, conn, arn)
 				if retry.NotFound(err) {
 					continue
 				}

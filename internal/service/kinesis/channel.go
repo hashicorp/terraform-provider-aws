@@ -149,7 +149,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"stream_arn": schema.StringAttribute{
+						names.AttrStreamARN: schema.StringAttribute{
 							Description: "The Amazon Resource Name (ARN) of the source Kinesis data stream.",
 							Required:    true,
 							CustomType:  fwtypes.ARNType,
@@ -231,7 +231,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				Description: "The server-side encryption configuration for the channel.",
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelEncryptionConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -250,7 +250,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"key_id": schema.StringAttribute{
+						names.AttrKeyID: schema.StringAttribute{
 							Description: "The identifier of the customer managed Amazon Web Services KMS key. You cannot use the Amazon Kinesis Data Streams service key (aws/kinesis).",
 							CustomType:  types.StringType,
 							Required:    true,
@@ -266,7 +266,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 
-			"logging_configuration": schema.ListNestedBlock{
+			names.AttrLoggingConfiguration: schema.ListNestedBlock{
 				Description: "The Amazon CloudWatch Logs configuration for the channel.",
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[channelLoggingConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -274,7 +274,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloudwatch_logs": schema.ListNestedBlock{
+						names.AttrCloudWatchLogs: schema.ListNestedBlock{
 							Description: "The Amazon CloudWatch Logs settings for the channel.",
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsModel](ctx),
 							Validators: []validator.List{
@@ -284,12 +284,12 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"enabled": schema.BoolAttribute{
+									names.AttrEnabled: schema.BoolAttribute{
 										Description: "Specifies whether logging to Amazon CloudWatch Logs is enabled.",
 										CustomType:  types.BoolType,
 										Required:    true,
 									},
-									"log_group_name": schema.StringAttribute{
+									names.AttrLogGroupName: schema.StringAttribute{
 										Description: "The name of the Amazon CloudWatch Logs log group. Defaults to /aws/kinesis/{channelName}/{channelId}.",
 										CustomType:  types.StringType,
 										Optional:    true,
@@ -369,7 +369,7 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"namespace": schema.StringAttribute{
+				names.AttrNamespace: schema.StringAttribute{
 					Description: "The namespace (database) of the destination table.",
 					CustomType:  types.StringType,
 					Required:    true,
@@ -385,7 +385,7 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"table_name": schema.StringAttribute{
+				names.AttrTableName: schema.StringAttribute{
 					Description: "The name of the destination table. Amazon Kinesis Data Streams creates this table in the specified table bucket.",
 					CustomType:  types.StringType,
 					Required:    true,
@@ -506,7 +506,7 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"expected_bucket_owner": schema.StringAttribute{
+				names.AttrExpectedBucketOwner: schema.StringAttribute{
 					Description: "The Amazon Web Services account ID of the expected owner of the destination bucket. This value helps prevent delivery to an unintended bucket if ownership changes.",
 					CustomType:  types.StringType,
 					Required:    true,
@@ -540,7 +540,7 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 						stringplanmodifier.UseStateForUnknown(),
 					},
 				},
-				"storage_class": schema.StringAttribute{
+				names.AttrStorageClass: schema.StringAttribute{
 					Description: "The Amazon S3 storage class for delivered objects. Defaults to STANDARD.",
 					CustomType:  fwtypes.StringEnumType[awstypes.S3StorageClass](),
 					Optional:    true,
@@ -599,7 +599,7 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context) schema.List
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"expected_bucket_owner": schema.StringAttribute{
+				names.AttrExpectedBucketOwner: schema.StringAttribute{
 					Description: "The Amazon Web Services account ID of the expected owner of the dead-letter queue bucket.",
 					CustomType:  types.StringType,
 					Required:    true,
@@ -774,7 +774,7 @@ func (r *channelResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := findChannelByArn(ctx, conn, state.ARN.ValueString())
+	out, err := findChannelByARN(ctx, conn, state.ARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -966,7 +966,7 @@ func waitChannelDeleted(ctx context.Context, conn *kinesis.Client, arn string, t
 
 func statusChannel(conn *kinesis.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findChannelByArn(ctx, conn, arn)
+		out, err := findChannelByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -979,7 +979,7 @@ func statusChannel(conn *kinesis.Client, arn string) retry.StateRefreshFunc {
 	}
 }
 
-func findChannelByArn(ctx context.Context, conn *kinesis.Client, arn string) (*awstypes.ChannelDescription, error) {
+func findChannelByARN(ctx context.Context, conn *kinesis.Client, arn string) (*awstypes.ChannelDescription, error) {
 	input := kinesis.DescribeChannelInput{
 		ChannelARN: aws.String(arn),
 	}
