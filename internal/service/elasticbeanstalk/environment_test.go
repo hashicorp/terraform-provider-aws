@@ -2106,3 +2106,143 @@ func settingsChecks_ValueChanged(envVal string) []knownvalue.Check {
 		}),
 	}
 }
+
+func TestAccElasticBeanstalkEnvironment_clusterTier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var env awstypes.EnvironmentDescription
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_IMAGE_URI")
+	subnets := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_SUBNETS")
+	clusterRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_CLUSTER_ROLE_ARN")
+	nodeRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_NODE_ROLE_ARN")
+	operationRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_OPERATION_ROLE_ARN")
+	applicationRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_APPLICATION_ROLE_ARN")
+	observabilityRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_OBSERVABILITY_ROLE_ARN")
+	resourceName := "aws_elastic_beanstalk_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_clusterTier(acctest.RandInt(t), imageURI, subnets,
+					clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &env),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "cluster_arn", "eks", regexache.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTriggers+".#", "2"),
+					// The cluster tier has no classic Elastic Beanstalk resources.
+					resource.TestCheckResourceAttr(resourceName, "autoscaling_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_configurations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queues.#", "0"),
+				),
+			},
+			{
+				// The API reports the tier as "Cluster", so a configuration spelling it
+				// "Kubernetes" must not plan a replacement.
+				Config: testAccEnvironmentConfig_clusterTier(acctest.RandInt(t), imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccEnvironmentConfig_clusterTier(randInt int, imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN string) string {
+	return fmt.Sprintf(`
+resource "aws_elastic_beanstalk_application" "test" {
+  name        = "tf-test-name-%[1]d"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_application_version" "test" {
+  application = aws_elastic_beanstalk_application.test.name
+  name        = "tf-test-version-label-%[1]d"
+
+  image_configuration {
+    source {
+      uri = %[2]q
+    }
+  }
+}
+
+resource "aws_elastic_beanstalk_environment" "test" {
+  application   = aws_elastic_beanstalk_application.test.name
+  name          = "tf-test-name-%[1]d"
+  tier          = "Kubernetes"
+  version_label = aws_elastic_beanstalk_application_version.test.name
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks"
+    name      = "cluster-role"
+    value     = %[4]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks"
+    name      = "node-role"
+    value     = %[5]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment"
+    name      = "subnets"
+    value     = %[3]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment"
+    name      = "operation-role"
+    value     = %[6]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment"
+    name      = "application-role"
+    value     = %[7]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment"
+    name      = "observability-role"
+    value     = %[8]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment"
+    name      = "load-balancer-type"
+    value     = "ALB"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment"
+    name      = "service-port"
+    value     = "80"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:alb"
+    name      = "subnets"
+    value     = %[3]q
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment:autoscaling:trigger"
+    name      = "cpu-metric-type"
+    value     = "Utilization"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:eks:environment:autoscaling:trigger"
+    name      = "memory-metric-type"
+    value     = "Utilization"
+  }
+}
+`, randInt, imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN)
+}
