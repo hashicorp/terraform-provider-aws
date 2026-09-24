@@ -56,17 +56,19 @@ func resourceAggregateAuthorization() *schema.Resource {
 					Computed: true,
 				},
 				"authorized_aws_region": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ForceNew:     true,
-					ExactlyOneOf: []string{"authorized_aws_region", names.AttrRegion},
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrRegion},
 				},
 				names.AttrRegion: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ForceNew:     true,
-					ExactlyOneOf: []string{"authorized_aws_region", names.AttrRegion},
-					Deprecated:   "region is deprecated. Use authorized_aws_region instead.",
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"authorized_aws_region"},
+					Deprecated:    "region is deprecated. Use authorized_aws_region instead.",
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -127,11 +129,8 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(names.AttrAccountID, aggregationAuthorization.AuthorizedAccountId)
 	d.Set(names.AttrARN, aggregationAuthorization.AggregationAuthorizationArn)
-	if _, ok := d.GetOk(names.AttrRegion); ok {
-		d.Set(names.AttrRegion, aggregationAuthorization.AuthorizedAwsRegion)
-	} else {
-		d.Set("authorized_aws_region", aggregationAuthorization.AuthorizedAwsRegion)
-	}
+	d.Set(names.AttrRegion, aggregationAuthorization.AuthorizedAwsRegion)
+	d.Set("authorized_aws_region", aggregationAuthorization.AuthorizedAwsRegion)
 
 	return diags
 }
