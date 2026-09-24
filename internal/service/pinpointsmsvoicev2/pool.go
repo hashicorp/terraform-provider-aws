@@ -92,7 +92,7 @@ func (r *poolResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			names.AttrID: framework.IDAttribute(),
 			"iso_country_code": schema.StringAttribute{
-				Description: "Two-character code, in ISO 3166-1 alpha-2 format, for the country or region of the pool. This field is optional for origination identity types that are not country-specific.",
+				Description: "Two-character code, in ISO 3166-1 alpha-2 format, for the country or region of the pool. This field is optional for origination identity types that are not country-specific. Must be omitted when `origination_identities` spans more than one country, since this attribute is single-valued and cannot be changed after creation.",
 				Optional:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -628,30 +628,78 @@ func validateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2
 	return diags
 }
 
+const (
+	originationIdentityTypePhoneNumber = "phone-number"
+	originationIdentityTypeSenderID    = "sender-id"
+)
+
+// originationIdentityARN holds the components of a recognized origination identity ARN.
+// Phone number ARNs are shaped phone-number/<PhoneNumberId>; sender ID ARNs are shaped
+// sender-id/<SenderId>/<IsoCountryCode>.
+type originationIdentityARN struct {
+	resourceType   string
+	senderID       string
+	isoCountryCode string
+}
+
+// parseOriginationIdentityARN reports whether identityARN is a recognized origination identity
+// ARN and, if so, returns its components. Unrecognized shapes are reported as such so callers
+// can fail open and let AWS reject them.
+func parseOriginationIdentityARN(identityARN string) (originationIdentityARN, bool) {
+	parsed, err := arn.Parse(identityARN)
+	if err != nil {
+		return originationIdentityARN{}, false
+	}
+
+	parts := strings.SplitN(parsed.Resource, "/", 3)
+	switch parts[0] {
+	case originationIdentityTypePhoneNumber:
+		return originationIdentityARN{resourceType: originationIdentityTypePhoneNumber}, true
+	case originationIdentityTypeSenderID:
+		if len(parts) < 3 {
+			return originationIdentityARN{}, false
+		}
+		return originationIdentityARN{
+			resourceType:   originationIdentityTypeSenderID,
+			senderID:       parts[1],
+			isoCountryCode: parts[2],
+		}, true
+	}
+	return originationIdentityARN{}, false
+}
+
+// originationIdentityISOCountryCode resolves the IsoCountryCode to send with a per-identity
+// Associate/DisassociateOriginationIdentity call.
+//
+// Sender IDs are keyed on (SenderId, IsoCountryCode) and their ARN carries both. Omitting
+// IsoCountryCode makes the API reject the ARN with
+// ValidationException Reason="INVALID_ARN" Fields="senderId". A pool's iso_country_code is
+// optional — and necessarily unset when its identities span countries — so prefer the country
+// the ARN carries, and fall back to the pool-level value for identities that carry none.
+func originationIdentityISOCountryCode(identityARN string, poolISOCountryCode *string) *string {
+	if parsed, ok := parseOriginationIdentityARN(identityARN); ok && parsed.isoCountryCode != "" {
+		return aws.String(parsed.isoCountryCode)
+	}
+	return poolISOCountryCode
+}
+
 func groupOriginationIdentitiesByType(identities []string) (phoneARNs []string, senderRefs []awstypes.SenderIdAndCountry, unknownARN map[string]struct{}) {
 	unknownARN = map[string]struct{}{}
 	for _, identityARN := range identities {
-		parsed, err := arn.Parse(identityARN)
-		if err != nil {
+		parsed, ok := parseOriginationIdentityARN(identityARN)
+		if !ok {
 			unknownARN[identityARN] = struct{}{}
 			continue
 		}
 
-		parts := strings.SplitN(parsed.Resource, "/", 3)
-		switch parts[0] {
-		case "phone-number":
+		switch parsed.resourceType {
+		case originationIdentityTypePhoneNumber:
 			phoneARNs = append(phoneARNs, identityARN)
-		case "sender-id":
-			if len(parts) >= 3 {
-				senderRefs = append(senderRefs, awstypes.SenderIdAndCountry{
-					SenderId:       aws.String(parts[1]),
-					IsoCountryCode: aws.String(parts[2]),
-				})
-			} else {
-				unknownARN[identityARN] = struct{}{}
-			}
-		default:
-			unknownARN[identityARN] = struct{}{}
+		case originationIdentityTypeSenderID:
+			senderRefs = append(senderRefs, awstypes.SenderIdAndCountry{
+				SenderId:       aws.String(parsed.senderID),
+				IsoCountryCode: aws.String(parsed.isoCountryCode),
+			})
 		}
 	}
 	return phoneARNs, senderRefs, unknownARN
@@ -785,13 +833,15 @@ func validateSenderIdentity(identityARN string, s awstypes.SenderIdInformation, 
 	return diags
 }
 
-func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, isoCountryCode *string, identities ...string) error {
+func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, poolISOCountryCode *string, identities ...string) error {
 	for _, identity := range identities {
 		input := pinpointsmsvoicev2.AssociateOriginationIdentityInput{
 			ClientToken:         aws.String(create.UniqueId(ctx)),
 			PoolId:              aws.String(poolID),
 			OriginationIdentity: aws.String(identity),
-			IsoCountryCode:      isoCountryCode,
+			// poolISOCountryCode is only a fallback: sender IDs carry their own country in
+			// the ARN, which always wins. See originationIdentityISOCountryCode.
+			IsoCountryCode: originationIdentityISOCountryCode(identity, poolISOCountryCode),
 		}
 
 		// AssociateOriginationIdentity call is rate-limited (1 RPS per Pool ops); wrap to handle throttles.
@@ -808,13 +858,15 @@ func associateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev
 	return nil
 }
 
-func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, isoCountryCode *string, identities ...string) error {
+func disassociateOriginationIdentities(ctx context.Context, conn *pinpointsmsvoicev2.Client, poolID string, poolISOCountryCode *string, identities ...string) error {
 	for _, identity := range identities {
 		input := pinpointsmsvoicev2.DisassociateOriginationIdentityInput{
 			ClientToken:         aws.String(create.UniqueId(ctx)),
 			PoolId:              aws.String(poolID),
 			OriginationIdentity: aws.String(identity),
-			IsoCountryCode:      isoCountryCode,
+			// poolISOCountryCode is only a fallback: sender IDs carry their own country in
+			// the ARN, which always wins. See originationIdentityISOCountryCode.
+			IsoCountryCode: originationIdentityISOCountryCode(identity, poolISOCountryCode),
 		}
 		_, err := tfresource.RetryWhenIsA[*pinpointsmsvoicev2.DisassociateOriginationIdentityOutput, *awstypes.ThrottlingException](
 			ctx, originationIdentityTimeout,
