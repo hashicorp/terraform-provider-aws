@@ -281,7 +281,7 @@ func resourceComputeEnvironment() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Computed:     true,
-								ValidateFunc: validation.IntBetween(1, 360),
+								ValidateFunc: validation.IntBetween(1, 7200),
 							},
 							"terminate_jobs_on_update": {
 								Type:     schema.TypeBool,
