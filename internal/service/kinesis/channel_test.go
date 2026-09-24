@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -430,16 +431,21 @@ func testAccCheckChannelDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			arn := rs.Primary.Attributes["channel_arn"]
-			_, err := tfkinesis.FindChannelByArn(ctx, conn, arn)
+			arnStr := rs.Primary.Attributes["channel_arn"]
+
+			if parsedArn, err := arn.Parse(arnStr); err == nil && parsedArn.Region != acctest.Region() {
+				continue
+			}
+
+			_, err := tfkinesis.FindChannelByArn(ctx, conn, arnStr)
 			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
-				return create.Error(names.Kinesis, create.ErrActionCheckingDestroyed, tfkinesis.ResNameChannel, arn, err)
+				return create.Error(names.Kinesis, create.ErrActionCheckingDestroyed, tfkinesis.ResNameChannel, arnStr, err)
 			}
 
-			return create.Error(names.Kinesis, create.ErrActionCheckingDestroyed, tfkinesis.ResNameChannel, arn, errors.New("not destroyed"))
+			return create.Error(names.Kinesis, create.ErrActionCheckingDestroyed, tfkinesis.ResNameChannel, arnStr, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -498,7 +504,7 @@ resource "aws_iam_role" "role" {
           Service = [
             "kinesis.amazonaws.com",
             "s3.amazonaws.com",
-			"glue.amazonaws.com"
+            "glue.amazonaws.com"
           ]
         }
         Action = "sts:AssumeRole"
@@ -522,21 +528,21 @@ resource "aws_iam_role_policy" "policy" {
         ]
         Resource = aws_kinesis_stream.stream.arn
       },
-	  {
+      {
         Effect = "Allow"
         Action = [
           "kms:*"
         ]
         Resource = ["*"]
       },
-	  {
+      {
         Effect = "Allow"
         Action = [
           "glue:*"
         ]
         Resource = ["*"]
       },
-	  {
+      {
         Effect = "Allow"
         Action = [
           "logs:CreateLogStream",
@@ -553,7 +559,7 @@ resource "aws_iam_role_policy" "policy" {
           "${aws_s3_bucket.bucket.arn}/*"
         ]
       },
-	  {
+      {
         Effect = "Allow"
         Action = ["s3tables:*"]
         Resource = [
@@ -641,9 +647,9 @@ resource "aws_kinesis_channel" "test" {
 
   logging_configuration {
     cloudwatch_logs {
-      enabled 		  = true
-	  log_group_name  = aws_cloudwatch_log_group.test.name
-	  log_stream_name = %[1]q
+      enabled         = true
+      log_group_name  = aws_cloudwatch_log_group.test.name
+      log_stream_name = %[1]q
     }
   }
 
@@ -701,25 +707,25 @@ resource "aws_glue_registry" "test" {
 }
 
 resource "aws_glue_schema" "test" {
-  schema_name       = %[1]q
-  registry_arn      = aws_glue_registry.test.arn
-  data_format       = "JSON"
-  compatibility     = "NONE"
+  schema_name   = %[1]q
+  registry_arn  = aws_glue_registry.test.arn
+  data_format   = "JSON"
+  compatibility = "NONE"
   schema_definition = jsonencode({
-    "$id": "https://example.com/record.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Record",
-    "type": "object",
-    "properties": {
-      "event_time": {
-        "type": "string",
-        "format": "date-time"
+    "$id" : "https://example.com/record.schema.json",
+    "$schema" : "http://json-schema.org/draft-07/schema#",
+    "title" : "Record",
+    "type" : "object",
+    "properties" : {
+      "event_time" : {
+        "type" : "string",
+        "format" : "date-time"
       },
-      "data": {
-        "type": "string"
+      "data" : {
+        "type" : "string"
       }
     },
-    "required": ["event_time"]
+    "required" : ["event_time"]
   })
 }
 
@@ -749,12 +755,12 @@ resource "aws_kinesis_channel" "test" {
       table_name       = "test_table"
       compression_type = "ZSTD"
 
-	  partition_spec {
-		partition_fields {
-		  source_name = "event_time"
-		  transform   = "TIME_HOUR" 
-		}
-	  }
+      partition_spec {
+        partition_fields {
+          source_name = "event_time"
+          transform   = "TIME_HOUR"
+        }
+      }
     }
   }
 
