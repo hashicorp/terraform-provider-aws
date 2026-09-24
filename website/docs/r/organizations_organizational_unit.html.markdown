@@ -23,8 +23,8 @@ resource "aws_organizations_organizational_unit" "example" {
 
 This resource supports the following arguments:
 
-* `name` - The name for the organizational unit
-* `parent_id` - ID of the parent organizational unit, which may be the root
+* `name` - (Required) Name for the organizational unit
+* `parent_id` - (Required) ID of the parent organizational unit, which may be the root
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -38,7 +38,8 @@ This resource exports the following attributes in addition to the arguments abov
     * `name` - Name of the account
 * `arn` - ARN of the organizational unit
 * `id` - Identifier of the organization unit
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `path` - Path in organization where the organizational unit exists
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
