@@ -376,12 +376,16 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 			RuleVersion:     awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 		}
 
-		if d.HasChange(names.AttrDefaultValue) {
-			input.DefaultValue = aws.String(d.Get(names.AttrDefaultValue).(string))
+		// UpdateCostCategoryDefinition replaces the whole definition, so optional
+		// members have to be populated from configuration the way Create does.
+		// Guarding them with d.HasChange drops them from the request whenever some
+		// other attribute is what changed, and AWS then resets them.
+		if v, ok := d.GetOk(names.AttrDefaultValue); ok {
+			input.DefaultValue = aws.String(v.(string))
 		}
 
-		if d.HasChange("split_charge_rule") {
-			input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
+		if v, ok := d.GetOk("split_charge_rule"); ok {
+			input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 		}
 
 		_, err := conn.UpdateCostCategoryDefinition(ctx, input)
