@@ -27,11 +27,11 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_directory_service_directory_settings", name="Directory Settings")
+// @IdentityAttribute("directory_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directoryservice;directoryservice.DescribeSettingsOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
@@ -51,6 +51,7 @@ const (
 type directorySettingsResource struct {
 	framework.ResourceWithModel[directorySettingsResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 	framework.WithNoOpDelete
 }
 
@@ -311,27 +312,18 @@ func findDirectorySettingsByDirectoryID(ctx context.Context, conn *directoryserv
 		DirectoryId: aws.String(directoryID),
 	}
 
-	var entries []awstypes.SettingEntry
-	for {
-		out, err := conn.DescribeSettings(ctx, &input)
-		if err != nil {
-			return nil, smarterr.NewError(err)
+	var output []awstypes.SettingEntry
+	err := describeSettingsPages(ctx, conn, &input, func(page *directoryservice.DescribeSettingsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		if out == nil {
-			break
-		}
-		entries = append(entries, out.SettingEntries...)
-		if out.NextToken == nil {
-			break
-		}
-		input.NextToken = out.NextToken
-	}
 
-	if len(entries) == 0 {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
+		output = append(output, page.SettingEntries...)
 
-	return entries, nil
+		return !lastPage
+	})
+
+	return output, smarterr.NewError(err)
 }
 
 func flattenSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, requested []*directorySettingModel, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[directorySettingModel] {
