@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -64,9 +63,7 @@ func TestTagsResourceInterceptor(t *testing.T) {
 
 	ctx := t.Context()
 	var interceptors interceptorInvocations
-	sp := unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: "id",
-	})
+	sp := inttypes.ResourceTagsAttribute("id")
 	tags := resourceTransparentTagging(sp)
 	interceptors = append(interceptors, interceptorInvocation{
 		when:        Finally,

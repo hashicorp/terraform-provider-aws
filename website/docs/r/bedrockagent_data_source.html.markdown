@@ -422,7 +422,7 @@ The `chunking_configuration` configuration block supports the following argument
 The `fixed_size_chunking_configuration` configuration block supports the following arguments:
 
 * `max_tokens` - (Required, Forces new resource) Maximum number of tokens to include in a chunk.
-* `overlap_percentage` - (Optional, Forces new resource) Percentage of overlap between adjacent chunks of a data source.
+* `overlap_percentage` - (Required, Forces new resource) Percentage of overlap between adjacent chunks of a data source.
 
 ### `hierarchical_chunking_configuration` Block
 

@@ -411,8 +411,8 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 ### `target_parameters.batch_job_parameters.container_overrides.resource_requirement` Block
 
-* `type` - (Optional) Type of resource to assign to a container. The supported resources include GPU, MEMORY, and VCPU.
-* `value` - (Optional) Quantity of the specified resource to reserve for the container. [The values vary based on the type specified](https://docs.aws.amazon.com/eventbridge/latest/pipes-reference/API_BatchResourceRequirement.html).
+* `type` - (Required) Type of resource to assign to a container. The supported resources include GPU, MEMORY, and VCPU.
+* `value` - (Required) Quantity of the specified resource to reserve for the container. [The values vary based on the type specified](https://docs.aws.amazon.com/eventbridge/latest/pipes-reference/API_BatchResourceRequirement.html).
 
 ### `depends_on` Block
 
@@ -490,13 +490,13 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 ### `environment_file` Block
 
-* `type` - (Optional) File type to use. The only supported value is s3.
-* `value` - (Optional) ARN of the Amazon S3 object containing the environment variable file.
+* `type` - (Required) File type to use. The only supported value is s3.
+* `value` - (Required) ARN of the Amazon S3 object containing the environment variable file.
 
 ### `target_parameters.ecs_task_parameters.overrides.container_override.resource_requirement` Block
 
-* `type` - (Optional) Type of resource to assign to a container. The supported values are GPU or InferenceAccelerator.
-* `value` - (Optional) Value for the specified resource type. If the GPU type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on. If the InferenceAccelerator type is used, the value matches the deviceName for an InferenceAccelerator specified in a task definition.
+* `type` - (Required) Type of resource to assign to a container. The supported values are GPU or InferenceAccelerator.
+* `value` - (Required) Value for the specified resource type. If the GPU type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on. If the InferenceAccelerator type is used, the value matches the deviceName for an InferenceAccelerator specified in a task definition.
 
 ### `ephemeral_storage` Block
 

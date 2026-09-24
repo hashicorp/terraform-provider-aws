@@ -7,7 +7,6 @@ package networkflowmonitor
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
@@ -30,19 +29,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMonitorResource,
 			TypeName: "aws_networkflowmonitor_monitor",
 			Name:     "Monitor",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "monitor_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("monitor_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newScopeResource,
 			TypeName: "aws_networkflowmonitor_scope",
 			Name:     "Scope",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "scope_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("scope_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

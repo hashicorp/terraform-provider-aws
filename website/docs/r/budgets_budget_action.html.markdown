@@ -128,7 +128,7 @@ This resource supports the following arguments:
 #### `scp_action_definition` Block
 
 * `policy_id` - (Required) Policy ID attached.
-* `target_ids` - (Optional) List of target IDs.
+* `target_ids` - (Required) List of target IDs.
 
 #### `ssm_action_definition` Block
 

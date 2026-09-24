@@ -5,7 +5,6 @@ package interceptors
 
 import (
 	"context"
-	"unique"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,14 +23,10 @@ type taggingAWSClient interface {
 	Partition(context.Context) string
 }
 
-type HTags unique.Handle[inttypes.ServicePackageResourceTags]
+type HTags inttypes.ServicePackageResourceTags
 
-func (h HTags) unwrap() unique.Handle[inttypes.ServicePackageResourceTags] {
-	return unique.Handle[inttypes.ServicePackageResourceTags](h)
-}
-
-func (h HTags) value() inttypes.ServicePackageResourceTags {
-	return h.unwrap().Value()
+func (h HTags) unwrap() inttypes.ServicePackageResourceTags {
+	return inttypes.ServicePackageResourceTags(h)
 }
 
 // GetIdentifierFramework returns the value of the identifier attribute used in AWS tagging APIs.
@@ -41,7 +35,7 @@ func (h HTags) GetIdentifierFramework(ctx context.Context, d interface {
 }) string {
 	var identifier string
 
-	if identifierAttribute := h.value().IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := h.unwrap().IdentifierAttribute(); identifierAttribute != "" {
 		d.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)
 	}
 
@@ -52,7 +46,7 @@ func (h HTags) GetIdentifierFramework(ctx context.Context, d interface {
 func (h HTags) GetIdentifierSDKv2(_ context.Context, d sdkv2.ResourceDiffer) string {
 	var identifier string
 
-	if identifierAttribute := h.value().IdentifierAttribute; identifierAttribute != "" {
+	if identifierAttribute := h.unwrap().IdentifierAttribute(); identifierAttribute != "" {
 		if identifierAttribute == names.AttrID {
 			identifier = d.Id()
 		} else {
@@ -64,14 +58,14 @@ func (h HTags) GetIdentifierSDKv2(_ context.Context, d sdkv2.ResourceDiffer) str
 }
 
 func (h HTags) Enabled() bool {
-	return !tfunique.IsHandleNil(h.unwrap())
+	return h.unwrap().Enabled()
 }
 
 // If the service package has a generic resource list tags methods, call it.
 func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string) error {
 	var err error
 
-	resourceType := h.value().ResourceType
+	resourceType := h.unwrap().ResourceType()
 	if v, ok := sp.(tftags.ServiceTagLister); ok {
 		err = v.ListTags(ctx, c, identifier) // Sets tags in Context
 	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
@@ -107,7 +101,7 @@ func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c taggingA
 func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string, oldTags, newTags any) error {
 	var err error
 
-	resourceType := h.value().ResourceType
+	resourceType := h.unwrap().ResourceType()
 	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)
 	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok {
