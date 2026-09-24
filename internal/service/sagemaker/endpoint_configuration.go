@@ -255,6 +255,11 @@ func resourceEndpointConfiguration() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc:  validPrefix,
 				},
+				"enable_network_isolation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
 				names.AttrExecutionRoleARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -691,6 +696,30 @@ func validateDataCaptureConfigCustomDiff(ctx context.Context, d *schema.Resource
 		return nil
 	}
 
+	enableNetworkIsolation := configRaw.GetAttr("enable_network_isolation")
+	if enableNetworkIsolation.IsKnown() && !enableNetworkIsolation.IsNull() && enableNetworkIsolation.True() {
+		productionVariants := configRaw.GetAttr("production_variants")
+		if productionVariants.IsKnown() && !productionVariants.IsNull() {
+			it := productionVariants.ElementIterator()
+			for it.Next() {
+				_, variant := it.Element()
+				if !variant.IsKnown() || variant.IsNull() {
+					continue
+				}
+				modelName := variant.GetAttr("model_name")
+				if modelName.IsKnown() && !modelName.IsNull() && modelName.AsString() != "" {
+					diags = append(diags, diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "Conflicting configuration",
+						Detail:        "\"enable_network_isolation\" cannot be set when \"model_name\" is specified in \"production_variants\". Remove \"model_name\" and set \"execution_role_arn\" to use an Inference Components endpoint.",
+						AttributePath: cty.GetAttrPath("enable_network_isolation"),
+					})
+					break
+				}
+			}
+		}
+	}
+
 	dataCapturesPath := cty.GetAttrPath("data_capture_config")
 	dataCaptures := configRaw.GetAttr("data_capture_config")
 	if dataCaptures.IsKnown() && !dataCaptures.IsNull() {
@@ -767,6 +796,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		input.DataCaptureConfig = expandDataCaptureConfig(v.([]any))
 	}
 
+	if v, ok := d.GetOk("enable_network_isolation"); ok {
+		input.EnableNetworkIsolation = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
@@ -812,6 +845,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_capture_config: %s", err)
 	}
+	d.Set("enable_network_isolation", endpointConfig.EnableNetworkIsolation)
 	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
