@@ -268,7 +268,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `cloudwatch_dashboard` Block
 
-* `dashboard_arn` - (Required) ARN of the CloudWatch dashboard.
+* `dashboard_arn` - (Optional) ARN of the CloudWatch dashboard.
 
 #### `outputs` Block
 

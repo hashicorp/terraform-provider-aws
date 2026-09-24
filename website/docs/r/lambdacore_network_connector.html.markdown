@@ -83,7 +83,7 @@ The following arguments are required:
 
 * `configuration` - (Required) Network configuration of the connector. See [`configuration` Block](#configuration-block) below.
 * `name` - (Required) Name of the network connector, unique within the account and Region. Changing this forces a new resource.
-* `operator_role` - (Optional) ARN of the IAM role that the network connector service assumes to manage elastic network interfaces in your VPC.
+* `operator_role` - (Required) ARN of the IAM role that the network connector service assumes to manage elastic network interfaces in your VPC.
 
 The following arguments are optional:
 
@@ -100,7 +100,7 @@ The `configuration` block supports the following:
 The `vpc_egress_configuration` block supports the following:
 
 * `associated_compute_resource_types` - (Required) Compute resource types that may use this connector. Valid values: `MicroVm`.
-* `network_protocol` - (Required) Network protocol. Valid values: `IPv4`, `DualStack`.
+* `network_protocol` - (Optional) Network protocol. Valid values: `IPv4`, `DualStack`.
 * `security_group_ids` - (Required) Set of security group IDs applied to the connector's ENIs.
 * `subnet_ids` - (Required) Set of subnet IDs where the connector provisions its ENIs.
 

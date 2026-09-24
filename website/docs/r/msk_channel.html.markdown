@@ -202,7 +202,7 @@ The following arguments are optional:
 
 ### `source` Block
 
-* `source_name` - (Required) Name of the source column. For `TIME_HOUR` partitioning this must be a timestamp column defined in the Glue Schema Registry schema.
+* `source_name` - (Optional) Name of the source column. For `TIME_HOUR` partitioning this must be a timestamp column defined in the Glue Schema Registry schema.
 
 ### `schema_evolution` Block
 
