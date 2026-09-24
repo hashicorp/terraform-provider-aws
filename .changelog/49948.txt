@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_user_group: Fix `user_ids` additions being silently dropped when the same update also removes an already-detached user
+```
