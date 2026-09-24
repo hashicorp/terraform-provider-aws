@@ -133,10 +133,10 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_baseCapacity(rName, 1),
+				Config: testAccFleetConfig_baseCapacity(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "0"),
 				),
 			},
 			{
