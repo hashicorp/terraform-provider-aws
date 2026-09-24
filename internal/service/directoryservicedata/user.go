@@ -38,6 +38,7 @@ import (
 // @Testing(generator=false)
 // @Testing(domainTfVar="directoryDomain")
 // @Testing(emailAddress="emailAddress")
+// @Testing(importStateIdAttributes="directory_id;sam_account_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userResource{}, nil
 }
@@ -217,18 +218,33 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	if !plan.EmailAddress.Equal(state.EmailAddress) {
-		input := updateInput(updateType(plan.EmailAddress, state.EmailAddress))
-		input.EmailAddress = plan.EmailAddress.ValueStringPointer()
+		inputCheck := updateType(plan.EmailAddress, state.EmailAddress)
+		input := updateInput(inputCheck)
+		if inputCheck == awstypes.UpdateTypeRemove {
+			input.EmailAddress = state.EmailAddress.ValueStringPointer()
+		} else {
+			input.EmailAddress = plan.EmailAddress.ValueStringPointer()
+		}
 	}
 
 	if !plan.GivenName.Equal(state.GivenName) {
-		input := updateInput(updateType(plan.GivenName, state.GivenName))
-		input.GivenName = plan.GivenName.ValueStringPointer()
+		inputCheck := updateType(plan.GivenName, state.GivenName)
+		input := updateInput(inputCheck)
+		if inputCheck == awstypes.UpdateTypeRemove {
+			input.GivenName = state.GivenName.ValueStringPointer()
+		} else {
+			input.GivenName = plan.GivenName.ValueStringPointer()
+		}
 	}
 
 	if !plan.Surname.Equal(state.Surname) {
-		input := updateInput(updateType(plan.Surname, state.Surname))
-		input.Surname = plan.Surname.ValueStringPointer()
+		inputCheck := updateType(plan.Surname, state.Surname)
+		input := updateInput(inputCheck)
+		if inputCheck == awstypes.UpdateTypeRemove {
+			input.Surname = state.Surname.ValueStringPointer()
+		} else {
+			input.Surname = plan.Surname.ValueStringPointer()
+		}
 	}
 
 	// For when more than one attribute needs to be updated
