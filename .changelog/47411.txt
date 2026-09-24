@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_db_instance: Fix `iops` being incorrectly sent during `ModifyDBInstance` when `allocated_storage` crosses the `gp3` engine-specific threshold, which prevented AWS from automatically applying the higher baseline IOPS (e.g. 12,000 IOPS for MySQL/MariaDB/PostgreSQL/DB2 at ≥ 400 GiB, Oracle at ≥ 200 GiB)
+```
+
+```release-note:bug
+resource/aws_db_instance: Fix incorrect `gp3` IOPS threshold for DB2 engines (`db2-ae`, `db2-se`): threshold is 400 GiB (same as MySQL/MariaDB/PostgreSQL), not 100 GiB
+```
+
+
