@@ -45,4 +45,7 @@ var (
 	FindSchemaByID                  = findSchemaByID
 	FindTableByThreePartKey         = findTableByThreePartKey
 	FindTriggerByName               = findTriggerByName
+
+	CatalogDatabaseCreateResourceID = catalogDatabaseCreateResourceID
+	CatalogDatabaseParseResourceID  = catalogDatabaseParseResourceID
 )
