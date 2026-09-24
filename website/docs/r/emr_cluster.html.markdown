@@ -257,6 +257,38 @@ resource "aws_emr_cluster" "example" {
 }
 ```
 
+### Publish Logs to CloudWatch Logs
+
+Available in EMR version 7.11.0 and later, an EMR Cluster can stream step and Spark logs directly to CloudWatch Logs. This requires the `AmazonCloudWatchAgent` application, and the EC2 instance profile must be granted the CloudWatch Logs permissions described in the [EMR Management Guide](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-logging-cw.html).
+
+```terraform
+resource "aws_emr_cluster" "example" {
+  name          = "example"
+  release_label = "emr-7.11.0"
+  applications  = ["Spark", "AmazonCloudWatchAgent"]
+
+  # ... other configuration ...
+
+  monitoring_configuration {
+    cloud_watch_log_configuration {
+      enabled                = true
+      log_group_name         = "/aws/emr/example"
+      log_stream_name_prefix = "example"
+
+      log_types {
+        name   = "STEP_LOGS"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDERR"]
+      }
+    }
+  }
+}
+```
+
 ### Multiple Node Master Instance Group
 
 Available in EMR version 5.23.0 and later, an EMR Cluster can be launched with three master nodes for high availability. Additional information about this functionality and its requirements can be found in the [EMR Management Guide](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-ha.html).
@@ -657,6 +689,7 @@ EOF
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
 * `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
+* `monitoring_configuration` - (Optional) Configuration block for publishing cluster logs to CloudWatch Logs and for controlling how logs are uploaded to S3. Amazon EMR accepts this configuration only when the cluster is created, so changing it forces a new resource to be created. See [`monitoring_configuration` Block](#monitoring_configuration) below.
 * `os_release_label` - (Optional) Amazon Linux release for all nodes in a cluster launch RunJobFlow request. If not specified, Amazon EMR uses the latest validated Amazon Linux release for cluster launch.
 * `placement_group_config` - (Optional) The specified placement group configuration for an Amazon EMR cluster.
 * `scale_down_behavior` - (Optional) Way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
@@ -795,6 +828,37 @@ Supported nested arguments for the `master_instance_group` configuration block:
 #### ebs_config
 
 See `ebs_config` under `core_instance_group` above.
+
+### monitoring_configuration
+
+At least one of `cloud_watch_log_configuration` or `s3_logging_configuration` must be configured.
+
+* `cloud_watch_log_configuration` - (Optional) Configuration block for publishing cluster logs to CloudWatch Logs. Requires `release_label` 7.11.0 or greater and the `AmazonCloudWatchAgent` application. See [`cloud_watch_log_configuration` Block](#cloud_watch_log_configuration) below.
+* `s3_logging_configuration` - (Optional) Configuration block for controlling how each log type is uploaded to S3. Requires `release_label` 7.13.0 or greater. See [`s3_logging_configuration` Block](#s3_logging_configuration) below.
+
+#### cloud_watch_log_configuration
+
+* `enabled` - (Required) Whether to publish cluster logs to CloudWatch Logs.
+* `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the logs. If not specified, logs are encrypted using CloudWatch Logs server-side encryption.
+* `log_group_name` - (Optional) Name of the CloudWatch log group where logs are published. Must be between 1 and 512 characters. Default value: `/aws/emr/{cluster_id}`.
+* `log_stream_name_prefix` - (Optional) Prefix for log stream names. Must be between 1 and 512 characters. Defaults to an empty prefix.
+* `log_types` - (Optional) Configuration block(s) specifying which log types to publish. Defaults to `STEP_LOGS` and `SPARK_DRIVER`, each publishing both `STDOUT` and `STDERR`. See [`log_types` Block](#log_types) below.
+
+~> **NOTE:** The EC2 instance profile configured in `ec2_attributes` must be granted the CloudWatch Logs permissions documented in [Publish Amazon EMR logs to CloudWatch Logs](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-logging-cw.html). For clusters in a private subnet, a CloudWatch Logs VPC endpoint is also required.
+
+##### log_types
+
+* `name` - (Required) Log type to publish. Valid values are `STEP_LOGS`, `SPARK_DRIVER`, and `SPARK_EXECUTOR`.
+* `values` - (Required) Set of streams to publish for this log type. At least one value is required. Valid values are `STDOUT` and `STDERR`.
+
+#### s3_logging_configuration
+
+* `log_type_upload_policy` - (Required) Configuration block(s) specifying the upload policy to apply to each log type. Amazon EMR applies a default policy to every log type, so configure one block per log type to avoid a persistent difference. See [`log_type_upload_policy` Block](#log_type_upload_policy) below.
+
+##### log_type_upload_policy
+
+* `log_type` - (Required) Log type the upload policy applies to. Valid values are `system-logs`, `application-logs`, and `persistent-ui-logs`.
+* `upload_policy` - (Required) Upload policy to apply to the log type. Valid values are `emr-managed`, `on-customer-s3only`, and `disabled`. Using `on-customer-s3only` requires `log_uri` to be set and is not supported for `persistent-ui-logs`.
 
 ### step
 
