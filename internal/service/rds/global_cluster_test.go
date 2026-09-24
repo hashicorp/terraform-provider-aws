@@ -1429,25 +1429,6 @@ resource "aws_rds_global_cluster" "test" {
   depends_on = [aws_rds_cluster_instance.source]
 }
 
-resource "aws_vpc" "alternate" {
-  provider   = "awsalternate"
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "alternate" {
-  provider          = "awsalternate"
-  count             = 3
-  vpc_id            = aws_vpc.alternate.id
-  availability_zone = data.aws_availability_zones.alternate.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-}
-
-resource "aws_db_subnet_group" "alternate" {
-  provider   = "awsalternate"
-  name       = "%[1]s-secondary"
-  subnet_ids = aws_subnet.alternate[*].id
-}
-
 # Fails with InvalidDBClusterStateFault if the source has not finished promoting.
 resource "aws_rds_cluster" "secondary" {
   provider                  = "awsalternate"
@@ -1455,7 +1436,6 @@ resource "aws_rds_cluster" "secondary" {
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
   global_cluster_identifier = aws_rds_global_cluster.test.id
-  db_subnet_group_name      = aws_db_subnet_group.alternate.name
   skip_final_snapshot       = true
 
   lifecycle {
