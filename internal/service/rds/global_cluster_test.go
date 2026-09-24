@@ -593,6 +593,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster1),
+					testAccCheckGlobalClusterHasWriterMember(&globalCluster1, clusterResourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
@@ -601,30 +602,6 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
-			},
-		},
-	})
-}
-
-func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_writerMemberPromoted(t *testing.T) {
-	ctx := acctest.Context(t)
-	var globalCluster1 types.GlobalCluster
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_rds_global_cluster.test"
-	sourceResourceName := "aws_rds_cluster.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster1),
-					testAccCheckGlobalClusterHasWriterMember(&globalCluster1, sourceResourceName),
-				),
 			},
 		},
 	})
