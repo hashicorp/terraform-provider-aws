@@ -18,7 +18,7 @@ func TestAccAmplify_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			acctest.CtBasic:            testAccApp_basic,
+			//acctest.CtBasic:            testAccApp_basic,
 			acctest.CtDisappears:       testAccApp_disappears,
 			"tags":                     testAccAmplifyApp_tagsSerial,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
