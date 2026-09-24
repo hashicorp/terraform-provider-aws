@@ -5,7 +5,6 @@ package rds_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -612,6 +611,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_writerMemberPromoted(t *t
 	var globalCluster1 types.GlobalCluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
+	sourceResourceName := "aws_rds_cluster.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
@@ -623,7 +623,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_writerMemberPromoted(t *t
 				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster1),
-					testAccCheckGlobalClusterHasWriterMember(&globalCluster1),
+					testAccCheckGlobalClusterHasWriterMember(&globalCluster1, sourceResourceName),
 				),
 			},
 		},
@@ -644,6 +644,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_crossRegionReplica(t *tes
 	rNameGlobal := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameSecondary := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
+	sourceResourceName := "aws_rds_cluster.source"
 	secondaryResourceName := "aws_rds_cluster.secondary"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -660,7 +661,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_crossRegionReplica(t *tes
 				Config: testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rNameSource, rNameGlobal, rNameSecondary, tfrds.ClusterEngineAuroraPostgreSQL),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster),
-					testAccCheckGlobalClusterHasWriterMember(&globalCluster),
+					testAccCheckGlobalClusterHasWriterMember(&globalCluster, sourceResourceName),
 					resource.TestCheckResourceAttrSet(secondaryResourceName, "replication_source_identifier"),
 				),
 			},
@@ -830,14 +831,21 @@ func testAccCheckGlobalClusterExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
-func testAccCheckGlobalClusterHasWriterMember(globalCluster *types.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterHasWriterMember(globalCluster *types.GlobalCluster, sourceResourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[sourceResourceName]
+		if !ok {
+			return fmt.Errorf("source cluster not found in state: %s", sourceResourceName)
+		}
+
+		sourceARN := rs.Primary.Attributes[names.AttrARN]
 		for _, m := range globalCluster.GlobalClusterMembers {
-			if aws.ToBool(m.IsWriter) && aws.ToString(m.DBClusterArn) != "" {
+			if aws.ToString(m.DBClusterArn) == sourceARN && aws.ToBool(m.IsWriter) {
 				return nil
 			}
 		}
-		return errors.New("expected global cluster to have a writer member after create, but none found")
+
+		return fmt.Errorf("expected source cluster %q to be a writer member", sourceARN)
 	}
 }
 
