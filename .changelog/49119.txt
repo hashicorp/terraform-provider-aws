@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_parameter: Normalize `name` to match the API's canonical form, avoiding spurious resource replacement when a single name has a leading slash and an error when a path is missing one
+```
