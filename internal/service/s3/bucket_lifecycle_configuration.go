@@ -656,7 +656,11 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 }
 
 func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
-	if transitionMinSize1 != transitionMinSize2 {
+	// Some S3-compatible implementations (e.g., Ceph RADOS Gateway, NetApp StorageGRID) do not return the
+	// x-amz-transition-default-minimum-object-size response header on GetBucketLifecycleConfiguration, so the
+	// value read back is empty. Treat an empty value on either side as a match (it just means the backend did
+	// not echo the field) rather than waiting until the Terraform timeout.
+	if transitionMinSize1 != transitionMinSize2 && transitionMinSize1 != "" && transitionMinSize2 != "" {
 		return false
 	}
 

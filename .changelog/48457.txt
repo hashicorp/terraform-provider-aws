@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix create/update hanging until timeout against S3-compatible endpoints (e.g. Ceph RADOS Gateway) that do not return the `transition_default_minimum_object_size` response header
+```
