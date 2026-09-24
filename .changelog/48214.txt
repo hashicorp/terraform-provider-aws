@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_lambda_invocation: Add `maximum_retry_attempts` argument to retry failed invocations with exponential backoff on temporary, self-correcting errors (`TooManyRequestsException`, `ServiceException`, `ResourceNotReadyException`)
+```
+
+```release-note:enhancement
+data-source/aws_lambda_invocation: Add `maximum_retry_attempts` argument to retry failed invocations with exponential backoff on temporary, self-correcting errors (`TooManyRequestsException`, `ServiceException`, `ResourceNotReadyException`)
+```
+
+```release-note:enhancement
+action/aws_lambda_invoke: Add `maximum_retry_attempts` argument to retry failed invocations with exponential backoff on temporary, self-correcting errors (`TooManyRequestsException`, `ServiceException`, `ResourceNotReadyException`)
+```

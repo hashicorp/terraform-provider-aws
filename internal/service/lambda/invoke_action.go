@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -39,13 +40,14 @@ type invokeAction struct {
 
 type invokeActionModel struct {
 	framework.WithRegionModel
-	FunctionName   types.String                                `tfsdk:"function_name"`
-	Payload        types.String                                `tfsdk:"payload"`
-	Qualifier      types.String                                `tfsdk:"qualifier"`
-	InvocationType fwtypes.StringEnum[awstypes.InvocationType] `tfsdk:"invocation_type"`
-	LogType        fwtypes.StringEnum[awstypes.LogType]        `tfsdk:"log_type"`
-	ClientContext  types.String                                `tfsdk:"client_context"`
-	TenantId       types.String                                `tfsdk:"tenant_id"`
+	FunctionName         types.String                                `tfsdk:"function_name"`
+	MaximumRetryAttempts types.Int64                                 `tfsdk:"maximum_retry_attempts"`
+	Payload              types.String                                `tfsdk:"payload"`
+	Qualifier            types.String                                `tfsdk:"qualifier"`
+	InvocationType       fwtypes.StringEnum[awstypes.InvocationType] `tfsdk:"invocation_type"`
+	LogType              fwtypes.StringEnum[awstypes.LogType]        `tfsdk:"log_type"`
+	ClientContext        types.String                                `tfsdk:"client_context"`
+	TenantId             types.String                                `tfsdk:"tenant_id"`
 }
 
 func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
@@ -55,6 +57,13 @@ func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, res
 			"function_name": schema.StringAttribute{
 				Description: "The name, ARN, or partial ARN of the Lambda function to invoke. You can specify a function name (e.g., my-function), a qualified function name (e.g., my-function:PROD), or a partial ARN (e.g., 123456789012:function:my-function).",
 				Required:    true,
+			},
+			"maximum_retry_attempts": schema.Int64Attribute{
+				Description: "Number of times to retry the Lambda invocation on transient errors (TooManyRequestsException, ServiceException, ResourceNotReadyException). Uses exponential backoff between attempts (~500ms, ~1s, ~2s). Valid values are 0 to 20. Defaults to 0.",
+				Optional:    true,
+				Validators: []validator.Int64{
+					int64validator.Between(0, 20),
+				},
 			},
 			"payload": schema.StringAttribute{
 				Description: "The JSON payload to send to the Lambda function. This should be a valid JSON string that represents the event data for your function.",
@@ -151,8 +160,8 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 		input.ClientContext = aws.String(clientContext)
 	}
 
-	// Perform the invocation
-	output, err := conn.Invoke(ctx, input)
+	retryCount := int(config.MaximumRetryAttempts.ValueInt64())
+	output, err := invokeWithRetry(ctx, conn, input, retryCount)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to Invoke Lambda Function",
