@@ -6,7 +6,9 @@ package ds_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -267,17 +269,26 @@ func testAccCheckIPRoutesDisappears(ctx context.Context, t *testing.T, n string)
 			return err
 		}
 
-		cidrs := make([]string, 0, len(routes))
+		var cidrIPs, cidrIPv6s []string
 		for _, route := range routes {
-			cidrs = append(cidrs, aws.ToString(route.CidrIp))
+			if route.CidrIp != nil {
+				cidrIPs = append(cidrIPs, aws.ToString(route.CidrIp))
+			} else if route.CidrIpv6 != nil {
+				cidrIPv6s = append(cidrIPv6s, aws.ToString(route.CidrIpv6))
+			}
 		}
 
-		_, err = conn.RemoveIpRoutes(ctx, &directoryservice.RemoveIpRoutesInput{
+		if _, err = conn.RemoveIpRoutes(ctx, &directoryservice.RemoveIpRoutesInput{
 			DirectoryId: aws.String(directoryID),
-			CidrIps:     cidrs,
-		})
+			CidrIps:     cidrIPs,
+			CidrIpv6s:   cidrIPv6s,
+		}); err != nil {
+			return err
+		}
 
-		return err
+		// RemoveIpRoutes is asynchronous. Wait for the routes to finish removing
+		// so the backing directory does not begin teardown mid-removal.
+		return tfds.WaitIPRoutesRemoved(ctx, conn, directoryID, slices.Concat(cidrIPs, cidrIPv6s), 30*time.Minute)
 	}
 }
 

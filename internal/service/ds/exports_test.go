@@ -18,6 +18,7 @@ var (
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
 	FindIPRoutesByDirectoryID            = findIPRoutesByDirectoryID
+	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey

@@ -32,7 +32,10 @@ func TestAccDSIPRoutes_Identity_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		CheckDestroy:             testAccCheckIPRoutesDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -126,7 +129,10 @@ func TestAccDSIPRoutes_Identity_regionOverride(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

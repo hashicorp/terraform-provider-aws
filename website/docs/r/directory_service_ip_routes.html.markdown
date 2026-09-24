@@ -60,7 +60,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `update_security_group_for_directory_controllers` - (Optional) Whether to update the security group of the directory controllers to allow traffic to and from the added CIDR blocks. Changing this forces a new resource to be created. Defaults to `false`.
+* `update_security_group_for_directory_controllers` - (Optional) Whether to update the inbound and outbound rules of the security group for the directory controllers. Changing this forces a new resource to be created. Defaults to `false`.
 
 ### `ip_route` Block
 

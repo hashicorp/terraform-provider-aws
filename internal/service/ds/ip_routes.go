@@ -34,6 +34,7 @@ import (
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,11 +43,13 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="directory_id")
 // @Testing(importIgnore="update_security_group_for_directory_controllers")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckDirectoryService")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directoryservice/types;awstypes;awstypes.IpRouteInfo")
 func newIPRoutesResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ipRoutesResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -118,6 +121,7 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -295,7 +299,7 @@ func (r *ipRoutesResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 		removeKeys := slices.Concat(removeV4, removeV6)
-		if err := waitIPRoutesRemoved(ctx, conn, directoryID, removeKeys, r.DeleteTimeout(ctx, plan.Timeouts)); err != nil {
+		if err := waitIPRoutesRemoved(ctx, conn, directoryID, removeKeys, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
 			return
 		}
@@ -311,7 +315,7 @@ func (r *ipRoutesResource) Update(ctx context.Context, request resource.UpdateRe
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
 			return
 		}
-		if err := waitIPRoutesAdded(ctx, conn, directoryID, ipRoutesCIDRs(add), r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+		if err := waitIPRoutesAdded(ctx, conn, directoryID, ipRoutesCIDRs(add), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, directoryID)
 			return
 		}
@@ -339,9 +343,9 @@ func (r *ipRoutesResource) Delete(ctx context.Context, request resource.DeleteRe
 	var removeV4, removeV6 []string
 	for _, v := range routes {
 		if v.isIPv6() {
-			removeV6 = append(removeV6, v.CidrIPv6.ValueString())
+			removeV6 = append(removeV6, v.routeKey())
 		} else {
-			removeV4 = append(removeV4, v.CidrIP.ValueString())
+			removeV4 = append(removeV4, v.routeKey())
 		}
 	}
 
@@ -388,16 +392,16 @@ func ipRoutesCIDRs(routes []awstypes.IpRoute) []string {
 
 func ipRouteKey(v awstypes.IpRoute) string {
 	if v.CidrIp != nil {
-		return aws.ToString(v.CidrIp)
+		return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIp))
 	}
-	return aws.ToString(v.CidrIpv6)
+	return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIpv6))
 }
 
 func ipRouteInfoKey(v awstypes.IpRouteInfo) string {
 	if v.CidrIp != nil {
-		return aws.ToString(v.CidrIp)
+		return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIp))
 	}
-	return aws.ToString(v.CidrIpv6)
+	return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIpv6))
 }
 
 // findIPRoutes returns all IP routes (IPv4 and IPv6) for a directory regardless
@@ -492,21 +496,21 @@ func statusIPRoutesAdded(conn *directoryservice.Client, directoryID string, cidr
 			return nil, "", err
 		}
 
-		got := make(map[string]awstypes.IpRouteStatusMsg, len(routes))
+		got := make(map[string]awstypes.IpRouteInfo, len(routes))
 		for _, v := range routes {
-			got[ipRouteInfoKey(v)] = v.IpRouteStatusMsg
+			got[ipRouteInfoKey(v)] = v
 		}
 
 		added := true
 		for c := range want {
-			s, ok := got[c]
+			v, ok := got[c]
 			if !ok {
 				added = false
 				continue
 			}
-			switch s {
+			switch v.IpRouteStatusMsg {
 			case awstypes.IpRouteStatusMsgAddFailed:
-				return routes, string(s), fmt.Errorf("IP route %q failed to add", c)
+				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to add: %s", c, aws.ToString(v.IpRouteStatusReason))
 			case awstypes.IpRouteStatusMsgAdded:
 			default:
 				added = false
@@ -543,7 +547,7 @@ func statusIPRoutesRemoved(conn *directoryservice.Client, directoryID string, ci
 				continue
 			}
 			if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoveFailed {
-				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to remove", ipRouteInfoKey(v))
+				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to remove: %s", ipRouteInfoKey(v), aws.ToString(v.IpRouteStatusReason))
 			}
 			// A route still present in any non-Removed state (including
 			// "Removing") means removal is not yet complete.
@@ -600,12 +604,15 @@ type ipRouteModel struct {
 	Description types.String `tfsdk:"description"`
 }
 
-// routeKey returns the CIDR that identifies a route model (IPv4 or IPv6).
+// routeKey returns the canonicalized CIDR that identifies a route model (IPv4
+// or IPv6). Canonicalization ensures equivalent IPv6 spellings (e.g.
+// "2001:db8::/64" and "2001:0db8::/64") map to the same key so uniqueness
+// checks and add/remove diffs match what AWS returns.
 func (m ipRouteModel) routeKey() string {
 	if !m.CidrIP.IsNull() && !m.CidrIP.IsUnknown() && m.CidrIP.ValueString() != "" {
-		return m.CidrIP.ValueString()
+		return inttypes.CanonicalCIDRBlock(m.CidrIP.ValueString())
 	}
-	return m.CidrIPv6.ValueString()
+	return inttypes.CanonicalCIDRBlock(m.CidrIPv6.ValueString())
 }
 
 func (m ipRouteModel) isIPv6() bool {
