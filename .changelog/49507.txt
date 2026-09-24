@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_dashboard: Retry the read after creation when CloudWatch eventual consistency transiently returns `ResourceNotFound`, preventing intermittent `apply` failures immediately after a successful `PutDashboard`
+```
