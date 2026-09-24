@@ -47,9 +47,9 @@ import (
 )
 
 // @FrameworkResource("aws_kinesis_channel", name="Channel")
-// @Tags(identifierAttribute="channel_arn")
+// @Tags(identifierAttribute="channel_arn", resourceType="Channel")
 // @ArnIdentity("channel_arn")
-// @Testing(hasNoPreExistingResource=true, generator=false, tagsTest=false)
+// @Testing(hasNoPreExistingResource=true)
 func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelResource{}
 
@@ -79,14 +79,23 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "The time at which the channel was created.",
 				CustomType:  timetypes.RFC3339Type{},
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"channel_status": schema.StringAttribute{
 				Description: "The current status of the channel.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"channel_status_reason": schema.StringAttribute{
 				Description: "A message describing the reason for a FAILED status.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
