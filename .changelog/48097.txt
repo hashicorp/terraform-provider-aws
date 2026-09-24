@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Fix `maintenance_window` changes incorrectly triggering blue/green deployment when `blue_green_update` is enabled
+```
