@@ -35,6 +35,14 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionsDataSourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "secret_id", resource1Name, "secret_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "versions.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.%"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.created_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.last_accessed_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "versions.0.version_id"),
+				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), dataSourceName, tfjsonpath.New("secret_arn"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("include_deprecated"), knownvalue.Null()),
