@@ -443,6 +443,34 @@ func resourceEndpointConfiguration() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: validation.IntAtLeast(0),
 										},
+										"scale_in_policy": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cooldown_in_minutes": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"maximum_step_size": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"strategy": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingScaleInStrategy](),
+													},
+												},
+											},
+										},
 										names.AttrStatus: {
 											Type:             schema.TypeString,
 											Optional:         true,
@@ -649,6 +677,34 @@ func resourceEndpointConfiguration() *schema.Resource {
 											Optional:     true,
 											ForceNew:     true,
 											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"scale_in_policy": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cooldown_in_minutes": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"maximum_step_size": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"strategy": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingScaleInStrategy](),
+													},
+												},
+											},
 										},
 										names.AttrStatus: {
 											Type:             schema.TypeString,
@@ -1320,7 +1376,34 @@ func expandManagedInstanceScaling(configured []any) *awstypes.ProductionVariantM
 		c.MaxInstanceCount = aws.Int32(int32(v))
 	}
 
+	if v, ok := m["scale_in_policy"].([]any); ok && len(v) > 0 {
+		c.ScaleInPolicy = expandScaleInPolicy(v)
+	}
+
 	return c
+}
+
+func expandScaleInPolicy(tfList []any) *awstypes.ProductionVariantManagedInstanceScalingScaleInPolicy {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ProductionVariantManagedInstanceScalingScaleInPolicy{}
+
+	if v, ok := tfMap["strategy"].(string); ok && v != "" {
+		apiObject.Strategy = awstypes.ManagedInstanceScalingScaleInStrategy(v)
+	}
+
+	if v, ok := tfMap["cooldown_in_minutes"].(int); ok && v > 0 {
+		apiObject.CooldownInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_step_size"].(int); ok && v > 0 {
+		apiObject.MaximumStepSize = aws.Int32(int32(v))
+	}
+
+	return apiObject
 }
 
 func expandCapacityReservationConfig(tfList []any) *awstypes.ProductionVariantCapacityReservationConfig {
@@ -1489,6 +1572,30 @@ func flattenManagedInstanceScaling(apiObject *awstypes.ProductionVariantManagedI
 
 	if apiObject.MaxInstanceCount != nil {
 		tfMap["max_instance_count"] = aws.ToInt32(apiObject.MaxInstanceCount)
+	}
+
+	if apiObject.ScaleInPolicy != nil {
+		tfMap["scale_in_policy"] = flattenScaleInPolicy(apiObject.ScaleInPolicy)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenScaleInPolicy(apiObject *awstypes.ProductionVariantManagedInstanceScalingScaleInPolicy) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"strategy": apiObject.Strategy,
+	}
+
+	if apiObject.CooldownInMinutes != nil {
+		tfMap["cooldown_in_minutes"] = aws.ToInt32(apiObject.CooldownInMinutes)
+	}
+
+	if apiObject.MaximumStepSize != nil {
+		tfMap["maximum_step_size"] = aws.ToInt32(apiObject.MaximumStepSize)
 	}
 
 	return []any{tfMap}
