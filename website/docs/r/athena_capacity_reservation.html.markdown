@@ -27,7 +27,7 @@ resource "aws_athena_capacity_reservation" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the capacity reservation.
-* `target_dpus` - (Required) Number of data processing units requested. Must be at least `24` units.
+* `target_dpus` - (Required) Number of data processing units requested. Must be at least `4` units.
 
 The following arguments are optional:
 
