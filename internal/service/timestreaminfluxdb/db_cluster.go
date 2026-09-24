@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -32,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -98,9 +100,14 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					(when using an InfluxDB V3 db parameter group).`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
-				Required:    true,
-				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.`,
+				CustomType: fwtypes.StringEnumType[awstypes.DbInstanceType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.
+					Required unless the restore block is configured, in which case it is inherited from the backup.`,
 			},
 			"db_parameter_group_identifier": schema.StringAttribute{
 				Optional: true,
@@ -291,9 +298,11 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 5),
@@ -306,9 +315,11 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"vpc_subnet_ids": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 3),
@@ -390,6 +401,74 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
+			"db_backup_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[dbBackupConfigurationModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(4),
+				},
+				Description: `Automated backup schedules for the DB cluster. Up to four backup configurations are supported.`,
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						dbBackupConfigurationCustomScheduleValidator{},
+					},
+					Attributes: map[string]schema.Attribute{
+						"custom_schedule": schema.StringAttribute{
+							Optional:    true,
+							Description: `A cron expression defining the backup schedule. Required when type is CUSTOM_SCHEDULE.`,
+						},
+						names.AttrEnabled: schema.BoolAttribute{
+							Required:    true,
+							Description: `Whether this automated backup configuration is enabled.`,
+						},
+						"retention_days": schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 365),
+							},
+							Description: `The number of days to retain automated backups. Valid values are 1 to 365.`,
+						},
+						names.AttrType: schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.AutomatedDbBackupType](),
+							Required:    true,
+							Description: `The automated backup schedule type. Valid values are HOURLY, DAILY, WEEKLY, MONTHLY, CUSTOM_SCHEDULE, and CONTINUOUS.`,
+						},
+					},
+				},
+			},
+			"restore": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[restoreModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: `Restore the DB cluster from an existing backup instead of creating a new one. This block can only be set at creation time.`,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"restore_mode": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.RestoreMode](),
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Description: `Whether to restore to a new resource (NEW_RESOURCE, the default) or replace an existing resource (REPLACE_EXISTING).`,
+						},
+						"restore_to_time": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Description: `The point in time to restore to, in RFC3339 format. Only applies to CONTINUOUS backups.`,
+						},
+						"source_db_backup_id": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Description: `The identifier of the backup to restore from.`,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -426,21 +505,33 @@ func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateReque
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
-	var input timestreaminfluxdb.CreateDbClusterInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
+
+	var clusterID string
+	if !plan.Restore.IsNull() {
+		id, d := r.createFromRestore(ctx, conn, plan)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		clusterID = id
+	} else {
+		var input timestreaminfluxdb.CreateDbClusterInput
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.Tags = getTagsIn(ctx)
+
+		out, err := conn.CreateDbCluster(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("creating Timestream InfluxDB DB Cluster (%s)", name), err.Error())
+			return
+		}
+
+		clusterID = aws.ToString(out.DbClusterId)
 	}
 
-	input.Tags = getTagsIn(ctx)
-
-	out, err := conn.CreateDbCluster(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("creating Timestream InfluxDB DB Cluster (%s)", name), err.Error())
-		return
-	}
-
-	clusterID := aws.ToString(out.DbClusterId)
 	state := plan
 	state.ID = fwflex.StringValueToFramework(ctx, clusterID)
 
@@ -457,6 +548,58 @@ func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// createFromRestore restores a DB cluster from a backup via RestoreFromDbBackup and returns the id
+// of the restored resource. The caller waits for the resource to become available using the normal
+// cluster waiter, because RestoreFromDbBackup only reports RESTORING.
+func (r *dbClusterResource) createFromRestore(ctx context.Context, conn *timestreaminfluxdb.Client, plan dbClusterResourceModel) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	restore, d := plan.Restore.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return "", diags
+	}
+
+	if restore.RestoreMode.ValueEnum() == awstypes.RestoreModeReplaceExisting {
+		diags.AddError(
+			"Unsupported Restore Mode",
+			"restore_mode REPLACE_EXISTING is not yet supported; use NEW_RESOURCE.",
+		)
+		return "", diags
+	}
+
+	var input timestreaminfluxdb.RestoreFromDbBackupInput
+	diags.Append(fwflex.Expand(ctx, plan, &input)...)
+	if diags.HasError() {
+		return "", diags
+	}
+
+	input.DbBackupId = restore.SourceDBBackupID.ValueStringPointer()
+	if !restore.RestoreMode.IsNull() {
+		input.RestoreMode = restore.RestoreMode.ValueEnum()
+	}
+	if !restore.RestoreToTime.IsNull() {
+		t, d := restore.RestoreToTime.ValueRFC3339Time()
+		diags.Append(d...)
+		if diags.HasError() {
+			return "", diags
+		}
+		input.RestoreToTime = aws.Time(t)
+	}
+	input.Tags = getTagsIn(ctx)
+
+	out, err := conn.RestoreFromDbBackup(ctx, &input)
+	if err != nil {
+		diags.AddError(
+			fmt.Sprintf("restoring Timestream InfluxDB DB Cluster (%s)", fwflex.StringValueFromFramework(ctx, plan.Name)),
+			err.Error(),
+		)
+		return "", diags
+	}
+
+	return aws.ToString(out.RestoredDbResourceId), diags
 }
 
 func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -602,6 +745,52 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// When restoring, the source configuration is inherited from the backup. Skip the V2/V3 field
+	// enforcement and reject arguments that cannot be overridden on restore.
+	if !data.Restore.IsNull() && !data.Restore.IsUnknown() {
+		inheritedFromBackup := []struct {
+			val  attr.Value
+			path string
+		}{
+			{data.AllocatedStorage, names.AttrAllocatedStorage},
+			{data.Bucket, names.AttrBucket},
+			{data.DBInstanceType, "db_instance_type"},
+			{data.DBStorageType, "db_storage_type"},
+			{data.Organization, "organization"},
+			{data.Password, names.AttrPassword},
+			{data.Username, names.AttrUsername},
+		}
+		for _, f := range inheritedFromBackup {
+			if !isNullOrUnknownValue(f.val) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root(f.path),
+					"Invalid Argument Combination",
+					fmt.Sprintf("%q must not be set when the restore block is configured; it is inherited from the backup.", f.path),
+				)
+			}
+		}
+		return
+	}
+
+	// db_instance_type and the VPC id sets are always required for a normal (non-restore) create.
+	alwaysRequired := []struct {
+		val  attr.Value
+		path string
+	}{
+		{data.DBInstanceType, "db_instance_type"},
+		{data.VPCSecurityGroupIDs, names.AttrVPCSecurityGroupIDs},
+		{data.VPCSubnetIDs, "vpc_subnet_ids"},
+	}
+	for _, f := range alwaysRequired {
+		if isNullOrUnknownValue(f.val) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root(f.path),
+				"Missing Required Argument",
+				fmt.Sprintf("%q is required unless the restore block is configured.", f.path),
+			)
+		}
 	}
 
 	var isV3Cluster bool
@@ -791,6 +980,7 @@ type dbClusterResourceModel struct {
 	AllocatedStorage              types.Int64                                                    `tfsdk:"allocated_storage"`
 	ARN                           types.String                                                   `tfsdk:"arn"`
 	Bucket                        types.String                                                   `tfsdk:"bucket"`
+	DBBackupConfigurations        fwtypes.SetNestedObjectValueOf[dbBackupConfigurationModel]     `tfsdk:"db_backup_configuration"`
 	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                    `tfsdk:"db_instance_type"`
 	DBParameterGroupIdentifier    types.String                                                   `tfsdk:"db_parameter_group_identifier"`
 	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                     `tfsdk:"db_storage_type"`
@@ -809,6 +999,7 @@ type dbClusterResourceModel struct {
 	Port                          types.Int32                                                    `tfsdk:"port"`
 	PubliclyAccessible            types.Bool                                                     `tfsdk:"publicly_accessible"`
 	ReaderEndpoint                types.String                                                   `tfsdk:"reader_endpoint"`
+	Restore                       fwtypes.ListNestedObjectValueOf[restoreModel]                  `tfsdk:"restore"`
 	Tags                          tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                       tftags.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                 `tfsdk:"timeouts"`
@@ -829,6 +1020,72 @@ type s3ConfigurationModel struct {
 type maintenanceScheduleModel struct {
 	PreferredMaintenanceWindow types.String `tfsdk:"preferred_maintenance_window"`
 	Timezone                   types.String `tfsdk:"timezone"`
+}
+
+// dbBackupConfigurationModel is shared by the DB instance and DB cluster resources. It maps to the
+// SDK input type DbBackupConfiguration and to the output type DbBackupConfigurationOutput. The
+// output-only NextAutomatedBackupTime field is intentionally not surfaced: a computed value inside a
+// set nested block produces unknown-value plan churn.
+type dbBackupConfigurationModel struct {
+	CustomSchedule types.String                                       `tfsdk:"custom_schedule"`
+	Enabled        types.Bool                                         `tfsdk:"enabled"`
+	RetentionDays  types.Int32                                        `tfsdk:"retention_days"`
+	Type           fwtypes.StringEnum[awstypes.AutomatedDbBackupType] `tfsdk:"type"`
+}
+
+// restoreModel is shared by the DB instance and DB cluster resources and maps a subset of
+// RestoreFromDbBackupInput. When present, the resource is created via RestoreFromDbBackup rather than
+// CreateDbInstance/CreateDbCluster. It can only be set at creation time.
+type restoreModel struct {
+	RestoreMode      fwtypes.StringEnum[awstypes.RestoreMode] `tfsdk:"restore_mode"`
+	RestoreToTime    timetypes.RFC3339                        `tfsdk:"restore_to_time"`
+	SourceDBBackupID types.String                             `tfsdk:"source_db_backup_id"`
+}
+
+// dbBackupConfigurationCustomScheduleValidator enforces that custom_schedule is set when, and only
+// when, the automated backup type is CUSTOM_SCHEDULE.
+type dbBackupConfigurationCustomScheduleValidator struct{}
+
+func (dbBackupConfigurationCustomScheduleValidator) Description(_ context.Context) string {
+	return "custom_schedule must be set when type is CUSTOM_SCHEDULE, and must not be set otherwise"
+}
+
+func (v dbBackupConfigurationCustomScheduleValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (dbBackupConfigurationCustomScheduleValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var data dbBackupConfigurationModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &data, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Type.IsUnknown() || data.CustomSchedule.IsUnknown() {
+		return
+	}
+
+	isCustomSchedule := data.Type.ValueEnum() == awstypes.AutomatedDbBackupTypeCustomSchedule
+	hasCustomSchedule := !data.CustomSchedule.IsNull() && data.CustomSchedule.ValueString() != ""
+
+	switch {
+	case isCustomSchedule && !hasCustomSchedule:
+		resp.Diagnostics.AddAttributeError(
+			req.Path.AtName("custom_schedule"),
+			"Missing Required Configuration",
+			"custom_schedule is required when type is CUSTOM_SCHEDULE",
+		)
+	case !isCustomSchedule && hasCustomSchedule:
+		resp.Diagnostics.AddAttributeError(
+			req.Path.AtName("custom_schedule"),
+			"Invalid Configuration",
+			"custom_schedule can only be set when type is CUSTOM_SCHEDULE",
+		)
+	}
 }
 
 func isNullOrUnknownValue(val attr.Value) bool {

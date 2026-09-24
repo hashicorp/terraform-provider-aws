@@ -1434,3 +1434,147 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 `, rName))
 }
+
+func TestAccTimestreamInfluxDBDBCluster_dbBackupConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_dbBackupConfiguration(rName, string(awstypes.AutomatedDbBackupTypeDaily), 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_backup_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "db_backup_configuration.*", map[string]string{
+						names.AttrEnabled: acctest.CtTrue,
+						names.AttrType:    string(awstypes.AutomatedDbBackupTypeDaily),
+						"retention_days":  "7",
+					}),
+				),
+			},
+			{
+				Config: testAccDBClusterConfig_dbBackupConfiguration(rName, string(awstypes.AutomatedDbBackupTypeWeekly), 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_backup_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "db_backup_configuration.*", map[string]string{
+						names.AttrType:   string(awstypes.AutomatedDbBackupTypeWeekly),
+						"retention_days": "30",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
+func testAccDBClusterConfig_dbBackupConfiguration(rName, backupType string, retentionDays int) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+# InfluxDB V2.
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  allocated_storage      = 20
+  bucket                 = "initial"
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
+  organization           = "organization"
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  db_backup_configuration {
+    enabled        = true
+    type           = %[2]q
+    retention_days = %[3]d
+  }
+}
+`, rName, backupType, retentionDays))
+}
+
+func TestAccTimestreamInfluxDBDBCluster_restore(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_restore(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "restore.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "restore.0.source_db_backup_id", "aws_timestreaminfluxdb_db_backup.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "db_instance_type"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDBClusterConfig_restore(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+# InfluxDB V2.
+resource "aws_timestreaminfluxdb_db_cluster" "source" {
+  allocated_storage      = 20
+  bucket                 = "initial"
+  db_instance_type       = "db.influx.medium"
+  name                   = "%[1]s-src"
+  organization           = "organization"
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+
+resource "aws_timestreaminfluxdb_db_backup" "test" {
+  db_resource_id = aws_timestreaminfluxdb_db_cluster.source.id
+  name           = "%[1]s-backup"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = "%[1]s-restored"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  restore {
+    source_db_backup_id = aws_timestreaminfluxdb_db_backup.test.id
+  }
+}
+`, rName))
+}

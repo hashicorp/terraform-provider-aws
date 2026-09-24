@@ -15,16 +15,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -68,11 +72,16 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Int64{
 					int64validator.Between(20, 16384),
 				},
-				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).`,
+				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).
+					Required unless the restore block is configured, in which case it is inherited from the backup.`,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrAvailabilityZone: schema.StringAttribute{
@@ -83,7 +92,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			names.AttrBucket: schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -99,9 +108,14 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					that each data point persists). A bucket belongs to an organization.`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
-				Required:    true,
-				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.`,
+				CustomType: fwtypes.StringEnumType[awstypes.DbInstanceType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.
+					Required unless the restore block is configured, in which case it is inherited from the backup.`,
 			},
 			"db_parameter_group_identifier": schema.StringAttribute{
 				Optional: true,
@@ -189,7 +203,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					over both IPv4 and IPv6 protocols.`,
 			},
 			"organization": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -200,7 +214,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					InfluxDB organization is a workspace for a group of users.`,
 			},
 			names.AttrPassword: schema.StringAttribute{
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -243,7 +257,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrUsername: schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -264,9 +278,11 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 5),
@@ -279,9 +295,11 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"vpc_subnet_ids": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 3),
@@ -354,6 +372,74 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
+			"db_backup_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[dbBackupConfigurationModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(4),
+				},
+				Description: `Automated backup schedules for the DB instance. Up to four backup configurations are supported.`,
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						dbBackupConfigurationCustomScheduleValidator{},
+					},
+					Attributes: map[string]schema.Attribute{
+						"custom_schedule": schema.StringAttribute{
+							Optional:    true,
+							Description: `A cron expression defining the backup schedule. Required when type is CUSTOM_SCHEDULE.`,
+						},
+						names.AttrEnabled: schema.BoolAttribute{
+							Required:    true,
+							Description: `Whether this automated backup configuration is enabled.`,
+						},
+						"retention_days": schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 365),
+							},
+							Description: `The number of days to retain automated backups. Valid values are 1 to 365.`,
+						},
+						names.AttrType: schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.AutomatedDbBackupType](),
+							Required:    true,
+							Description: `The automated backup schedule type. Valid values are HOURLY, DAILY, WEEKLY, MONTHLY, CUSTOM_SCHEDULE, and CONTINUOUS.`,
+						},
+					},
+				},
+			},
+			"restore": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[restoreModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: `Restore the DB instance from an existing backup instead of creating a new one. This block can only be set at creation time.`,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"restore_mode": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.RestoreMode](),
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Description: `Whether to restore to a new resource (NEW_RESOURCE, the default) or replace an existing resource (REPLACE_EXISTING).`,
+						},
+						"restore_to_time": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Description: `The point in time to restore to, in RFC3339 format. Only applies to CONTINUOUS backups.`,
+						},
+						"source_db_backup_id": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Description: `The identifier of the backup to restore from.`,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -379,6 +465,72 @@ func dbInstanceDBParameterGroupIdentifierReplaceIf(ctx context.Context, req plan
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }
 
+func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		// Resource deletion.
+		return
+	}
+
+	var plan dbInstanceResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	isRestore := !plan.Restore.IsNull() && !plan.Restore.IsUnknown()
+
+	// Arguments that are required for a normal create but are inherited from the backup on restore.
+	requiredUnlessRestore := []struct {
+		val  attr.Value
+		path string
+	}{
+		{plan.AllocatedStorage, names.AttrAllocatedStorage},
+		{plan.Bucket, names.AttrBucket},
+		{plan.DBInstanceType, "db_instance_type"},
+		{plan.Organization, "organization"},
+		{plan.Password, names.AttrPassword},
+		{plan.Username, names.AttrUsername},
+		{plan.VPCSecurityGroupIDs, names.AttrVPCSecurityGroupIDs},
+		{plan.VPCSubnetIDs, "vpc_subnet_ids"},
+	}
+
+	if !isRestore {
+		for _, f := range requiredUnlessRestore {
+			if isNullOrUnknownValue(f.val) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root(f.path),
+					"Missing Required Argument",
+					fmt.Sprintf("%q is required unless the restore block is configured.", f.path),
+				)
+			}
+		}
+		return
+	}
+
+	// When restoring, these arguments are inherited from the backup and must not be set.
+	inheritedFromBackup := []struct {
+		val  attr.Value
+		path string
+	}{
+		{plan.AllocatedStorage, names.AttrAllocatedStorage},
+		{plan.Bucket, names.AttrBucket},
+		{plan.DBInstanceType, "db_instance_type"},
+		{plan.DBStorageType, "db_storage_type"},
+		{plan.Organization, "organization"},
+		{plan.Password, names.AttrPassword},
+		{plan.Username, names.AttrUsername},
+	}
+	for _, f := range inheritedFromBackup {
+		if !isNullOrUnknownValue(f.val) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root(f.path),
+				"Invalid Argument Combination",
+				fmt.Sprintf("%q must not be set when the restore block is configured; it is inherited from the backup.", f.path),
+			)
+		}
+	}
+}
+
 func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -389,21 +541,33 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
-	var input timestreaminfluxdb.CreateDbInstanceInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
+
+	var instanceID string
+	if !plan.Restore.IsNull() {
+		id, d := r.createFromRestore(ctx, conn, plan)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		instanceID = id
+	} else {
+		var input timestreaminfluxdb.CreateDbInstanceInput
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.Tags = getTagsIn(ctx)
+
+		out, err := conn.CreateDbInstance(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("creating Timestream InfluxDB DB Instance (%s)", name), err.Error())
+			return
+		}
+
+		instanceID = aws.ToString(out.Id)
 	}
 
-	input.Tags = getTagsIn(ctx)
-
-	out, err := conn.CreateDbInstance(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("creating Timestream InfluxDB DB Instance (%s)", name), err.Error())
-		return
-	}
-
-	instanceID := aws.ToString(out.Id)
 	state := plan
 	state.ID = fwflex.StringValueToFramework(ctx, instanceID)
 
@@ -423,6 +587,58 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 	state.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// createFromRestore restores a DB instance from a backup via RestoreFromDbBackup and returns the id
+// of the restored resource. The caller waits for the resource to become available using the normal
+// instance waiter, because RestoreFromDbBackup only reports RESTORING.
+func (r *dbInstanceResource) createFromRestore(ctx context.Context, conn *timestreaminfluxdb.Client, plan dbInstanceResourceModel) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	restore, d := plan.Restore.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return "", diags
+	}
+
+	if restore.RestoreMode.ValueEnum() == awstypes.RestoreModeReplaceExisting {
+		diags.AddError(
+			"Unsupported Restore Mode",
+			"restore_mode REPLACE_EXISTING is not yet supported; use NEW_RESOURCE.",
+		)
+		return "", diags
+	}
+
+	var input timestreaminfluxdb.RestoreFromDbBackupInput
+	diags.Append(fwflex.Expand(ctx, plan, &input)...)
+	if diags.HasError() {
+		return "", diags
+	}
+
+	input.DbBackupId = restore.SourceDBBackupID.ValueStringPointer()
+	if !restore.RestoreMode.IsNull() {
+		input.RestoreMode = restore.RestoreMode.ValueEnum()
+	}
+	if !restore.RestoreToTime.IsNull() {
+		t, d := restore.RestoreToTime.ValueRFC3339Time()
+		diags.Append(d...)
+		if diags.HasError() {
+			return "", diags
+		}
+		input.RestoreToTime = aws.Time(t)
+	}
+	input.Tags = getTagsIn(ctx)
+
+	out, err := conn.RestoreFromDbBackup(ctx, &input)
+	if err != nil {
+		diags.AddError(
+			fmt.Sprintf("restoring Timestream InfluxDB DB Instance (%s)", fwflex.StringValueFromFramework(ctx, plan.Name)),
+			err.Error(),
+		)
+		return "", diags
+	}
+
+	return aws.ToString(out.RestoredDbResourceId), diags
 }
 
 func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -639,6 +855,7 @@ type dbInstanceResourceModel struct {
 	ARN                           types.String                                                   `tfsdk:"arn"`
 	AvailabilityZone              types.String                                                   `tfsdk:"availability_zone"`
 	Bucket                        types.String                                                   `tfsdk:"bucket"`
+	DBBackupConfigurations        fwtypes.SetNestedObjectValueOf[dbBackupConfigurationModel]     `tfsdk:"db_backup_configuration"`
 	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                    `tfsdk:"db_instance_type"`
 	DBParameterGroupIdentifier    types.String                                                   `tfsdk:"db_parameter_group_identifier"`
 	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                     `tfsdk:"db_storage_type"`
@@ -654,6 +871,7 @@ type dbInstanceResourceModel struct {
 	Password                      types.String                                                   `tfsdk:"password"`
 	Port                          types.Int32                                                    `tfsdk:"port"`
 	PubliclyAccessible            types.Bool                                                     `tfsdk:"publicly_accessible"`
+	Restore                       fwtypes.ListNestedObjectValueOf[restoreModel]                  `tfsdk:"restore"`
 	SecondaryAvailabilityZone     types.String                                                   `tfsdk:"secondary_availability_zone"`
 	Tags                          tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                       tftags.Map                                                     `tfsdk:"tags_all"`
