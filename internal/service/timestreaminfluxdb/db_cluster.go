@@ -179,6 +179,18 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					formatted key-value pair holding InfluxDB authorization values: organization, bucket,
 					username, and password. For InfluxDB V3 clusters, the secret contains the InfluxDB admin token.`,
 			},
+			names.AttrKMSKeyID: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The ARN of the AWS KMS customer managed key to use for encryption of data at 
+					rest. Must be a symmetric key in the same AWS account and Region as the DB cluster. 
+					This value is set at creation only; changing it forces a new resource to be created.`,
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -800,6 +812,7 @@ type dbClusterResourceModel struct {
 	FailoverMode                  fwtypes.StringEnum[awstypes.FailoverMode]                      `tfsdk:"failover_mode"`
 	ID                            types.String                                                   `tfsdk:"id"`
 	InfluxAuthParametersSecretARN types.String                                                   `tfsdk:"influx_auth_parameters_secret_arn"`
+	KMSKeyID                      fwtypes.ARN                                                    `tfsdk:"kms_key_id"`
 	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationModel] `tfsdk:"log_delivery_configuration"`
 	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[maintenanceScheduleModel]      `tfsdk:"maintenance_schedule"`
 	Name                          types.String                                                   `tfsdk:"name"`
