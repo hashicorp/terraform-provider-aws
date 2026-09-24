@@ -19,9 +19,15 @@ var (
 	FindDirectoryByID                    = findDirectoryByID
 	FindIPRoutesByDirectoryID            = findIPRoutesByDirectoryID
 	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
+	IPRoutesSemanticEquals               = ipRoutesSemanticEquals
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
 	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey // nosemgrep:ci.ds-in-var-name
 	FindTrustByTwoPartKey                = findTrustByTwoPartKey
+)
+
+// Type aliases for use in tests only.
+type (
+	IPRouteModel = ipRouteModel
 )

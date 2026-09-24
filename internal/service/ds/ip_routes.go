@@ -78,17 +78,21 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					// Only consumed by AddIpRoutes and never returned by the API.
-					// Use the configured-only variant so an omitted/defaulted value
-					// (e.g. after import) does not force replacement, while an
-					// explicit change still does.
-					boolplanmodifier.RequiresReplaceIfConfigured(),
+					// Consumed only by AddIpRoutes and never returned by the API.
+					// Any change to the effective value must replace the resource:
+					// toggling it does not undo the security-group changes made by
+					// the earlier AddIpRoutes call. Unconditional replacement also
+					// covers the explicit-true -> omitted case, where the argument
+					// becomes null in config but plans back to the default false.
+					// Read seeds the value on import so a plain import does not
+					// spuriously force replacement.
+					boolplanmodifier.RequiresReplace(),
 				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"ip_route": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[ipRouteModel](ctx),
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[ipRouteModel](ctx, fwtypes.WithSemanticEqualityFunc(ipRoutesSemanticEquals)),
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
 					setvalidator.IsRequired(),
@@ -206,6 +210,14 @@ func (r *ipRoutesResource) Read(ctx context.Context, request resource.ReadReques
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// The flag is never returned by the API. On import it is absent from state;
+	// seed it with the schema default so the value is concrete and a subsequent
+	// plan does not treat the null -> false transition as a replacement. A value
+	// already present from a prior apply is left untouched.
+	if data.UpdateSecurityGroupForDirectoryControllers.IsNull() {
+		data.UpdateSecurityGroupForDirectoryControllers = types.BoolValue(false)
 	}
 
 	conn := r.Meta().DSClient(ctx)
@@ -617,4 +629,46 @@ func (m ipRouteModel) routeKey() string {
 
 func (m ipRouteModel) isIPv6() bool {
 	return m.CidrIP.IsNull() || m.CidrIP.ValueString() == ""
+}
+
+// ipRoutesSemanticEquals treats two "ip_route" sets as equal when they contain
+// the same routes keyed by canonical CIDR and description. Without this, an
+// equivalent but differently spelled IPv6 CIDR (e.g. "2001:0db8::/64" in the
+// configuration vs. the AWS-canonicalized "2001:db8::/64" flattened during
+// Read) would compare as a different set element and show as persistent drift,
+// even though no API change is required.
+func ipRoutesSemanticEquals(ctx context.Context, a, b fwtypes.NestedCollectionValue[ipRouteModel]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if a.Equal(b) {
+		return true, diags
+	}
+
+	aSlice, d := a.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
+	bSlice, d := b.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if len(aSlice) != len(bSlice) {
+		return false, diags
+	}
+
+	aByKey := make(map[string]*ipRouteModel, len(aSlice))
+	for _, r := range aSlice {
+		aByKey[r.routeKey()] = r
+	}
+
+	for _, r := range bSlice {
+		if other, ok := aByKey[r.routeKey()]; !ok || !other.Description.Equal(r.Description) {
+			return false, diags
+		}
+	}
+
+	return true, diags
 }

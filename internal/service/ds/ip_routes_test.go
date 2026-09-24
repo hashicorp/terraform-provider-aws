@@ -13,14 +13,91 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestIPRoutesSemanticEquals(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	route := func(cidrIP, cidrIPv6, description string) *tfds.IPRouteModel {
+		m := &tfds.IPRouteModel{
+			CidrIP:      types.StringNull(),
+			CidrIPv6:    types.StringNull(),
+			Description: types.StringValue(description),
+		}
+		if cidrIP != "" {
+			m.CidrIP = types.StringValue(cidrIP)
+		}
+		if cidrIPv6 != "" {
+			m.CidrIPv6 = types.StringValue(cidrIPv6)
+		}
+		return m
+	}
+
+	set := func(routes ...*tfds.IPRouteModel) fwtypes.SetNestedObjectValueOf[tfds.IPRouteModel] {
+		return fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, routes)
+	}
+
+	testCases := map[string]struct {
+		a, b fwtypes.SetNestedObjectValueOf[tfds.IPRouteModel]
+		want bool
+	}{
+		"equivalent IPv6 spellings": {
+			a:    set(route("", "2001:0db8::/64", "example")),
+			b:    set(route("", "2001:db8::/64", "example")),
+			want: true,
+		},
+		"identical IPv4": {
+			a:    set(route("192.0.2.0/24", "", "example")),
+			b:    set(route("192.0.2.0/24", "", "example")),
+			want: true,
+		},
+		"order independent": {
+			a:    set(route("192.0.2.0/24", "", "a"), route("", "2001:db8::/64", "b")),
+			b:    set(route("", "2001:0db8::/64", "b"), route("192.0.2.0/24", "", "a")),
+			want: true,
+		},
+		"different description": {
+			a:    set(route("", "2001:db8::/64", "one")),
+			b:    set(route("", "2001:db8::/64", "two")),
+			want: false,
+		},
+		"different CIDR": {
+			a:    set(route("", "2001:db8::/64", "example")),
+			b:    set(route("", "2001:db8:1::/64", "example")),
+			want: false,
+		},
+		"different count": {
+			a:    set(route("192.0.2.0/24", "", "a")),
+			b:    set(route("192.0.2.0/24", "", "a"), route("", "2001:db8::/64", "b")),
+			want: false,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, diags := tfds.IPRoutesSemanticEquals(ctx, testCase.a, testCase.b)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if got != testCase.want {
+				t.Errorf("IPRoutesSemanticEquals = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
 
 func TestAccDSIPRoutes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
