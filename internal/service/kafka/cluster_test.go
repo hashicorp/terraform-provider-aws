@@ -1328,6 +1328,13 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1351,6 +1358,13 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1382,6 +1396,13 @@ func TestAccKafkaCluster_loggingInfoForExpress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1405,6 +1426,13 @@ func TestAccKafkaCluster_loggingInfoForExpress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.authorizer_logs.0.s3.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -2661,7 +2689,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
   lifecycle {
     ignore_changes = [
-      # Ignore changes to LogDeliveryEnabled tag as API adds this tag when broker log delivery is enabled
+      # Ignore changes to LogDeliveryEnabled tag as API adds this tag when log delivery is enabled
       tags["LogDeliveryEnabled"],
     ]
   }
@@ -2686,6 +2714,24 @@ resource "aws_msk_cluster" "test" {
 
   logging_info {
     broker_logs {
+      cloudwatch_logs {
+        enabled   = %[2]t
+        log_group = %[3]s
+      }
+
+      firehose {
+        enabled         = %[4]t
+        delivery_stream = %[5]s
+      }
+
+      s3 {
+        enabled = %[6]t
+        bucket  = %[7]s
+        prefix  = ""
+      }
+    }
+
+    authorizer_logs {
       cloudwatch_logs {
         enabled   = %[2]t
         log_group = %[3]s
@@ -2767,7 +2813,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
   lifecycle {
     ignore_changes = [
-      # Ignore changes to LogDeliveryEnabled tag as API adds this tag when broker log delivery is enabled
+      # Ignore changes to LogDeliveryEnabled tag as API adds this tag when log delivery is enabled
       tags["LogDeliveryEnabled"],
     ]
   }
@@ -2786,6 +2832,24 @@ resource "aws_msk_cluster" "test" {
 
   logging_info {
     broker_logs {
+      cloudwatch_logs {
+        enabled   = %[2]t
+        log_group = %[3]s
+      }
+
+      firehose {
+        enabled         = %[4]t
+        delivery_stream = %[5]s
+      }
+
+      s3 {
+        enabled = %[6]t
+        bucket  = %[7]s
+        prefix  = ""
+      }
+    }
+
+    authorizer_logs {
       cloudwatch_logs {
         enabled   = %[2]t
         log_group = %[3]s
