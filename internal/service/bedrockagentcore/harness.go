@@ -1090,8 +1090,8 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
-	} else if plan.EnvironmentVariables.IsUnknown() {
-		// Tag-only updates skip UpdateHarness, so retain the last known environment variables.
+	} else {
+		// Copy computed attributes during tag-only updates
 		plan.EnvironmentVariables = state.EnvironmentVariables
 	}
 
