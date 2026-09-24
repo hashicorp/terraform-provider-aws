@@ -89,7 +89,7 @@ resource "aws_iam_role_policy" "example" {
         Effect = "Allow"
         Action = ["s3:*"]
         Resource = [
-          "${aws_s3_bucket.example.arn}",
+          aws_s3_bucket.example.arn,
           "${aws_s3_bucket.example.arn}/*"
         ]
       }
@@ -250,10 +250,10 @@ resource "aws_iam_role_policy" "example" {
         Resource = "${aws_cloudwatch_log_group.example.arn}:*"
       },
       {
-        Effect   = "Allow"
-        Action   = ["s3:*"]
+        Effect = "Allow"
+        Action = ["s3:*"]
         Resource = [
-          "${aws_s3_bucket.example.arn}",
+          aws_s3_bucket.example.arn,
           "${aws_s3_bucket.example.arn}/*"
         ]
       }
@@ -290,24 +290,25 @@ The following arguments are required:
 
 * `channel_name` - (Required) Name of the channel. Unique within the AWS account and Region.
 * `service_execution_role_arn` - (Required) ARN of the IAM role that Amazon Kinesis Data Streams assumes to write records to the destination.
-* `stream_configuration_list` - (Required) Source stream configuration for the channel. See [`stream_configuration_list`](#stream_configuration_list) below.
+* `stream_configuration_list` - (Required) Source stream configuration for the channel. See [`stream_configuration_list` Block](#stream_configuration_list-block) below.
 
 The following arguments are optional:
 
-* `encryption_configuration` - (Optional) Server-side encryption configuration for the channel. See [`encryption_configuration`](#encryption_configuration) below.
-* `logging_configuration` - (Optional) CloudWatch Logs configuration for the channel. See [`logging_configuration`](#logging_configuration) below.
-* `s3_destination_configuration` - (Optional) Configuration for delivery to a general purpose Amazon S3 bucket. Present only when the channel destination is a general purpose Amazon S3 bucket. Conflicts with `s3_tables_destination_configuration`. Exactly one of `s3_destination_configuration` or `s3_tables_destination_configuration` must be specified. See [`s3_destination_configuration`](#s3_destination_configuration) below.
-* `s3_tables_destination_configuration` - (Optional) Configuration for delivery to streaming tables on Apache Iceberg in Amazon S3 Tables. Present only when the channel destination is a streaming table. Conflicts with `s3_destination_configuration`. Exactly one of `s3_destination_configuration` or `s3_tables_destination_configuration` must be specified. See [`s3_tables_destination_configuration`](#s3_tables_destination_configuration) below.
+* `encryption_configuration` - (Optional) Server-side encryption configuration for the channel. See [`encryption_configuration` Block](#encryption_configuration-block) below.
+* `logging_configuration` - (Optional) CloudWatch Logs configuration for the channel. See [`logging_configuration` Block](#logging_configuration-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `s3_destination_configuration` - (Optional) Configuration for delivery to a general purpose Amazon S3 bucket. Present only when the channel destination is a general purpose Amazon S3 bucket. Conflicts with `s3_tables_destination_configuration`. Exactly one of `s3_destination_configuration` or `s3_tables_destination_configuration` must be specified. See [`s3_destination_configuration` Block](#s3_destination_configuration-block) below.
+* `s3_tables_destination_configuration` - (Optional) Configuration for delivery to streaming tables on Apache Iceberg in Amazon S3 Tables. Present only when the channel destination is a streaming table. Conflicts with `s3_destination_configuration`. Exactly one of `s3_destination_configuration` or `s3_tables_destination_configuration` must be specified. See [`s3_tables_destination_configuration` Block](#s3_tables_destination_configuration-block) below.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### stream_configuration_list
+### `stream_configuration_list` Block
 
 The following arguments are required:
 
-* `record_configuration` - (Required) Record format configuration for the source stream. See [`record_configuration`](#record_configuration) below.
+* `record_configuration` - (Required) Record format configuration for the source stream. See [`record_configuration` Block](#record_configuration-block) below.
 * `stream_arn` - (Required) ARN of the source Kinesis data stream.
 
-### record_configuration
+### `record_configuration` Block
 
 The following arguments are required:
 
@@ -317,18 +318,18 @@ The following arguments are optional:
 
 * `gsr_schema_arn` - (Optional) ARN of the AWS Glue Schema Registry schema used to validate records. Required when the channel destination is a streaming table (Amazon S3 Tables), for both `JSON` and `GSR_JSON` record formats.
 
-### s3_destination_configuration
+### `s3_destination_configuration` Block
 
 The following arguments are required:
 
-* `storage_configuration` - (Required) S3 storage configuration for the channel. See [`storage_configuration`](#storage_configuration) below.
+* `storage_configuration` - (Required) S3 storage configuration for the channel. See [`storage_configuration` Block](#storage_configuration-block) below.
 
 The following arguments are optional:
 
 * `data_freshness_in_seconds` - (Optional) Maximum age, in seconds, of undelivered data. Valid values are between `300` and `900`. Defaults to `300`.
-* `dead_letter_queue_s3_configuration` - (Optional) Dead-letter queue configuration for records that cannot be delivered. If not specified, defaults to the destination bucket with an error prefix. See [`dead_letter_queue_s3_configuration`](#dead_letter_queue_s3_configuration) below.
+* `dead_letter_queue_s3_configuration` - (Optional) Dead-letter queue configuration for records that cannot be delivered. If not specified, defaults to the destination bucket with an error prefix. See [`dead_letter_queue_s3_configuration` Block](#dead_letter_queue_s3_configuration-block) below.
 
-### storage_configuration
+### `storage_configuration` Block
 
 The following arguments are required:
 
@@ -341,7 +342,7 @@ The following arguments are optional:
 * `output_key_template` - (Optional) Template used to construct the S3 object key for delivered objects. If not specified, a default template is used.
 * `storage_class` - (Optional) S3 storage class for delivered objects. Valid values are `STANDARD`, `INTELLIGENT_TIERING`, `STANDARD_IA`, or `GLACIER_IR`. Defaults to `STANDARD`.
 
-### dead_letter_queue_s3_configuration
+### `dead_letter_queue_s3_configuration` Block
 
 The following arguments are required:
 
@@ -352,18 +353,18 @@ The following arguments are optional:
 
 * `error_output_prefix` - (Optional) S3 key prefix for error records.
 
-### s3_tables_destination_configuration
+### `s3_tables_destination_configuration` Block
 
 The following arguments are required:
 
-* `dead_letter_queue_s3_configuration` - (Required) Dead-letter queue configuration for records that cannot be delivered. See [`dead_letter_queue_s3_configuration`](#dead_letter_queue_s3_configuration) above.
-* `s3_tables_configuration_list` - (Required) List of streaming table configurations. See [`s3_tables_configuration_list`](#s3_tables_configuration_list) below.
+* `dead_letter_queue_s3_configuration` - (Required) Dead-letter queue configuration for records that cannot be delivered. See [`dead_letter_queue_s3_configuration` Block](#dead_letter_queue_s3_configuration-block) above.
+* `s3_tables_configuration_list` - (Required) List of streaming table configurations. See [`s3_tables_configuration_list` Block](#s3_tables_configuration_list-block) below.
 
 The following arguments are optional:
 
 * `data_freshness_in_seconds` - (Optional) Maximum age, in seconds, of undelivered data. Valid values are between `300` and `900`. Defaults to `300`.
 
-### s3_tables_configuration_list
+### `s3_tables_configuration_list` Block
 
 The following arguments are required:
 
@@ -374,35 +375,35 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `partition_spec` - (Optional) Partitioning specification for the destination table. See [`partition_spec`](#partition_spec) below.
+* `partition_spec` - (Optional) Partitioning specification for the destination table. See [`partition_spec` Block](#partition_spec-block) below.
 
-### partition_spec
+### `partition_spec` Block
 
 The following arguments are required:
 
-* `partition_fields` - (Required) List of partition fields. See [`partition_fields`](#partition_fields) below.
+* `partition_fields` - (Required) List of partition fields. See [`partition_fields` Block](#partition_fields-block) below.
 
-### partition_fields
+### `partition_fields` Block
 
 The following arguments are required:
 
 * `source_name` - (Required) Name of the source column used for partitioning. Must be of the `timestamptz` type.
 * `transform` - (Required) Partition transform to apply. The only valid value is `TIME_HOUR`.
 
-### encryption_configuration
+### `encryption_configuration` Block
 
 The following arguments are required:
 
 * `encryption_type` - (Required) Encryption type. The only valid value is `KMS`.
 * `key_id` - (Required) Identifier of the customer managed AWS KMS key. Cannot use the Amazon Kinesis Data Streams service key (`aws/kinesis`).
 
-### logging_configuration
+### `logging_configuration` Block
 
 The following arguments are required:
 
-* `cloudwatch_logs` - (Required) CloudWatch Logs settings for the channel. See [`cloudwatch_logs`](#cloudwatch_logs) below.
+* `cloudwatch_logs` - (Required) CloudWatch Logs settings for the channel. See [`cloudwatch_logs` Block](#cloudwatch_logs-block) below.
 
-### cloudwatch_logs
+### `cloudwatch_logs` Block
 
 The following arguments are required:
 
@@ -424,6 +425,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `channel_status_reason` - Message describing the reason for a `FAILED` status.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+### `stream_configuration_list` Block
+
+The `stream_configuration_list` block exports the following attributes in addition to the arguments above:
+
+* `stream_creation_timestamp` - Time at which the source stream was created.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -440,7 +447,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_kinesis_channel.example
   identity = {
-    arn = "arn:aws:kinesis:us-east-1:123456789012:channel/pw203t4lou5vu3p76"
+    channel_arn = "arn:aws:kinesis:us-east-1:123456789012:channel/pw203t4lou5vu3p76"
   }
 }
 
@@ -453,7 +460,7 @@ resource "aws_kinesis_channel" "example" {
 
 #### Required
 
-* `arn` - ARN of the Channel.
+* `channel_arn` (String) ARN of the Channel.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Channel using the `channel_arn`. For example:
 

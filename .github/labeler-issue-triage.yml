@@ -405,7 +405,7 @@ service/kendra:
 service/keyspaces:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_keyspaces_'
 service/kinesis:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_kinesis_stream'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_kinesis_'
 service/kinesisanalytics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_kinesis_analytics_'
 service/kinesisanalyticsv2:

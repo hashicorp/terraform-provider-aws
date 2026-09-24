@@ -44,7 +44,7 @@ func (l *channelListResource) List(ctx context.Context, request list.ListRequest
 				return
 			}
 
-			if item.ChannelStatus == awstypes.ChannelStatusDeleting {
+			if item.ChannelStatus == awstypes.ChannelStatusCreating || item.ChannelStatus == awstypes.ChannelStatusDeleting {
 				continue
 			}
 
@@ -60,6 +60,9 @@ func (l *channelListResource) List(ctx context.Context, request list.ListRequest
 				if err != nil {
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
 					return
+				}
+				if out.ChannelStatus == awstypes.ChannelStatusCreating || out.ChannelStatus == awstypes.ChannelStatusDeleting {
+					continue
 				}
 			}
 

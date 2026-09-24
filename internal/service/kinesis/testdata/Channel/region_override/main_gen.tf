@@ -63,7 +63,7 @@ resource "aws_iam_role_policy" "policy" {
         ]
         Resource = aws_kinesis_stream.stream.arn
       },
-	  {
+      {
         Effect = "Allow"
         Action = [
           "logs:CreateLogStream",
@@ -76,7 +76,7 @@ resource "aws_iam_role_policy" "policy" {
         Effect = "Allow"
         Action = ["s3:*"]
         Resource = [
-          "${aws_s3_bucket.bucket.arn}",
+          aws_s3_bucket.bucket.arn,
           "${aws_s3_bucket.bucket.arn}/*"
         ]
       }

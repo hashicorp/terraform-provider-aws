@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -62,6 +63,10 @@ func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, erro
 
 const (
 	ResNameChannel = "Channel"
+
+	channelDataFreshnessInSecondsDefault = 300
+	channelDataFreshnessInSecondsMin     = 300
+	channelDataFreshnessInSecondsMax     = 900
 )
 
 type channelResource struct {
@@ -180,11 +185,11 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"data_freshness_in_seconds": schema.Int64Attribute{
 							Description: "The maximum age, in seconds, of undelivered data.",
 							Optional:    true,
-							Default:     int64default.StaticInt64(300),
+							Default:     int64default.StaticInt64(channelDataFreshnessInSecondsDefault),
 							Computed:    true,
 							Validators: []validator.Int64{
-								int64validator.AtLeast(300),
-								int64validator.AtMost(900),
+								int64validator.AtLeast(channelDataFreshnessInSecondsMin),
+								int64validator.AtMost(channelDataFreshnessInSecondsMax),
 							},
 						},
 						"dead_letter_queue_s3_configuration": channelDeadLetterQueueS3ConfigurationAttribute(ctx),
@@ -211,11 +216,11 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"data_freshness_in_seconds": schema.Int64Attribute{
 							Description: "The maximum age, in seconds, of undelivered data.",
 							Optional:    true,
-							Default:     int64default.StaticInt64(300),
+							Default:     int64default.StaticInt64(channelDataFreshnessInSecondsDefault),
 							Computed:    true,
 							Validators: []validator.Int64{
-								int64validator.AtLeast(300),
-								int64validator.AtMost(900),
+								int64validator.AtLeast(channelDataFreshnessInSecondsMin),
+								int64validator.AtMost(channelDataFreshnessInSecondsMax),
 							},
 						},
 					},
@@ -357,7 +362,7 @@ func channelS3TablesConfigurationListBlock(ctx context.Context) schema.ListNeste
 						stringvalidator.LengthAtMost(2048),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`arn:aws[-a-z0-9]*:s3tables:[-a-z0-9]+:\d{12}:bucket/[a-z0-9_-]{3,63}`),
-							"value must contain only valid charecters for an S3 table arn",
+							"value must contain only valid characters for an S3 table arn",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -494,7 +499,7 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 						stringvalidator.LengthAtMost(2048),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`arn:aws[-a-z0-9]*:s3:::[a-z0-9._-]{3,63}`),
-							"value must contain only valid charecters for an S3 bucket arn",
+							"value must contain only valid characters for an S3 bucket arn",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -510,7 +515,7 @@ func channelStorageConfigurationBlock(ctx context.Context) schema.ListNestedBloc
 						stringvalidator.LengthAtMost(12),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`\d{12}`),
-							"value must contain only valid charecters for an aws account number",
+							"value must contain only valid characters for an aws account number",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -587,7 +592,7 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context) schema.List
 						stringvalidator.LengthAtMost(2048),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`arn:aws[-a-z0-9]*:s3:::[a-z0-9._-]{3,63}`),
-							"value must contain only valid charecters for an S3 bucket arn",
+							"value must contain only valid characters for an S3 bucket arn",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -603,7 +608,7 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context) schema.List
 						stringvalidator.LengthAtMost(12),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`\d{12}`),
-							"value must contain only valid charecters for an aws account number",
+							"value must contain only valid characters for an aws account number",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -619,7 +624,7 @@ func channelDeadLetterQueueS3ConfigurationBlock(ctx context.Context) schema.List
 						stringvalidator.LengthAtMost(512),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`[0-9A-Za-z!\-_'.*()\/]+`),
-							"value must contain only valid charecters for an S3 bucket prefix",
+							"value must contain only valid characters for an S3 bucket prefix",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -686,7 +691,7 @@ func channelRecordConfigurationBlock(ctx context.Context) schema.ListNestedBlock
 						stringvalidator.LengthAtMost(512),
 						stringvalidator.RegexMatches(
 							regexache.MustCompile(`arn:aws[-a-z0-9]*:glue:[-a-z0-9]+:\d{12}:schema/[-a-zA-Z0-9_$#.]+/[-a-zA-Z0-9_$#.]+`),
-							"value must contain only valid charecters for a Glue Schema Registry arn",
+							"value must contain only valid characters for a Glue Schema Registry arn",
 						),
 					},
 					PlanModifiers: []planmodifier.String{
@@ -884,7 +889,7 @@ func (r *channelResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *channelResource) flatten(ctx context.Context, channel *awstypes.ChannelDescription, data *channelResourceModel) (diags diag.Diagnostics) {
-	hadLoggingConfig := !data.LoggingConfiguration.IsNull() && len(data.LoggingConfiguration.Elements()) > 0
+	hadLoggingConfig := data.LoggingConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	diags.Append(flex.Flatten(ctx, channel, data, flex.WithFieldNamePrefix("Channel"))...)
 	data.ARN = types.StringPointerValue(channel.ChannelARN)
@@ -909,8 +914,8 @@ func getTagsInMap(ctx context.Context) map[string]string {
 
 func waitChannelCreated(ctx context.Context, conn *kinesis.Client, arn string, timeout time.Duration) (*awstypes.ChannelDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ChannelStatusCreating)},
-		Target:                    []string{string(awstypes.ChannelStatusActive)},
+		Pending:                   enum.Slice(awstypes.ChannelStatusCreating),
+		Target:                    enum.Slice(awstypes.ChannelStatusActive),
 		Refresh:                   statusChannel(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -927,8 +932,8 @@ func waitChannelCreated(ctx context.Context, conn *kinesis.Client, arn string, t
 
 func waitChannelUpdated(ctx context.Context, conn *kinesis.Client, arn string, timeout time.Duration) (*awstypes.ChannelDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ChannelStatusUpdating)},
-		Target:                    []string{string(awstypes.ChannelStatusActive)},
+		Pending:                   enum.Slice(awstypes.ChannelStatusUpdating),
+		Target:                    enum.Slice(awstypes.ChannelStatusActive),
 		Refresh:                   statusChannel(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -945,7 +950,7 @@ func waitChannelUpdated(ctx context.Context, conn *kinesis.Client, arn string, t
 
 func waitChannelDeleted(ctx context.Context, conn *kinesis.Client, arn string, timeout time.Duration) (*awstypes.ChannelDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ChannelStatusDeleting)},
+		Pending: enum.Slice(awstypes.ChannelStatusDeleting),
 		Target:  []string{},
 		Refresh: statusChannel(conn, arn),
 		Timeout: timeout,

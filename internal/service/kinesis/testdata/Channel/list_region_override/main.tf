@@ -68,7 +68,7 @@ resource "aws_iam_role_policy" "policy" {
         Effect = "Allow"
         Action = ["s3:*"]
         Resource = [
-          "${aws_s3_bucket.bucket.arn}",
+          aws_s3_bucket.bucket.arn,
           "${aws_s3_bucket.bucket.arn}/*"
         ]
       }

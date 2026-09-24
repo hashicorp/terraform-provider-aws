@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +25,7 @@ import (
 func TestAccKinesisChannel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -81,7 +80,7 @@ func TestAccKinesisChannel_basic(t *testing.T) {
 func TestAccKinesisChannel_updateLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -132,7 +131,7 @@ func TestAccKinesisChannel_updateLogging(t *testing.T) {
 func TestAccKinesisChannel_updateFreshness(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -180,7 +179,7 @@ func TestAccKinesisChannel_updateFreshness(t *testing.T) {
 func TestAccKinesisChannel_streamingTable(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -240,7 +239,7 @@ func TestAccKinesisChannel_streamingTable(t *testing.T) {
 func TestAccKinesisChannel_replaceChannel(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -328,7 +327,7 @@ func TestAccKinesisChannel_replaceChannel(t *testing.T) {
 func TestAccKinesisChannel_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -389,7 +388,7 @@ func TestAccKinesisChannel_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_channel.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -555,7 +554,7 @@ resource "aws_iam_role_policy" "policy" {
         Effect = "Allow"
         Action = ["s3:*"]
         Resource = [
-          "${aws_s3_bucket.bucket.arn}",
+          aws_s3_bucket.bucket.arn,
           "${aws_s3_bucket.bucket.arn}/*"
         ]
       },
@@ -591,6 +590,7 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 `, rName)
 }
 
@@ -784,7 +784,7 @@ resource "aws_kms_key" "test" {
         Sid    = "Enable IAM User Permissions"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"
