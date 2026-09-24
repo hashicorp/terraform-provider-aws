@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_bedrockagentcore_harness: Fix inconsistent result after apply when updating a harness with `environment_variables` omitted
+resource/aws_bedrockagentcore_harness: Fix "inconsistent result after apply" when `environment_variables` is unset
 ```
