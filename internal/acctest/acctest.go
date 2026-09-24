@@ -319,15 +319,15 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 func PreCheck(ctx context.Context, t *testing.T) {
 	t.Helper()
 
+	envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
+
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
+	}
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
-
-		if os.Getenv(envvar.AccessKeyId) != "" {
-			envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
-		}
-
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
 		// a provider configuration with a region. This defaults to us-west-2 for provider
 		// developer simplicity and has been in the codebase for a very long time.
@@ -2282,6 +2282,13 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	t.Helper()
 	return envvar.SkipIfEmpty(t, key, "")
+}
+
+// SkipIfEnvVarNotTrue skips the current test if the specified environment variable is not set
+// to a true value.
+func SkipIfEnvVarNotTrue(t *testing.T, key string) {
+	t.Helper()
+	envvar.SkipIfNotTrue(t, key, "")
 }
 
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.

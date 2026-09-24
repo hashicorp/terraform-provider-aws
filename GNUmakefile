@@ -3,6 +3,7 @@ SHELL := /bin/bash
 ACCTEST_PARALLELISM          ?= 20
 ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
+GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
 P                            ?= 20
 PKG_NAME                     ?= internal
@@ -16,6 +17,10 @@ SWEEP_DIR                    ?= ./internal/sweep
 SWEEP_TIMEOUT                ?= 360m
 TEST                         ?= ./...
 TEST_COUNT                   ?= 1
+
+GOTOOLCHAIN_PIN     := $(or $(addprefix go,$(shell sed -n 's/^go //p' go.mod)),auto)
+GOTOOLCHAIN         ?= $(GOTOOLCHAIN_PIN)
+export GOTOOLCHAIN
 
 # NOTE:
 # 1. Keep targets in alphabetical order
@@ -377,19 +382,19 @@ fix-imports-core: ## Fixing core directory imports with goimports
 		fi; \
 	done
 
-fmt: ## Fix Go source formatting
+fmt: prereq-go ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+	"$(GOFMT)" -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-fmt-core: ## Fix Go source formatting in core directories
+fmt-core: prereq-go ## Fix Go source formatting in core directories
 	@echo "make: Fixing core directory source code with gofmt..."
 	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
-	gofmt -s -w $$core_pkgs
+	"$(GOFMT)" -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
-fmt-check: ## Verify Go source is formatted
+fmt-check: prereq-go ## Verify Go source is formatted
 	@echo "make: Verifying source code with gofmt..."
-	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
+	@GOFMT="$(GOFMT)" sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
@@ -572,9 +577,8 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
 		/markdown/**/*.md
 
-# The 2 smoke test targets run exactly the same set of acceptance tests.
-# The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
-# The tests must pass on the earliest supported Terraform version (0.12.31).
+# The smoke tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
+# The smoke tests must pass on the earliest supported Terraform version (0.12.31).
 
 SMOKE_TESTS_IAM = \
 	TestAccIAMRole_basic \
@@ -682,7 +686,7 @@ SMOKE_TESTS_STAGE_3 = \
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
-	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
+	@echo "make: Like 'smoke-core-services' except full output and stops soon after 1st error"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
@@ -708,49 +712,6 @@ sane: prereq-go ## Run sane check
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
 		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$'
-
-sanity: prereq-go ## Run sanity check (failures allowed)
-	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
-	@echo "make: Like 'sane' but less output and runs all tests despite most errors"
-	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
-	@iam=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$' || true` ; \
-	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
-	passes=$$(( 18-$$fails1 )) ; \
-	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
-	logs=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/logs/... \
-		./internal/service/ec2/... \
-		./internal/service/ecs/... \
-		./internal/service/elbv2/... \
-		./internal/service/events/... \
-		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$' || true` ; \
-	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
-	tot_fails=$$(( $$fails1+$$fails2 )) ; \
-	passes=$$(( 35-$$tot_fails )) ; \
-	echo "35 of 54 complete: $$passes passed, $$tot_fails failed" ; \
-	lambda=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/lambda/... \
-		./internal/service/meta/... \
-		./internal/service/route53/... \
-		./internal/service/s3/... \
-		./internal/service/secretsmanager/... \
-		./internal/service/sts/... \
-		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$' || true` ; \
-	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
-	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
-	passes=$$(( 54-$$tot_fails )) ; \
-	echo "54 of 54 complete: $$passes passed, $$tot_fails failed" ; \
-	if [ $$tot_fails -gt 0 ] ; then \
-		echo "Sanity tests failed"; \
-		exit 1; \
-	fi
 
 schema-validate: ## Validate schemas
 	@echo "make: Validating schemas"
@@ -944,146 +905,21 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 
 smoke: sane ## Smoke tests (alias of sane)
 
-# smoke-identity runs Resource Identity smoke tests for a representative set of resource types.
-# For each resource it includes all _Identity_ tests.
-
-# aws_batch_job_queue: Framework Regional ARN
-SMOKE_IDENTITY_TESTS_BATCH = \
-	TestAccBatchJobQueue_Identity_
-
-# aws_cloudfront_key_value_store: Framework Global Single-Parameter
-SMOKE_IDENTITY_TESTS_CLOUDFRONT = \
-	TestAccCloudFrontKeyValueStore_Identity_
-
-# aws_cloudfrontkeyvaluestore_key: Framework Global Multiple-Parameter
-SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE = \
-	TestAccCloudFrontKeyValueStoreKey_Identity_
-
-# aws_globalaccelerator_cross_account_attachment: Framework Global ARN
-SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR = \
-	TestAccGlobalAcceleratorCrossAccountAttachment_Identity_
-
-# aws_iam_policy: SDKv2 Global ARN
-# aws_iam_policy_attachment: SDKv2 Global ARN (with rename)
-# aws_iam_role: SDKv2 Global Single-Parameter
-# aws_iam_role_policy: SDKv2 Global Multiple-Parameter
-SMOKE_IDENTITY_TESTS_IAM = \
-	TestAccIAMPolicy_Identity_ \
-	TestAccIAMPolicyAttachment_Identity_ \
-	TestAccIAMRole_Identity_ \
-	TestAccIAMRolePolicy_Identity_
-
-# aws_lambda_function_scaling_config: Framework Regional Multiple-Parameter
-SMOKE_IDENTITY_TESTS_LAMBDA = \
-	TestAccLambdaFunctionScalingConfig_Identity_
-
-# aws_cloudwatch_log_resource_policy: SDKv2 Regional Multiple-Parameter (with optional)
-# aws_cloudwatch_log_transformer: Framework Regional ARN (with rename)
-# aws_cloudwatch_log_storage_tier_policy: Framework Regional Singleton
-SMOKE_IDENTITY_TESTS_LOGS = \
-	TestAccLogsResourcePolicy_Identity_ \
-	TestAccLogsTransformer_Identity_ \
-	TestAccLogs_serial/StorageTierPolicy/Identity
-
-# aws_osis_pipeline: Framework Regional Single-Parameter (with rename)
-SMOKE_IDENTITY_TESTS_OSIS = \
-	TestAccOpenSearchIngestionPipeline_Identity_
-
-# aws_rds_certificate : SDKv2 Regional Singleton
-SMOKE_IDENTITY_TESTS_RDS = \
-	TestAccRDSCertificate_serial/Identity
-
-# aws_redshift_namespace_registration : Framework Regional Multiple-Parameter (with optional)
-SMOKE_IDENTITY_TESTS_REDSHIFT = \
-	TestAccRedshiftNamespaceRegistration_Identity_
-
-# aws_route53_record: SDKv2 Global Multiple-Parameter (with rename), (with optional), Mutable
-SMOKE_IDENTITY_TESTS_ROUTE53 = \
-	TestAccRoute53Record_Identity_
-
-# aws_s3_bucket: SDKv2 Regional Single-Parameter
-# aws_s3_bucket_acl: SDKv2 Identity Schema Upgrader
-# aws_s3_directory_bucket: Framework Regional Single-Parameter
-# aws_s3_object: SDKv2 Regional Multiple-Parameter
-SMOKE_IDENTITY_TESTS_S3 = \
-	TestAccS3Bucket_Identity_ \
-	TestAccS3BucketACL_Identity_ \
-	TestAccS3DirectoryBucket_Identity_ \
-	TestAccS3Object_Identity_
-
-# aws_s3_account_public_access_block : SDKv2 Global Singleton
-SMOKE_IDENTITY_TESTS_S3CONTROL = \
-	TestAccS3ControlAccountPublicAccessBlock_serial/PublicAccessBlock/Identity
-
-# aws_secretsmanager_secret_policy: SDKv2 Regional ARN (with rename)
-SMOKE_IDENTITY_TESTS_SECRETSMANAGER = \
-	TestAccSecretsManagerSecretPolicy_Identity_
-
-# aws_shield_application_layer_automatic_response: Framework Global ARN (with rename)
-SMOKE_IDENTITY_TESTS_SHIELD = \
-	TestAccShieldApplicationLayerAutomaticResponse_Identity_
-
-# aws_sns_topic: SDKv2 Regional ARN
-SMOKE_IDENTITY_TESTS_SNS = \
-	TestAccSNSTopic_Identity_
-
-# aws_sqs_queue: SDKv2 Custom Inherent Regional
-SMOKE_IDENTITY_TESTS_SQS = \
-	TestAccSQSQueue_Identity_
-
-# aws_ssoadmin_application: Framework Global ARN format for regional resource
-SMOKE_IDENTITY_TESTS_SSOADMIN = \
-	TestAccSSOAdminApplication_Identity_
-
-# aws_uxc_account_customizations: Framework Global Singleton
-SMOKE_IDENTITY_TESTS_UXC = \
-	TestAccUXC_serial/AccountCustomizations/Identity
-
-SMOKE_IDENTITY_TESTS = \
-	$(SMOKE_IDENTITY_TESTS_BATCH) \
-	$(SMOKE_IDENTITY_TESTS_CLOUDFRONT) \
-	$(SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE) \
-	$(SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR) \
-	$(SMOKE_IDENTITY_TESTS_IAM) \
-	$(SMOKE_IDENTITY_TESTS_LAMBDA) \
-	$(SMOKE_IDENTITY_TESTS_LOGS) \
-	$(SMOKE_IDENTITY_TESTS_OSIS) \
-	$(SMOKE_IDENTITY_TESTS_RDS) \
-	$(SMOKE_IDENTITY_TESTS_REDSHIFT) \
-	$(SMOKE_IDENTITY_TESTS_ROUTE53) \
-	$(SMOKE_IDENTITY_TESTS_S3) \
-	$(SMOKE_IDENTITY_TESTS_S3CONTROL) \
-	$(SMOKE_IDENTITY_TESTS_SECRETSMANAGER) \
-	$(SMOKE_IDENTITY_TESTS_SHIELD) \
-	$(SMOKE_IDENTITY_TESTS_SNS) \
-	$(SMOKE_IDENTITY_TESTS_SQS) \
-	$(SMOKE_IDENTITY_TESTS_SSOADMIN) \
-	$(SMOKE_IDENTITY_TESTS_UXC)
+smoke-core-services: prereq-go ## Run core-service smoke tests
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-core-services.sh'"
 
 smoke-identity: prereq-go ## Run Resource Identity smoke tests
-	@echo "make: Resource Identity Smoke Tests"
-	@TF_ACC=1 $(GO_VER) test \
-		./internal/service/batch/... \
-		./internal/service/cloudfront/... \
-		./internal/service/cloudfrontkeyvaluestore/... \
-		./internal/service/globalaccelerator/... \
-		./internal/service/iam/... \
-		./internal/service/lambda/... \
-		./internal/service/logs/... \
-		./internal/service/osis/... \
-		./internal/service/rds/... \
-		./internal/service/redshift/... \
-		./internal/service/route53/... \
-		./internal/service/s3/... \
-		./internal/service/s3control/... \
-		./internal/service/secretsmanager/... \
-		./internal/service/shield/... \
-		./internal/service/sns/... \
-		./internal/service/sqs/... \
-		./internal/service/ssoadmin/... \
-		./internal/service/uxc/... \
-		-count 1 -p 5 -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS)))'
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
+
+SMOKE_LOGGING_LEVELS := DEBUG WARN
+SMOKE_LOGGING_TARGETS := $(addprefix smoke-logging-,$(SMOKE_LOGGING_LEVELS))
+
+smoke-logging: $(SMOKE_LOGGING_TARGETS) ## Run logging smoke tests at all log levels
+
+smoke-logging-%: prereq-go ## Run logging smoke tests at a specific log level (e.g. make smoke-logging-DEBUG)
+	GO_BIN=$(GO_VER) TF_LOG=$* sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-logging.sh'"
 
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
@@ -1534,7 +1370,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	quick-fix-core-heading \
 	quick-fix-heading \
 	sane \
-	sanity \
 	schema-validate \
 	semgrep \
 	semgrep-all \
@@ -1553,7 +1388,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	skaff \
 	skaff-check-compile \
 	smoke \
+	smoke-core-services \
 	smoke-identity \
+	smoke-logging \
+	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \

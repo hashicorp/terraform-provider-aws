@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_observabilityadmin_telemetry_rule_for_organization: Fix updates when `all_regions` is enabled
+```

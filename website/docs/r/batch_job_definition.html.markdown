@@ -380,7 +380,7 @@ The following arguments are optional:
 * `optional` - (Optional) Whether the secret or the secret's keys must be defined.
 * `secret_name` - (Required) Name of the secret. The name must be allowed as a DNS subdomain name.
 
-##### `security_context` Block
+#### `security_context` Block
 
 * `allow_privilege_escalation` - (Optional) Whether or not a container or a Kubernetes pod is allowed to gain more privileges than its parent process. The default value is `false`.
 * `privileged` - (Optional) When this parameter is `true`, the container is given elevated permissions on the host container instance. The level of permissions are similar to the root user permissions. The default value is `false`.

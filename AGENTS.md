@@ -30,6 +30,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 
 | Skill | Task |
 |---|---|
+| [go-conventions](./.agents/skills/go-conventions/SKILL.md) | Fundamental Go conventions for the provider. Load before writing or editing any Go file in `internal/**`. |
 | [breaking-changes](./.agents/skills/breaking-changes/SKILL.md) | Review a PR for possible breaking changes. |
 | [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
 | [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
@@ -124,6 +125,7 @@ When creating a new resource, use the Terraform Plugin Framework.
 ### Coding Conventions (Follow These)
 
 #### Go language usage
+- **Before writing or editing any Go file in `internal/**`, load the [go-conventions](./.agents/skills/go-conventions/SKILL.md) skill and follow it.**
 - **GO USES TAB (`\t`) CHARACTERS TO INDENT**
 - **Use elegant Go, modern (Go 1.26+) idioms** (e.g., `slices.Contains()`)
 - **Go nuance**: Don't build single files, **build a package**

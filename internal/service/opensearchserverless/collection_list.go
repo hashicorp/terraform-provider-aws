@@ -31,15 +31,6 @@ type collectionListResource struct {
 }
 
 func (r *collectionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listCollectionModel
-
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := r.Meta()
 	conn := awsClient.OpenSearchServerlessClient(ctx)
 
@@ -84,10 +75,6 @@ func (r *collectionListResource) List(ctx context.Context, request list.ListRequ
 			}
 		}
 	}
-}
-
-type listCollectionModel struct {
-	framework.WithRegionModel
 }
 
 func listCollections(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.ListCollectionsInput) iter.Seq2[awstypes.CollectionSummary, error] {

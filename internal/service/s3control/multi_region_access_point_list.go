@@ -34,19 +34,7 @@ type multiRegionAccessPointListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type multiRegionAccessPointListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *multiRegionAccessPointListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query multiRegionAccessPointListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.S3ControlClient(ctx)
 	accountID := awsClient.AccountID(ctx)

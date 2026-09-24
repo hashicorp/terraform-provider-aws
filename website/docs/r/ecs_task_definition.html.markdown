@@ -225,22 +225,22 @@ The following arguments are optional:
 
 * `cpu` - (Optional) Number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
-* `ephemeral_storage` - (Optional) Amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
+* `ephemeral_storage` - (Optional) Amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage-block).
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task. Valid values: `host`, `task`, `none`.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values: `awsvpc`, `bridge`, `host`, and `none`.
 * `pid_mode` - (Optional) Process namespace to use for the containers in the task. Valid values: host`, `task`.
-* `placement_constraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints).
-* `proxy_configuration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
+* `placement_constraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints-block).
+* `proxy_configuration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration-block)
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `requires_compatibilities` - (Optional) Set of launch types required by the task. Valid values: `EC2`, `EXTERNAL`, `FARGATE`, `MANAGED_INSTANCES`.
-* `runtime_platform` - (Optional) Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
+* `runtime_platform` - (Optional) Configuration block for [runtime_platform](#runtime_platform-block) that containers in your task may use.
 * `skip_destroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `track_latest` - (Optional) Whether should track latest `ACTIVE` task definition on AWS or the one created with the resource stored in state. Default is `false`. Useful in the event the task definition is modified outside of this resource.
-* `volume` - (Optional) Repeatable configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
+* `volume` - (Optional) Repeatable configuration block for [volumes](#volume-block) that containers in your task may use. Detailed below.
 
 ~> **NOTE:** Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
 
@@ -249,12 +249,12 @@ The following arguments are optional:
 ### `volume` Block
 
 * `configure_at_launch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
-* `docker_volume_configuration` - (Optional) Configuration block to configure a [docker volume](#docker_volume_configuration). Detailed below.
-* `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
-* `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
+* `docker_volume_configuration` - (Optional) Configuration block to configure a [docker volume](#docker_volume_configuration-block). Detailed below.
+* `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration-block). Detailed below.
+* `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration-block). Detailed below.
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
-* `s3files_volume_configuration` - (Optional) Configuration block for an [S3 Files volume](#s3files_volume_configuration). Detailed below.
+* `s3files_volume_configuration` - (Optional) Configuration block for an [S3 Files volume](#s3files_volume_configuration-block). Detailed below.
 
 ### `docker_volume_configuration` Block
 
@@ -270,7 +270,7 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 
 For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
 
-* `authorization_config` - (Optional) Configuration block for [authorization](#efs_volume_configuration.authorization_config) for the Amazon EFS file system. Detailed below.
+* `authorization_config` - (Optional) Configuration block for [authorization](#efs_volume_configurationauthorization_config-block) for the Amazon EFS file system. Detailed below.
 * `file_system_id` - (Required) ID of the EFS File System.
 * `root_directory` - (Optional) Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorization_config`.
 * `transit_encryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
@@ -290,7 +290,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
 
-* `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configuration.authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
+* `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configurationauthorization_config-block) for the Amazon FSx for Windows File Server file system detailed below.
 * `file_system_id` - (Required) Amazon FSx for Windows File Server file system ID to use.
 * `root_directory` - (Required) Directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
 

@@ -34,13 +34,9 @@ data "aws_kms_public_key" "by_key_arn" {
 
 This data source supports the following arguments:
 
+* `grant_tokens` - (Optional) List of grant tokens.
+* `key_id` - (Required) Key identifier which can be one of the following formats: key ID (e.g., `1234abcd-12ab-34cd-56ef-1234567890ab`), key ARN (e.g., `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`), alias name (e.g., `alias/my-key`), or alias ARN (e.g., `arn:aws:kms:us-east-1:111122223333:alias/my-key`).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `key_id` - (Required) Key identifier which can be one of the following format:
-    * Key ID. E.g - `1234abcd-12ab-34cd-56ef-1234567890ab`
-    * Key ARN. E.g. - `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
-    * Alias name. E.g. - `alias/my-key`
-    * Alias ARN - E.g. - `arn:aws:kms:us-east-1:111122223333:alias/my-key`
-* `grant_tokens` - (Optional) List of grant tokens
 
 ## Attribute Reference
 

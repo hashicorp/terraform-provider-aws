@@ -260,6 +260,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newTransitGatewayPolicyTableEntryResource,
+			TypeName: "aws_ec2_transit_gateway_policy_table_entry",
+			Name:     "Transit Gateway Policy Table Entry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_policy_table_id", true),
+				inttypes.StringIdentityAttribute("policy_rule_number", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      transitGatewayPolicyTableEntryImportID{},
+			},
+		},
+		{
 			Factory:  newEIPDomainNameResource,
 			TypeName: "aws_eip_domain_name",
 			Name:     "EIP Domain Name",
@@ -455,6 +469,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("transit_gateway_metering_policy_id", true)),
+		},
+		{
+			Factory:  newTransitGatewayPolicyTableEntryResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_policy_table_entry",
+			Name:     "Transit Gateway Policy Table Entry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_policy_table_id", true),
+				inttypes.StringIdentityAttribute("policy_rule_number", true),
+			}),
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResourceAsListResource,
@@ -1093,11 +1117,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceDefaultSecurityGroup,
 			TypeName: "aws_default_security_group",
-			Name:     "Security Group",
+			Name:     "Default Security Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceDefaultSubnet,
@@ -1651,7 +1679,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceNetworkACLAssociation,
@@ -2144,6 +2176,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 		},
 		{
+			Factory:  newDefaultSecurityGroupResourceAsListResource,
+			TypeName: "aws_default_security_group",
+			Name:     "Default Security Group",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
 			Factory:  newEBSVolumeResourceAsListResource,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
@@ -2222,6 +2264,28 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newNetworkACLResourceAsListResource,
+			TypeName: "aws_network_acl",
+			Name:     "Network ACL",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newNetworkACLRuleResourceAsListResource,
+			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("network_acl_id", true),
+				inttypes.BoolIdentityAttribute("egress", true),
+				inttypes.IntIdentityAttribute("rule_number", true),
+				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
+			}),
 		},
 		{
 			Factory:  newNetworkInterfaceResourceAsListResource,
@@ -2334,7 +2398,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*ec2.Options){
 		ec2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

@@ -36,6 +36,23 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newChannelResource,
+			TypeName: "aws_msk_channel",
+			Name:     "Channel",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrARN, true),
+				inttypes.StringIdentityAttribute("cluster_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      channelImportID{},
+			},
+		},
+		{
 			Factory:  newSingleSCRAMSecretAssociationResource,
 			TypeName: "aws_msk_single_scram_secret_association",
 			Name:     "Single SCRAM Secret Association",
@@ -224,7 +241,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kafka.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*kafka.Options){
 		kafka.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

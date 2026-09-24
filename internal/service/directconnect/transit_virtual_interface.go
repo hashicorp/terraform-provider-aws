@@ -121,6 +121,11 @@ func resourceTransitVirtualInterface() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"vlan": {
@@ -180,6 +185,10 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		input.NewTransitVirtualInterface.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewTransitVirtualInterface.RateLimit = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateTransitVirtualInterface(ctx, input)
 
 	if err != nil {
@@ -236,6 +245,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
 	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

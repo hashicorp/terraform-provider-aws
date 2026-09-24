@@ -217,24 +217,24 @@ resource "aws_rekognition_stream_processor" "example" {
 
 The following arguments are required:
 
-* `input` - (Required) Input video stream. See [`input`](#input).
+* `input` - (Required) Input video stream. See [`input`](#input-block).
 * `name` - (Required) Name of the Stream Processor.
-* `output` - (Required) Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results. See [`output`](#output).
+* `output` - (Required) Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results. See [`output`](#output-block).
 * `role_arn` - (Required) Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor. The IAM role provides Rekognition read permissions for a Kinesis stream. It also provides write permissions to an Amazon S3 bucket and Amazon Simple Notification Service topic for a label detection stream processor. This is required for both face search and label detection stream processors.
-* `settings` - (Required) Input parameters used in a streaming video analyzed by a stream processor. See [`settings`](#settings).
+* `settings` - (Required) Input parameters used in a streaming video analyzed by a stream processor. See [`settings`](#settings-block).
 
 The following arguments are optional:
 
-* `data_sharing_preference` - (Optional) See [`data_sharing_preference`](#data_sharing_preference).
+* `data_sharing_preference` - (Optional) See [`data_sharing_preference`](#data_sharing_preference-block).
 * `kms_key_id` - (Optional) Optional parameter for label detection stream processors.
-* `notification_channel` - (Optional) Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notification_channel`](#notification_channel).
+* `notification_channel` - (Optional) Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notification_channel`](#notification_channel-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `regions_of_interest` - (Optional) Locations in the frames where Amazon Rekognition checks for objects or people. See [`regions_of_interest`](#regions_of_interest).
+* `regions_of_interest` - (Optional) Locations in the frames where Amazon Rekognition checks for objects or people. See [`regions_of_interest`](#regions_of_interest-block).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `input` Block
 
-* `kinesis_video_stream` - (Optional) Kinesis input stream. See [`kinesis_video_stream`](#kinesis_video_stream).
+* `kinesis_video_stream` - (Optional) Kinesis input stream. See [`kinesis_video_stream`](#kinesis_video_stream-block).
 
 ### `kinesis_video_stream` Block
 
@@ -242,8 +242,8 @@ The following arguments are optional:
 
 ### `output` Block
 
-* `kinesis_data_stream` - (Optional) Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results. See [`kinesis_data_stream`](#kinesis_data_stream).
-* `s3_destination` - (Optional) Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation. See [`s3_destination`](#s3_destination).
+* `kinesis_data_stream` - (Optional) Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results. See [`kinesis_data_stream`](#kinesis_data_stream-block).
+* `s3_destination` - (Optional) Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation. See [`s3_destination`](#s3_destination-block).
 
 ### `kinesis_data_stream` Block
 
@@ -260,8 +260,8 @@ The following arguments are optional:
 
 ### `regions_of_interest` Block
 
-* `bounding_box` - (Optional) Box representing a region of interest on screen. Only 1 per region is allowed. See [`bounding_box`](#bounding_box).
-* `polygon` - (Optional) Shape made up of up to 10 Point objects to define a region of interest. See [`polygon`](#polygon).
+* `bounding_box` - (Optional) Box representing a region of interest on screen. Only 1 per region is allowed. See [`bounding_box`](#bounding_box-block).
+* `polygon` - (Optional) Shape made up of up to 10 Point objects to define a region of interest. See [`polygon`](#polygon-block).
 
 ### `bounding_box` Block
 
@@ -285,8 +285,8 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
 ### `settings` Block
 
-* `connected_home` - (Optional) Label detection settings to use on a streaming video. See [`connected_home`](#connected_home).
-* `face_search` - (Optional) Input face recognition parameters for an Amazon Rekognition stream processor. See [`face_search`](#face_search).
+* `connected_home` - (Optional) Label detection settings to use on a streaming video. See [`connected_home`](#connected_home-block).
+* `face_search` - (Optional) Input face recognition parameters for an Amazon Rekognition stream processor. See [`face_search`](#face_search-block).
 
 ### `connected_home` Block
 

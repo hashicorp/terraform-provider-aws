@@ -58,16 +58,16 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `capacity_provider_strategy` - (Optional) Capacity provider strategy to use for the service. Can be one or more. [Defined below](#capacity_provider_strategy).
+* `capacity_provider_strategy` - (Optional) Capacity provider strategy to use for the service. Can be one or more. [Defined below](#capacity_provider_strategy-block).
 * `external_id` - (Optional) External ID associated with the task set.
 * `force_delete` - (Optional) Whether to allow deleting the task set without waiting for scaling down to 0. You can force a task set to delete even if it's in the process of scaling a resource. Normally, Terraform drains all the tasks before deleting the task set. This bypasses that behavior and potentially leaves resources dangling.
 * `launch_type` - (Optional) Launch type on which to run your service. Valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`.
-* `load_balancer` - (Optional) Details on load balancers that are used with a task set. [Detailed below](#load_balancer).
-* `network_configuration` - (Optional) Network configuration for the service. Required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and not supported for other network modes. [Detailed below](#network_configuration).
+* `load_balancer` - (Optional) Details on load balancers that are used with a task set. [Detailed below](#load_balancer-block).
+* `network_configuration` - (Optional) Network configuration for the service. Required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and not supported for other network modes. [Detailed below](#network_configuration-block).
 * `platform_version` - (Optional) Platform version on which to run your service. Only applicable for `launch_type` set to `FARGATE`. Defaults to `LATEST`. More information about Fargate platform versions can be found in the [AWS ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `scale` - (Optional) Floating-point percentage of the desired number of tasks to place and keep running in the task set. [Detailed below](#scale).
-* `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [Detailed below](#service_registries).
+* `scale` - (Optional) Floating-point percentage of the desired number of tasks to place and keep running in the task set. [Detailed below](#scale-block).
+* `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [Detailed below](#service_registries-block).
 * `tags` - (Optional) Map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `wait_until_stable` - (Optional) Whether `terraform` should wait until the task set has reached `STEADY_STATE`.
 * `wait_until_stable_timeout` - (Optional) Wait timeout for task set to reach `STEADY_STATE`. Valid time units include `ns`, `us` (or `µs`), `ms`, `s`, `m`, and `h`. Default `10m`.

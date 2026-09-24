@@ -649,6 +649,52 @@ func TestAccCloudWatchMetricAlarm_promql(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchMetricAlarm_warmUpConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_warmUpConfiguration(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.0.warm_up_period_duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.0.only_start_evaluating_after_warm_up_period_ends", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_warmUpConfigurationOnlyStartEvaluatingAfterWarmUpPeriodEnds(rName, 120, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.0.warm_up_period_duration_in_minutes", "120"),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.0.only_start_evaluating_after_warm_up_period_ends", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "warm_up_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/47624.
 func TestAccCloudWatchMetricAlarm_metricNameUnknown(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1249,6 +1295,57 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   evaluation_interval = 600
 }
 `, rName)
+}
+
+func testAccMetricAlarmConfig_warmUpConfiguration(rName string, durationInMinutes int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = 2
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = 120
+  statistic                 = "Average"
+  threshold                 = 80
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  warm_up_configuration {
+    warm_up_period_duration_in_minutes = %[2]d
+  }
+}
+`, rName, durationInMinutes)
+}
+
+func testAccMetricAlarmConfig_warmUpConfigurationOnlyStartEvaluatingAfterWarmUpPeriodEnds(rName string, durationInMinutes int, onlyStartEvaluatingAfterWarmUpPeriodEnds bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = 2
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = 120
+  statistic                 = "Average"
+  threshold                 = 80
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  warm_up_configuration {
+    warm_up_period_duration_in_minutes              = %[2]d
+    only_start_evaluating_after_warm_up_period_ends = %[3]t
+  }
+}
+`, rName, durationInMinutes, onlyStartEvaluatingAfterWarmUpPeriodEnds)
 }
 
 func testAccMetricAlarmConfig_metricNameUnknown(rName string) string {

@@ -57,20 +57,10 @@ This resource supports the following arguments:
 * `default_iam_role_arn` - (Optional) ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
-* `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
-  Conflicts with `master_password` and `master_password_wo`.
-  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
-* `master_password` - (Optional) Password for the master DB user.
-  Conflicts with `manage_master_password` and `master_password_wo`.
-  One of `master_password`, `master_password_wo` or `manage_master_password` is required unless `snapshot_identifier` is provided.
-  Note that this may show up in logs, and it will be stored in the state file.
-  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
-* `master_password_wo` - (Optional, Write-Only) Password for the master DB user.
-  Conflicts with `manage_master_password` and `master_password`.
-  One of `master_password_wo`, `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
-  Note that this may show up in logs.
-  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
-* `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
+* `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials. Conflicts with `master_password` and `master_password_wo`. One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+* `master_password` - (Optional) Password for the master DB user. Conflicts with `manage_master_password` and `master_password_wo`. One of `master_password`, `master_password_wo` or `manage_master_password` is required unless `snapshot_identifier` is provided. Note that this will show up in logs, and it will be stored in the state file. Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `master_password_wo` - (Optional, Write-Only) Password for the master DB user. Conflicts with `manage_master_password` and `master_password`. One of `master_password_wo`, `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided. Note that this may show up in logs. Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number. If set, requires `master_password_wo_version` to be set.
+* `master_password_wo_version` - (Optional) Required when `master_password_wo` is set. Changing this value triggers an update to `master_password_wo`.
 * `master_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `multi_az` - (Optional) Specifies if the Redshift cluster is multi-AZ.
@@ -106,7 +96,7 @@ This resource supports the following arguments:
 * `snapshot_identifier` - (Optional) The name of the snapshot from which to create the new cluster.  Conflicts with `snapshot_arn`.
 * `snapshot_cluster_identifier` - (Optional) The name of the cluster the source snapshot was created from.
 * `owner_account` - (Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot.
-* `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
+* `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A maximum of 50 (or 10 in ISO regions) can be associated with the cluster at any time.
 * `maintenance_track_name` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

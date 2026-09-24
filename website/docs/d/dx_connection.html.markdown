@@ -41,6 +41,16 @@ This data source exports the following attributes in addition to the arguments a
 * `prefix_pool_unallocated_count_ipv4` - The number of inbound IPv4 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
 * `prefix_pool_unallocated_count_ipv6` - The number of inbound IPv6 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
 * `provider_name` - Name of the service provider associated with the connection.
+* `rate_limiter_status` - Rate limiter status for the connection. See [`rate_limiter_status` Block](#rate_limiter_status-block) below.
 * `state` - State of the connection.
 * `tags` - Map of tags for the resource.
 * `vlan_id` - The VLAN ID.
+
+### `rate_limiter_status` Block
+
+`rate_limiter_status` exports the following attributes:
+
+* `max_allowed` - Maximum number of rate limiters allowed on the connection.
+* `in_use` - Number of rate limiters currently in use.
+* `remaining` - Number of rate limiters remaining (available).
+* `total_bandwidth` - Total bandwidth allocated across all rate limiters.

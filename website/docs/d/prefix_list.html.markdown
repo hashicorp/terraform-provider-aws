@@ -61,16 +61,16 @@ data "aws_prefix_list" "test" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `prefix_list_id` - (Optional) ID of the prefix list to select.
-* `name` - (Optional) Name of the prefix list to select.
-* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-
 The arguments of this data source act as filters for querying the available
 prefix lists. The given filters must match exactly one prefix list
 whose data will be exported as attributes.
 
-### filter Configuration Block
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `name` - (Optional) Name of the prefix list to select.
+* `prefix_list_id` - (Optional) ID of the prefix list to select.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `filter` Block
 
 The `filter` configuration block supports the following arguments:
 
@@ -81,9 +81,9 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `cidr_blocks` - List of CIDR blocks for the AWS service associated with the prefix list.
 * `id` - ID of the selected prefix list.
 * `name` - Name of the selected prefix list.
-* `cidr_blocks` - List of CIDR blocks for the AWS service associated with the prefix list.
 
 ## Timeouts
 

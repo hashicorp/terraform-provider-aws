@@ -54,10 +54,10 @@ resource "aws_appconfig_extension" "test" {
 
 This resource supports the following arguments:
 
-* `action_point` - (Required) Action points defined in the extension. [Detailed below](#action_point).
+* `action_point` - (Required) Action points defined in the extension. [Detailed below](#action_point-block).
 * `description` - (Optional) Information about the extension.
 * `name` - (Required) Name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
-* `parameter` - (Optional) Parameters accepted by the extension. You specify parameter values when you associate the extension to an AppConfig resource by using the CreateExtensionAssociation API action. For Lambda extension actions, these parameters are included in the Lambda request object. [Detailed below](#parameter).
+* `parameter` - (Optional) Parameters accepted by the extension. You specify parameter values when you associate the extension to an AppConfig resource by using the CreateExtensionAssociation API action. For Lambda extension actions, these parameters are included in the Lambda request object. [Detailed below](#parameter-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -65,7 +65,7 @@ This resource supports the following arguments:
 
 Defines the actions the extension performs during the AppConfig workflow and at which point those actions are performed. The `action_point` configuration block supports the following arguments:
 
-* `action` - (Required) Action the extension performs during the AppConfig workflow. [Detailed below](#action).
+* `action` - (Required) Action the extension performs during the AppConfig workflow. [Detailed below](#action-block).
 * `point` - (Required) Point at which to perform the defined actions. Valid points are `PRE_CREATE_HOSTED_CONFIGURATION_VERSION`, `PRE_START_DEPLOYMENT`, `ON_DEPLOYMENT_START`, `ON_DEPLOYMENT_STEP`, `ON_DEPLOYMENT_BAKING`, `ON_DEPLOYMENT_COMPLETE`, `ON_DEPLOYMENT_ROLLED_BACK`.
 
 #### `action` Block
