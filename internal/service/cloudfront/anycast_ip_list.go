@@ -8,6 +8,7 @@ package cloudfront
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -82,6 +83,41 @@ func (r *anycastIPListResource) Schema(ctx context.Context, request resource.Sch
 					int32planmodifier.RequiresReplace(),
 				},
 			},
+			"ipam_config": schema.ListNestedAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ipamConfigModel](ctx),
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"ipam_cidr_configs": schema.ListNestedAttribute{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[ipamCidrConfigStatusModel](ctx),
+							Computed:   true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"anycast_ip": schema.StringAttribute{
+										Computed: true,
+									},
+									"cidr": schema.StringAttribute{
+										Computed: true,
+									},
+									"ipam_pool_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Computed:   true,
+									},
+									names.AttrStatus: schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+						"quantity": schema.Int32Attribute{
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -95,6 +131,26 @@ func (r *anycastIPListResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"ipam_cidr_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ipamCidrConfigModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"anycast_ip": schema.StringAttribute{
+							Optional: true,
+						},
+						"cidr": schema.StringAttribute{
+							Required: true,
+						},
+						"ipam_pool_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 			}),
@@ -136,11 +192,8 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	// Set values for unknowns.
-	anycastIPList := outputCAIL.AnycastIpList
-	data.AnycastIPs = fwflex.FlattenFrameworkStringValueListOfString(ctx, anycastIPList.AnycastIps)
-	data.ARN = fwflex.StringToFramework(ctx, anycastIPList.Arn)
-	data.ID = fwflex.StringToFramework(ctx, anycastIPList.Id)
+	// Set 'id' for the waiter and so as to taint the resource on error.
+	data.ID = fwflex.StringToFramework(ctx, outputCAIL.AnycastIpList.Id)
 
 	outputGAIL, err := waitAnycastIPListDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -148,6 +201,14 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Anycast IP List (%s) create", data.ID.ValueString()), err.Error())
 
+		return
+	}
+
+	// Set values for unknowns. The configured 'ipam_cidr_config' block has no
+	// equivalent on the response (server-assigned values are surfaced via the
+	// computed 'ipam_config' attribute), so AutoFlex leaves it untouched.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGAIL.AnycastIpList, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -281,7 +342,27 @@ func anycastIPListStatus(conn *cloudfront.Client, id string) retry.StateRefreshF
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.AnycastIpList.Status), nil
+		anycastIPList := output.AnycastIpList
+
+		// When the list is backed by IPAM CIDRs, provisioning is asynchronous and
+		// reported per-CIDR (e.g. "provisioning" -> "provisioned" -> "advertising"
+		// -> "advertised", plus "failed-*" variants). Surface a failure and keep
+		// waiting while any CIDR is still transitioning.
+		if ipamConfig := anycastIPList.IpamConfig; ipamConfig != nil {
+			for _, cidrConfig := range ipamConfig.IpamCidrConfigs {
+				status := string(cidrConfig.Status)
+
+				if strings.HasPrefix(status, "failed-") {
+					return output, status, fmt.Errorf("IPAM CIDR (%s): %s", aws.ToString(cidrConfig.Cidr), status)
+				}
+
+				if strings.HasSuffix(status, "ing") {
+					return output, anycastIPListDeploying, nil
+				}
+			}
+		}
+
+		return output, aws.ToString(anycastIPList.Status), nil
 	}
 }
 
@@ -303,13 +384,37 @@ func waitAnycastIPListDeployed(ctx context.Context, conn *cloudfront.Client, id 
 }
 
 type anycastIPListResourceModel struct {
-	AnycastIPs fwtypes.ListOfString `tfsdk:"anycast_ips"`
-	ARN        types.String         `tfsdk:"arn"`
-	ETag       types.String         `tfsdk:"etag"`
-	ID         types.String         `tfsdk:"id"`
-	IPCount    types.Int32          `tfsdk:"ip_count"`
-	Name       types.String         `tfsdk:"name"`
-	Tags       tftags.Map           `tfsdk:"tags"`
-	TagsAll    tftags.Map           `tfsdk:"tags_all"`
-	Timeouts   timeouts.Value       `tfsdk:"timeouts"`
+	AnycastIPs      fwtypes.ListOfString                                 `tfsdk:"anycast_ips"`
+	ARN             types.String                                         `tfsdk:"arn"`
+	ETag            types.String                                         `tfsdk:"etag"`
+	ID              types.String                                         `tfsdk:"id"`
+	IPCount         types.Int32                                          `tfsdk:"ip_count"`
+	IpamCidrConfigs fwtypes.ListNestedObjectValueOf[ipamCidrConfigModel] `tfsdk:"ipam_cidr_config"`
+	IpamConfig      fwtypes.ListNestedObjectValueOf[ipamConfigModel]     `tfsdk:"ipam_config"`
+	Name            types.String                                         `tfsdk:"name"`
+	Tags            tftags.Map                                           `tfsdk:"tags"`
+	TagsAll         tftags.Map                                           `tfsdk:"tags_all"`
+	Timeouts        timeouts.Value                                       `tfsdk:"timeouts"`
+}
+
+// ipamCidrConfigModel is the configurable 'ipam_cidr_config' block, mapped to
+// the CreateAnycastIpList 'IpamCidrConfigs' input.
+type ipamCidrConfigModel struct {
+	AnycastIP   types.String `tfsdk:"anycast_ip"`
+	Cidr        types.String `tfsdk:"cidr"`
+	IpamPoolARN fwtypes.ARN  `tfsdk:"ipam_pool_arn"`
+}
+
+// ipamConfigModel is the computed 'ipam_config' attribute, mapped from the
+// AnycastIpList 'IpamConfig' response object.
+type ipamConfigModel struct {
+	IpamCidrConfigs fwtypes.ListNestedObjectValueOf[ipamCidrConfigStatusModel] `tfsdk:"ipam_cidr_configs"`
+	Quantity        types.Int32                                                `tfsdk:"quantity"`
+}
+
+type ipamCidrConfigStatusModel struct {
+	AnycastIP   types.String `tfsdk:"anycast_ip"`
+	Cidr        types.String `tfsdk:"cidr"`
+	IpamPoolARN fwtypes.ARN  `tfsdk:"ipam_pool_arn"`
+	Status      types.String `tfsdk:"status"`
 }
