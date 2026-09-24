@@ -7,6 +7,7 @@ import (
 	"context"
 	"iter"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
@@ -93,7 +94,7 @@ func listDirectories(ctx context.Context, conn *directoryservice.Client) iter.Se
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.DirectoryDescription{}, err)
+				yield(awstypes.DirectoryDescription{}, smarterr.NewError(err))
 				return
 			}
 

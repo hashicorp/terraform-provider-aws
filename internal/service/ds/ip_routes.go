@@ -134,7 +134,7 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 
 func (r *ipRoutesResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	var data ipRoutesResourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -144,7 +144,7 @@ func (r *ipRoutesResource) ValidateConfig(ctx context.Context, request resource.
 	}
 
 	routes, diags := data.IPRoutes.ToSlice(ctx)
-	response.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -160,11 +160,11 @@ func (r *ipRoutesResource) ValidateConfig(ctx context.Context, request resource.
 			continue
 		}
 		if _, ok := seen[cidr]; ok {
-			response.Diagnostics.AddAttributeError(
+			smerr.AddOne(ctx, &response.Diagnostics, diag.NewAttributeErrorDiagnostic(
 				path.Root("ip_route"),
 				"Duplicate CIDR",
 				fmt.Sprintf("CIDR %q is configured in more than one ip_route block; each cidr_ip/cidr_ipv6 must be unique.", cidr),
-			)
+			))
 			return
 		}
 		seen[cidr] = struct{}{}
@@ -226,7 +226,7 @@ func (r *ipRoutesResource) Read(ctx context.Context, request resource.ReadReques
 	output, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
 
 	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, directoryID)
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -522,7 +522,7 @@ func statusIPRoutesAdded(conn *directoryservice.Client, directoryID string, cidr
 			}
 			switch v.IpRouteStatusMsg {
 			case awstypes.IpRouteStatusMsgAddFailed:
-				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to add: %s", c, aws.ToString(v.IpRouteStatusReason))
+				return routes, string(v.IpRouteStatusMsg), smarterr.NewError(fmt.Errorf("IP route %q failed to add: %s", c, aws.ToString(v.IpRouteStatusReason)))
 			case awstypes.IpRouteStatusMsgAdded:
 			default:
 				added = false
@@ -559,7 +559,7 @@ func statusIPRoutesRemoved(conn *directoryservice.Client, directoryID string, ci
 				continue
 			}
 			if v.IpRouteStatusMsg == awstypes.IpRouteStatusMsgRemoveFailed {
-				return routes, string(v.IpRouteStatusMsg), fmt.Errorf("IP route %q failed to remove: %s", ipRouteInfoKey(v), aws.ToString(v.IpRouteStatusReason))
+				return routes, string(v.IpRouteStatusMsg), smarterr.NewError(fmt.Errorf("IP route %q failed to remove: %s", ipRouteInfoKey(v), aws.ToString(v.IpRouteStatusReason)))
 			}
 			// A route still present in any non-Removed state (including
 			// "Removing") means removal is not yet complete.
@@ -586,7 +586,7 @@ func waitIPRoutesAdded(ctx context.Context, conn *directoryservice.Client, direc
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	return smarterr.NewError(err)
 }
 
 func waitIPRoutesRemoved(ctx context.Context, conn *directoryservice.Client, directoryID string, cidrs []string, timeout time.Duration) error {
@@ -599,7 +599,7 @@ func waitIPRoutesRemoved(ctx context.Context, conn *directoryservice.Client, dir
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	return smarterr.NewError(err)
 }
 
 type ipRoutesResourceModel struct {
