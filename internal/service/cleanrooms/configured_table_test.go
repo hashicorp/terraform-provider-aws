@@ -155,16 +155,74 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_columns.*", "my_column_1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_columns.*", "my_column_2"),
 				),
 			},
 			{
 				Config: testAccConfiguredTableConfig_allowedColumns("[\"my_column_1\"]", rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
+					testAccCheckConfiguredTableIsTheSame(resourceName, &configuredTable),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_columns.*", "my_column_1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCleanRoomsConfiguredTable_updateAnalysisMethod(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var configuredTable cleanrooms.GetConfiguredTableOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cleanrooms_configured_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfiguredTableConfig_analysisMethod("DIRECT_QUERY", rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
+					resource.TestCheckResourceAttr(resourceName, "analysis_method", "DIRECT_QUERY"),
+				),
+			},
+			{
+				Config: testAccConfiguredTableConfig_analysisMethod("DIRECT_JOB", rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfiguredTableIsTheSame(resourceName, &configuredTable),
+					resource.TestCheckResourceAttr(resourceName, "analysis_method", "DIRECT_JOB"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCleanRoomsConfiguredTable_selectedAnalysisMethods(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var configuredTable cleanrooms.GetConfiguredTableOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cleanrooms_configured_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfiguredTableConfig_selectedAnalysisMethods(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
+					resource.TestCheckResourceAttr(resourceName, "analysis_method", "MULTIPLE"),
+					resource.TestCheckResourceAttr(resourceName, "selected_analysis_methods.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "selected_analysis_methods.*", "DIRECT_QUERY"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "selected_analysis_methods.*", "DIRECT_JOB"),
 				),
 			},
 		},
@@ -387,6 +445,62 @@ func testAccConfiguredTableConfig_basic(name string, description string, tagValu
 func testAccConfiguredTableConfig_allowedColumns(allowedColumns string, rName string) string {
 	return testAccConfiguredTableConfig(rName, TEST_NAME, TEST_DESCRIPTION, TEST_TAG, allowedColumns,
 		TEST_ANALYSIS_METHOD, rName, rName)
+}
+
+func testAccConfiguredTableConfig_analysisMethod(analysisMethod string, rName string) string {
+	return testAccConfiguredTableConfig(rName, TEST_NAME, TEST_DESCRIPTION, TEST_TAG, TEST_ALLOWED_COLUMNS,
+		analysisMethod, rName, rName)
+}
+
+func testAccConfiguredTableConfig_selectedAnalysisMethods(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = %[1]q
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.test.bucket}"
+
+    columns {
+      name = "my_column_1"
+      type = "string"
+    }
+
+    columns {
+      name = "my_column_2"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_cleanrooms_configured_table" "test" {
+  name            = %[2]q
+  description     = %[3]q
+  analysis_method = "MULTIPLE"
+  allowed_columns = %[4]s
+
+  selected_analysis_methods = ["DIRECT_QUERY", "DIRECT_JOB"]
+
+  table_reference {
+    database_name = %[1]q
+    table_name    = %[1]q
+  }
+
+  tags = {
+    Project = %[5]q
+  }
+
+  depends_on = [aws_glue_catalog_table.test]
+}
+	`, rName, TEST_NAME, TEST_DESCRIPTION, TEST_ALLOWED_COLUMNS, TEST_TAG)
 }
 
 const TEST_FIRST_ADDITIONAL_TABLE_NAME = "table_1"
