@@ -114,6 +114,10 @@ func resourceStack() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
+				"retain_except_on_create": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"template_body": {
@@ -183,6 +187,9 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	if v, ok := d.GetOk("policy_url"); ok {
 		input.StackPolicyURL = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("retain_except_on_create"); ok {
+		input.RetainExceptOnCreate = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("template_body"); ok {
 		template, err := verify.NormalizeJSONOrYAMLString(v)
@@ -312,6 +319,9 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	if d.HasChange("policy_url") {
 		input.StackPolicyURL = aws.String(d.Get("policy_url").(string))
+	}
+	if d.HasChange("retain_except_on_create") {
+		input.RetainExceptOnCreate = aws.Bool(d.Get("retain_except_on_create").(bool))
 	}
 	// Either TemplateBody, TemplateURL or UsePreviousTemplate are required
 	if v, ok := d.GetOk("template_url"); ok {
