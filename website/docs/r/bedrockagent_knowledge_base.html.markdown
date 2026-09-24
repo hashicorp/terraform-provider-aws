@@ -402,7 +402,7 @@ The `column` configuration block supports the following arguments:
 
 * `description` - (Optional) Description of the column that helps the query engine understand the contents of the column.
 * `inclusion` - (Optional) Whether to include or exclude the column during query generation. Valid values `INCLUDE`, `EXCLUDE`.
-* `name` - (Required) Name of the column for which the other fields in this object apply.
+* `name` - (Optional) Name of the column for which the other fields in this object apply.
 
 ### `knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration.storage_configuration` Block
 

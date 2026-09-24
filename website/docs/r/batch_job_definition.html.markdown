@@ -365,11 +365,11 @@ The following arguments are optional:
 #### `empty_dir` Block
 
 * `medium` - (Optional) Medium to store the volume. The default value is an empty string, which uses the storage of the node.
-* `size_limit` - (Optional) Maximum size of the volume. By default, there's no maximum size defined.
+* `size_limit` - (Required) Maximum size of the volume. By default, there's no maximum size defined.
 
 #### `host_path` Block
 
-* `path` - (Optional) Path of the file or directory on the host to mount into containers on the pod.
+* `path` - (Required) Path of the file or directory on the host to mount into containers on the pod.
 
 #### `metadata` Block
 

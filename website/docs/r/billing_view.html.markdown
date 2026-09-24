@@ -27,12 +27,12 @@ resource "aws_billing_view" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the custom billing view to be created.
-* `source_views` - (Required) List of ARNs of the source data views for the custom billing view.
 
 The following arguments are optional:
 
 * `data_filter_expression` - (Optional) Filter Cost Explorer APIs using the expression. See [`data_filter_expression`](#data_filter_expression-block) below for details.
 * `description` - (Optional) Description of the custom billing view.
+* `source_views` - (Optional) List of ARNs of the source data views for the custom billing view.
 * `tags` - (Optional) Key-value map of tags associated with the billing view being created.
 
 ### `data_filter_expression` Block

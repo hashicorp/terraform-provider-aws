@@ -131,13 +131,13 @@ The `transition` configuration block supports the following arguments:
 
 The `noncurrent_version_expiration` configuration block supports the following arguments:
 
-* `days` - (Required) Number of days noncurrent object versions expire.
+* `days` - (Optional) Number of days noncurrent object versions expire.
 
 ### `noncurrent_version_transition` Block
 
 The `noncurrent_version_transition` configuration block supports the following arguments:
 
-* `days` - (Required) Number of days noncurrent object versions transition.
+* `days` - (Optional) Number of days noncurrent object versions transition.
 * `storage_class` - (Required) Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
 
 ### `logging` Block
@@ -296,7 +296,7 @@ The `versioning` configuration block supports the following arguments:
 The `website` configuration block supports the following arguments:
 
 * `error_document` - (Optional) Absolute path to the document to return in case of a 4XX error.
-* `index_document` - (Required, unless using `redirect_all_requests_to`) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders.
+* `index_document` - (Optional) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders. Required unless using `redirect_all_requests_to`.
 * `redirect_all_requests_to` - (Optional) Hostname to redirect all website requests for this bucket to. Hostname can optionally be prefixed with a protocol (`http://` or `https://`) to use when redirecting requests. The default is the protocol that is used in the original request.
 * `routing_rules` - (Optional) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html) describing redirect behavior and when redirects are applied.
 

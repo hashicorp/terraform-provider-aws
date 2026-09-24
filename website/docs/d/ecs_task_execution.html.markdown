@@ -87,7 +87,7 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 * `environment` - (Optional) Environment variables to send to the container. You can add new environment variables, which are added to the container at launch, or you can override the existing environment variables from the Docker image or the task definition. See below.
 * `memory` - (Optional) Hard limit (in MiB) of memory to present to the container, instead of the default value from the task definition. If your container attempts to exceed the memory specified here, the container is killed.
 * `memory_reservation` - (Optional) Soft limit (in MiB) of memory to reserve for the container, instead of the default value from the task definition.
-* `name` - (Optional) Name of the container that receives the override. This parameter is required if any override is specified.
+* `name` - (Required) Name of the container that receives the override. This parameter is required if any override is specified.
 * `resource_requirements` - (Optional) Type and amount of a resource to assign to a container, instead of the default value from the task definition. The only supported resource is a GPU. See below.
 
 ### `environment` Block
@@ -103,14 +103,14 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 ### `placement_constraints` Block
 
 * `expression` - (Optional) Cluster query language expression to apply to the constraint. The expression can have a maximum length of 2000 characters. You can't specify an expression if the constraint type is `distinctInstance`.
-* `type` - (Optional) Type of constraint. Valid values are `distinctInstance` or `memberOf`. Use `distinctInstance` to ensure that each task in a particular group is running on a different container instance. Use `memberOf` to restrict the selection to a group of valid candidates.
+* `type` - (Required) Type of constraint. Valid values are `distinctInstance` or `memberOf`. Use `distinctInstance` to ensure that each task in a particular group is running on a different container instance. Use `memberOf` to restrict the selection to a group of valid candidates.
 
 ### `placement_strategy` Block
 
 For more information, see the [Placement Strategy](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_PlacementStrategy.html) documentation.
 
 * `field` - (Optional) Field to apply the placement strategy against.
-* `type` - (Optional) Type of placement strategy. Valid values are `random`, `spread`, and `binpack`.
+* `type` - (Required) Type of placement strategy. Valid values are `random`, `spread`, and `binpack`.
 
 ## Attribute Reference
 
