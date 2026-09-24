@@ -1305,6 +1305,7 @@ service/kinesis:
               - 'website/**/kinesis_stream*'
               - 'website/**/kinesis_resource_policy*'
               - 'website/**/kinesis_account_settings*'
+              - 'website/**/kinesis_channel*'
 service/kinesisanalytics:
   - any:
       - changed-files:

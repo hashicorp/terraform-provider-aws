@@ -4948,12 +4948,11 @@ service "kinesis" {
   }
 
   resource_prefix {
-    actual  = "aws_kinesis_stream"
     correct = "aws_kinesis_"
   }
 
   provider_package_correct = "kinesis"
-  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings"]
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings", "kinesis_channel"]
   brand                    = "AWS"
 }
 
