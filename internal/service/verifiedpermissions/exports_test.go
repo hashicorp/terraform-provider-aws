@@ -5,15 +5,17 @@ package verifiedpermissions
 
 // Exports for use in tests only.
 var (
-	ResourceIdentitySource = newIdentitySourceResource
-	ResourcePolicy         = newPolicyResource
-	ResourcePolicyStore    = newPolicyStoreResource
-	ResourcePolicyTemplate = newPolicyTemplateResource
-	ResourceSchema         = newSchemaResource
+	ResourceIdentitySource   = newIdentitySourceResource
+	ResourcePolicy           = newPolicyResource
+	ResourcePolicyStore      = newPolicyStoreResource
+	ResourcePolicyStoreAlias = newPolicyStoreAliasResource
+	ResourcePolicyTemplate   = newPolicyTemplateResource
+	ResourceSchema           = newSchemaResource
 
 	FindIdentitySourceByIDAndPolicyStoreID = findIdentitySourceByIDAndPolicyStoreID
 	FindPolicyByID                         = findPolicyByID
 	FindPolicyStoreByID                    = findPolicyStoreByID
+	FindPolicyStoreAliasByName             = findPolicyStoreAliasByName
 	FindPolicyTemplateByID                 = findPolicyTemplateByID
 	FindSchemaByPolicyStoreID              = findSchemaByPolicyStoreID
 )
