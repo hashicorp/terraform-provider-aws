@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearch_authorize_vpc_endpoint_access: Add `service` argument and `service_options` configuration block to grant access to an AWS service principal (e.g. the OpenSearch Dashboard)
+```
