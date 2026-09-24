@@ -355,6 +355,49 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 	})
 }
 
+// TestAccEKSAddon_updateFailedDegradedSelfHeal exercises the update path where EKS
+// times out an add-on update (marking the update Failed) but leaves the add-on in a
+// DEGRADED state with the new configuration applied, after which the add-on self-heals
+// to ACTIVE. The provider tolerates this by falling back to waiting on the add-on status,
+// mirroring create behavior with DEGRADED add-ons.
+//
+// The EKS service-side update timeout cannot be deterministically triggered from an
+// acceptance test (it requires a large or high-churn cluster where the rollout does not
+// converge within the service's internal deadline), so this test only verifies that a
+// normal update on a DEGRADED-prone add-on still succeeds.
+func TestAccEKSAddon_updateFailedDegradedSelfHeal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var addon types.Addon
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_addon.test"
+	dataSourceNameDefault := "data.aws_eks_addon_version.default"
+	dataSourceNameLatest := "data.aws_eks_addon_version.latest"
+	addonName := addonNames[2] // coredns. Often ends up in DEGRADED state.
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddonConfig_version(rName, addonName, dataSourceNameDefault),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, t, resourceName, &addon),
+					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceNameDefault, names.AttrVersion),
+				),
+			},
+			{
+				Config: testAccAddonConfig_version(rName, addonName, dataSourceNameLatest),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, t, resourceName, &addon),
+					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceNameLatest, names.AttrVersion),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSAddon_podIdentityAssociation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var addon types.Addon
