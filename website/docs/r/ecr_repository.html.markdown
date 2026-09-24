@@ -74,6 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Full ARN of the repository.
 * `registry_id` - The registry ID where the repository was created.
 * `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
+* `repository_url_dualstack` - The dual-stack (IPv6-compatible) URL of the repository (in the form `aws_account_id.dkr-ecr.region.on.aws/repositoryName`). Use this for ECS tasks in IPv6-only subnets.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
