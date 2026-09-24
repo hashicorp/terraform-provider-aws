@@ -107,59 +107,76 @@ func (r *securityGroupIngressRuleResource) findByID(ctx context.Context, id stri
 
 // moveStateResourceSecurityGroupRule transforms the state of an `aws_security_group_rule` resource to this resource's schema.
 func (r *securityGroupIngressRuleResource) moveStateResourceSecurityGroupRule(ctx context.Context, request resource.MoveStateRequest, response *resource.MoveStateResponse) {
-	if request.SourceTypeName != "aws_security_group_rule" {
+	source, done := r.validateMoveSupport(ctx, request, response, securityGroupRuleTypeIngress)
+	if done {
 		return
+	}
+
+	r.populateSgRuleModel(ctx, source, response)
+}
+
+func (r *securityGroupRuleResource) populateSgRuleModel(ctx context.Context, source legacySecurityGroupRuleResourceModel, response *resource.MoveStateResponse) {
+	target := &securityGroupRuleResourceModel{
+		Description:         fwflex.EmptyStringAsNull(source.Description),
+		SecurityGroupID:     source.SecurityGroupID,
+		FromPort:            source.FromPort,
+		ToPort:              source.ToPort,
+		IPProtocol:          source.Protocol,
+		ID:                  source.SecurityGroupRuleID,
+		SecurityGroupRuleID: source.SecurityGroupRuleID,
+		Tags:                tftags.NewMapValueNull(),
+		TagsAll:             tftags.NewMapValueNull(),
+	}
+
+	if !source.CIDRBlocks.IsNull() && len(source.CIDRBlocks.Elements()) > 0 {
+		target.CIDRIPv4 = source.CIDRBlocks.Elements()[0].(types.String)
+	} else if !source.IPv6CIDRBlocksBlocks.IsNull() && len(source.IPv6CIDRBlocksBlocks.Elements()) > 0 {
+		target.CIDRIPv6 = source.IPv6CIDRBlocksBlocks.Elements()[0].(types.String)
+	} else if !source.PrefixListIDs.IsNull() && len(source.PrefixListIDs.Elements()) > 0 {
+		target.PrefixListID = source.PrefixListIDs.Elements()[0].(types.String)
+	} else if !source.SourceSecurityGroupID.IsNull() && source.SourceSecurityGroupID.ValueString() != "" {
+		target.ReferencedSecurityGroupID = source.SourceSecurityGroupID
+	} else if !source.Self.IsNull() && source.Self.ValueBool() {
+		target.ReferencedSecurityGroupID = source.SecurityGroupID
+	} else {
+		response.Diagnostics.AddError("Missing Source", "At least one source is expected")
+		return
+	}
+
+	response.Diagnostics.Append(response.TargetState.Set(ctx, target)...)
+}
+
+func (r *securityGroupRuleResource) validateMoveSupport(ctx context.Context, request resource.MoveStateRequest, response *resource.MoveStateResponse, expectedRuleType securityGroupRuleType) (legacySecurityGroupRuleResourceModel, bool) {
+	if request.SourceTypeName != "aws_security_group_rule" {
+		return legacySecurityGroupRuleResourceModel{}, true
 	}
 
 	if request.SourceSchemaVersion != 2 {
-		return
+		return legacySecurityGroupRuleResourceModel{}, true
 	}
 
 	if !strings.HasSuffix(request.SourceProviderAddress, "hashicorp/aws") {
-		return
+		return legacySecurityGroupRuleResourceModel{}, true
 	}
 
 	var source legacySecurityGroupRuleResourceModel
 	response.Diagnostics.Append(request.SourceState.Get(ctx, &source)...)
 	if response.Diagnostics.HasError() {
-		return
+		return legacySecurityGroupRuleResourceModel{}, true
 	}
 
-	// TODO: Need to find the security group rule ID.
+	if typ := source.Type.ValueEnum(); typ != expectedRuleType {
+		response.Diagnostics.AddError("Incorrect Type", string(typ))
+		return legacySecurityGroupRuleResourceModel{}, true
+	}
 
-	// if typ := source.Type.ValueEnum(); typ != securityGroupRuleTypeIngress {
-	// 	response.Diagnostics.AddError("Incorrect Type", string(typ))
-	// 	return
-	// }
+	// security group rule ID required in order to populate the target state but is null in case of multiple sources
+	if fwflex.EmptyStringAsNull(source.SecurityGroupRuleID).IsNull() || source.SecurityGroupRuleID.IsUnknown() {
+		response.Diagnostics.AddError("Multiple Sources/Destinations", "Only one source/destination is allowed")
+		return legacySecurityGroupRuleResourceModel{}, true
+	}
 
-	// nCIDRs := 0
-	// if !source.CIDRBlocks.IsNull() {
-	// 	nCIDRs += len(source.CIDRBlocks.Elements())
-	// }
-	// nIPv6CIDRs := 0
-	// if !source.IPv6CIDRBlocksBlocks.IsNull() {
-	// 	nIPv6CIDRs += len(source.IPv6CIDRBlocksBlocks.Elements())
-	// }
-	// nPrefxListIDs := 0
-	// if !source.PrefixListIDs.IsNull() {
-	// 	nPrefxListIDs += len(source.PrefixListIDs.Elements())
-	// }
-	// nSourceSecurityGroupIDs := 0
-	// if !source.SourceSecurityGroupID.IsNull() && source.SourceSecurityGroupID.ValueString() != "" {
-	// 	nSourceSecurityGroupIDs = 1
-	// }
-
-	// if nCIDRs+nIPv6CIDRs+nPrefxListIDs+nSourceSecurityGroupIDs > 1 {
-	// 	response.Diagnostics.AddError("Multiple Sources", "Only one source is allowed")
-	// 	return
-	// }
-
-	// target := &securityGroupRuleResourceModel{
-	// 	// ARN: 				  r.securityGroupRuleARN(ctx, securityGroupRuleID),
-	// 	Description: fwflex.EmptyStringAsNull(source.Description),
-	// }
-
-	// response.Diagnostics.Append(response.TargetState.Set(ctx, target)...)
+	return source, false
 }
 
 // Base structure and methods for VPC security group rules.
