@@ -13,6 +13,8 @@ import (
 	"strconv"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -94,14 +96,15 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									},
 								},
 							},
+							// No Default: an unset argument must be omitted from the
+							// rendered document entirely, since core networks created
+							// before these settings existed reject the keys.
 							"dns_support": {
 								Type:     schema.TypeBool,
-								Default:  true,
 								Optional: true,
 							},
 							"security_group_referencing_support": {
 								Type:     schema.TypeBool,
-								Default:  false,
 								Optional: true,
 							},
 						},
@@ -607,7 +610,7 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	}
 
 	// CoreNetworkConfiguration
-	networkConfiguration, err := expandCoreNetworkPolicyCoreNetworkConfiguration(d.Get("core_network_configuration").([]any))
+	networkConfiguration, err := expandCoreNetworkPolicyCoreNetworkConfiguration(d.Get("core_network_configuration").([]any), d.GetRawConfig().GetAttr("core_network_configuration"))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -1264,7 +1267,7 @@ func expandCoreNetworkPolicyRoutingPolicyRuleAction(tfList []any) *coreNetworkPo
 	return apiObject
 }
 
-func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
+func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any, rawConfig cty.Value) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &coreNetworkPolicyCoreNetworkConfiguration{}
 
@@ -1282,12 +1285,20 @@ func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetwork
 	}
 	apiObject.EdgeLocations = el
 
-	if v, ok := tfMap["dns_support"].(bool); ok {
-		apiObject.DnsSupport = v
+	// Only render these keys when the practitioner set them. A plain d.Get cannot
+	// tell an unset argument from an explicit false, and dns-support defaults to
+	// true on the AWS side, so omitting an explicit false would silently flip it.
+	rawMap := map[string]cty.Value{}
+	if !rawConfig.IsNull() && rawConfig.IsKnown() && rawConfig.LengthInt() > 0 {
+		rawMap = rawConfig.Index(cty.NumberIntVal(0)).AsValueMap()
 	}
 
-	if v, ok := tfMap["security_group_referencing_support"].(bool); ok {
-		apiObject.SecurityGroupReferencingSupport = v
+	if v, ok := rawMap["dns_support"]; ok && !v.IsNull() {
+		apiObject.DnsSupport = aws.Bool(tfMap["dns_support"].(bool))
+	}
+
+	if v, ok := rawMap["security_group_referencing_support"]; ok && !v.IsNull() {
+		apiObject.SecurityGroupReferencingSupport = aws.Bool(tfMap["security_group_referencing_support"].(bool))
 	}
 
 	return apiObject, nil
