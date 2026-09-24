@@ -65,7 +65,7 @@ func newWrappedDataSource(ctx context.Context, spec *inttypes.ServicePackageFram
 		interceptors = append(interceptors, dataSourceSetRegionInState())
 	}
 
-	if !tfunique.IsHandleNil(spec.Tags) {
+	if spec.Tags.Enabled() {
 		interceptors = append(interceptors, dataSourceTransparentTagging(spec.Tags))
 	}
 
@@ -522,7 +522,7 @@ func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFramew
 		}
 	}
 
-	if !tfunique.IsHandleNil(spec.Tags) {
+	if spec.Tags.Enabled() {
 		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
 		interceptors = append(interceptors, resourceValidateRequiredTags())
 	}
@@ -825,7 +825,7 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 		// interceptor to set default types for tags, tags_all, and timeouts objects
 		v.AppendResultInterceptor(listresource.DefaultObjectInterceptor())
 
-		if !tfunique.IsHandleNil(spec.Tags) {
+		if spec.Tags.Enabled() {
 			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
 		}
 	}
@@ -962,7 +962,7 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 
 		v.AppendResultInterceptor(listresource.IdentityInterceptorSDK(spec.Identity.Attributes))
 
-		if !tfunique.IsHandleNil(spec.Tags) {
+		if spec.Tags.Enabled() {
 			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
 	}
