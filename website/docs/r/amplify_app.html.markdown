@@ -136,6 +136,26 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Package Version Overrides
+
+Amplify picks a package version (e.g. the Node.js version) automatically unless `package.json` specifies otherwise. To override a package version for the build, set the `_LIVE_UPDATES` environment variable to a JSON-encoded list of packages to update. See [Updating the Next.js version for an existing app](https://docs.aws.amazon.com/amplify/latest/userguide/server-side-rendering-amplify.html) in the Amplify User Guide.
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  environment_variables = {
+    "_LIVE_UPDATES" = jsonencode([
+      {
+        pkg     = "node"
+        type    = "nvm"
+        version = "20"
+      },
+    ])
+  }
+}
+```
+
 ### Custom Headers
 
 ```terraform
