@@ -528,7 +528,7 @@ func statusGlobalClusterSourcePromotion(conn *rds.Client, id, sourceARN string) 
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
-			return nil, "", &retry.NotFoundError{LastError: err}
+			return nil, "", nil
 		}
 
 		if err != nil {
