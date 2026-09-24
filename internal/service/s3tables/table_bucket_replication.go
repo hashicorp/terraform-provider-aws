@@ -111,9 +111,21 @@ func (r *tableBucketReplicationResource) Create(ctx context.Context, request res
 	}
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	current, err := conn.GetTableBucketReplication(ctx, &s3tables.GetTableBucketReplicationInput{
+		TableBucketARN: aws.String(tableBucketARN),
+	})
+	if err != nil && !errs.IsA[*awstypes.NotFoundException](err) {
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket Replication (%s) before create", tableBucketARN), err.Error())
+
+		return
+	}
+
 	input := s3tables.PutTableBucketReplicationInput{
 		Configuration:  &configuration,
 		TableBucketARN: aws.String(tableBucketARN),
+	}
+	if current != nil && current.VersionToken != nil {
+		input.VersionToken = current.VersionToken
 	}
 
 	output, err := conn.PutTableBucketReplication(ctx, &input)
