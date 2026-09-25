@@ -9,13 +9,11 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectoryservicedata "github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
@@ -183,7 +181,7 @@ func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestChe
 			id := fmt.Sprintf("%s,%s", rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 
 			_, err := tfdirectoryservicedata.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
-			if retry.NotFound(err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
