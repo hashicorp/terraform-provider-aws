@@ -200,6 +200,9 @@ func testAccCheckUserExists(ctx context.Context, t *testing.T, name string) reso
 		if !ok {
 			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, name, errors.New("not found"))
 		}
+		if rs.Primary.ID == "" {
+			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, name, errors.New("empty resource ID"))
+		}
 		id := fmt.Sprintf("%s,%s", rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 
 		conn := acctest.ProviderMeta(ctx, t).DirectoryServiceDataClient(ctx)
