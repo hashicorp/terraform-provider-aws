@@ -42,6 +42,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="directory_id")
 // @Testing(importIgnore="update_security_group_for_directory_controllers")
+// @Testing(plannableImportAction="NoOp")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckDirectoryService")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directoryservice/types;awstypes;awstypes.IpRouteInfo")
 func newIPRoutesResource(_ context.Context) (resource.ResourceWithConfigure, error) {
