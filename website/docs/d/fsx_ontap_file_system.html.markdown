@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 
   **Note:** This attribute does not apply to FSx for ONTAP file systems and is consequently not set. You can access your FSx for ONTAP file system and volumes via a [Storage Virtual Machine (SVM)](fsx_ontap_storage_virtual_machine.html) using its DNS name or IP address.
 * `endpoint_ip_address_range` - (Multi-AZ only) IP address range in which the endpoints to access your file system exist.
-* `endpoints` - Management and Intercluster FileSystemEndpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [FileSystemEndpoints](#file-system-endpoints) below.
+* `endpoints` - Management and Intercluster FileSystemEndpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [`endpoints`](#endpoints-block) below.
 * `ha_pairs` - Number of HA pairs for the file system.
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
@@ -63,12 +63,12 @@ This data source exports the following attributes in addition to the arguments a
 * `iops` - Total number of SSD IOPS provisioned for the file system.
 * `mode` - Whether the file system is using the `AUTOMATIC` setting of SSD IOPS of 3 IOPS per GB of storage capacity, or if it using a `USER_PROVISIONED` value.
 
-### File System Endpoints
+### `endpoints` Block
 
-* `intercluster` - FileSystemEndpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [FileSystemEndpoint](#file-system-endpoint) below.
-* `management` - FileSystemEndpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [FileSystemEndpoint](#file-system-endpoint) below.
+* `intercluster` - FileSystemEndpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [Endpoint](#endpoint) below.
+* `management` - FileSystemEndpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint) below.
 
-### File System Endpoint
+#### Endpoint
 
-* `DNSName` - File system's DNS name. You can mount your file system using its DNS name.
-* `IpAddresses` - IP addresses of the file system endpoint.
+* `dns_name` - File system's DNS name. You can mount your file system using its DNS name.
+* `ip_addresses` - IP addresses of the file system endpoint.
