@@ -33,18 +33,18 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -70,29 +70,27 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -122,29 +120,27 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -170,26 +166,24 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -207,12 +201,11 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -236,18 +229,18 @@ func TestAccDynamoDBTableReplica_Tags_null(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -266,26 +259,24 @@ func TestAccDynamoDBTableReplica_Tags_null(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -314,16 +305,16 @@ func TestAccDynamoDBTableReplica_Tags_emptyMap(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -342,24 +333,22 @@ func TestAccDynamoDBTableReplica_Tags_emptyMap(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -388,16 +377,16 @@ func TestAccDynamoDBTableReplica_Tags_addOnUpdate(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -416,14 +405,13 @@ func TestAccDynamoDBTableReplica_Tags_addOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -449,14 +437,13 @@ func TestAccDynamoDBTableReplica_Tags_addOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -480,18 +467,18 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_onCreate(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -516,26 +503,24 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_onCreate(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -553,12 +538,11 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_onCreate(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -582,18 +566,18 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -619,15 +603,14 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -655,29 +638,27 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -703,14 +684,13 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -734,18 +714,18 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -771,14 +751,13 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -803,14 +782,13 @@ func TestAccDynamoDBTableReplica_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -838,7 +816,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -846,7 +824,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -868,7 +846,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -876,14 +854,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -892,7 +870,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -916,7 +894,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -925,14 +903,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -940,7 +918,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -962,7 +940,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -970,19 +948,19 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1000,12 +978,12 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1033,7 +1011,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1043,7 +1021,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1071,7 +1049,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1081,14 +1059,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1099,7 +1077,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1131,7 +1109,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1142,19 +1120,19 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1172,12 +1150,12 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1205,7 +1183,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1215,7 +1193,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1241,7 +1219,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1251,14 +1229,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1270,7 +1248,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1300,7 +1278,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1312,14 +1290,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1329,7 +1307,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1355,7 +1333,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1365,7 +1343,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1393,14 +1371,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToProviderOnly(t *testin
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1426,7 +1404,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToProviderOnly(t *testin
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1434,7 +1412,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1456,7 +1434,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToProviderOnly(t *testin
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1464,7 +1442,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1492,7 +1470,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToResourceOnly(t *testin
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1500,7 +1478,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1522,14 +1500,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToResourceOnly(t *testin
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1555,14 +1533,14 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_updateToResourceOnly(t *testin
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1590,7 +1568,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1600,7 +1578,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1625,7 +1603,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1635,7 +1613,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1663,7 +1641,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1671,7 +1649,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1692,7 +1670,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1700,7 +1678,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
-					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region":     config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1728,7 +1706,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullOverlappingResourceTag(t *
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1738,7 +1716,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1760,7 +1738,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullOverlappingResourceTag(t *
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1770,7 +1748,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1798,7 +1776,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullNonOverlappingResourceTag(
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1808,7 +1786,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1830,7 +1808,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullNonOverlappingResourceTag(
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -1840,7 +1818,7 @@ func TestAccDynamoDBTableReplica_Tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1868,12 +1846,12 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_onCreate(t *testing.T) {
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"unknownTagKey":    config.StringVariable("computedkey1"),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1898,12 +1876,12 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_onCreate(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"unknownTagKey":    config.StringVariable("computedkey1"),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1931,14 +1909,14 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -1964,14 +1942,14 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable(acctest.CtKey1),
-					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"unknownTagKey":    config.StringVariable("computedkey1"),
+					"knownTagKey":      config.StringVariable(acctest.CtKey1),
+					"knownTagValue":    config.StringVariable(acctest.CtValue1),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2002,14 +1980,14 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable(acctest.CtKey1),
-					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"unknownTagKey":    config.StringVariable("computedkey1"),
+					"knownTagKey":      config.StringVariable(acctest.CtKey1),
+					"knownTagValue":    config.StringVariable(acctest.CtValue1),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -2037,14 +2015,14 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2070,12 +2048,12 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"unknownTagKey":    config.StringVariable(acctest.CtKey1),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2100,12 +2078,12 @@ func TestAccDynamoDBTableReplica_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"unknownTagKey":    config.StringVariable(acctest.CtKey1),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -2134,7 +2112,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -2147,7 +2125,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2184,7 +2162,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 			},
 			// 2: Update ignored tag only
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -2197,7 +2175,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2234,7 +2212,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 			},
 			// 3: Update both tags
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -2247,7 +2225,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2305,7 +2283,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -2316,7 +2294,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2369,7 +2347,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 			},
 			// 2: Update ignored tag
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -2380,7 +2358,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
@@ -2433,7 +2411,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 			},
 			// 3: Update both tags
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TableReplica/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
@@ -2444,7 +2422,7 @@ func TestAccDynamoDBTableReplica_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),

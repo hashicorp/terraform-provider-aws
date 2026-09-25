@@ -39,7 +39,7 @@ const (
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
 // @Tags(identifierAttribute="arn")
-// @Testing(altRegionProvider=true)
+// @Testing(altRegionTfVars=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
