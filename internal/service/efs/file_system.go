@@ -78,6 +78,14 @@ func resourceFileSystem() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					ForceNew: true,
+					// AWS now creates encrypted file systems and no longer honors
+					// an explicit "false", so Read always records "true". Suppress
+					// the resulting "true" -> "false" diff to avoid a perpetual,
+					// data-destroying replacement loop. A "false" -> "true" change
+					// is a genuine request to encrypt and still forces replacement.
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "true" && new == "false"
+					},
 				},
 				names.AttrKMSKeyID: {
 					Type:         schema.TypeString,
@@ -215,6 +223,8 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Distinguish an omitted "encrypted" from an explicit "false"
+	// Send exactly what the user configured.
+	// AWS now unconditionally creates encrypted file systems regardless of this value
 	var encryptedConfigured bool
 	if v := d.GetRawConfig().GetAttr(names.AttrEncrypted); v.IsKnown() && !v.IsNull() {
 		encryptedConfigured = true
