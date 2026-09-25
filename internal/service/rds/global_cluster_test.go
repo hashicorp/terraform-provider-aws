@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -592,6 +593,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster1),
+					testAccCheckGlobalClusterHasWriterMember(&globalCluster1, clusterResourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
@@ -600,6 +602,43 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
+			},
+		},
+	})
+}
+
+// Regression test for the source promotion race: a cross-region secondary must
+// apply cleanly on top of a promote-existing global cluster, which only holds if
+// create waits for the source cluster to become a writer member first.
+func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_crossRegionReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalCluster types.GlobalCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+	sourceResourceName := "aws_rds_cluster.source"
+	secondaryResourceName := "aws_rds_cluster.secondary"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalCluster(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rName, tfrds.ClusterEngineAuroraPostgreSQL),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster),
+					testAccCheckGlobalClusterHasWriterMember(&globalCluster, sourceResourceName),
+					resource.TestCheckResourceAttrSet(secondaryResourceName, "replication_source_identifier"),
+				),
 			},
 		},
 	})
@@ -764,6 +803,24 @@ func testAccCheckGlobalClusterExists(ctx context.Context, t *testing.T, n string
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckGlobalClusterHasWriterMember(globalCluster *types.GlobalCluster, sourceResourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[sourceResourceName]
+		if !ok {
+			return fmt.Errorf("source cluster not found in state: %s", sourceResourceName)
+		}
+
+		sourceARN := rs.Primary.Attributes[names.AttrARN]
+		for _, m := range globalCluster.GlobalClusterMembers {
+			if aws.ToString(m.DBClusterArn) == sourceARN && aws.ToBool(m.IsWriter) {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("expected source cluster %q to be a writer member", sourceARN)
 	}
 }
 
@@ -1316,6 +1373,85 @@ resource "aws_rds_global_cluster" "test" {
   source_db_cluster_identifier = aws_rds_cluster.test.arn
 }
 `, rName)
+}
+
+func testAccGlobalClusterConfig_sourceClusterIDCrossRegionReplica(rName, engine string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_rds_engine_version" "test" {
+  engine = %[2]q
+  latest = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version_actual
+  preferred_instance_classes = [%[3]s]
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%[1]s-source"
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version_actual
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+
+  lifecycle {
+    ignore_changes = [global_cluster_identifier]
+  }
+}
+
+resource "aws_rds_cluster_instance" "source" {
+  identifier         = "%[1]s-source"
+  cluster_identifier = aws_rds_cluster.source.id
+  engine             = aws_rds_cluster.source.engine
+  engine_version     = aws_rds_cluster.source.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+}
+
+resource "aws_rds_global_cluster" "test" {
+  force_destroy                = true
+  global_cluster_identifier    = "%[1]s-global"
+  source_db_cluster_identifier = aws_rds_cluster.source.arn
+
+  depends_on = [aws_rds_cluster_instance.source]
+}
+
+# Fails with InvalidDBClusterStateFault if the source has not finished promoting.
+resource "aws_rds_cluster" "secondary" {
+  provider                  = "awsalternate"
+  cluster_identifier        = "%[1]s-secondary"
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  skip_final_snapshot       = true
+
+  lifecycle {
+    ignore_changes = [replication_source_identifier]
+  }
+}
+
+resource "aws_rds_cluster_instance" "secondary" {
+  provider           = "awsalternate"
+  identifier         = "%[1]s-secondary"
+  cluster_identifier = aws_rds_cluster.secondary.id
+  engine             = aws_rds_cluster.secondary.engine
+  engine_version     = aws_rds_cluster.secondary.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+}
+`, rName, engine, mainInstanceClasses))
 }
 
 func testAccGlobalClusterConfig_sourceClusterIDStorageEncrypted(rName string) string {
