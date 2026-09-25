@@ -12,6 +12,7 @@ import (
 	"maps"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -364,6 +366,11 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
+
+	// Opt-in escape hatch for local development against emulators (e.g. LocalStack)
+	// where there is no cross-service propagation delay. Deliberately an environment
+	// variable rather than provider schema: it is unsupported against real AWS.
+	config.AssumeNoPropagationDelay, _ = strconv.ParseBool(os.Getenv(envvar.AssumeNoPropagationDelay))
 
 	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
 		mode, err := aws.ParseRetryMode(v)
