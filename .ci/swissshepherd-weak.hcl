@@ -269,6 +269,10 @@ check "schema_docs" {
     "`{Block}` Block",
   ]
 
+  # QuickSight analysis/dashboard/template mirror the QuickSight API's visual model:
+  # a reuse graph, not a tree -- 8,609 block paths but only 381 distinct shapes (one
+  # recurs at 907 paths), so path-keyed `coverage` wants ~8,600 sections per doc.
+  # Only `coverage` fails here; all other findings are fixed. See swissshepherd#74, #75.
   ignore_targets = [
     "data_source/aws_account_primary_contact",
     "data_source/aws_account_regions",
@@ -1445,6 +1449,9 @@ check "schema_docs" {
     "resource/aws_organizations_tag",
     "resource/aws_osis_pipeline",
     "resource/aws_outposts_capacity_task",
+    "resource/aws_quicksight_analysis",
+    "resource/aws_quicksight_dashboard",
+    "resource/aws_quicksight_template",
     "resource/aws_rbin_rule",
     "resource/aws_redshift_authentication_profile",
     "resource/aws_redshift_cluster_iam_roles",
