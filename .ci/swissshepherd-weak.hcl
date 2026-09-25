@@ -447,9 +447,6 @@ check "schema_docs" {
     "data_source/aws_emr_release_labels",
     "data_source/aws_emr_supported_instance_types",
     "data_source/aws_emrcontainers_virtual_cluster",
-    "data_source/aws_fsx_ontap_file_system",
-    "data_source/aws_fsx_ontap_storage_virtual_machine",
-    "data_source/aws_fsx_windows_file_system",
     "data_source/aws_globalaccelerator_accelerator",
     "data_source/aws_globalaccelerator_custom_routing_accelerator",
     "data_source/aws_glue_catalog",
@@ -674,8 +671,6 @@ check "schema_docs" {
     "data_source/aws_subnets",
     "data_source/aws_synthetics_runtime_version",
     "data_source/aws_synthetics_runtime_versions",
-    "data_source/aws_timestreamwrite_database",
-    "data_source/aws_timestreamwrite_table",
     "data_source/aws_verifiedpermissions_policy_store",
     "data_source/aws_vpc_dhcp_options",
     "data_source/aws_vpc_endpoint_associations",
@@ -1834,9 +1829,6 @@ check "schema_docs" {
     "resource/aws_workspacesweb_user_access_logging_settings",
     "resource/aws_workspacesweb_user_settings_association",
     "resource/aws_workspacesweb_user_settings",
-    "resource/aws_xray_group",
-    "resource/aws_xray_resource_policy",
-    "resource/aws_xray_sampling_rule",
   ]
 }
 
