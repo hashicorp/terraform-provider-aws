@@ -87,6 +87,7 @@ project {
         }
         if (acctestRootDomain != "") {
             text("env.AMPLIFY_DOMAIN_NAME", acctestRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.APPRUNNER_CUSTOM_DOMAIN", acctestRootDomain, display = ParameterDisplay.HIDDEN)
             text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acctestRootDomain, display = ParameterDisplay.HIDDEN)
         }
 
