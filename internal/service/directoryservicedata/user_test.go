@@ -9,15 +9,20 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectoryservicedata "github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const testAccUserPrefix = "tfacctest-"
 
 func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -29,8 +34,9 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
-		"user%s",
-		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
+		"%s%s",
+		testAccUserPrefix,
+		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
 	)
 	resourceName := "aws_directoryservicedata_user.test"
 
@@ -60,9 +66,11 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", "sam_account_name"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "directory_id",
 			},
 		},
 	})
@@ -78,8 +86,9 @@ func TestAccDirectoryServiceDataUser_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
-		"user%s",
-		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
+		"%s%s",
+		testAccUserPrefix,
+		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
 	)
 	resourceName := "aws_directoryservicedata_user.test"
 
@@ -123,8 +132,9 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 	emailAddress := acctest.RandomEmailAddress(domainName)
 	updatedEmailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
-		"user%s",
-		acctest.RandStringFromCharSet(t, 16, "abcdefghijklmnopqrstuvwxyz0123456789"),
+		"%s%s",
+		testAccUserPrefix,
+		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
 	)
 	resourceName := "aws_directoryservicedata_user.test"
 
@@ -173,7 +183,7 @@ func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestChe
 			id := fmt.Sprintf("%s,%s", rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 
 			_, err := tfdirectoryservicedata.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
-			if retry.NotFound(err) {
+			if retry.NotFound(err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				continue
 			}
 			if err != nil {
