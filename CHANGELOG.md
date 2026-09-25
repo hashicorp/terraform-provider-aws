@@ -15,6 +15,27 @@ ENHANCEMENTS:
 * resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
 * resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
 
+BUG FIXES:
+
+* list-resource/aws_dynamodb_table_replica: Fix eventual consistency error when replacing resource. ([#50133](https://github.com/hashicorp/terraform-provider-aws/issues/50133))
+
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
+* resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
 ## 6.66.0 (September 21, 2026)
 
 NOTES:
