@@ -38,7 +38,7 @@ jobs:
             # definitively rejected the request due to a rate limit. Ambiguous
             # failures (e.g. a lost response) could have created a dispatch, so
             # fail fast and let the failure alert prompt a manual reconcile.
-            if ! grep -qiE 'rate limit|HTTP 403' <<<"$output"; then
+            if ! grep -qiE 'rate limit' <<<"$output"; then
               echo "::error::Failed to dispatch registry-check.yml (non-retryable error)."
               exit 1
             fi
@@ -74,7 +74,7 @@ jobs:
             # definitively rejected the request due to a rate limit. Ambiguous
             # failures (e.g. a lost response) could have created a dispatch, so
             # fail fast and let the failure alert prompt a manual reconcile.
-            if ! grep -qiE 'rate limit|HTTP 403' <<<"$output"; then
+            if ! grep -qiE 'rate limit' <<<"$output"; then
               echo "::error::Failed to dispatch update-changelog.yml (non-retryable error)."
               exit 1
             fi
@@ -110,7 +110,7 @@ jobs:
             # definitively rejected the request due to a rate limit. Ambiguous
             # failures (e.g. a lost response) could have created a dispatch, so
             # fail fast and let the failure alert prompt a manual reconcile.
-            if ! grep -qiE 'rate limit|HTTP 403' <<<"$output"; then
+            if ! grep -qiE 'rate limit' <<<"$output"; then
               echo "::error::Failed to dispatch post-publish.yml (non-retryable error)."
               exit 1
             fi
@@ -139,5 +139,5 @@ jobs:
           payload: |
             {
               "channel": "${{ secrets.SLACK_CHANNEL }}",
-              "text": ":rotating_light: crt-post-promote-production failed for version ${{ github.event.client_payload.payload.version }}. One or more post-release dispatches (registry-check, update-changelog, post-publish) did not run — often a GitHub API rate limit (HTTP 403) that can persist until the daily reset. The CHANGELOG's next '(Unreleased)' heading and PR milestones depend on these. Re-run the failed jobs once the limit resets: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": ":rotating_light: crt-post-promote-production failed for version ${{ github.event.client_payload.payload.version }}. One or more post-release dispatches (registry-check, update-changelog, post-publish) may not have started — often a GitHub API rate limit that can persist until the daily reset. The CHANGELOG's next '(Unreleased)' heading and PR milestones depend on these. Before re-running, check whether each downstream workflow already started (a dispatch can succeed even if the call reported failure) and re-run only the dispatches that did not start: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
