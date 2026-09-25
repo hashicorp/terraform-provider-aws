@@ -3750,7 +3750,7 @@ func waitVPNConcentratorDeleted(ctx context.Context, conn *ec2.Client, id string
 
 func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateDefaultState, awstypes.VpcBlockPublicAccessStateUpdateInProgress),
 		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
 		Refresh:                   statusVPCBlockPublicAccessOptions(conn),
 		Timeout:                   timeout,
