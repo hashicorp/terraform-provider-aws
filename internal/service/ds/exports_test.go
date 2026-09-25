@@ -7,6 +7,7 @@ package ds
 var (
 	ResourceConditionalForwarder    = resourceConditionalForwarder
 	ResourceDirectory               = resourceDirectory
+	ResourceDirectorySettings       = newDirectorySettingsResource
 	ResourceLogSubscription         = resourceLogSubscription
 	ResourceRadiusSettings          = resourceRadiusSettings
 	ResourceRegion                  = resourceRegion
@@ -16,9 +17,12 @@ var (
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
+	FindDirectorySettingsByDirectoryID   = findDirectorySettingsByDirectoryID
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
 	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey // nosemgrep:ci.ds-in-var-name
 	FindTrustByTwoPartKey                = findTrustByTwoPartKey
+
+	ResNameDirectorySettingsExported = ResNameDirectorySettings
 )
