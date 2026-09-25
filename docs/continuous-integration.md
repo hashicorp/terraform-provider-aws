@@ -28,6 +28,62 @@ Additionally, these tests provide rapid feedback to contributors, enabling them 
 !!! note "GitHub Actions Caching"
     The provider uses a specialized caching strategy to handle the unique challenges of a massive codebase with 500+ active PRs. If you're working on GitHub Actions workflows or experiencing slow CI builds, see [GitHub Actions Caching Strategy](github-actions-caching.md) for details.
 
+## Triggering Acceptance Tests from a Pull Request Comment
+
+!!! note "Maintainers only"
+    This feature is restricted to project maintainers. When a comment is posted, a community check runs against the maintainers list. If the commenter is not a maintainer, nothing happens and no feedback is posted. Contributors should continue to run tests [locally](#using-make-to-run-specific-tests-locally) and include the output in the pull request.
+
+Maintainers can trigger the acceptance test suite for a pull request by adding a comment that begins with `/test`. This runs the affected service package's acceptance tests on the internal TeamCity server and posts the results back to the pull request when the run completes. It is implemented by the [`pr-test-trigger.yml`](https://github.com/hashicorp/terraform-provider-aws/blob/main/.github/workflows/pr-test-trigger.yml) workflow.
+
+The comment must _start_ with `/test`. A `/test` that appears later in a comment is ignored.
+
+### Single Service Package Requirement
+
+The trigger inspects the files changed in the pull request and derives the affected service package from paths under `internal/service/<package>`. It only runs when the pull request touches a **single** service package. If the pull request changes more than one service package, the workflow declines to run and instead comments asking that the tests be run manually.
+
+### Options
+
+Options are supplied as `KEY=VALUE` tokens after `/test`, separated by whitespace. Keys are case-insensitive, order does not matter, and values cannot contain spaces.
+
+| Option | Description |
+|---|---|
+| `PATTERN=<regex>` | Restricts which tests run. The value is passed through to the acceptance test runner as a Go test-name regular expression (equivalent to `go test -run`). Only the following characters are allowed: letters, digits, and `_ . ^ $ / \| \ ( ) -`. Any other character (including spaces) causes the command to be rejected. Combine multiple tests with the `\|` alternation operator, and use `^`/`$` anchors for exact matches. |
+| `PARALLELISM=<n>` | Sets the number of concurrent acceptance tests (`ACCTEST_PARALLELISM`). The value must be digits only and cannot exceed `20`; a larger value is rejected. Lower it (for example, `PARALLELISM=1`) to serialize tests that cannot run concurrently, such as those that contend for a shared, account-wide resource. |
+
+Both options can be combined in a single comment.
+
+### Examples
+
+Run all acceptance tests for the pull request's service package:
+
+```text
+/test
+```
+
+Run only the tests matching a pattern:
+
+```text
+/test PATTERN=TestAccRDSInstance_basic
+```
+
+Run several specific tests using alternation:
+
+```text
+/test PATTERN=TestAccRDSInstance_basic$|TestAccRDSCluster_basic$
+```
+
+Serialize the run to avoid contention on a shared resource:
+
+```text
+/test PARALLELISM=1
+```
+
+Combine a pattern with reduced parallelism:
+
+```text
+/test PATTERN=TestAccRDSInstance_ PARALLELISM=5
+```
+
 ## Using `make` to Run Specific Tests Locally
 
 !!! note
