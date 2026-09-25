@@ -186,9 +186,37 @@ func (r *modelInvocationLoggingConfigurationResource) Read(ctx context.Context, 
 		return
 	}
 
+	var priorVideoDataDeliveryEnabled types.Bool
+	if !data.LoggingConfig.IsNull() && !data.LoggingConfig.IsUnknown() {
+		if priorLoggingConfig, d := data.LoggingConfig.ToPtr(ctx); !d.HasError() && priorLoggingConfig != nil {
+			priorVideoDataDeliveryEnabled = priorLoggingConfig.VideoDataDeliveryEnabled
+		}
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// In regions where the video modality is unsupported (e.g. ca-west-1), the Bedrock API
+	// omits videoDataDeliveryEnabled from GetModelInvocationLoggingConfiguration.
+	// fwflex.Flatten overwrites it with null, causing a perpetual diff against the schema default.
+	// Preserve the prior state value if present, or default to true.
+	if output.LoggingConfig != nil && output.LoggingConfig.VideoDataDeliveryEnabled == nil {
+		if loggingConfig, d := data.LoggingConfig.ToPtr(ctx); !d.HasError() && loggingConfig != nil {
+			if !priorVideoDataDeliveryEnabled.IsNull() && !priorVideoDataDeliveryEnabled.IsUnknown() {
+				loggingConfig.VideoDataDeliveryEnabled = priorVideoDataDeliveryEnabled
+			} else {
+				loggingConfig.VideoDataDeliveryEnabled = types.BoolValue(true)
+			}
+
+			newLoggingConfig, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, loggingConfig)
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			data.LoggingConfig = newLoggingConfig
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
