@@ -5,9 +5,11 @@ package networksecuritymanager
 
 // Exports for use in tests only.
 var (
+	ResourcePolicy   = newPolicyResource
 	ResourceRule     = newRuleResource
 	ResourceTemplate = newTemplateResource
 
+	FindPolicyByARN   = findPolicyByARN
 	FindRuleByARN     = findRuleByARN
 	FindTemplateByARN = findTemplateByARN
 )
