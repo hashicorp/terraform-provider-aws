@@ -206,7 +206,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_updated_time` - Time that the dashboard was last updated.
 * `source_entity_arn` - ARN of a template that was used to create this dashboard.
 * `status` - Dashboard creation status.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_number` - Version number of the dashboard version.
 
 ## Timeouts

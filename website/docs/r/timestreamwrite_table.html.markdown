@@ -63,7 +63,7 @@ This resource supports the following arguments:
 * `database_name` - (Required) Name of the Timestream database.
 * `magnetic_store_write_properties` - (Optional) Properties to set on the table when enabling magnetic store writes. See [`magnetic_store_write_properties` Block](#magnetic_store_write_properties-block) below for more details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `retention_properties` - (Optional) Retention duration for the memory store and magnetic store. See [`retention_properties` Block](#retention_properties-block) below for more details. If not provided, `magnetic_store_retention_period_in_days` default to 73000 and `memory_store_retention_period_in_hours` defaults to 6.
+* `retention_properties` - (Optional) Retention duration for the memory store and magnetic store. See [`retention_properties` Block](#retention_properties-block) below for more details. If not provided, `magnetic_store_retention_period_in_days` defaults to 73000 and `memory_store_retention_period_in_hours` defaults to 6.
 * `schema` - (Optional) Schema of the table. See [`schema` Block](#schema-block) below for more details.
 * `table_name` - (Required) Name of the Timestream table.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -72,7 +72,7 @@ This resource supports the following arguments:
 
 The `magnetic_store_write_properties` block supports the following arguments:
 
-* `enable_magnetic_store_writes` - (Optional) Flag to enable magnetic store writes.
+* `enable_magnetic_store_writes` - (Optional) Whether to enable magnetic store writes.
 * `magnetic_store_rejected_data_location` - (Optional) Location to write error reports for records rejected asynchronously during magnetic store writes. See [`magnetic_store_rejected_data_location` Block](#magnetic_store_rejected_data_location-block) below for more details.
 
 #### `magnetic_store_rejected_data_location` Block

@@ -44,7 +44,7 @@ This data source exports the following attributes in addition to the arguments a
             * `bucket_name` - Name of S3 bucket.
             * `encryption_option` - Encryption option for S3 location.
             * `kms_key_id` - AWS KMS key ID for S3 location with AWS managed key.
-            * `object_key_prefix` - Object key preview for S3 location.
+            * `object_key_prefix` - Object key prefix for S3 location.
 * `name` - Name of the table.
 * `retention_properties` - Object containing the following attributes to describe the retention duration for the memory and magnetic stores.
     * `magnetic_store_retention_period_in_days` - Duration in days in which the data must be stored in magnetic store.

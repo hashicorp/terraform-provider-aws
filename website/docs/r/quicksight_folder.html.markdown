@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `folder_path` - Array of ancestor ARN strings for the folder. Empty for root-level folders.
 * `id` - Comma-delimited string joining AWS account ID and folder ID.
 * `last_updated_time` - Time that the folder was last updated.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

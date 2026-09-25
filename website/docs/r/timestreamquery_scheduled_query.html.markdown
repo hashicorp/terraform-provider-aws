@@ -462,7 +462,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `last_run_summary.query_insights_response.query_temporal_range.max` Block
 
-* `table_arn` - ARN of the table table which is queried with the largest time range.
+* `table_arn` - ARN of the table which is queried with the largest time range.
 * `value` - Maximum duration in nanoseconds between the start and end of the query.
 
 ### `recently_failed_runs` Block

@@ -91,7 +91,7 @@ The following arguments are optional:
 
 ### `border` Block
 
-* `show` - (Optional) Option to enable display of borders for visuals.
+* `show` - (Optional) Whether to enable display of borders for visuals.
 
 ### `tile_layout` Block
 
@@ -142,7 +142,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Comma-delimited string joining AWS account ID and theme ID.
 * `last_updated_time` - Time that the theme was last updated.
 * `status` - Theme creation status.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_number` - Version number of the theme version.
 
 ## Timeouts

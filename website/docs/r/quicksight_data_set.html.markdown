@@ -275,8 +275,8 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 ### `data_set_usage_configuration` Block
 
-* `disable_use_as_direct_query_source` - (Optional) Controls whether a child dataset of a direct query can use this dataset as a source.
-* `disable_use_as_imported_source` - (Optional) Controls whether a child dataset that's stored in QuickSight can use this dataset as a source.
+* `disable_use_as_direct_query_source` - (Optional) Whether to prevent a child dataset of a direct query from using this dataset as a source.
+* `disable_use_as_imported_source` - (Optional) Whether to prevent a child dataset that's stored in QuickSight from using this dataset as a source.
 
 ### `field_folders` Block
 
@@ -366,11 +366,11 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 ### `left_join_key_properties` Block
 
-* `unique_key` - (Optional) Value that indicates that a row in a table is uniquely identified by the columns in a join key. This is used by Amazon QuickSight to optimize query performance.
+* `unique_key` - (Optional) Whether to treat a row in a table as uniquely identified by the columns in a join key. This is used by Amazon QuickSight to optimize query performance.
 
 ### `right_join_key_properties` Block
 
-* `unique_key` - (Optional) Value that indicates that a row in a table is uniquely identified by the columns in a join key. This is used by Amazon QuickSight to optimize query performance.
+* `unique_key` - (Optional) Whether to treat a row in a table as uniquely identified by the columns in a join key. This is used by Amazon QuickSight to optimize query performance.
 
 ### `permissions` Block
 
@@ -422,7 +422,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the data set.
 * `id` - Comma-delimited string joining AWS account ID and data set ID.
 * `output_columns` - Final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set. See [`output_columns` Block](#output_columns-block) below.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `output_columns` Block
 

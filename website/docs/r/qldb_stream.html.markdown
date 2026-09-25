@@ -47,7 +47,7 @@ This resource supports the following arguments:
 
 The `kinesis_configuration` block supports the following arguments:
 
-* `aggregation_enabled` - (Optional) Enables QLDB to publish multiple data records in a single Kinesis Data Streams record, increasing the number of records sent per API call. Default: `true`.
+* `aggregation_enabled` - (Optional) Whether to allow QLDB to publish multiple data records in a single Kinesis Data Streams record, increasing the number of records sent per API call. Default: `true`.
 * `stream_arn` - (Required) ARN of the Kinesis Data Streams resource.
 
 ## Attribute Reference

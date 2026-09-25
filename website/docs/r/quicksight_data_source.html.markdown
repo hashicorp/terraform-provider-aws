@@ -145,7 +145,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ssl_properties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [`ssl_properties` Block](#ssl_properties-block) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_connection_properties`- (Optional) Use this parameter only when you want Amazon QuickSight to use a VPC connection when connecting to your underlying source. See [`vpc_connection_properties` Block](#vpc_connection_properties-block) below for more details.
+* `vpc_connection_properties` - (Optional) Use this parameter only when you want Amazon QuickSight to use a VPC connection when connecting to your underlying source. See [`vpc_connection_properties` Block](#vpc_connection_properties-block) below for more details.
 
 ### `credentials` Block
 
@@ -191,7 +191,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 
 ### `ssl_properties` Block
 
-* `disable_ssl` - (Required) Boolean option to control whether SSL should be disabled.
+* `disable_ssl` - (Required) Whether to disable SSL.
 
 ### `vpc_connection_properties` Block
 

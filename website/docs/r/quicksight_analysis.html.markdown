@@ -149,7 +149,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_published_time` - Time that the analysis was last published.
 * `last_updated_time` - Time that the analysis was last updated.
 * `status` - Analysis creation status.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
