@@ -1,10 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "awsalternate" {
-  region = var.alt_region
-}
-
 provider "null" {}
 
 resource "aws_kms_replica_key" "test" {
@@ -19,7 +15,7 @@ resource "aws_kms_replica_key" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  provider = awsalternate
+  region = var.secondary_region
 
   description  = "${var.rName}-source"
   multi_region = true
@@ -51,8 +47,8 @@ variable "knownTagValue" {
   nullable = false
 }
 
-variable "alt_region" {
-  description = "Region for provider awsalternate"
+variable "secondary_region" {
+  description = "Secondary region"
   type        = string
   nullable    = false
 }
