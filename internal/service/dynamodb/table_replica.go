@@ -158,6 +158,10 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
 				return tfresource.RetryableError(err)
 			}
+			// Race condition when re-creating resource
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "because one or more replicas already existed as tables") {
+				return tfresource.RetryableError(err)
+			}
 
 			return tfresource.NonRetryableError(err)
 		}
