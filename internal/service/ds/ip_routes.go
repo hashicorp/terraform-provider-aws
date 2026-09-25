@@ -31,7 +31,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -115,12 +114,6 @@ func (r *ipRoutesResource) Schema(ctx context.Context, request resource.SchemaRe
 							Optional: true,
 						},
 					},
-					Validators: []validator.Object{
-						tfobjectvalidator.ExactlyOneOfChildren(
-							path.MatchRelative().AtName("cidr_ip"),
-							path.MatchRelative().AtName("cidr_ipv6"),
-						),
-					},
 				},
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -155,6 +148,25 @@ func (r *ipRoutesResource) ValidateConfig(ctx context.Context, request resource.
 	// IPv6) to be unique.
 	seen := make(map[string]struct{}, len(routes))
 	for _, route := range routes {
+		hasV4 := !route.CidrIP.IsNull() && !route.CidrIP.IsUnknown()
+		hasV6 := !route.CidrIPv6.IsNull() && !route.CidrIPv6.IsUnknown()
+
+		// Skip validation while a value is still unknown; it is re-checked once
+		// known. Enforce exactly one of cidr_ip / cidr_ipv6 per block. (An
+		// object-level ExactlyOneOfChildren validator cannot read sibling values
+		// inside a set nested block, so the check lives here.)
+		if route.CidrIP.IsUnknown() || route.CidrIPv6.IsUnknown() {
+			continue
+		}
+		if hasV4 == hasV6 {
+			smerr.AddOne(ctx, &response.Diagnostics, diag.NewAttributeErrorDiagnostic(
+				path.Root("ip_route"),
+				"Invalid Attribute Combination",
+				"Each ip_route block must configure exactly one of cidr_ip or cidr_ipv6.",
+			))
+			return
+		}
+
 		cidr := route.routeKey()
 		if cidr == "" {
 			continue
@@ -508,6 +520,13 @@ func statusIPRoutesAdded(conn *directoryservice.Client, directoryID string, cidr
 			return nil, "", err
 		}
 
+		// StateChangeConf treats a nil/zero refresh result as "resource not
+		// found" regardless of the returned state string, so never return a nil
+		// slice alongside a valid state.
+		if routes == nil {
+			routes = []awstypes.IpRouteInfo{}
+		}
+
 		got := make(map[string]awstypes.IpRouteInfo, len(routes))
 		for _, v := range routes {
 			got[ipRouteInfoKey(v)] = v
@@ -551,6 +570,13 @@ func statusIPRoutesRemoved(conn *directoryservice.Client, directoryID string, ci
 
 		if err != nil {
 			return nil, "", err
+		}
+
+		// StateChangeConf treats a nil/zero refresh result as "resource not
+		// found" regardless of the returned state string, so never return a nil
+		// slice alongside a valid state.
+		if routes == nil {
+			routes = []awstypes.IpRouteInfo{}
 		}
 
 		remaining := false
