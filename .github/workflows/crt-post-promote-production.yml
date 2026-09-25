@@ -21,20 +21,33 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.client_payload.payload.version }}
         run: |
-          for attempt in $(seq 1 5); do
-            if gh workflow run \
+          max_attempts=5
+          for attempt in $(seq 1 "$max_attempts"); do
+            if output=$(gh workflow run \
               --repo "${{ github.repository }}" \
               --ref main \
-              --field version="${{ github.event.client_payload.payload.version }}" \
-              registry-check.yml; then
+              --field version="$VERSION" \
+              registry-check.yml 2>&1); then
               echo "Dispatched registry-check.yml (attempt ${attempt})"
               exit 0
             fi
-            echo "::warning::Attempt ${attempt} to dispatch registry-check.yml failed; retrying in $((attempt * 15))s"
-            sleep "$((attempt * 15))"
+            echo "$output"
+            # The dispatch is not idempotent, so only retry when GitHub
+            # definitively rejected the request due to a rate limit. Ambiguous
+            # failures (e.g. a lost response) could have created a dispatch, so
+            # fail fast and let the failure alert prompt a manual reconcile.
+            if ! grep -qiE 'rate limit|HTTP 403' <<<"$output"; then
+              echo "::error::Failed to dispatch registry-check.yml (non-retryable error)."
+              exit 1
+            fi
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              echo "::warning::Attempt ${attempt} hit a rate limit dispatching registry-check.yml; retrying in $((attempt * 15))s"
+              sleep "$((attempt * 15))"
+            fi
           done
-          echo "::error::Failed to dispatch registry-check.yml after 5 attempts (possible GitHub API rate limit). Re-run this workflow once the limit resets."
+          echo "::error::Failed to dispatch registry-check.yml after ${max_attempts} attempts (GitHub API rate limit). Re-run this workflow once the limit resets."
           exit 1
   create-update-changelog-pr:
     name: Create Update Changelog PR
@@ -44,20 +57,33 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.client_payload.payload.version }}
         run: |
-          for attempt in $(seq 1 5); do
-            if gh workflow run \
+          max_attempts=5
+          for attempt in $(seq 1 "$max_attempts"); do
+            if output=$(gh workflow run \
               --repo "${{ github.repository }}" \
               --ref main \
-              --field previous_version="${{ github.event.client_payload.payload.version }}" \
-              update-changelog.yml; then
+              --field previous_version="$VERSION" \
+              update-changelog.yml 2>&1); then
               echo "Dispatched update-changelog.yml (attempt ${attempt})"
               exit 0
             fi
-            echo "::warning::Attempt ${attempt} to dispatch update-changelog.yml failed; retrying in $((attempt * 15))s"
-            sleep "$((attempt * 15))"
+            echo "$output"
+            # The dispatch is not idempotent, so only retry when GitHub
+            # definitively rejected the request due to a rate limit. Ambiguous
+            # failures (e.g. a lost response) could have created a dispatch, so
+            # fail fast and let the failure alert prompt a manual reconcile.
+            if ! grep -qiE 'rate limit|HTTP 403' <<<"$output"; then
+              echo "::error::Failed to dispatch update-changelog.yml (non-retryable error)."
+              exit 1
+            fi
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              echo "::warning::Attempt ${attempt} hit a rate limit dispatching update-changelog.yml; retrying in $((attempt * 15))s"
+              sleep "$((attempt * 15))"
+            fi
           done
-          echo "::error::Failed to dispatch update-changelog.yml after 5 attempts (possible GitHub API rate limit). Re-run this workflow once the limit resets."
+          echo "::error::Failed to dispatch update-changelog.yml after ${max_attempts} attempts (GitHub API rate limit). Re-run this workflow once the limit resets."
           exit 1
   post-publish:
     name: Runs post publish actions
@@ -67,20 +93,33 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.client_payload.payload.version }}
         run: |
-          for attempt in $(seq 1 5); do
-            if gh workflow run \
+          max_attempts=5
+          for attempt in $(seq 1 "$max_attempts"); do
+            if output=$(gh workflow run \
               --repo "${{ github.repository }}" \
               --ref main \
-              --field release_tag="${{ github.event.client_payload.payload.version }}" \
-              post-publish.yml; then
+              --field release_tag="$VERSION" \
+              post-publish.yml 2>&1); then
               echo "Dispatched post-publish.yml (attempt ${attempt})"
               exit 0
             fi
-            echo "::warning::Attempt ${attempt} to dispatch post-publish.yml failed; retrying in $((attempt * 15))s"
-            sleep "$((attempt * 15))"
+            echo "$output"
+            # The dispatch is not idempotent, so only retry when GitHub
+            # definitively rejected the request due to a rate limit. Ambiguous
+            # failures (e.g. a lost response) could have created a dispatch, so
+            # fail fast and let the failure alert prompt a manual reconcile.
+            if ! grep -qiE 'rate limit|HTTP 403' <<<"$output"; then
+              echo "::error::Failed to dispatch post-publish.yml (non-retryable error)."
+              exit 1
+            fi
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              echo "::warning::Attempt ${attempt} hit a rate limit dispatching post-publish.yml; retrying in $((attempt * 15))s"
+              sleep "$((attempt * 15))"
+            fi
           done
-          echo "::error::Failed to dispatch post-publish.yml after 5 attempts (possible GitHub API rate limit). Re-run this workflow once the limit resets."
+          echo "::error::Failed to dispatch post-publish.yml after ${max_attempts} attempts (GitHub API rate limit). Re-run this workflow once the limit resets."
           exit 1
 
   notify-failure:
