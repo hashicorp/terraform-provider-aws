@@ -40,7 +40,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Ingestion.
-* `id` - A comma-delimited string joining AWS account ID, data set ID, and ingestion ID.
+* `id` - Comma-delimited string joining AWS account ID, data set ID, and ingestion ID.
 * `ingestion_status` - Ingestion status.
 
 ## Import
