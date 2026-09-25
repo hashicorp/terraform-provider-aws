@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket: Send the configured `region` as the S3 `CreateBucket` `LocationConstraint` when using a custom S3 endpoint with a non-standard region string (e.g. Ceph, MinIO), fixing bucket creation failures against S3-compatible storage
+```

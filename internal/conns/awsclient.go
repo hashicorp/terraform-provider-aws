@@ -286,6 +286,14 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 	return c.s3UsePathStyle
 }
 
+// S3OriginalRegion returns the original, non-standard Region string configured for
+// S3-compatible storage (Ceph, MinIO, etc.). It is empty when the configured Region
+// is a standard AWS Region. See config.go where the Region is substituted with a
+// compliant dummy value for AWS SDK initialization.
+func (c *AWSClient) S3OriginalRegion(context.Context) string {
+	return c.s3OriginalRegion
+}
+
 // SetHTTPClient sets the http.Client used for AWS API calls.
 func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
 	c.httpClient = httpClient
