@@ -169,9 +169,9 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email_address", ""),
-					resource.TestCheckResourceAttr(resourceName, "given_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "surname", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "email_address"),
+					resource.TestCheckNoResourceAttr(resourceName, "given_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "surname"),
 				),
 			},
 			{
