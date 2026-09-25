@@ -31,6 +31,21 @@ func TestAccNetworkSecurityManager_serial(t *testing.T) {
 			"Identity":           testAccNetworkSecurityManagerRule_identitySerial,
 			"tags":               testAccNetworkSecurityManagerRule_tagsSerial,
 		},
+		"Template": {
+			acctest.CtBasic:      testAccTemplate_basic,
+			acctest.CtDisappears: testAccTemplate_disappears,
+			"full":               testAccTemplate_full,
+			"rules":              testAccTemplate_rules,
+			"publish":            testAccTemplate_publish,
+			"description":        testAccTemplate_description,
+			"updateToken":        testAccTemplate_updateToken,
+			"replace":            testAccTemplate_replace,
+			"recreate":           testAccTemplate_recreate,
+			"ruleReplace":        testAccTemplate_ruleReplace,
+			"validation":         testAccTemplate_validation,
+			"Identity":           testAccNetworkSecurityManagerTemplate_identitySerial,
+			"tags":               testAccNetworkSecurityManagerTemplate_tagsSerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
