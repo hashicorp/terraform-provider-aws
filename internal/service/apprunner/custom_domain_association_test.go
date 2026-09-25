@@ -26,7 +26,8 @@ import (
 
 func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
@@ -82,7 +83,8 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 
 func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
