@@ -28,12 +28,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+<<<<<<< HEAD
 			Factory:  newDeploymentResource,
 			TypeName: "aws_networksecuritymanager_deployment",
 			Name:     "Deployment",
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
+=======
+			Factory:  newAdminAccountResource,
+			TypeName: "aws_networksecuritymanager_admin_account",
+			Name:     "Admin Account",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
+>>>>>>> afeca37479e (New Resource: aws_networksecuritymanager_admin_account)
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
