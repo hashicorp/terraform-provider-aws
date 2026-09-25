@@ -28,24 +28,24 @@ resource "aws_xray_group" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `group_name` - (Required) The name of the group.
-* `filter_expression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
+* `filter_expression` - (Required) Filter expression defining criteria by which to group traces. More info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
+* `group_name` - (Required) Name of the group.
 * `insights_configuration` - (Optional) Configuration options for enabling insights.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-#### `insights_configuration`
+### `insights_configuration` Block
 
-* `insights_enabled` - (Required) Specifies whether insights are enabled.
-* `notifications_enabled` - (Optional) Specifies whether insight notifications are enabled.
+* `insights_enabled` - (Required) Whether insights are enabled.
+* `notifications_enabled` - (Optional) Whether insight notifications are enabled.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of the Group.
-* `arn` - The ARN of the Group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the Group.
+* `id` - ARN of the Group.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
