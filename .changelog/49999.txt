@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_efs_file_system: Avoid resource replacement when `encrypted` is set to `false`
+resource/aws_efs_file_system: Support new default of `encrypted = true` for new file systems by correctly honoring an explicit `encrypted = false`, and no longer requiring `encrypted` to be set explicitly to `true` when `kms_key_id` is configured
 ```
