@@ -7,6 +7,8 @@ package ds
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -26,12 +28,34 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newIPRoutesResource,
+			TypeName: "aws_directory_service_ip_routes",
+			Name:     "IP Routes",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTrustResource,
 			TypeName: "aws_directory_service_trust",
 			Name:     "Trust",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newIPRoutesResourceAsListResource,
+			TypeName: "aws_directory_service_ip_routes",
+			Name:     "IP Routes",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
