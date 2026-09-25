@@ -184,7 +184,8 @@ func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, t, resourceName, &conf),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), "aws_iam_role.test"),
+					// Deleting the associated role does not affect the instance profile
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), "aws_iam_role.test"), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
