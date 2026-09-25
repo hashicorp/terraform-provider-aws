@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/float32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -307,31 +306,23 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"messages_count": schema.Int32Attribute{
 										Optional: true,
 									},
-								},
-								Blocks: map[string]schema.Block{
-									"retrieval_config": schema.ListNestedBlock{
+									// Optional+Computed list-of-object attribute (not a block): the
+									// API defaults or populates this server-side when omitted, so an unset
+									// retrieval_config must be able to become known after apply. A block
+									// cannot be Computed, and protocol v5 cannot nest attribute metadata
+									// inside a block, so this is modeled as a typed ListAttribute (see #50097).
+									"retrieval_config": schema.ListAttribute{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreMemoryRetrievalConfigModel](ctx),
+										Optional:   true,
+										Computed:   true,
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
-												"map_block_key": schema.StringAttribute{
-													Required: true,
-												},
-												"relevance_score": schema.Float32Attribute{
-													Optional: true,
-													Validators: []validator.Float32{
-														float32validator.Between(0, 1),
-													},
-												},
-												"strategy_id": schema.StringAttribute{
-													Optional: true,
-												},
-												"top_k": schema.Int32Attribute{
-													Optional: true,
-												},
-											},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
+										},
+										ElementType: types.ObjectType{
+											AttrTypes: fwtypes.AttributeTypesMust[harnessAgentCoreMemoryRetrievalConfigModel](ctx),
 										},
 									},
 								},
