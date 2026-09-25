@@ -15,6 +15,26 @@ func TestAccNetworkSecurityManager_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"Policy": {
+			acctest.CtBasic:      testAccPolicy_basic,
+			acctest.CtDisappears: testAccPolicy_disappears,
+			"full":               testAccPolicy_full,
+			"shieldAdvanced":     testAccPolicy_shieldAdvanced,
+			"wafConfig":          testAccPolicy_wafConfig,
+			"priority":           testAccPolicy_priority,
+			"associations":       testAccPolicy_associations,
+			"associationsMax":    testAccPolicy_associationsMax,
+			"publish":            testAccPolicy_publish,
+			"description":        testAccPolicy_description,
+			"updateToken":        testAccPolicy_updateToken,
+			"replace":            testAccPolicy_replace,
+			"recreate":           testAccPolicy_recreate,
+			"referenceReplace":   testAccPolicy_referenceReplace,
+			"draftReferences":    testAccPolicy_draftReferences,
+			"validation":         testAccPolicy_validation,
+			"Identity":           testAccNetworkSecurityManagerPolicy_identitySerial,
+			"tags":               testAccNetworkSecurityManagerPolicy_tagsSerial,
+		},
 		"Rule": {
 			acctest.CtBasic:      testAccRule_basic,
 			acctest.CtDisappears: testAccRule_disappears,
