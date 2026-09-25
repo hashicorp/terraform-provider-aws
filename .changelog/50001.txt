@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_directoryservicedata_user
+```
+
+```release-note:new-list-resource
+aws_directoryservicedata_user
+```
