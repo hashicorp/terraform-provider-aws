@@ -162,6 +162,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"blackhole":                          testAccTransitGatewayRoute_blackhole,
 			acctest.CtDisappears:                 testAccTransitGatewayRoute_disappears,
 			"disappearsTransitGatewayAttachment": testAccTransitGatewayRoute_disappears_TransitGatewayAttachment,
+			"Identity":                           testAccTransitGatewayRoute_identity,
 		},
 		"RouteTable": {
 			acctest.CtBasic:            testAccTransitGatewayRouteTable_basic,

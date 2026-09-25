@@ -22,20 +22,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_route", name="Transit Gateway Route")
+// @IdentityAttribute("transit_gateway_route_table_id")
+// @IdentityAttribute("destination_cidr_block")
+// @ImportIDHandler("transitGatewayRouteImportID")
+// @Testing(preIdentityVersion="v6.66.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayRoute")
+// @Testing(preCheck="testAccPreCheckTransitGateway")
+// @Testing(serialize=true)
 func resourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteRead,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -182,4 +186,24 @@ func transitGatewayRouteParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TRANSIT-GATEWAY-ROUTE-TABLE-ID%[2]sDESTINATION", id, transitGatewayRouteIDSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = transitGatewayRouteImportID{}
+
+type transitGatewayRouteImportID struct{}
+
+func (transitGatewayRouteImportID) Create(d *schema.ResourceData) string {
+	return transitGatewayRouteCreateResourceID(d.Get("transit_gateway_route_table_id").(string), d.Get("destination_cidr_block").(string))
+}
+
+func (transitGatewayRouteImportID) Parse(id string) (string, map[string]any, error) {
+	transitGatewayRouteTableID, destination, err := transitGatewayRouteParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return transitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination), map[string]any{
+		"destination_cidr_block":         destination,
+		"transit_gateway_route_table_id": transitGatewayRouteTableID,
+	}, nil
 }
