@@ -30,7 +30,7 @@ resource "aws_directoryservicedata_user" "example" {
 
 The following arguments are required:
 
-* `directory_id` - (Required) Identifier ID of the Directory that's associated with the user.
+* `directory_id` - (Required) ID of the Directory that's associated with the user.
 * `sam_account_name` - (Required) SAM account name of the user. Must contain only word characters, hyphens, and periods.
 
 The following arguments are optional:
