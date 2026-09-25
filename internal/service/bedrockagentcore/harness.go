@@ -96,6 +96,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
+				Computed:   true,
 				Sensitive:  true,
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
@@ -1089,6 +1090,9 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// Copy computed attributes during tag-only updates
+		plan.EnvironmentVariables = state.EnvironmentVariables
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
@@ -1115,7 +1119,13 @@ func (r *harnessResource) deleteSync(ctx context.Context, harnessID string, time
 		HarnessId: aws.String(harnessID),
 	}
 	_, err := conn.DeleteHarness(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	// Deletion of a non-existent harness triggers an AccessDeniedException.
+	//
+	//   AccessDeniedException: User: <redacted> is not authorized to perform: bedrock-agentcore:DeleteHarness"
+	//
+	// The standard ResourceNotFoundException handling is retained in case
+	// this behavior changes in the future.
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil
 	}
 	if err != nil {
