@@ -382,7 +382,7 @@ func TestAccEFSFileSystem_encryptedExplicitFalseNoDiff(t *testing.T) {
 				Config: testAccFileSystemConfig_encrypted(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEncrypted),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 				),
 			},
 			{
