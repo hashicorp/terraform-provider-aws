@@ -713,7 +713,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 					"http_protocol_ipv6": {
 						Type:             schema.TypeString,
 						Optional:         true,
-						Default:          awstypes.InstanceMetadataProtocolStateDisabled,
+						Computed:         true,
 						ValidateDiagFunc: enum.Validate[awstypes.InstanceMetadataProtocolState](),
 					},
 					"http_put_response_hop_limit": {
@@ -1782,7 +1782,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 				if httpEndpoint == awstypes.InstanceMetadataEndpointStateEnabled {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
-					input.HttpProtocolIpv6 = awstypes.InstanceMetadataProtocolState(tfMap["http_protocol_ipv6"].(string))
+					// HttpProtocolIpv6 is not supported in all partitions, so only send it when set.
+					if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {
+						input.HttpProtocolIpv6 = awstypes.InstanceMetadataProtocolState(v)
+					}
 					input.HttpPutResponseHopLimit = aws.Int32(int32(tfMap["http_put_response_hop_limit"].(int)))
 					input.InstanceMetadataTags = awstypes.InstanceMetadataTagsState(tfMap["instance_metadata_tags"].(string))
 				}
