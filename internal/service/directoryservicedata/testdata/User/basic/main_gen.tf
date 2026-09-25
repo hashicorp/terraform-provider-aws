@@ -1,6 +1,15 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_directoryservicedata_user" "test" {
+
+  directory_id     = aws_directory_service_directory.test.id
+  sam_account_name = "tfacctest-user"
+  email_address    = var.emailAddress
+  given_name       = "Test"
+  surname          = "User"
+}
+
 resource "aws_directory_service_directory" "test" {
 
   edition                      = "Standard"
@@ -13,15 +22,6 @@ resource "aws_directory_service_directory" "test" {
     subnet_ids = aws_subnet.test[*].id
     vpc_id     = aws_vpc.test.id
   }
-}
-
-resource "aws_directoryservicedata_user" "test" {
-
-  directory_id     = aws_directory_service_directory.test.id
-  sam_account_name = "tfacctest-user"
-  email_address    = var.emailAddress
-  given_name       = "Test"
-  surname          = "User"
 }
 
 # acctest.ConfigVPCWithSubnets(rName, 2)

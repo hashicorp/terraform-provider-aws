@@ -1,6 +1,13 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_directoryservicedata_user" "test" {
+  count = var.resource_count
+
+  directory_id     = aws_directory_service_directory.test.id
+  sam_account_name = "${var.samAccountNamePrefix}-${count.index}"
+}
+
 resource "aws_directory_service_directory" "test" {
   edition                      = "Standard"
   name                         = var.directoryDomain
@@ -12,13 +19,6 @@ resource "aws_directory_service_directory" "test" {
     subnet_ids = aws_subnet.test[*].id
     vpc_id     = aws_vpc.test.id
   }
-}
-
-resource "aws_directoryservicedata_user" "test" {
-  count = var.resource_count
-
-  directory_id     = aws_directory_service_directory.test.id
-  sam_account_name = "${var.samAccountNamePrefix}-${count.index}"
 }
 
 resource "aws_vpc" "test" {
