@@ -46,6 +46,7 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
@@ -599,6 +600,58 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusEnabled)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_imageTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_imageTags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.key1", acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_imageTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.key1", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.key2", acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccImagePipelineConfig_imageTags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.key2", acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccImagePipelineConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_tags.%", "0"),
 				),
 			},
 		},
@@ -1181,6 +1234,35 @@ resource "aws_imagebuilder_image_pipeline" "test" {
   status                           = %[2]q
 }
 `, rName, status))
+}
+
+func testAccImagePipelineConfig_imageTags1(rName string, tagKey1 string, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  image_tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccImagePipelineConfig_imageTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  image_tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccImagePipelineConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
