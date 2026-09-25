@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -53,7 +54,7 @@ func resourceLocationAzureBlob() *schema.Resource {
 				},
 				"agent_arns": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
 					Elem: &schema.Schema{
 						Type:         schema.TypeString,
 						ValidateFunc: verify.ValidARN,
@@ -115,6 +116,10 @@ func resourceLocationAzureBlob() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: customdiff.ForceNewIfChange("agent_arns", func(_ context.Context, old, new, meta any) bool {
+			return (old.(*schema.Set).Len() == 0 && new.(*schema.Set).Len() > 0) || (old.(*schema.Set).Len() > 0 && new.(*schema.Set).Len() == 0)
+		}),
 	}
 }
 
@@ -123,10 +128,13 @@ func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationAzureBlobInput{
-		AgentArns:          flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 		AuthenticationType: awstypes.AzureBlobAuthenticationType(d.Get("authentication_type").(string)),
 		ContainerUrl:       aws.String(d.Get("container_url").(string)),
 		Tags:               getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("access_tier"); ok {
@@ -211,7 +219,9 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("agent_arns") {
-			input.AgentArns = flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set))
+			if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
+				input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
+			}
 		}
 
 		if d.HasChange("authentication_type") {
