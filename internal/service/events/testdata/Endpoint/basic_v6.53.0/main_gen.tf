@@ -1,5 +1,7 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_cloudwatch_event_endpoint" "test" {
-{{- template "region" }}
   name = var.rName
 
   event_bus {
@@ -29,7 +31,6 @@ resource "aws_cloudwatch_event_endpoint" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_event_bus" "primary" {
-{{- template "region" }}
   name = var.rName
 }
 
@@ -102,3 +103,25 @@ resource "aws_route53_health_check" "test" {
   disabled         = true
   port             = 80
 }
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "secondary_region" {
+  description = "Secondary region"
+  type        = string
+  nullable    = false
+}
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.53.0"
+    }
+  }
+}
+
+provider "aws" {}
