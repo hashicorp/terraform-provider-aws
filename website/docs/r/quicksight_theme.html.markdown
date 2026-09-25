@@ -49,72 +49,72 @@ resource "aws_quicksight_theme" "example" {
 
 The following arguments are required:
 
-* `base_theme_id` - (Required) The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight. For a list of the starting themes, use ListThemes or choose Themes from within an analysis.
-* `configuration` - (Required) The theme configuration, which contains the theme display properties. See [configuration](#configuration).
+* `base_theme_id` - (Required) ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight. For a list of the starting themes, use ListThemes or choose Themes from within an analysis.
+* `configuration` - (Required) Theme configuration, which contains the theme display properties. See [configuration](#configuration-block).
 * `name` - (Required) Display name of the theme.
 * `theme_id` - (Required, Forces new resource) Identifier of the theme.
 
 The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `permissions` - (Optional) A set of resource permissions on the theme. Maximum of 64 items. See [permissions](#permissions).
+* `permissions` - (Optional) Set of resource permissions on the theme. Maximum of 64 items. See [permissions](#permissions-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `version_description` - (Optional) A description of the current theme version being created/updated.
+* `version_description` - (Optional) Description of the current theme version being created/updated.
 
-### permissions
+### `permissions` Block
 
 * `actions` - (Required) List of IAM actions to grant or revoke permissions on.
 * `principal` - (Required) ARN of the principal. See the [ResourcePermission documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ResourcePermission.html) for the applicable ARN values.
 
-### configuration
+### `configuration` Block
 
-* `data_color_palette` - (Optional) Color properties that apply to chart data colors. See [data_color_palette](#data_color_palette).
-* `sheet` - (Optional) Display options related to sheets. See [sheet](#sheet).
-* `typography` - (Optional) Determines the typography options. See [typography](#typography).
-* `ui_color_palette` - (Optional) Color properties that apply to the UI and to charts, excluding the colors that apply to data. See [ui_color_palette](#ui_color_palette).
+* `data_color_palette` - (Optional) Color properties that apply to chart data colors. See [data_color_palette](#data_color_palette-block).
+* `sheet` - (Optional) Display options related to sheets. See [sheet](#sheet-block).
+* `typography` - (Optional) Typography options. See [typography](#typography-block).
+* `ui_color_palette` - (Optional) Color properties that apply to the UI and to charts, excluding the colors that apply to data. See [ui_color_palette](#ui_color_palette-block).
 
-### data_color_palette
+### `data_color_palette` Block
 
 * `colors` - (Optional) List of hexadecimal codes for the colors. Minimum of 8 items and maximum of 20 items.
-* `empty_fill_color` - (Optional) The hexadecimal code of a color that applies to charts where a lack of data is highlighted.
-* `min_max_gradient` - (Optional) The minimum and maximum hexadecimal codes that describe a color gradient. List of exactly 2 items.
+* `empty_fill_color` - (Optional) Hexadecimal code of a color that applies to charts where a lack of data is highlighted.
+* `min_max_gradient` - (Optional) Minimum and maximum hexadecimal codes that describe a color gradient. List of exactly 2 items.
 
-### sheet
+### `sheet` Block
 
-* `tile` - (Optional) The display options for tiles. See [tile](#tile).
-* `tile_layout` - (Optional) The layout options for tiles. See [tile_layout](#tile_layout).
+* `tile` - (Optional) Display options for tiles. See [tile](#tile-block).
+* `tile_layout` - (Optional) Layout options for tiles. See [tile_layout](#tile_layout-block).
 
-### tile
+### `tile` Block
 
-* `border` - (Optional) The border around a tile. See [border](#border).
+* `border` - (Optional) Border around a tile. See [border](#border-block).
 
-### border
+### `border` Block
 
-* `show` - (Optional) The option to enable display of borders for visuals.
+* `show` - (Optional) Option to enable display of borders for visuals.
 
-### tile_layout
+### `tile_layout` Block
 
-* `gutter` - (Optional) The gutter settings that apply between tiles. See [gutter](#gutter).
-* `margin` - (Optional) The margin settings that apply around the outside edge of sheets. See [margin](#margin).
+* `gutter` - (Optional) Gutter settings that apply between tiles. See [gutter](#gutter-block).
+* `margin` - (Optional) Margin settings that apply around the outside edge of sheets. See [margin](#margin-block).
 
-### gutter
+### `gutter` Block
 
-* `show` - (Optional) This Boolean value controls whether to display a gutter space between sheet tiles.
+* `show` - (Optional) Whether to display a gutter space between sheet tiles.
 
-### margin
+### `margin` Block
 
-* `show` - (Optional) This Boolean value controls whether to display sheet margins.
+* `show` - (Optional) Whether to display sheet margins.
 
-### typography
+### `typography` Block
 
-* `font_families` - (Optional) Determines the list of font families. Maximum number of 5 items. See [font_families](#font_families).
+* `font_families` - (Optional) List of font families. Maximum number of 5 items. See [font_families](#font_families-block).
 
-### font_families
+### `font_families` Block
 
 * `font_family` - (Optional) Font family name.
 
-### ui_color_palette
+### `ui_color_palette` Block
 
 * `accent` - (Optional) Color (hexadecimal) that applies to selected states and buttons.
 * `accent_foreground` - (Optional) Color (hexadecimal) that applies to any text or other elements that appear over the accent color.
@@ -138,12 +138,12 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the theme.
-* `created_time` - The time that the theme was created.
-* `id` - A comma-delimited string joining AWS account ID and theme ID.
-* `last_updated_time` - The time that the theme was last updated.
-* `status` - The theme creation status.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `version_number` - The version number of the theme version.
+* `created_time` - Time that the theme was created.
+* `id` - Comma-delimited string joining AWS account ID and theme ID.
+* `last_updated_time` - Time that the theme was last updated.
+* `status` - Theme creation status.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `version_number` - Version number of the theme version.
 
 ## Timeouts
 
