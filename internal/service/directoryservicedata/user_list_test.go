@@ -26,7 +26,6 @@ func TestAccDirectoryServiceDataUser_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_directoryservicedata_user.test[0]"
 	resourceName2 := "aws_directoryservicedata_user.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
 	samAccountNamePrefix := fmt.Sprintf(
 		"%s%s",
@@ -53,7 +52,6 @@ func TestAccDirectoryServiceDataUser_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					"resource_count":       config.IntegerVariable(2),
 					"directoryDomain":      config.StringVariable(domainName),
 					"samAccountNamePrefix": config.StringVariable(samAccountNamePrefix),
@@ -72,7 +70,6 @@ func TestAccDirectoryServiceDataUser_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/User/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					"resource_count":       config.IntegerVariable(2),
 					"directoryDomain":      config.StringVariable(domainName),
 					"samAccountNamePrefix": config.StringVariable(samAccountNamePrefix),
@@ -171,7 +168,6 @@ func TestAccDirectoryServiceDataUser_List_regionOverride(t *testing.T) {
 
 	resourceName1 := "aws_directoryservicedata_user.test[0]"
 	resourceName2 := "aws_directoryservicedata_user.test[1]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
 	samAccountNamePrefix := fmt.Sprintf(
 		"%s%s",
@@ -199,7 +195,6 @@ func TestAccDirectoryServiceDataUser_List_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					"resource_count":       config.IntegerVariable(2),
 					"region":               config.StringVariable(acctest.AlternateRegion()),
 					"directoryDomain":      config.StringVariable(domainName),
@@ -219,7 +214,6 @@ func TestAccDirectoryServiceDataUser_List_regionOverride(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/User/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					"resource_count":       config.IntegerVariable(2),
 					"region":               config.StringVariable(acctest.AlternateRegion()),
 					"directoryDomain":      config.StringVariable(domainName),
