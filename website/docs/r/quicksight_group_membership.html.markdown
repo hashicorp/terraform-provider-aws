@@ -24,14 +24,16 @@ resource "aws_quicksight_group_membership" "example" {
 This resource supports the following arguments:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `group_name` - (Required) The name of the group in which the member will be added.
-* `member_name` - (Required) The name of the member to add to the group.
-* `namespace` - (Optional) The namespace that you want the user to be a part of. Defaults to `default`.
+* `group_name` - (Required) Name of the group in which the member will be added.
+* `member_name` - (Required) Name of the member to add to the group.
+* `namespace` - (Optional) Namespace that you want the user to be a part of. Defaults to `default`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the group membership.
 
 ## Import
 
