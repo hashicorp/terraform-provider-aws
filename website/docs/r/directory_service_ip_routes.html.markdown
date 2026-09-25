@@ -12,6 +12,8 @@ Manages IP routes for an AWS Directory Service directory. IP routes are used to 
 
 ~> **Note:** This resource manages the complete set of IP routes for a directory. Any IP routes added outside of Terraform are removed on the next apply.
 
+~> **Note:** Adding an IPv6 route (`cidr_ipv6`) requires the directory's network type to be dual-stack (IPv4 and IPv6). Enabling IPv6 support on a directory is a one-way operation performed outside of Terraform; see [Updating directory network type](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_update-directory-type.html).
+
 ## Example Usage
 
 ### Basic Usage
