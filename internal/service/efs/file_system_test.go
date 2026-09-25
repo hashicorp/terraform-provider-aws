@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -310,7 +309,38 @@ func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystem_encryptedComputedOnCreate(t *testing.T) {
+func TestAccEFSFileSystem_kmsKeyEncryptedUnset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc awstypes.FileSystemDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_efs_file_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_kmsKeyEncryptedUnset(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEFSFileSystem_encryptedExplicitFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc awstypes.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
@@ -323,14 +353,9 @@ func TestAccEFSFileSystem_encryptedComputedOnCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_encrypted(false),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrEncrypted)),
-					},
-				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFileSystem(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEncrypted),
+					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 				),
 			},
 			{
@@ -342,7 +367,7 @@ func TestAccEFSFileSystem_encryptedComputedOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystem_encryptedTrueToFalseNoReplacement(t *testing.T) {
+func TestAccEFSFileSystem_encryptedExplicitTrue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc awstypes.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
@@ -356,21 +381,14 @@ func TestAccEFSFileSystem_encryptedTrueToFalseNoReplacement(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_encrypted(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFileSystem(ctx, t, resourceName, &desc),
+					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccFileSystemConfig_encrypted(false),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFileSystem(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -758,6 +776,24 @@ resource "aws_efs_file_system" "test" {
   }
 }
 `, rName, enable)
+}
+
+func testAccFileSystemConfig_kmsKeyEncryptedUnset(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_efs_file_system" "test" {
+  kms_key_id = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
 func testAccFileSystemConfig_encrypted(encrypted bool) string {
