@@ -45,13 +45,6 @@ func resourceFileSystem() *schema.Resource {
 		UpdateWithoutTimeout: resourceFileSystemUpdate,
 		DeleteWithoutTimeout: resourceFileSystemDelete,
 
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-			if diff.Id() == "" && !diff.Get(names.AttrEncrypted).(bool) {
-				return diff.SetNewComputed(names.AttrEncrypted)
-			}
-			return nil
-		},
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -85,9 +78,6 @@ func resourceFileSystem() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					ForceNew: true,
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						return old == "true" && new == "false"
-					},
 				},
 				names.AttrKMSKeyID: {
 					Type:         schema.TypeString,
@@ -224,9 +214,11 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 	}
 
-	encrypted, hasEncrypted := d.GetOk(names.AttrEncrypted)
-	if hasEncrypted {
-		input.Encrypted = aws.Bool(encrypted.(bool))
+	// Distinguish an omitted "encrypted" from an explicit "false"
+	var encryptedConfigured bool
+	if v := d.GetRawConfig().GetAttr(names.AttrEncrypted); v.IsKnown() && !v.IsNull() {
+		encryptedConfigured = true
+		input.Encrypted = aws.Bool(d.Get(names.AttrEncrypted).(bool))
 	}
 
 	kmsKeyID, hasKmsKeyID := d.GetOk(names.AttrKMSKeyID)
@@ -234,8 +226,13 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyId = aws.String(kmsKeyID.(string))
 	}
 
-	if encrypted == false && hasKmsKeyID {
+	if encryptedConfigured && !d.Get(names.AttrEncrypted).(bool) && hasKmsKeyID {
 		return sdkdiag.AppendFromErr(diags, errors.New("encrypted must be set to true when kms_key_id is specified"))
+	}
+
+	// The EFS API requires encrypted=true whenever kms_key_id is specified
+	if !encryptedConfigured && hasKmsKeyID {
+		input.Encrypted = aws.Bool(true)
 	}
 
 	output, err := conn.CreateFileSystem(ctx, &input)
