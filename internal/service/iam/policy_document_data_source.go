@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -171,41 +172,6 @@ func dataSourcePolicyDocument() *schema.Resource {
 
 func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	mergedDoc := &iamPolicyDoc{}
-
-	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]any)) > 0 {
-		// generate sid map to assure there are no duplicates in source jsons
-		sidMap := make(map[string]struct{})
-		for _, stmt := range mergedDoc.Statements {
-			if stmt.Sid != "" {
-				sidMap[stmt.Sid] = struct{}{}
-			}
-		}
-
-		// merge sourceDocs in order specified
-		for sourceJSONIndex, sourceJSON := range v.([]any) {
-			if sourceJSON == nil {
-				continue
-			}
-
-			sourceDoc := &iamPolicyDoc{}
-			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
-				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging source document %d: %s", sourceJSONIndex, err)
-			}
-
-			// assure all statements in sourceDoc are unique before merging
-			for stmtIndex, stmt := range sourceDoc.Statements {
-				if stmt.Sid != "" {
-					if _, sidExists := sidMap[stmt.Sid]; sidExists {
-						return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging source document %d: duplicate Sid (%s) in source_policy_documents (statement %d). Remove the Sid or ensure Sids are unique.", sourceJSONIndex, stmt.Sid, stmtIndex)
-					}
-					sidMap[stmt.Sid] = struct{}{}
-				}
-			}
-
-			mergedDoc.Merge(sourceDoc)
-		}
-	}
 
 	// process the current document
 	doc := &iamPolicyDoc{
@@ -293,22 +259,13 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 		doc.Statements = stmts
 	}
 
-	// merge our current document into mergedDoc
-	mergedDoc.Merge(doc)
-
-	// merge override_policy_documents policies into mergedDoc in order specified
-	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]any)) > 0 {
-		for overrideJSONIndex, overrideJSON := range v.([]any) {
-			if overrideJSON == nil {
-				continue
-			}
-			overrideDoc := &iamPolicyDoc{}
-			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
-				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging override document %d: %s", overrideJSONIndex, err)
-			}
-
-			mergedDoc.Merge(overrideDoc)
-		}
+	mergedDoc, err := mergePolicyDocuments(
+		flex.ExpandStringValueListEmpty(d.Get("source_policy_documents").([]any)),
+		doc,
+		flex.ExpandStringValueListEmpty(d.Get("override_policy_documents").([]any)),
+	)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: %s", err)
 	}
 
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
@@ -332,6 +289,54 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags
+}
+
+// mergePolicyDocuments merges sources, then doc, then overrides, in order.
+// Duplicate Sids across sources are rejected; overrides replace statements
+// with matching Sids. Empty strings are skipped so that indexes in error
+// messages match the configuration.
+func mergePolicyDocuments(sources []string, doc *iamPolicyDoc, overrides []string) (*iamPolicyDoc, error) {
+	merged := &iamPolicyDoc{}
+	sids := make(map[string]struct{})
+	for i, v := range sources {
+		if v == "" {
+			continue
+		}
+
+		sourceDoc := &iamPolicyDoc{}
+		if err := json.Unmarshal([]byte(v), sourceDoc); err != nil {
+			return nil, fmt.Errorf("merging source document %d: %w", i, err)
+		}
+
+		for stmtIndex, stmt := range sourceDoc.Statements {
+			if stmt.Sid == "" {
+				continue
+			}
+			if _, ok := sids[stmt.Sid]; ok {
+				return nil, fmt.Errorf("merging source document %d: duplicate Sid (%s) in source_policy_documents (statement %d). Remove the Sid or ensure Sids are unique.", i, stmt.Sid, stmtIndex)
+			}
+			sids[stmt.Sid] = struct{}{}
+		}
+
+		merged.Merge(sourceDoc)
+	}
+
+	merged.Merge(doc)
+
+	for i, v := range overrides {
+		if v == "" {
+			continue
+		}
+
+		overrideDoc := &iamPolicyDoc{}
+		if err := json.Unmarshal([]byte(v), overrideDoc); err != nil {
+			return nil, fmt.Errorf("merging override document %d: %w", i, err)
+		}
+
+		merged.Merge(overrideDoc)
+	}
+
+	return merged, nil
 }
 
 func dataSourcePolicyDocumentReplaceVarsInList(in any, version string) (any, error) {
@@ -364,19 +369,28 @@ func dataSourcePolicyDocumentMakeConditions(in []any, version string) (iamPolicy
 			Test:     item["test"].(string),
 			Variable: item["variable"].(string),
 		}
-		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
+		out[i].Values, err = policyConditionValues(
 			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]any))),
 			version,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("reading values: %w", err)
 		}
-		itemValues := out[i].Values.([]string)
-		if len(itemValues) == 1 {
-			out[i].Values = itemValues[0]
-		}
 	}
 	return iamPolicyStatementConditionSet(out), nil
+}
+
+// policyConditionValues replaces policy variables in values and returns the
+// single element as a string, or all elements as a slice.
+func policyConditionValues(values []string, version string) (any, error) {
+	v, err := dataSourcePolicyDocumentReplaceVarsInList(values, version)
+	if err != nil {
+		return nil, err
+	}
+	if v := v.([]string); len(v) == 1 {
+		return v[0], nil
+	}
+	return v, nil
 }
 
 func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (iamPolicyStatementPrincipalSet, error) {
