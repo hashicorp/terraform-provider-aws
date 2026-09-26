@@ -66,6 +66,25 @@ func TestAccNetworkSecurityManager_serial(t *testing.T) {
 			"Identity":           testAccNetworkSecurityManagerTemplate_identitySerial,
 			"tags":               testAccNetworkSecurityManagerTemplate_tagsSerial,
 		},
+		"Scope": {
+			acctest.CtBasic:      testAccScope_basic,
+			acctest.CtDisappears: testAccScope_disappears,
+			"full":               testAccScope_full,
+			"resourceTypes":      testAccScope_resourceTypes,
+			"selection":          testAccScope_selection,
+			"explicitARNs":       testAccScope_explicitARNs,
+			"expressions":        testAccScope_expressions,
+			"albConfig":          testAccScope_albConfig,
+			"publish":            testAccScope_publish,
+			"description":        testAccScope_description,
+			"updateToken":        testAccScope_updateToken,
+			"replace":            testAccScope_replace,
+			"recreate":           testAccScope_recreate,
+			"validation":         testAccScope_validation,
+			"accountFilter":      testAccScope_accountFilter,
+			"Identity":           testAccNetworkSecurityManagerScope_identitySerial,
+			"tags":               testAccNetworkSecurityManagerScope_tagsSerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
