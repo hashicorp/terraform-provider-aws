@@ -15,6 +15,25 @@ func TestAccNetworkSecurityManager_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"Deployment": {
+			acctest.CtBasic:           testAccDeployment_basic,
+			acctest.CtDisappears:      testAccDeployment_disappears,
+			"full":                    testAccDeployment_full,
+			"policies":                testAccDeployment_policies,
+			"scope":                   testAccDeployment_scope,
+			"deploymentConfiguration": testAccDeployment_deploymentConfiguration,
+			"publish":                 testAccDeployment_publish,
+			"description":             testAccDeployment_description,
+			"updateToken":             testAccDeployment_updateToken,
+			"replace":                 testAccDeployment_replace,
+			"recreate":                testAccDeployment_recreate,
+			"referenceReplace":        testAccDeployment_referenceReplace,
+			"draftReferences":         testAccDeployment_draftReferences,
+			"remediation":             testAccDeployment_remediation,
+			"validation":              testAccDeployment_validation,
+			"Identity":                testAccNetworkSecurityManagerDeployment_identitySerial,
+			"tags":                    testAccNetworkSecurityManagerDeployment_tagsSerial,
+		},
 		"Policy": {
 			acctest.CtBasic:      testAccPolicy_basic,
 			acctest.CtDisappears: testAccPolicy_disappears,

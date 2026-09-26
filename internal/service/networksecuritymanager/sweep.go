@@ -17,7 +17,30 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes)
+	awsv2.Register("aws_networksecuritymanager_deployment", sweepDeployments)
+	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes, "aws_networksecuritymanager_deployment")
+}
+
+func sweepDeployments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := networksecuritymanager.ListDeploymentsInput{}
+	conn := client.NetworkSecurityManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := networksecuritymanager.NewListDeploymentsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Deployments {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newDeploymentResource, client,
+				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.DeploymentArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepScopes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
