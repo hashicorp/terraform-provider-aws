@@ -96,7 +96,7 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
 				),
@@ -109,6 +109,104 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_false(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(domain)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(domain)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_true(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtTrue),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(domain)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(domain)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.www\.%s\.$`, regexp.QuoteMeta(domain)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
 			},
 		},
 	})
@@ -177,4 +275,30 @@ resource "aws_apprunner_service" "test" {
   }
 }
 `, rName, domain)
+}
+
+func testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_custom_domain_association" "test" {
+  domain_name = %[2]q
+  service_arn = aws_apprunner_service.test.arn
+
+  enable_www_subdomain = %[3]t
+}
+
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName, domain, enabled)
 }
