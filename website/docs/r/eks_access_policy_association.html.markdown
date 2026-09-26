@@ -13,6 +13,13 @@ Access Entry Policy Association for an EKS Cluster.
 ## Example Usage
 
 ```terraform
+resource "aws_eks_access_entry" "example" {
+  cluster_name      = aws_eks_cluster.example.name
+  principal_arn     = aws_iam_user.example.arn
+  kubernetes_groups = ["group-1", "group-2"]
+  type              = "STANDARD"
+}
+
 resource "aws_eks_access_policy_association" "example" {
   cluster_name  = aws_eks_cluster.example.name
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
@@ -22,6 +29,10 @@ resource "aws_eks_access_policy_association" "example" {
     type       = "namespace"
     namespaces = ["example-namespace"]
   }
+
+  depends_on = [
+    aws_eks_access_entry.example
+  ]
 }
 ```
 
