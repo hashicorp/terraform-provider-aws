@@ -24,7 +24,7 @@ func TestSplitPolicyDocument(t *testing.T) {
 			Sid:       sid,
 			Effect:    "Allow",
 			Actions:   "s3:GetObject",
-			Resources: "arn:aws:s3:::bucket/*",
+			Resources: "*",
 		}
 	}
 	doc := func(sids ...string) *tfiam.IAMPolicyDoc {
@@ -153,8 +153,8 @@ func TestAccIAMPolicyDocumentsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "json.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "minified_json.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "minified_json.0", `{"Version":"2012-10-17","Statement":[{"Sid":"S1","Effect":"Allow","Action":["s3:PutObject","s3:GetObject"],"Resource":"arn:aws:s3:::bucket1/*"}]}`),
-					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json.0", `{"Version":"2012-10-17","Statement":[{"Sid":"S1","Effect":"Allow","Action":["s3:PutObject","s3:GetObject"],"Resource":"arn:aws:s3:::bucket1/*"}]}`),
+					resource.TestCheckResourceAttr(dataSourceName, "minified_json.0", fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Sid":"S1","Effect":"Allow","Action":["s3:PutObject","s3:GetObject"],"Resource":"arn:%s:s3:::bucket1/*"}]}`, acctest.Partition())),
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json.0", fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Sid":"S1","Effect":"Allow","Action":["s3:PutObject","s3:GetObject"],"Resource":"arn:%s:s3:::bucket1/*"}]}`, acctest.Partition())),
 					resource.TestCheckResourceAttr(dataSourceName, "max_policy_size", "6144"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "2012-10-17"),
 					resource.TestCheckResourceAttr(dataSourceName, "statement.0.effect", "Allow"),
@@ -167,6 +167,7 @@ func TestAccIAMPolicyDocumentsDataSource_basic(t *testing.T) {
 func TestAccIAMPolicyDocumentsDataSource_split(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_documents.test"
+	twoStatementSize := 218 + 2*(len(acctest.Partition())-len("aws"))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -174,17 +175,17 @@ func TestAccIAMPolicyDocumentsDataSource_split(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				// Each statement is 89 characters and a two-statement document is exactly 218.
-				Config: testAccPolicyDocumentsDataSourceConfig_split(218),
+				// A two-statement document exactly fits; one byte less requires a split.
+				Config: testAccPolicyDocumentsDataSourceConfig_split(twoStatementSize),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "json.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "minified_json.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "minified_json.0", `{"Version":"2012-10-17","Statement":[{"Sid":"S1","Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:s3:::bucket1/*"},{"Sid":"S2","Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:s3:::bucket2/*"}]}`),
-					resource.TestCheckResourceAttr(dataSourceName, "minified_json.1", `{"Version":"2012-10-17","Statement":[{"Sid":"S3","Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:s3:::bucket3/*"}]}`),
+					resource.TestCheckResourceAttr(dataSourceName, "minified_json.0", fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Sid":"S1","Effect":"Allow","Action":"s3:GetObject","Resource":"arn:%[1]s:s3:::bucket1/*"},{"Sid":"S2","Effect":"Allow","Action":"s3:GetObject","Resource":"arn:%[1]s:s3:::bucket2/*"}]}`, acctest.Partition())),
+					resource.TestCheckResourceAttr(dataSourceName, "minified_json.1", fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Sid":"S3","Effect":"Allow","Action":"s3:GetObject","Resource":"arn:%s:s3:::bucket3/*"}]}`, acctest.Partition())),
 				),
 			},
 			{
-				Config: testAccPolicyDocumentsDataSourceConfig_split(217),
+				Config: testAccPolicyDocumentsDataSourceConfig_split(twoStatementSize - 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "minified_json.#", "3"),
 				),
@@ -259,7 +260,7 @@ func TestAccIAMPolicyDocumentsDataSource_oversizedStatement(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentsDataSourceConfig_split(100),
-				ExpectError: regexache.MustCompile(`statement 0 \(Sid "S1"\) of the merged policy document is 128 characters on its own, exceeding\s+max_policy_size \(100\)`),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`statement 0 \(Sid "S1"\) of the merged policy document is %d characters on its own, exceeding\s+max_policy_size \(100\)`, 128+len(acctest.Partition())-len("aws"))),
 			},
 		},
 	})
@@ -277,7 +278,7 @@ func TestAccIAMPolicyDocumentsDataSource_variables(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentsDataSourceConfig_variables("2012-10-17"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "minified_json.0", `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:s3:::bucket/home/${aws:username}/*","Principal":{"AWS":"*"},"Condition":{"StringLike":{"s3:prefix":"home/${aws:username}/"}}}]}`),
+					resource.TestCheckResourceAttr(dataSourceName, "minified_json.0", fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:%s:s3:::bucket/home/${aws:username}/*","Principal":{"AWS":"*"},"Condition":{"StringLike":{"s3:prefix":"home/${aws:username}/"}}}]}`, acctest.Partition())),
 				),
 			},
 			{
@@ -289,17 +290,21 @@ func TestAccIAMPolicyDocumentsDataSource_variables(t *testing.T) {
 }
 
 const testAccPolicyDocumentsDataSourceConfig_basic = `
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_documents" "test" {
   statement {
     sid       = "S1"
     actions   = ["s3:GetObject", "s3:PutObject"]
-    resources = ["arn:aws:s3:::bucket1/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:s3:::bucket1/*"]
   }
 }
 `
 
 func testAccPolicyDocumentsDataSourceConfig_split(maxPolicySize int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_documents" "test" {
   max_policy_size = %[1]d
 
@@ -309,7 +314,7 @@ data "aws_iam_policy_documents" "test" {
     content {
       sid       = "S${statement.value}"
       actions   = ["s3:GetObject"]
-      resources = ["arn:aws:s3:::bucket${statement.value}/*"]
+      resources = ["arn:${data.aws_partition.current.partition}:s3:::bucket${statement.value}/*"]
     }
   }
 }
@@ -371,12 +376,14 @@ data "aws_iam_policy_documents" "test" {
 
 func testAccPolicyDocumentsDataSourceConfig_variables(version string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_documents" "test" {
   version = %[1]q
 
   statement {
     actions   = ["s3:GetObject"]
-    resources = ["arn:aws:s3:::bucket/home/&{aws:username}/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:s3:::bucket/home/&{aws:username}/*"]
 
     principals {
       type        = "AWS"
