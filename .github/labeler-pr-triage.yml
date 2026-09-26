@@ -1679,6 +1679,12 @@ service/networkmonitor:
           - any-glob-to-any-file:
               - 'internal/service/networkmonitor/**/*'
               - 'website/**/networkmonitor_*'
+service/networksecuritymanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networksecuritymanager/**/*'
+              - 'website/**/networksecuritymanager_*'
 service/nimble:
   - any:
       - changed-files:
