@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_marketplaceagreement_agreement
+```
+
+```release-note:new-list-resource
+aws_marketplaceagreement_agreement
+```
