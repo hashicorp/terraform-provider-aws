@@ -134,6 +134,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
@@ -332,6 +333,7 @@ func registerSweepers() {
 	networkfirewall.RegisterSweepers()
 	networkflowmonitor.RegisterSweepers()
 	networkmanager.RegisterSweepers()
+	networksecuritymanager.RegisterSweepers()
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()
 	observabilityadmin.RegisterSweepers()
