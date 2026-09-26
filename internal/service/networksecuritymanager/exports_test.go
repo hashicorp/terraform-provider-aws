@@ -7,9 +7,11 @@ package networksecuritymanager
 var (
 	ResourcePolicy   = newPolicyResource
 	ResourceRule     = newRuleResource
+	ResourceScope    = newScopeResource
 	ResourceTemplate = newTemplateResource
 
 	FindPolicyByARN   = findPolicyByARN
 	FindRuleByARN     = findRuleByARN
+	FindScopeByARN    = findScopeByARN
 	FindTemplateByARN = findTemplateByARN
 )
