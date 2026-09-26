@@ -11,6 +11,7 @@ Cost and Usage Report
 Global Accelerator
 IAM (Identity & Access Management)
 Invoicing
+Marketplace Agreement
 Network Manager
 Organizations
 Pricing Calculator

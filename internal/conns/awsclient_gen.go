@@ -166,6 +166,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
+	"github.com/aws/aws-sdk-go-v2/service/marketplaceagreement"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -934,6 +935,10 @@ func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {
 
 func (c *AWSClient) MailManagerClient(ctx context.Context) *mailmanager.Client {
 	return errs.Must(client[*mailmanager.Client](ctx, c, names.MailManager, make(map[string]any)))
+}
+
+func (c *AWSClient) MarketplaceAgreementClient(ctx context.Context) *marketplaceagreement.Client {
+	return errs.Must(client[*marketplaceagreement.Client](ctx, c, names.MarketplaceAgreement, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect.Client {
