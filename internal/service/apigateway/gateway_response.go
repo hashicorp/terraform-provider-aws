@@ -73,6 +73,7 @@ func resourceGatewayResponse() *schema.Resource {
 				names.AttrStatusCode: {
 					Type:     schema.TypeString,
 					Optional: true,
+					Computed: true,
 				},
 			}
 		},
