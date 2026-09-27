@@ -25,7 +25,7 @@ var (
 	FindTag                                   = findTag
 	FindTrafficSourceAttachmentByThreePartKey = findTrafficSourceAttachmentByThreePartKey
 
-	ExpandCapacityReservationSpecification   = expandCapacityReservationSpecification
+	ExpandCapacityReservationSpecification = expandCapacityReservationSpecification
 
 	InstanceHealthStatusHealthy = instanceHealthStatusHealthy
 	TagResourceTypeGroup        = tagResourceTypeGroup
