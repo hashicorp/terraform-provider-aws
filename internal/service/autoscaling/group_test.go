@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -101,7 +102,7 @@ func TestExpandCapacityReservationSpecification(t *testing.T) {
 
 			got := tfautoscaling.ExpandCapacityReservationSpecification(testCase.input)
 
-			if diff := cmp.Diff(testCase.want, got); diff != "" {
+			if diff := cmp.Diff(testCase.want, got, cmpopts.IgnoreUnexported(awstypes.CapacityReservationSpecification{})); diff != "" {
 				t.Errorf("unexpected diff (-want +got): %s", diff)
 			}
 		})
