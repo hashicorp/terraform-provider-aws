@@ -703,6 +703,60 @@ func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBInstance_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance timestreaminfluxdb.GetDbInstanceOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_kmsKeyID(rName, "aws_kms_key.test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				// The KMS key is set at creation only; changing it forces replacement.
+				Config: testAccDBInstanceConfig_kmsKeyID(rName, "aws_kms_key.test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test2", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDBInstanceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
@@ -1030,6 +1084,36 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   }
 }
 `, rName, preferredMaintenanceWindow, timezone))
+}
+
+// Configuration with a customer managed KMS key. kmsKeyResourceName selects
+// which of the two declared keys the instance references, so the replacement
+// behavior on key change can be exercised.
+func testAccDBInstanceConfig_kmsKeyID(rName, kmsKeyResourceName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "%[1]s-1"
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+}
+
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  kms_key_id             = %[2]s.arn
+}
+`, rName, kmsKeyResourceName))
 }
 
 // Minimal configuration (v5.90.0).

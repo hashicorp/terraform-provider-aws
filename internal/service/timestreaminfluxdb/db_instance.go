@@ -159,6 +159,18 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					key-value pair holding InfluxDB authorization values: organization, bucket, 
 					username, and password.`,
 			},
+			names.AttrKMSKeyID: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The ARN of the AWS KMS customer managed key to use for encryption of data at 
+					rest. Must be a symmetric key in the same AWS account and Region as the DB instance. 
+					This value is set at creation only; changing it forces a new resource to be created.`,
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -646,6 +658,7 @@ type dbInstanceResourceModel struct {
 	Endpoint                      types.String                                                   `tfsdk:"endpoint"`
 	ID                            types.String                                                   `tfsdk:"id"`
 	InfluxAuthParametersSecretARN types.String                                                   `tfsdk:"influx_auth_parameters_secret_arn"`
+	KMSKeyID                      fwtypes.ARN                                                    `tfsdk:"kms_key_id"`
 	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationModel] `tfsdk:"log_delivery_configuration"`
 	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[maintenanceScheduleModel]      `tfsdk:"maintenance_schedule"`
 	Name                          types.String                                                   `tfsdk:"name"`

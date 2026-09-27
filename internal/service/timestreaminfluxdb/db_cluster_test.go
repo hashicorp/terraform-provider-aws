@@ -715,6 +715,89 @@ func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBCluster_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_kmsKeyID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBCluster_kmsKeyIDV3(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_kmsKeyIDV3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization", names.AttrAllocatedStorage},
+			},
+		},
+	})
+}
+
 func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
@@ -842,6 +925,57 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   password               = "testpassword"
   vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName))
+}
+
+// Configuration with a customer managed KMS key (InfluxDB V2 cluster).
+func testAccDBClusterConfig_kmsKeyID(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+# InfluxDB V2.
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  allocated_storage      = 20
+  bucket                 = "initial"
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
+  organization           = "organization"
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  kms_key_id             = aws_kms_key.test.arn
+}
+`, rName))
+}
+
+// Configuration with a customer managed KMS key (InfluxDB V3 cluster).
+func testAccDBClusterConfig_kmsKeyIDV3(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+  kms_key_id                    = aws_kms_key.test.arn
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
 }
 `, rName))
 }
