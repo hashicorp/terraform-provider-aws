@@ -13,8 +13,8 @@ import (
 func TestManagedKnowledgeBaseConnectorConfigurationModelFlattenCanonicalizesConnectorParameters(t *testing.T) {
 	t.Parallel()
 
-	input := `{"version":"1","type":"CONFLUENCE","filterConfiguration":{"maxFileSizeInMegaBytes":"500","inclusionSpaceKeys":["EXAMPLE"]},"connectionConfiguration":{"type":"SAAS","secretArn":"arn:aws:secretsmanager:us-east-1:111122223333:secret:example","hostUrl":"https://confluence.example.com","authType":"BASIC"},"aclEnabled":false,"largeNumber":9007199254740993}`
-	want := `{"aclEnabled":false,"connectionConfiguration":{"authType":"BASIC","hostUrl":"https://confluence.example.com","secretArn":"arn:aws:secretsmanager:us-east-1:111122223333:secret:example","type":"SAAS"},"filterConfiguration":{"inclusionSpaceKeys":["EXAMPLE"],"maxFileSizeInMegaBytes":"500"},"largeNumber":9007199254740993,"type":"CONFLUENCE","version":"1"}`
+	input := `{"version":"1","type":"CONFLUENCE","filterConfiguration":{"maxFileSizeInMegaBytes":"500","inclusionSpaceKeys":["EXAMPLE"]},"connectionConfiguration":{"type":"SAAS","secretArn":"example-secret","hostUrl":"https://confluence.example.com","authType":"BASIC"},"aclEnabled":false,"largeNumber":9007199254740993}`
+	want := `{"aclEnabled":false,"connectionConfiguration":{"authType":"BASIC","hostUrl":"https://confluence.example.com","secretArn":"example-secret","type":"SAAS"},"filterConfiguration":{"inclusionSpaceKeys":["EXAMPLE"],"maxFileSizeInMegaBytes":"500"},"largeNumber":9007199254740993,"type":"CONFLUENCE","version":"1"}`
 
 	var got managedKnowledgeBaseConnectorConfigurationModel
 	diags := got.Flatten(t.Context(), awstypes.ManagedKnowledgeBaseConnectorConfiguration{
