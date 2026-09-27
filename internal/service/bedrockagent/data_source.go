@@ -7,6 +7,7 @@ package bedrockagent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -1353,8 +1354,15 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 				var inner string
 				if err := tfjson.DecodeFromString(v, &inner); err != nil {
 					diags.AddError("Decoding", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %s", err))
+					return diags
 				}
 				v = inner
+			}
+
+			v, err = canonicalizeConnectorParameters(v)
+			if err != nil {
+				diags.AddError("normalizing connector parameters", err.Error())
+				return diags
 			}
 
 			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
@@ -1387,6 +1395,23 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 		diags.AddError("Unsupported Type", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %T", v))
 	}
 	return diags
+}
+
+func canonicalizeConnectorParameters(v string) (string, error) {
+	decoder := json.NewDecoder(strings.NewReader(v))
+	decoder.UseNumber()
+
+	var parameters any
+	if err := decoder.Decode(&parameters); err != nil {
+		return "", err
+	}
+
+	normalized, err := json.Marshal(parameters)
+	if err != nil {
+		return "", err
+	}
+
+	return string(normalized), nil
 }
 
 type deletionProtectionConfigurationModel struct {
