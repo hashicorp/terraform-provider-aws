@@ -222,9 +222,6 @@ func testAccCheckUserExists(ctx context.Context, t *testing.T, name string) reso
 		if !ok {
 			return smarterr.NewError(errors.New("not found"))
 		}
-		if rs.Primary.ID == "" {
-			return smarterr.NewError(errors.New("empty resource ID"))
-		}
 
 		conn := acctest.ProviderMeta(ctx, t).DirectoryServiceDataClient(ctx)
 		_, err := tfdirectoryservicedata.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
