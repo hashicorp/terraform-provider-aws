@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/smarterr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservicedata/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -201,17 +201,16 @@ func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestChe
 			if rs.Type != "aws_directoryservicedata_user" {
 				continue
 			}
-			id := fmt.Sprintf("%s,%s", rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 
 			_, err := tfdirectoryservicedata.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 			if retry.NotFound(err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				continue
 			}
 			if err != nil {
-				return create.Error(names.DirectoryServiceData, create.ErrActionCheckingDestroyed, tfdirectoryservicedata.ResNameUser, id, err)
+				return smarterr.NewError(err)
 			}
 
-			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingDestroyed, tfdirectoryservicedata.ResNameUser, id, errors.New("not destroyed"))
+			return smarterr.NewError(errors.New("not destroyed"))
 		}
 		return nil
 	}
@@ -221,18 +220,17 @@ func testAccCheckUserExists(ctx context.Context, t *testing.T, name string) reso
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, name, errors.New("not found"))
+			return smarterr.NewError(errors.New("not found"))
 		}
 		if rs.Primary.ID == "" {
-			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, name, errors.New("empty resource ID"))
+			return smarterr.NewError(errors.New("empty resource ID"))
 		}
-		id := fmt.Sprintf("%s,%s", rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 
 		conn := acctest.ProviderMeta(ctx, t).DirectoryServiceDataClient(ctx)
 		_, err := tfdirectoryservicedata.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["sam_account_name"])
 
 		if err != nil {
-			return create.Error(names.DirectoryServiceData, create.ErrActionCheckingExistence, tfdirectoryservicedata.ResNameUser, id, err)
+			return smarterr.NewError(err)
 		}
 		return nil
 	}
