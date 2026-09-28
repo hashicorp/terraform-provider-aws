@@ -25,10 +25,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceAutonomousDatabase,
 			TypeName: "aws_odb_autonomous_database",
 			Name:     "Autonomous Database",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudAutonomousVmCluster,
@@ -145,10 +143,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceAutonomousDatabase,
 			TypeName: "aws_odb_autonomous_database",
 			Name:     "Autonomous Database",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceAutonomousDatabaseSecretsManagerIntegration,
