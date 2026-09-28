@@ -36,17 +36,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `certificate_validation_records` - Set of certificate CNAME records used for this domain name. See [`certificate_validation_records` Block](#certificate_validation_records-block) below for more details.
 * `dns_target` - App Runner subdomain of the App Runner service. The custom domain name is mapped to this target name. Attribute only available if resource created (not imported) with Terraform.
-* `id` - `domain_name` and `service_arn` separated by a comma (`,`).
 * `status` - Current state of the certificate CNAME record validation.
 
 ### `certificate_validation_records` Block
 
 The `certificate_validation_records` block exports the following attributes:
 
-* `name` - Certificate CNAME record name.
-* `status` - Current state of the certificate CNAME record validation. It should change to `SUCCESS` after App Runner completes validation with your DNS.
+* `name` - Certificate `CNAME` record name.
+* `status` - Current state of the certificate `CNAME` record validation. It should change to `SUCCESS` after App Runner completes validation with your DNS.
 * `type` - Record type, always `CNAME`.
-* `value` - Certificate CNAME record value.
+* `value` - Certificate `CNAME` record value.
 
 ## Import
 
