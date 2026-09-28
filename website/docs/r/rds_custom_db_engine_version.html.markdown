@@ -93,8 +93,8 @@ resource "aws_rds_custom_db_engine_version" "test" {
 
 This resource supports the following arguments:
 
-* `database_installation_files_s3_bucket_name` - (Required) Name of the Amazon S3 bucket that contains the database installation files.
-* `database_installation_files_s3_prefix` - (Required) Prefix for the Amazon S3 bucket that contains the database installation files.
+* `database_installation_files_s3_bucket_name` - (Optional) Name of the Amazon S3 bucket that contains the database installation files.
+* `database_installation_files_s3_prefix` - (Optional) Prefix for the Amazon S3 bucket that contains the database installation files.
 * `description` - (Optional) Description of the CEV.
 * `engine` - (Required) Name of the database engine. Valid values are `custom-oracle*`, `custom-sqlserver*`.
 * `engine_version` - (Required) Version of the database engine.

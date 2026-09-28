@@ -709,14 +709,14 @@ A configuration classification that applies when provisioning cluster instances,
 * `on_demand_specification` - (Optional) Configuration block for on demand instances launch specifications.
 * `spot_specification` - (Optional) Configuration block for spot instances launch specifications.
 
-##### on_demand_specification
+#### on_demand_specification
 
 The launch specification for On-Demand instances in the instance fleet, which determines the allocation strategy.
 The instance fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation strategy is available in Amazon EMR version 5.12.1 and later.
 
 * `allocation_strategy` - (Required) Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is `lowest-price` (the default), which launches the lowest price first.
 
-##### spot_specification
+#### spot_specification
 
 The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
 

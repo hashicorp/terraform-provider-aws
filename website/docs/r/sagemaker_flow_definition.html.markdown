@@ -135,7 +135,7 @@ This resource supports the following arguments:
 
 * `amount_in_usd` - (Optional) Defines the amount of money paid to an Amazon Mechanical Turk worker in United States dollars. See [Amount In Usd](#amount-in-usd) details below.
 
-##### Amount In Usd
+#### Amount In Usd
 
 * `cents` - (Optional) The fractional portion, in cents, of the amount. Valid value range between `0` and `99`.
 * `dollars` - (Optional) The whole number of dollars in the amount. Valid value range between `0` and `2`.

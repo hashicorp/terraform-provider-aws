@@ -36,80 +36,80 @@ resource "aws_keyspaces_table" "example" {
 
 The following arguments are required:
 
-* `keyspace_name` - (Required) The name of the keyspace that the table is going to be created in.
-* `table_name` - (Required) The name of the table.
+* `keyspace_name` - (Required) Name of the keyspace that the table is going to be created in.
+* `schema_definition` - (Required) Schema of the table. See [`schema_definition`](#schema_definition-block) below.
+* `table_name` - (Required) Name of the table.
 
 The following arguments are optional:
 
+* `capacity_specification` - (Optional) Read/write throughput capacity mode for the table. See [`capacity_specification`](#capacity_specification-block) below.
+* `client_side_timestamps` - (Optional) Enables client-side timestamps for the table. By default, the setting is disabled. See [`client_side_timestamps`](#client_side_timestamps-block) below.
+* `comment` - (Optional) Description of the table. See [`comment`](#comment-block) below.
+* `default_time_to_live` - (Optional) Default Time to Live setting in seconds for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL-how-it-works.html#ttl-howitworks_default_ttl).
+* `encryption_specification` - (Optional) Encryption key management for encryption at rest for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/EncryptionAtRest.html). See [`encryption_specification`](#encryption_specification-block) below.
+* `point_in_time_recovery` - (Optional) Enables or disables point-in-time recovery for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/PointInTimeRecovery.html). See [`point_in_time_recovery`](#point_in_time_recovery-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `capacity_specification` - (Optional) Specifies the read/write throughput capacity mode for the table.
-* `client_side_timestamps` - (Optional) Enables client-side timestamps for the table. By default, the setting is disabled.
-* `comment` - (Optional) A description of the table.
-* `default_time_to_live` - (Optional) The default Time to Live setting in seconds for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL-how-it-works.html#ttl-howitworks_default_ttl).
-* `encryption_specification` - (Optional) Specifies how the encryption key for encryption at rest is managed for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/EncryptionAtRest.html).
-* `point_in_time_recovery` - (Optional) Specifies if point-in-time recovery is enabled or disabled for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/PointInTimeRecovery.html).
-* `schema_definition` - (Optional) Describes the schema of the table.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `ttl` - (Optional) Enables Time to Live custom settings for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL.html).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `ttl` - (Optional) Enables Time to Live custom settings for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL.html). See [`ttl`](#ttl-block) below.
 
-The `capacity_specification` object takes the following arguments:
+### `capacity_specification` Block
 
-* `read_capacity_units` - (Optional) The throughput capacity specified for read operations defined in read capacity units (RCUs).
-* `throughput_mode` - (Optional) The read/write throughput capacity mode for a table. Valid values: `PAY_PER_REQUEST`, `PROVISIONED`. The default value is `PAY_PER_REQUEST`.
-* `write_capacity_units` - (Optional) The throughput capacity specified for write operations defined in write capacity units (WCUs).
+* `read_capacity_units` - (Optional) Throughput capacity specified for read operations defined in read capacity units (RCUs).
+* `throughput_mode` - (Optional) Read/write throughput capacity mode for a table. Valid values: `PAY_PER_REQUEST`, `PROVISIONED`. The default value is `PAY_PER_REQUEST`.
+* `write_capacity_units` - (Optional) Throughput capacity specified for write operations defined in write capacity units (WCUs).
 
-The `client_side_timestamps` object takes the following arguments:
+### `client_side_timestamps` Block
 
 * `status` - (Required) Shows how to enable client-side timestamps settings for the specified table. Valid values: `ENABLED`.
 
-The `comment` object takes the following arguments:
+### `comment` Block
 
-* `message` - (Required) A description of the table.
+* `message` - (Optional) Description of the table.
 
-The `encryption_specification` object takes the following arguments:
+### `encryption_specification` Block
 
 * `kms_key_identifier` - (Optional) ARN of the customer managed KMS key.
-* `type` - (Optional) The encryption option specified for the table. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_MANAGED_KMS_KEY`. The default value is `AWS_OWNED_KMS_KEY`.
+* `type` - (Optional) Encryption option specified for the table. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_MANAGED_KMS_KEY`. The default value is `AWS_OWNED_KMS_KEY`.
 
-The `point_in_time_recovery` object takes the following arguments:
+### `point_in_time_recovery` Block
 
 * `status` - (Optional) Valid values: `ENABLED`, `DISABLED`. The default value is `DISABLED`.
 
-The `schema_definition` object takes the following arguments:
+### `schema_definition` Block
 
-* `column` - (Required) The regular columns of the table.
-* `partition_key` - (Required) The columns that are part of the partition key of the table .
-* `clustering_key` - (Required) The columns that are part of the clustering key of the table.
-* `static_column` - (Required) The columns that have been defined as `STATIC`. Static columns store values that are shared by all rows in the same partition.
+* `clustering_key` - (Optional) Columns that are part of the clustering key of the table. See [`clustering_key`](#clustering_key-block) below.
+* `column` - (Required) Regular columns of the table. See [`column`](#column-block) below.
+* `partition_key` - (Required) Columns that are part of the partition key of the table. See [`partition_key`](#partition_key-block) below.
+* `static_column` - (Optional) Columns that have been defined as `STATIC`. Static columns store values that are shared by all rows in the same partition. See [`static_column`](#static_column-block) below.
 
-The `column` object takes the following arguments:
+#### `clustering_key` Block
 
-* `name` - (Required) The name of the column.
-* `type` - (Required) The data type of the column. See the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/cql.elements.html#cql.data-types) for a list of available data types.
+* `name` - (Required) Name of the clustering key column.
+* `order_by` - (Required) Order modifier. Valid values: `ASC`, `DESC`.
 
-The `partition_key` object takes the following arguments:
+#### `column` Block
 
-* `name` - (Required) The name of the partition key column.
+* `name` - (Required) Name of the column.
+* `type` - (Required) Data type of the column. See the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/cql.elements.html#cql.data-types) for a list of available data types.
 
-The `clustering_key` object takes the following arguments:
+#### `partition_key` Block
 
-* `name` - (Required) The name of the clustering key column.
-* `order_by` - (Required) The order modifier. Valid values: `ASC`, `DESC`.
+* `name` - (Required) Name of the partition key column.
 
-The `static_column` object takes the following arguments:
+#### `static_column` Block
 
-* `name` - (Required) The name of the static column.
+* `name` - (Required) Name of the static column.
 
-The `ttl` object takes the following arguments:
+### `ttl` Block
 
-* `status` - (Optional) Valid values: `ENABLED`.
+* `status` - (Required) Valid values: `ENABLED`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the table.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the table.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

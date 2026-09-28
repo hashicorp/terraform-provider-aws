@@ -363,8 +363,8 @@ func validateSchemaRegionForResource(regionSpec unique.Handle[inttypes.ServicePa
 	return nil
 }
 
-func validateSchemaTagsForDataSource(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], schema datasourceschema.Schema) error {
-	if !tfunique.IsHandleNil(tagsSpec) {
+func validateSchemaTagsForDataSource(tagsSpec inttypes.ServicePackageResourceTags, schema datasourceschema.Schema) error {
+	if tagsSpec.Enabled() {
 		if v, ok := schema.Attributes[names.AttrTags]; ok {
 			if !v.IsComputed() {
 				return fmt.Errorf("`%s` attribute must be Computed", names.AttrTags)
@@ -376,8 +376,8 @@ func validateSchemaTagsForDataSource(tagsSpec unique.Handle[inttypes.ServicePack
 	return nil
 }
 
-func validateSchemaTagsForResource(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], schema resourceschema.Schema) error {
-	if !tfunique.IsHandleNil(tagsSpec) {
+func validateSchemaTagsForResource(tagsSpec inttypes.ServicePackageResourceTags, schema resourceschema.Schema) error {
+	if tagsSpec.Enabled() {
 		if v, ok := schema.Attributes[names.AttrTags]; ok {
 			if v.IsComputed() {
 				return fmt.Errorf("`%s` attribute cannot be Computed", names.AttrTags)

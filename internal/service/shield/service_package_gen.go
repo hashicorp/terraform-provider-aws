@@ -7,7 +7,6 @@ package shield
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
@@ -81,19 +80,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProtection,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  ResourceProtectionGroup,
 			TypeName: "aws_shield_protection_group",
 			Name:     "Protection Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "protection_group_arn",
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     inttypes.ResourceTagsAttribute("protection_group_arn"),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  ResourceProtectionHealthCheckAssociation,
@@ -110,7 +105,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*shield.Options){
 		shield.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

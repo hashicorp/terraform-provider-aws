@@ -683,7 +683,7 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if v.Tags.Enabled() {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -728,7 +728,7 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 				}
 			}
 
-			if !tfunique.IsHandleNil(resource.Tags) {
+			if resource.Tags.Enabled() {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {

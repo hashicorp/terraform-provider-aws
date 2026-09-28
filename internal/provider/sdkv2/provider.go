@@ -559,25 +559,24 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorInvocations
+			// Pre-size to the maximum number of interceptors added below to avoid
+			// reallocating the backing array as interceptors are appended.
+			interceptors := make(interceptorInvocations, 0, 3)
 
 			if isRegionOverrideEnabled {
 				v := v.Region.Value()
-				s := r.SchemaMap()
 
-				if _, ok := s[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					regionSchema := sdkv2.RegionOptionalComputed()
+				// Inject a top-level "region" attribute.
+				regionSchema := sdkv2.RegionOptionalComputed()
 
-					if f := r.SchemaFunc; f != nil {
-						r.SchemaFunc = func() map[string]*schema.Schema {
-							s := f()
-							s[names.AttrRegion] = regionSchema
-							return s
-						}
-					} else {
-						r.Schema[names.AttrRegion] = regionSchema
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
 					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
 				}
 
 				if v.IsValidateOverrideInPartition {
@@ -594,7 +593,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				})
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if v.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
@@ -652,30 +651,29 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				isRegionOverrideEnabled = true
 			}
 
-			var interceptors interceptorInvocations
+			// Pre-size to the maximum number of interceptors added below to avoid
+			// reallocating the backing array as interceptors are appended.
+			interceptors := make(interceptorInvocations, 0, 9)
 
 			if isRegionOverrideEnabled {
 				v := resource.Region.Value()
-				s := r.SchemaMap()
 
-				if _, ok := s[names.AttrRegion]; !ok {
-					// Inject a top-level "region" attribute.
-					regionSchema := sdkv2.RegionOptionalComputed()
+				// Inject a top-level "region" attribute.
+				regionSchema := sdkv2.RegionOptionalComputed()
 
-					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
-					if r.UpdateWithoutTimeout == nil {
-						r.UpdateWithoutTimeout = schema.NoopContext
+				// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
+				if r.UpdateWithoutTimeout == nil {
+					r.UpdateWithoutTimeout = schema.NoopContext
+				}
+
+				if f := r.SchemaFunc; f != nil {
+					r.SchemaFunc = func() map[string]*schema.Schema {
+						s := f()
+						s[names.AttrRegion] = regionSchema
+						return s
 					}
-
-					if f := r.SchemaFunc; f != nil {
-						r.SchemaFunc = func() map[string]*schema.Schema {
-							s := f()
-							s[names.AttrRegion] = regionSchema
-							return s
-						}
-					} else {
-						r.Schema[names.AttrRegion] = regionSchema
-					}
+				} else {
+					r.Schema[names.AttrRegion] = regionSchema
 				}
 
 				if v.IsValidateOverrideInPartition {
@@ -710,7 +708,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				}
 			}
 
-			if !tfunique.IsHandleNil(resource.Tags) {
+			if resource.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,

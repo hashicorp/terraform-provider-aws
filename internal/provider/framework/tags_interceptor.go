@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -69,7 +68,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 	}
 }
 
-func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
+func dataSourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) dataSourceCRUDInterceptor {
 	return &tagsDataSourceInterceptor{
 		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
@@ -280,7 +279,7 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 	}
 }
 
-func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) interface {
+func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) interface {
 	resourceCRUDInterceptor
 	resourceModifyPlanInterceptor
 } {

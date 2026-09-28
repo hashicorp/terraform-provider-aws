@@ -317,19 +317,19 @@ The `target_group_pair_info` configuration block supports the following:
 * `target_group` - (Required) Configuration blocks for a target group within a target group pair (documented below).
 * `test_traffic_route` - (Optional) Configuration block for the test traffic route (documented below).
 
-##### load_balancer_info target_group_pair_info prod_traffic_route Argument Reference
+#### load_balancer_info target_group_pair_info prod_traffic_route Argument Reference
 
 The `prod_traffic_route` configuration block supports the following:
 
 * `listener_arns` - (Required) List of ARNs of the load balancer listeners. Must contain exactly one listener ARN.
 
-##### load_balancer_info target_group_pair_info target_group Argument Reference
+#### load_balancer_info target_group_pair_info target_group Argument Reference
 
 The `target_group` configuration block supports the following:
 
 * `name` - (Required) Name of the target group.
 
-##### load_balancer_info target_group_pair_info test_traffic_route Argument Reference
+#### load_balancer_info target_group_pair_info test_traffic_route Argument Reference
 
 The `test_traffic_route` configuration block supports the following:
 

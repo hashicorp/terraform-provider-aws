@@ -26,23 +26,23 @@ resource "aws_bedrockagentcore_agent_runtime_endpoint" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the agent runtime endpoint.
 * `agent_runtime_id` - (Required) ID of the agent runtime this endpoint belongs to.
+* `name` - (Required) Name of the agent runtime endpoint.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_runtime_version` - (Optional) Version of the agent runtime to use for this endpoint.
 * `description` - (Optional) Description of the agent runtime endpoint.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `agent_runtime_endpoint_arn` - ARN of the Agent Runtime Endpoint.
 * `agent_runtime_arn` - ARN of the associated Agent Runtime.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `agent_runtime_endpoint_arn` - ARN of the Agent Runtime Endpoint.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
