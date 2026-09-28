@@ -15,7 +15,7 @@ import (
 
 // Read rebuilds requested_term from the accepted terms. If that doesn't expand back to
 // exactly what Create sent, every plan after apply would replace the agreement.
-func TestFlattenAcceptedTerms_roundTrip(t *testing.T) {
+func TestRequestedTermModel_roundTrip(t *testing.T) {
 	t.Parallel()
 
 	accepted := []awstypes.AcceptedTerm{
@@ -77,7 +77,7 @@ func TestFlattenAcceptedTerms_roundTrip(t *testing.T) {
 
 	ctx := t.Context()
 	var model agreementResourceModel
-	if diags := flattenAcceptedTerms(ctx, accepted, &model); diags.HasError() {
+	if diags := fwflex.Flatten(ctx, accepted, &model.RequestedTerms); diags.HasError() {
 		t.Fatalf("flattening: %v", diags)
 	}
 

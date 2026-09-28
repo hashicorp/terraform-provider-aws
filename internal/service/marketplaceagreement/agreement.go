@@ -47,6 +47,7 @@ import (
 // @Testing(importIgnore="agreement_proposal_id", plannableImportAction="Update")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/marketplaceagreement;marketplaceagreement.DescribeAgreementOutput")
 // @Testing(serialize=true)
+// @Testing(generator=false)
 func newAgreementResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agreementResource{}
 
@@ -273,7 +274,10 @@ func (r *agreementResource) Create(ctx context.Context, request resource.CreateR
 	}
 
 	// requested_term stays as planned; Read reconciles it with the accepted terms.
-	flattenAgreement(ctx, out, &plan)
+	smerr.AddEnrich(ctx, &response.Diagnostics, plan.setFromAgreement(ctx, out))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
@@ -299,7 +303,10 @@ func (r *agreementResource) Read(ctx context.Context, request resource.ReadReque
 		return
 	}
 
-	flattenAgreement(ctx, out, &state)
+	smerr.AddEnrich(ctx, &response.Diagnostics, state.setFromAgreement(ctx, out))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	terms, err := findAcceptedTermsByAgreementID(ctx, conn, agreementID)
 	if err != nil {
@@ -307,7 +314,7 @@ func (r *agreementResource) Read(ctx context.Context, request resource.ReadReque
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flattenAcceptedTerms(ctx, terms, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, terms, &state.RequestedTerms))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -438,100 +445,97 @@ func waitAgreementCancelled(ctx context.Context, conn *marketplaceagreement.Clie
 	return nil, smarterr.NewError(err)
 }
 
-func flattenAgreement(ctx context.Context, out *marketplaceagreement.DescribeAgreementOutput, model *agreementResourceModel) {
-	model.AcceptanceTime = timetypes.NewRFC3339TimePointerValue(out.AcceptanceTime)
-	model.AgreementID = fwflex.StringToFramework(ctx, out.AgreementId)
-	model.AgreementType = fwflex.StringToFramework(ctx, out.AgreementType)
-	model.EndTime = timetypes.NewRFC3339TimePointerValue(out.EndTime)
-	model.StartTime = timetypes.NewRFC3339TimePointerValue(out.StartTime)
+var (
+	_ fwflex.Flattener = &requestedTermModel{}
+)
 
-	var offerID, proposerAccountID *string
-	if out.ProposalSummary != nil {
-		offerID = out.ProposalSummary.OfferId
-	}
-	if out.Proposer != nil {
-		proposerAccountID = out.Proposer.AccountId
-	}
-	model.OfferID = fwflex.StringToFramework(ctx, offerID)
-	model.ProposerAccountID = fwflex.StringToFramework(ctx, proposerAccountID)
-}
-
-func flattenAcceptedTerms(ctx context.Context, terms []awstypes.AcceptedTerm, model *agreementResourceModel) diag.Diagnostics {
+// setFromAgreement copies DescribeAgreement's output onto the computed attributes.
+// AutoFlex matches the top-level fields by name; OfferId and the proposer's AccountId
+// sit in nested structs, so those are mapped from the nested structs directly.
+func (m *agreementResourceModel) setFromAgreement(ctx context.Context, out *marketplaceagreement.DescribeAgreementOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	requestedTerms := make([]*requestedTermModel, 0, len(terms))
-	for _, term := range terms {
-		var id *string
-		configuration := requestedTermConfigurationModel{
-			ConfigurableUpfrontPricingTerm: fwtypes.NewListNestedObjectValueOfNull[configurableUpfrontPricingTermConfigurationModel](ctx),
-			RenewalTerm:                    fwtypes.NewListNestedObjectValueOfNull[renewalTermConfigurationModel](ctx),
-			VariablePaymentTerm:            fwtypes.NewListNestedObjectValueOfNull[variablePaymentTermConfigurationModel](ctx),
-		}
-		configured := false
-
-		switch t := term.(type) {
-		case *awstypes.AcceptedTermMemberByolPricingTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberConfigurableUpfrontPricingTerm:
-			id = t.Value.Id
-			if c := t.Value.Configuration; c != nil {
-				var m configurableUpfrontPricingTermConfigurationModel
-				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, c, &m))
-				configuration.ConfigurableUpfrontPricingTerm = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &m)
-				configured = true
-			}
-		case *awstypes.AcceptedTermMemberFixedUpfrontPricingTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberFreeTrialPricingTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberLegalTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberNetPaymentTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberPaymentScheduleTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberRecurringPaymentTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberRenewalTerm:
-			id = t.Value.Id
-			if c := t.Value.Configuration; c != nil {
-				var m renewalTermConfigurationModel
-				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, c, &m))
-				configuration.RenewalTerm = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &m)
-				configured = true
-			}
-		case *awstypes.AcceptedTermMemberSupportTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberUsageBasedPricingTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberValidityTerm:
-			id = t.Value.Id
-		case *awstypes.AcceptedTermMemberVariablePaymentTerm:
-			id = t.Value.Id
-			if c := t.Value.Configuration; c != nil {
-				var m variablePaymentTermConfigurationModel
-				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, c, &m))
-				configuration.VariablePaymentTerm = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &m)
-				configured = true
-			}
-		default:
-			diags.AddError("Unsupported Type", fmt.Sprintf("accepted term: %T", term))
-		}
-		if diags.HasError() {
-			return diags
-		}
-
-		requestedTerm := requestedTermModel{
-			ID:            fwflex.StringToFramework(ctx, id),
-			Configuration: fwtypes.NewListNestedObjectValueOfNull[requestedTermConfigurationModel](ctx),
-		}
-		if configured {
-			requestedTerm.Configuration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &configuration)
-		}
-		requestedTerms = append(requestedTerms, &requestedTerm)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, m))
+	if out.ProposalSummary != nil {
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out.ProposalSummary, m))
+	}
+	if out.Proposer != nil {
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out.Proposer, m, fwflex.WithFieldNamePrefix("Proposer")))
 	}
 
-	model.RequestedTerms = fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, requestedTerms)
+	return diags
+}
+
+// Flatten maps an accepted term back to the requested term that produced it, so that
+// requested_term reads back exactly as configured.
+func (m *requestedTermModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	configuration := requestedTermConfigurationModel{
+		ConfigurableUpfrontPricingTerm: fwtypes.NewListNestedObjectValueOfNull[configurableUpfrontPricingTermConfigurationModel](ctx),
+		RenewalTerm:                    fwtypes.NewListNestedObjectValueOfNull[renewalTermConfigurationModel](ctx),
+		VariablePaymentTerm:            fwtypes.NewListNestedObjectValueOfNull[variablePaymentTermConfigurationModel](ctx),
+	}
+	configured := false
+	var id *string
+
+	switch t := v.(type) {
+	case awstypes.AcceptedTermMemberByolPricingTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberConfigurableUpfrontPricingTerm:
+		id = t.Value.Id
+		if c := t.Value.Configuration; c != nil {
+			var model configurableUpfrontPricingTermConfigurationModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, c, &model))
+			configuration.ConfigurableUpfrontPricingTerm = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+			configured = true
+		}
+	case awstypes.AcceptedTermMemberFixedUpfrontPricingTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberFreeTrialPricingTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberLegalTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberNetPaymentTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberPaymentScheduleTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberRecurringPaymentTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberRenewalTerm:
+		id = t.Value.Id
+		if c := t.Value.Configuration; c != nil {
+			var model renewalTermConfigurationModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, c, &model))
+			configuration.RenewalTerm = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+			configured = true
+		}
+	case awstypes.AcceptedTermMemberSupportTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberUsageBasedPricingTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberValidityTerm:
+		id = t.Value.Id
+	case awstypes.AcceptedTermMemberVariablePaymentTerm:
+		id = t.Value.Id
+		if c := t.Value.Configuration; c != nil {
+			var model variablePaymentTermConfigurationModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, c, &model))
+			configuration.VariablePaymentTerm = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+			configured = true
+		}
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("requestedTermModel.Flatten: %T", v))
+	}
+	if diags.HasError() {
+		return diags
+	}
+
+	m.ID = fwflex.StringToFramework(ctx, id)
+	m.Configuration = fwtypes.NewListNestedObjectValueOfNull[requestedTermConfigurationModel](ctx)
+	if configured {
+		m.Configuration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &configuration)
+	}
 
 	return diags
 }

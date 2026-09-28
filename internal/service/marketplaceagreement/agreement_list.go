@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -47,7 +48,7 @@ func (l *agreementListResource) List(ctx context.Context, request list.ListReque
 		Filters: []awstypes.Filter{
 			{Name: aws.String("PartyType"), Values: []string{"Acceptor"}},
 			{Name: aws.String("AgreementType"), Values: []string{"PurchaseAgreement"}},
-			{Name: aws.String("Status"), Values: []string{string(awstypes.AgreementStatusActive)}},
+			{Name: aws.String("Status"), Values: enum.Slice(awstypes.AgreementStatusActive)},
 		},
 	}
 
@@ -88,9 +89,12 @@ func (l *agreementListResource) List(ctx context.Context, request list.ListReque
 				data.AgreementID = fwflex.StringValueToFramework(ctx, agreementID)
 
 				if request.IncludeResource {
-					flattenAgreement(ctx, out, &data)
+					smerr.AddEnrich(ctx, &result.Diagnostics, data.setFromAgreement(ctx, out))
+					if result.Diagnostics.HasError() {
+						return
+					}
 
-					smerr.AddEnrich(ctx, &result.Diagnostics, flattenAcceptedTerms(ctx, terms, &data))
+					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, terms, &data.RequestedTerms))
 					if result.Diagnostics.HasError() {
 						return
 					}

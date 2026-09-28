@@ -27,7 +27,6 @@ func testAccMarketplaceAgreementAgreement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v marketplaceagreement.DescribeAgreementOutput
 	resourceName := "aws_marketplaceagreement_agreement.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -40,9 +39,6 @@ func testAccMarketplaceAgreementAgreement_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agreement/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, t, resourceName, &v),
 				),
@@ -76,10 +72,7 @@ func testAccMarketplaceAgreementAgreement_basic(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Agreement/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:                      config.StaticDirectory("testdata/Agreement/basic/"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agreement_id"),
@@ -97,7 +90,6 @@ func testAccMarketplaceAgreementAgreement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v marketplaceagreement.DescribeAgreementOutput
 	resourceName := "aws_marketplaceagreement_agreement.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -110,9 +102,6 @@ func testAccMarketplaceAgreementAgreement_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agreement/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgreementExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmarketplaceagreement.ResourceAgreement, resourceName),
