@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
@@ -70,10 +71,13 @@ func resourceCustomDomainAssociation() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrDomainName: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					),
 				},
 				"enable_www_subdomain": {
 					Type:     schema.TypeBool,
