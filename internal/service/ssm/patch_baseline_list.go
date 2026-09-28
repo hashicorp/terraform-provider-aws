@@ -34,21 +34,9 @@ type patchBaselineListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type patchBaselineListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *patchBaselineListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.SSMClient(ctx)
-
-	var query patchBaselineListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input ssm.DescribePatchBaselinesInput
 

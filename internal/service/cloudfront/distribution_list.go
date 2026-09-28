@@ -39,14 +39,6 @@ func (l *distributionListResource) List(ctx context.Context, request list.ListRe
 	awsClient := l.Meta()
 	conn := awsClient.CloudFrontClient(ctx)
 
-	var query listDistributionModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing CloudFront Distributions")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input cloudfront.ListDistributionsInput
@@ -104,8 +96,6 @@ func (l *distributionListResource) List(ctx context.Context, request list.ListRe
 		}
 	}
 }
-
-type listDistributionModel struct{}
 
 func listDistributions(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListDistributionsInput) iter.Seq2[awstypes.DistributionSummary, error] {
 	return func(yield func(awstypes.DistributionSummary, error) bool) {

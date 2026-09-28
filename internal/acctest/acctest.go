@@ -2284,6 +2284,13 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	return envvar.SkipIfEmpty(t, key, "")
 }
 
+// SkipIfEnvVarNotTrue skips the current test if the specified environment variable is not set
+// to a true value.
+func SkipIfEnvVarNotTrue(t *testing.T, key string) {
+	t.Helper()
+	envvar.SkipIfNotTrue(t, key, "")
+}
+
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
 // The absolute path to the executable is returned.
 func SkipIfExeNotOnPath(t *testing.T, file string) string {

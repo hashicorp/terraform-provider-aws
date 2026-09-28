@@ -468,7 +468,7 @@ The processing guidance for a Rule, used by AWS WAF to determine whether a web r
 The `statement` block supports the following arguments:
 
 * `and_statement` - (Optional) A logical rule statement used to combine other rule statements with AND logic. See [AND Statement](#and-statement) below for details.
-* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [`asn_match_statement`](#asn_match_statement-block) below for details.
+* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [ASN Match Statement](#asn-match-statement) below for details.
 * `byte_match_statement` - (Optional) A rule statement that defines a string match search for AWS WAF to apply to web requests. See [Byte Match Statement](#byte-match-statement) below for details.
 * `geo_match_statement` - (Optional) A rule statement used to identify web requests based on country of origin. See [GEO Match Statement](#geo-match-statement) below for details.
 * `label_match_statement` - (Optional) A rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.
@@ -728,7 +728,7 @@ Inspect a single header. Provide the name of the header to inspect, for example,
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Optional) The name of the header to inspect. Maximum length of 64. AWS returns header names in lower case, so provide the name as lower case characters to avoid a perpetual diff.
 
 ### Single Query Argument
 
@@ -736,7 +736,7 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Optional) The name of the query argument to inspect. Maximum length of 30. AWS returns query argument names in lower case, so provide the name as lower case characters to avoid a perpetual diff.
 
 ### URI Fragment
 

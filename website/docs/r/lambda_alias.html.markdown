@@ -105,17 +105,41 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Aliases using the `function_name/alias`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_lambda_alias.example
-  id = "example/production"
+  identity = {
+    function_name = "example-function"
+    name          = "production"
+  }
 }
 ```
 
-For backwards compatibility, the following legacy `terraform import` command is also supported:
+### Identity Schema
+
+#### Required
+
+* `function_name` (String) Name or ARN of the Lambda function.
+* `name` (String) Name of the alias.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Aliases using `function_name/alias`. For example:
+
+```terraform
+import {
+  to = aws_lambda_alias.example
+  id = "example-function/production"
+}
+```
+
+Using `terraform import`, import Lambda Function Aliases using `function_name/alias`. For example:
 
 ```console
-% terraform import aws_lambda_alias.example example/production
+% terraform import aws_lambda_alias.example example-function/production
 ```

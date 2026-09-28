@@ -25,7 +25,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -231,7 +231,7 @@ func TestAccBedrockAgentCoreHarness_Tags_null(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -300,7 +300,7 @@ func TestAccBedrockAgentCoreHarness_Tags_emptyMap(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -357,7 +357,7 @@ func TestAccBedrockAgentCoreHarness_Tags_addOnUpdate(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -446,7 +446,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -550,7 +550,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -703,7 +703,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -802,7 +802,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1007,7 +1007,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1186,7 +1186,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1381,7 +1381,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToProviderOnly(t *tes
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1480,7 +1480,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToResourceOnly(t *tes
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1578,7 +1578,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyResourceTag(t *testing
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1653,7 +1653,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1720,7 +1720,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullOverlappingResourceTag(
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1796,7 +1796,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullNonOverlappingResourceT
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1874,7 +1874,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_onCreate(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1938,7 +1938,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2044,7 +2044,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_replace(t *testing
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2140,7 +2140,7 @@ func TestAccBedrockAgentCoreHarness_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2306,7 +2306,7 @@ func TestAccBedrockAgentCoreHarness_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

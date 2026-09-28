@@ -7,10 +7,6 @@ provider "aws" {
   }
 }
 
-provider "awsalternate" {
-  region = var.alt_region
-}
-
 resource "aws_dynamodb_table_replica" "test" {
   global_table_arn = aws_dynamodb_table.test.arn
 
@@ -18,7 +14,8 @@ resource "aws_dynamodb_table_replica" "test" {
 }
 
 resource "aws_dynamodb_table" "test" {
-  provider         = "awsalternate"
+  region = var.secondary_region
+
   name             = var.rName
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -58,8 +55,8 @@ variable "provider_tags" {
   nullable = false
 }
 
-variable "alt_region" {
-  description = "Region for provider awsalternate"
+variable "secondary_region" {
+  description = "Secondary region"
   type        = string
   nullable    = false
 }

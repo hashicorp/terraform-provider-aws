@@ -148,212 +148,172 @@ resource "aws_kinesis_analytics_application" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Name of the Kinesis Analytics Application.
+* `cloudwatch_logging_options` - (Optional) CloudWatch log stream options to monitor application errors. See [`cloudwatch_logging_options` Block](#cloudwatch_logging_options-block) below for details.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
 * `description` - (Optional) Description of the application.
-* `cloudwatch_logging_options` - (Optional) The CloudWatch log stream options to monitor application errors.
-See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more details.
-* `inputs` - (Optional) Input configuration of the application. See [Inputs](#inputs) below for more details.
-* `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
-* `reference_data_sources` - (Optional) An S3 Reference Data Source for the application.
-See [Reference Data Sources](#reference-data-sources) below for more details.
-* `start_application` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `starting_position` must be configured.
-To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
-* `tags` - Key-value map of tags for the Kinesis Analytics Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `inputs` - (Optional) Input configuration of the application. See [`inputs` Block](#inputs-block) below for details.
+* `name` - (Required) Name of the Kinesis Analytics Application.
+* `outputs` - (Optional) Output destination configuration of the application. See [`outputs` Block](#outputs-block) below for details.
+* `reference_data_sources` - (Optional) S3 Reference Data Source for the application. See [`reference_data_sources` Block](#reference_data_sources-block) below for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `start_application` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `starting_position` must be configured. To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### CloudWatch Logging Options
+### `cloudwatch_logging_options` Block
 
-Configure a CloudWatch Log Stream to monitor application errors.
+* `log_stream_arn` - (Required) ARN of the CloudWatch Log Stream.
+* `role_arn` - (Required) ARN of the IAM Role used to send application messages.
 
-The `cloudwatch_logging_options` block supports the following:
+### `inputs` Block
 
-* `log_stream_arn` - (Required) The ARN of the CloudWatch Log Stream.
-* `role_arn` - (Required) The ARN of the IAM Role used to send application messages.
+* `kinesis_firehose` - (Optional) Kinesis Firehose configuration for the streaming source. Conflicts with `kinesis_stream`. See [`inputs.kinesis_firehose` Block](#inputskinesis_firehose-block) below for details.
+* `kinesis_stream` - (Optional) Kinesis Stream configuration for the streaming source. Conflicts with `kinesis_firehose`. See [`inputs.kinesis_stream` Block](#inputskinesis_stream-block) below for details.
+* `name_prefix` - (Required) Name Prefix to use when creating an in-application stream.
+* `parallelism` - (Optional) Number of Parallel in-application streams to create. See [`inputs.parallelism` Block](#inputsparallelism-block) below for details.
+* `processing_configuration` - (Optional) Processing Configuration to transform records as they are received from the stream. See [`inputs.processing_configuration` Block](#inputsprocessing_configuration-block) below for details.
+* `schema` - (Required) Schema format of the data in the streaming source. See [`inputs.schema` Block](#inputsschema-block) below for details.
+* `starting_position_configuration` - (Optional) Point at which the application starts processing records from the streaming source. See [`inputs.starting_position_configuration` Block](#inputsstarting_position_configuration-block) below for details.
 
-### Inputs
+### `inputs.kinesis_firehose` Block
 
-Configure an Input for the Kinesis Analytics Application. You can only have 1 Input configured.
+* `resource_arn` - (Required) ARN of the Kinesis Firehose delivery stream.
+* `role_arn` - (Required) ARN of the IAM Role used to access the stream.
 
-The `inputs` block supports the following:
+### `inputs.kinesis_stream` Block
 
-* `name_prefix` - (Required) The Name Prefix to use when creating an in-application stream.
-* `schema` - (Required) The Schema format of the data in the streaming source. See [Source Schema](#source-schema) below for more details.
-* `kinesis_firehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesis_stream`.
-See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesis_stream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesis_firehose`.
-See [Kinesis Stream](#kinesis-stream) below for more details.
-* `parallelism` - (Optional) The number of Parallel in-application streams to create.
-See [Parallelism](#parallelism) below for more details.
-* `processing_configuration` - (Optional) The Processing Configuration to transform records as they are received from the stream.
-See [Processing Configuration](#processing-configuration) below for more details.
-* `starting_position_configuration` (Optional) The point at which the application starts processing records from the streaming source.
-See [Starting Position Configuration](#starting-position-configuration) below for more details.
+* `resource_arn` - (Required) ARN of the Kinesis Stream.
+* `role_arn` - (Required) ARN of the IAM Role used to access the stream.
 
-### Outputs
+### `inputs.parallelism` Block
 
-Configure Output destinations for the Kinesis Analytics Application. You can have a maximum of 3 destinations configured.
+* `count` - (Optional) Count of streams.
 
-The `outputs` block supports the following:
+### `inputs.processing_configuration` Block
 
-* `name` - (Required) The Name of the in-application stream.
-* `schema` - (Required) The Schema format of the data written to the destination. See [Destination Schema](#destination-schema) below for more details.
-* `kinesis_firehose` - (Optional) The Kinesis Firehose configuration for the destination stream. Conflicts with `kinesis_stream`.
-See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesis_stream` - (Optional) The Kinesis Stream configuration for the destination stream. Conflicts with `kinesis_firehose`.
-See [Kinesis Stream](#kinesis-stream) below for more details.
-* `lambda` - (Optional) The Lambda function destination. See [Lambda](#lambda) below for more details.
+* `lambda` - (Required) Lambda function configuration. See [`inputs.processing_configuration.lambda` Block](#inputsprocessing_configurationlambda-block) below for details.
 
-### Reference Data Sources
+### `inputs.processing_configuration.lambda` Block
 
-Add a Reference Data Source to the Kinesis Analytics Application. You can only have 1 Reference Data Source.
+* `resource_arn` - (Required) ARN of the Lambda function.
+* `role_arn` - (Required) ARN of the IAM Role used to access the Lambda function.
 
-The `reference_data_sources` block supports the following:
+### `inputs.schema` Block
 
-* `schema` - (Required) The Schema format of the data in the streaming source. See [Source Schema](#source-schema) below for more details.
-* `table_name` - (Required) The in-application Table Name.
-* `s3` - (Optional) The S3 configuration for the reference data source. See [S3 Reference](#s3-reference) below for more details.
+* `record_columns` - (Required) Record Column mapping for the streaming source data element. See [`inputs.schema.record_columns` Block](#inputsschemarecord_columns-block) below for details.
+* `record_encoding` - (Optional) Encoding of the record in the streaming source.
+* `record_format` - (Required) Record Format and mapping information to schematize a record. See [`inputs.schema.record_format` Block](#inputsschemarecord_format-block) below for details.
 
-#### Kinesis Firehose
+### `inputs.schema.record_columns` Block
 
-Configuration for a Kinesis Firehose delivery stream.
-
-The `kinesis_firehose` block supports the following:
-
-* `resource_arn` - (Required) The ARN of the Kinesis Firehose delivery stream.
-* `role_arn` - (Required) The ARN of the IAM Role used to access the stream.
-
-#### Kinesis Stream
-
-Configuration for a Kinesis Stream.
-
-The `kinesis_stream` block supports the following:
-
-* `resource_arn` - (Required) The ARN of the Kinesis Stream.
-* `role_arn` - (Required) The ARN of the IAM Role used to access the stream.
-
-#### Destination Schema
-
-The Schema format of the data in the destination.
-
-The `schema` block supports the following:
-
-* `record_format_type` - (Required) The Format Type of the records on the output stream. Can be `CSV` or `JSON`.
-
-#### Source Schema
-
-The Schema format of the data in the streaming source.
-
-The `schema` block supports the following:
-
-* `record_columns` - (Required) The Record Column mapping for the streaming source data element.
-See [Record Columns](#record-columns) below for more details.
-* `record_format` - (Required) The Record Format and mapping information to schematize a record.
-See [Record Format](#record-format) below for more details.
-* `record_encoding` - (Optional) The Encoding of the record in the streaming source.
-
-#### Parallelism
-
-Configures the number of Parallel in-application streams to create.
-
-The `parallelism` block supports the following:
-
-* `count` - (Required) The Count of streams.
-
-#### Processing Configuration
-
-The Processing Configuration to transform records as they are received from the stream.
-
-The `processing_configuration` block supports the following:
-
-* `lambda` - (Required) The Lambda function configuration. See [Lambda](#lambda) below for more details.
-
-#### Lambda
-
-The Lambda function that pre-processes records in the stream.
-
-The `lambda` block supports the following:
-
-* `resource_arn` - (Required) The ARN of the Lambda function.
-* `role_arn` - (Required) The ARN of the IAM Role used to access the Lambda function.
-
-#### Starting Position Configuration
-
-The point at which the application reads from the streaming source.
-
-The `starting_position_configuration` block supports the following:
-
-* `starting_position` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
-
-#### Record Columns
-
-The Column mapping of each data element in the streaming source to the corresponding column in the in-application stream.
-
-The `record_columns` block supports the following:
-
+* `mapping` - (Optional) Mapping reference to the data element.
 * `name` - (Required) Name of the column.
-* `sql_type` - (Required) The SQL Type of the column.
-* `mapping` - (Optional) The Mapping reference to the data element.
+* `sql_type` - (Required) SQL Type of the column.
 
-#### Record Format
+### `inputs.schema.record_format` Block
 
-The Record Format and relevant mapping information that should be applied to schematize the records on the stream.
+* `mapping_parameters` - (Optional) Mapping Information for the record format. See [`inputs.schema.record_format.mapping_parameters` Block](#inputsschemarecord_formatmapping_parameters-block) below for details.
 
-The `record_format` block supports the following:
+### `inputs.schema.record_format.mapping_parameters` Block
 
-* `record_format_type` - (Required) The type of Record Format. Can be `CSV` or `JSON`.
-* `mapping_parameters` - (Optional) The Mapping Information for the record format.
-See [Mapping Parameters](#mapping-parameters) below for more details.
+* `csv` - (Optional) Mapping information when the record format uses delimiters. See [`inputs.schema.record_format.mapping_parameters.csv` Block](#inputsschemarecord_formatmapping_parameterscsv-block) below for details.
+* `json` - (Optional) Mapping information when JSON is the record format on the streaming source. See [`inputs.schema.record_format.mapping_parameters.json` Block](#inputsschemarecord_formatmapping_parametersjson-block) below for details.
 
-#### Mapping Parameters
+### `inputs.schema.record_format.mapping_parameters.csv` Block
 
-Provides Mapping information specific to the record format on the streaming source.
+* `record_column_delimiter` - (Required) Column Delimiter.
+* `record_row_delimiter` - (Required) Row Delimiter.
 
-The `mapping_parameters` block supports the following:
-
-* `csv` - (Optional) Mapping information when the record format uses delimiters.
-See [CSV Mapping Parameters](#csv-mapping-parameters) below for more details.
-* `json` - (Optional) Mapping information when JSON is the record format on the streaming source.
-See [JSON Mapping Parameters](#json-mapping-parameters) below for more details.
-
-#### CSV Mapping Parameters
-
-Mapping information when the record format uses delimiters.
-
-The `csv` block supports the following:
-
-* `record_column_delimiter` - (Required) The Column Delimiter.
-* `record_row_delimiter` - (Required) The Row Delimiter.
-
-#### JSON Mapping Parameters
-
-Mapping information when JSON is the record format on the streaming source.
-
-The `json` block supports the following:
+### `inputs.schema.record_format.mapping_parameters.json` Block
 
 * `record_row_path` - (Required) Path to the top-level parent that contains the records.
 
-#### S3 Reference
+### `inputs.starting_position_configuration` Block
 
-Identifies the S3 bucket and object that contains the reference data.
+* `starting_position` - (Optional) Starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
-The `s3` blcok supports the following:
+### `outputs` Block
 
-* `bucket_arn` - (Required) The S3 Bucket ARN.
-* `file_key` - (Required) The File Key name containing reference data.
-* `role_arn` - (Required) The IAM Role ARN to read the data.
+* `kinesis_firehose` - (Optional) Kinesis Firehose configuration for the destination stream. Conflicts with `kinesis_stream`. See [`outputs.kinesis_firehose` Block](#outputskinesis_firehose-block) below for details.
+* `kinesis_stream` - (Optional) Kinesis Stream configuration for the destination stream. Conflicts with `kinesis_firehose`. See [`outputs.kinesis_stream` Block](#outputskinesis_stream-block) below for details.
+* `lambda` - (Optional) Lambda function destination. See [`outputs.lambda` Block](#outputslambda-block) below for details.
+* `name` - (Required) Name of the in-application stream.
+* `schema` - (Required) Schema format of the data written to the destination. See [`outputs.schema` Block](#outputsschema-block) below for details.
+
+### `outputs.kinesis_firehose` Block
+
+* `resource_arn` - (Required) ARN of the Kinesis Firehose delivery stream.
+* `role_arn` - (Required) ARN of the IAM Role used to access the stream.
+
+### `outputs.kinesis_stream` Block
+
+* `resource_arn` - (Required) ARN of the Kinesis Stream.
+* `role_arn` - (Required) ARN of the IAM Role used to access the stream.
+
+### `outputs.lambda` Block
+
+* `resource_arn` - (Required) ARN of the Lambda function.
+* `role_arn` - (Required) ARN of the IAM Role used to access the Lambda function.
+
+### `outputs.schema` Block
+
+* `record_format_type` - (Required) Format Type of the records on the output stream. Can be `CSV` or `JSON`.
+
+### `reference_data_sources` Block
+
+* `s3` - (Required) S3 configuration for the reference data source. See [`reference_data_sources.s3` Block](#reference_data_sourcess3-block) below for details.
+* `schema` - (Required) Schema format of the data in the streaming source. See [`reference_data_sources.schema` Block](#reference_data_sourcesschema-block) below for details.
+* `table_name` - (Required) In-application Table Name.
+
+### `reference_data_sources.s3` Block
+
+* `bucket_arn` - (Required) S3 Bucket ARN.
+* `file_key` - (Required) File Key name containing reference data.
+* `role_arn` - (Required) IAM Role ARN to read the data.
+
+### `reference_data_sources.schema` Block
+
+* `record_columns` - (Required) Record Column mapping for the streaming source data element. See [`reference_data_sources.schema.record_columns` Block](#reference_data_sourcesschemarecord_columns-block) below for details.
+* `record_encoding` - (Optional) Encoding of the record in the streaming source.
+* `record_format` - (Required) Record Format and mapping information to schematize a record. See [`reference_data_sources.schema.record_format` Block](#reference_data_sourcesschemarecord_format-block) below for details.
+
+### `reference_data_sources.schema.record_columns` Block
+
+* `mapping` - (Optional) Mapping reference to the data element.
+* `name` - (Required) Name of the column.
+* `sql_type` - (Required) SQL Type of the column.
+
+### `reference_data_sources.schema.record_format` Block
+
+* `mapping_parameters` - (Optional) Mapping Information for the record format. See [`reference_data_sources.schema.record_format.mapping_parameters` Block](#reference_data_sourcesschemarecord_formatmapping_parameters-block) below for details.
+
+### `reference_data_sources.schema.record_format.mapping_parameters` Block
+
+* `csv` - (Optional) Mapping information when the record format uses delimiters. See [`reference_data_sources.schema.record_format.mapping_parameters.csv` Block](#reference_data_sourcesschemarecord_formatmapping_parameterscsv-block) below for details.
+* `json` - (Optional) Mapping information when JSON is the record format on the streaming source. See [`reference_data_sources.schema.record_format.mapping_parameters.json` Block](#reference_data_sourcesschemarecord_formatmapping_parametersjson-block) below for details.
+
+### `reference_data_sources.schema.record_format.mapping_parameters.csv` Block
+
+* `record_column_delimiter` - (Required) Column Delimiter.
+* `record_row_delimiter` - (Required) Row Delimiter.
+
+### `reference_data_sources.schema.record_format.mapping_parameters.json` Block
+
+* `record_row_path` - (Required) Path to the top-level parent that contains the records.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of the Kinesis Analytics Application.
-* `arn` - The ARN of the Kinesis Analytics Appliation.
-* `create_timestamp` - The Timestamp when the application version was created.
-* `last_update_timestamp` - The Timestamp when the application was last updated.
-* `status` - The Status of the application.
-* `version` - The Version of the application.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the Kinesis Analytics Application.
+* `create_timestamp` - Timestamp when the application version was created.
+* `id` - ARN of the Kinesis Analytics Application.
+* `inputs.schema.record_format.record_format_type` - Type of Record Format of the input streaming source.
+* `inputs.stream_names` - Names of the in-application streams created for the input.
+* `last_update_timestamp` - Timestamp when the application was last updated.
+* `reference_data_sources.schema.record_format.record_format_type` - Type of Record Format of the reference data source.
+* `status` - Status of the application.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `version` - Version of the application.
 
 ## Import
 

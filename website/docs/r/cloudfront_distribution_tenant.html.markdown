@@ -90,16 +90,16 @@ This resource supports the following arguments:
 * `geo_restriction` (Optional) - [Geographic restrictions](#geo-restriction-arguments) configuration for the tenant (maximum one).
 * `web_acl` (Optional) - [Web ACL](#web-acl-arguments) configuration for the tenant (maximum one).
 
-##### Certificate Arguments
+#### Certificate Arguments
 
 * `arn` (Optional) - ARN of the AWS Certificate Manager certificate to use with this distribution tenant.
 
-##### Geo Restriction Arguments
+#### Geo Restriction Arguments
 
 * `restriction_type` (Optional) - Method to restrict distribution by country: `none`, `whitelist`, or `blacklist`.
 * `locations` (Optional) - Set of ISO 3166-1-alpha-2 country codes for the restriction. Required if `restriction_type` is `whitelist` or `blacklist`.
 
-##### Web ACL Arguments
+#### Web ACL Arguments
 
 * `action` (Optional) - Action to take for the web ACL. Valid values: `allow`, `block`.
 * `arn` (Optional) - ARN of the AWS WAF web ACL to associate with this distribution tenant.

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rString := acctest.RandString(t, 5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
@@ -44,7 +44,7 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
+func TestAccIAMOpenIDConnectProviderDataSource_url(t *testing.T) {
 	ctx := acctest.Context(t)
 	rString := acctest.RandString(t, 5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
