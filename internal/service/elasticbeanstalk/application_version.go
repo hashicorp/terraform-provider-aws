@@ -48,10 +48,11 @@ func resourceApplicationVersion() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrBucket: {
-					Type:          schema.TypeString,
-					Optional:      true,
-					ForceNew:      true,
-					ConflictsWith: []string{"image_configuration.0.source"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrBucket, "image_configuration.0.source"},
+					RequiredWith: []string{names.AttrKey},
 				},
 				"build_arn": {
 					Type:     schema.TypeString,
@@ -186,6 +187,7 @@ func resourceApplicationVersion() *schema.Resource {
 					Optional:      true,
 					ForceNew:      true,
 					ConflictsWith: []string{"image_configuration.0.source"},
+					RequiredWith:  []string{names.AttrBucket},
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,

@@ -5,3 +5,7 @@ resource/aws_elastic_beanstalk_application_version: Add `image_configuration` co
 ```release-note:enhancement
 resource/aws_elastic_beanstalk_environment: Support `Kubernetes` value for `tier` and add `cluster_arn` attribute
 ```
+
+```release-note:enhancement
+resource/aws_elastic_beanstalk_application_version: `bucket` and `key` are now optional, and must be omitted when `image_configuration.source` is set
+```
