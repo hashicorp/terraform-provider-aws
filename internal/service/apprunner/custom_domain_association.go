@@ -7,6 +7,7 @@ package apprunner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -97,6 +98,8 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: validateCustomDomainAssociationCustomDiff,
 	}
 }
 
@@ -352,4 +355,18 @@ func flattenCustomDomainCertificateValidationRecords(records []types.Certificate
 	}
 
 	return results
+}
+
+func validateCustomDomainAssociationCustomDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	domainName := d.Get(names.AttrDomainName).(string)
+	if !strings.HasPrefix(domainName, "*.") {
+		return nil
+	}
+
+	enableWWW := d.Get("enable_www_subdomain").(bool)
+	if enableWWW {
+		return errors.New("enable_www_subdomain cannot be true for wildcard domains")
+	}
+
+	return nil
 }

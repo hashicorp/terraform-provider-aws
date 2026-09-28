@@ -212,6 +212,93 @@ func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_true(t *testing.T) {
 	})
 }
 
+func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_default(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.NewDomainName(root).Subdomain("*").String()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCustomDomainAssociationConfig_basic(rName, domain),
+				ExpectError: regexache.MustCompile(`enable_www_subdomain cannot be true for wildcard domains`),
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_false(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.NewDomainName(root).Subdomain("*").String()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(root)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(root)))),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+							names.AttrType:   knownvalue.StringExact("CNAME"),
+							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_true(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.NewDomainName(root).Subdomain("*").String()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, true),
+				ExpectError: regexache.MustCompile(`enable_www_subdomain cannot be true for wildcard domains`),
+			},
+		},
+	})
+}
+
 func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
