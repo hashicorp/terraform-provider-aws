@@ -73,6 +73,7 @@ func (e *applyGuardrailEphemeralResource) Schema(ctx context.Context, _ ephemera
 			"output": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailOutputModel](ctx),
 				Computed:   true,
+				Sensitive: true,
 				ElementType: types.ObjectType{
 					AttrTypes: fwtypes.AttributeTypesMust[guardrailOutputModel](ctx),
 				},
