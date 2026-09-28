@@ -49,26 +49,10 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "pending_certificate_dns_validation"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.www\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(append(
+						domainValidationRecords(domain),
+						wwwValidationRecord(domain),
+					))),
 				},
 			},
 			{
@@ -134,20 +118,9 @@ func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_false(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(
+						domainValidationRecords(domain),
+					)),
 				},
 			},
 			{
@@ -180,26 +153,10 @@ func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_true(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtTrue),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.www\.%s\.$`, regexp.QuoteMeta(domain)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(append(
+						domainValidationRecords(domain),
+						wwwValidationRecord(domain),
+					))),
 				},
 			},
 			{
@@ -253,20 +210,9 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_fa
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(root)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(root)))),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
-							names.AttrType:   knownvalue.StringExact("CNAME"),
-							names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(
+						domainValidationRecords(root),
+					)),
 				},
 			},
 			{
@@ -338,6 +284,32 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, t *testing.T
 
 		return err
 	}
+}
+
+func domainValidationRecords(domainName string) []knownvalue.Check {
+	return []knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.%s\.$`, regexp.QuoteMeta(domainName)))),
+			names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+			names.AttrType:   knownvalue.StringExact("CNAME"),
+			names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+		}),
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.[0-9a-z]{31}\.%s\.$`, regexp.QuoteMeta(domainName)))),
+			names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+			names.AttrType:   knownvalue.StringExact("CNAME"),
+			names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+		}),
+	}
+}
+
+func wwwValidationRecord(domainName string) knownvalue.Check {
+	return knownvalue.ObjectExact(map[string]knownvalue.Check{
+		names.AttrName:   knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^_[0-9a-f]{32}\.www\.%s\.$`, regexp.QuoteMeta(domainName)))),
+		names.AttrStatus: tfknownvalue.StringExact(awstypes.CertificateValidationRecordStatusPendingValidation),
+		names.AttrType:   knownvalue.StringExact("CNAME"),
+		names.AttrValue:  knownvalue.StringRegexp(regexache.MustCompile(`^_[0-9a-f]{32}\.[a-z]+\.acm-validations\.aws\.$`)),
+	})
 }
 
 func testAccCustomDomainAssociationConfig_basic(rName, domain string) string {
