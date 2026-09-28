@@ -226,7 +226,7 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_de
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCustomDomainAssociationConfig_basic(rName, domain),
-				ExpectError: regexache.MustCompile(`enable_www_subdomain cannot be true for wildcard domains`),
+				ExpectError: regexache.MustCompile(`enable_www_subdomain must be false for wildcard domains`),
 			},
 		},
 	})
@@ -293,7 +293,7 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_tr
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, true),
-				ExpectError: regexache.MustCompile(`enable_www_subdomain cannot be true for wildcard domains`),
+				ExpectError: regexache.MustCompile(`enable_www_subdomain must be false for wildcard domains`),
 			},
 		},
 	})

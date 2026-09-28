@@ -365,7 +365,7 @@ func validateCustomDomainAssociationCustomDiff(_ context.Context, d *schema.Reso
 
 	enableWWW := d.Get("enable_www_subdomain").(bool)
 	if enableWWW {
-		return errors.New("enable_www_subdomain cannot be true for wildcard domains")
+		return errors.New("enable_www_subdomain must be false for wildcard domains")
 	}
 
 	return nil
