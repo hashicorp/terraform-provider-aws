@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestApplyGuardrailExpand(t *testing.T) {
@@ -209,7 +210,7 @@ func TestApplyGuardrailFlatten(t *testing.T) {
 			)); diff != "" {
 				t.Errorf("unexpected assessments (-want +got):\n%s", diff)
 			}
-			if len(model.Assessments.Elements()) != len(tc.output.Assessments) {
+			if model.Assessments.Length(fwtypes.CollectionLengthUnhandledAsZero) != len(tc.output.Assessments) {
 				t.Errorf("unexpected assessment count: %s", model.Assessments)
 			}
 			if tc.output.Assessments == nil && !model.Assessments.IsNull() {
@@ -241,7 +242,7 @@ func TestApplyGuardrailFlatten(t *testing.T) {
 				}
 			}
 			if tc.text == "" {
-				if !model.Output.IsNull() && len(model.Output.Elements()) != 0 {
+				if !model.Output.IsNull() && model.Output.Length(fwtypes.CollectionLengthUnhandledAsZero) != 0 {
 					t.Errorf("expected no output, got %s", model.Output)
 				}
 			} else {
@@ -264,7 +265,7 @@ func TestApplyGuardrailFlattenAssessments(t *testing.T) {
 	want := []awstypes.GuardrailAssessment{
 		{
 			AppliedGuardrailDetails: &awstypes.AppliedGuardrailDetails{
-				GuardrailArn:       aws.String("arn:aws:bedrock:us-east-1:123456789012:guardrail/example"),
+				GuardrailArn:       aws.String("arn:example:bedrock:example-region:123456789012:guardrail/example"),
 				GuardrailId:        aws.String("example"),
 				GuardrailOrigin:    []awstypes.GuardrailOrigin{awstypes.GuardrailOriginRequest, awstypes.GuardrailOriginAccountEnforced},
 				GuardrailOwnership: awstypes.GuardrailOwnershipCrossAccount,
@@ -297,7 +298,7 @@ func TestApplyGuardrailFlattenAssessments(t *testing.T) {
 			},
 			SensitiveInformationPolicy: &awstypes.GuardrailSensitiveInformationPolicyAssessment{
 				PiiEntities: []awstypes.GuardrailPiiEntityFilter{
-					{Action: "ANONYMIZED", Detected: aws.Bool(true), Match: aws.String("user@example.com"), Type: "EMAIL"},
+					{Action: "ANONYMIZED", Detected: aws.Bool(true), Match: aws.String("no-reply@hashicorp.com"), Type: "EMAIL"},
 					{Action: "NONE", Detected: aws.Bool(false), Match: aws.String("123"), Type: "PIN"},
 				},
 				Regexes: []awstypes.GuardrailRegexFilter{
@@ -356,7 +357,7 @@ func TestApplyGuardrailFlattenAssessments(t *testing.T) {
 		t.Error("assessments must be computed and sensitive")
 	}
 	// The framework's region interceptor adds this attribute to the resource schema.
-	resp.Schema.Attributes["region"] = schema.StringAttribute{Computed: true}
+	resp.Schema.Attributes[names.AttrRegion] = schema.StringAttribute{Computed: true}
 	model.Content = fwtypes.NewListNestedObjectValueOfNull[guardrailContentModel](ctx)
 	result := tfsdk.EphemeralResultData{Schema: resp.Schema}
 	if diags := result.Set(ctx, &model); diags.HasError() {
@@ -392,8 +393,8 @@ func TestApplyGuardrailFlattenAutomatedReasoning(t *testing.T) {
 		Claims: claims, Premises: premises, Type: awstypes.GuardrailAutomatedReasoningLogicWarningTypeAlwaysTrue,
 	}
 	rules := []awstypes.GuardrailAutomatedReasoningRule{
-		{Identifier: aws.String("rule-1"), PolicyVersionArn: aws.String("arn:aws:bedrock:us-east-1:123456789012:automated-reasoning-policy/example:1")},
-		{Identifier: aws.String("rule-2"), PolicyVersionArn: aws.String("arn:aws:bedrock:us-east-1:123456789012:automated-reasoning-policy/example:2")},
+		{Identifier: aws.String("rule-1"), PolicyVersionArn: aws.String("arn:example:bedrock:example-region:123456789012:automated-reasoning-policy/example:1")},
+		{Identifier: aws.String("rule-2"), PolicyVersionArn: aws.String("arn:example:bedrock:example-region:123456789012:automated-reasoning-policy/example:2")},
 	}
 	scenario := &awstypes.GuardrailAutomatedReasoningScenario{Statements: claims}
 	impossible := awstypes.GuardrailAutomatedReasoningImpossibleFinding{ContradictingRules: rules, LogicWarning: warning, Translation: translation}
@@ -475,7 +476,7 @@ func TestApplyGuardrailFlattenAutomatedReasoning(t *testing.T) {
 			})); diff != "" {
 				t.Errorf("finding fields lost during conversion (-want +got):\n%s", diff)
 			}
-			if len(findings[1].NoTranslations.Elements()) != 1 {
+			if findings[1].NoTranslations.Length(fwtypes.CollectionLengthUnhandledAsZero) != 1 {
 				t.Error("empty union variant must be a singleton list containing an empty object")
 			}
 			entries, err := tflogtest.MultilineJSONDecode(&logs)

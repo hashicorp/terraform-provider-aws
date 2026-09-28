@@ -90,7 +90,7 @@ func (e *applyGuardrailEphemeralResource) Schema(ctx context.Context, _ ephemera
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"content": schema.ListNestedBlock{
+			names.AttrContent: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailContentModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),

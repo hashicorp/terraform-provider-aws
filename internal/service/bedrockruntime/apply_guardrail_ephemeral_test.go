@@ -50,7 +50,7 @@ func TestAccBedrockRuntimeApplyGuardrailEphemeral_basic(t *testing.T) {
 						"total":   knownvalue.Int64Exact(13),
 					})),
 					statecheck.ExpectKnownValue("echo.test", wordPolicyUsagePath, positiveUsage),
-					statecheck.ExpectKnownValue("echo.test", dataPath.AtMapKey("content"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue("echo.test", dataPath.AtMapKey(names.AttrContent), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"text": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -75,9 +75,9 @@ func TestAccBedrockRuntimeApplyGuardrailEphemeral_basic(t *testing.T) {
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"custom_words": knownvalue.ListPartial(map[int]knownvalue.Check{
 										0: knownvalue.ObjectPartial(map[string]knownvalue.Check{
-											"action":   knownvalue.StringExact("BLOCKED"),
-											"detected": knownvalue.Bool(true),
-											"match":    knownvalue.StringExact("exampleblockedword"),
+											names.AttrAction: knownvalue.StringExact("BLOCKED"),
+											"detected":       knownvalue.Bool(true),
+											"match":          knownvalue.StringExact("exampleblockedword"),
 										}),
 									}),
 								}),
