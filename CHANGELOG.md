@@ -14,10 +14,13 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
 * resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+* resource/aws_sns_topic: Add `maximum_message_size` argument ([#50111](https://github.com/hashicorp/terraform-provider-aws/issues/50111))
 
 BUG FIXES:
 
 * list-resource/aws_dynamodb_table_replica: Fix eventual consistency error when replacing resource. ([#50133](https://github.com/hashicorp/terraform-provider-aws/issues/50133))
+* resource/aws_autoscaling_group: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#50084](https://github.com/hashicorp/terraform-provider-aws/issues/50084))
+* resource/aws_bedrockagentcore_harness: Fix "inconsistent result after apply" when `environment_variables` is unset ([#50088](https://github.com/hashicorp/terraform-provider-aws/issues/50088))
 * resource/aws_rds_global_cluster: Wait for source cluster promotion to complete when `source_db_cluster_identifier` is specified, fixing race condition with downstream resources ([#48076](https://github.com/hashicorp/terraform-provider-aws/issues/48076))
 
 ## 6.66.0 (September 21, 2026)
