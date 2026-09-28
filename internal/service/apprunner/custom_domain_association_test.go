@@ -172,7 +172,8 @@ func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_true(t *testing.T) {
 func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_default(t *testing.T) {
 	ctx := acctest.Context(t)
 	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
-	domain := acctest.NewDomainName(root).Subdomain("*").String()
+	domainName := acctest.NewDomainName(root).RandomSubdomain(t)
+	wildcard := domainName.Subdomain("*").String()
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -182,7 +183,7 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_de
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCustomDomainAssociationConfig_basic(rName, domain),
+				Config:      testAccCustomDomainAssociationConfig_basic(rName, wildcard),
 				ExpectError: regexache.MustCompile(`enable_www_subdomain must be false for wildcard domains`),
 			},
 		},
@@ -192,7 +193,8 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_de
 func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_false(t *testing.T) {
 	ctx := acctest.Context(t)
 	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
-	domain := acctest.NewDomainName(root).Subdomain("*").String()
+	domainName := acctest.NewDomainName(root).RandomSubdomain(t)
+	wildcard := domainName.Subdomain("*").String()
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
@@ -203,15 +205,15 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_fa
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, false),
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain(rName, wildcard, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, wildcard),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(
-						domainValidationRecords(root),
+						domainValidationRecords(domainName.String()),
 					)),
 				},
 			},
@@ -228,7 +230,8 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_fa
 func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_true(t *testing.T) {
 	ctx := acctest.Context(t)
 	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
-	domain := acctest.NewDomainName(root).Subdomain("*").String()
+	domainName := acctest.NewDomainName(root).RandomSubdomain(t)
+	wildcard := domainName.Subdomain("*").String()
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -238,7 +241,7 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_tr
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, true),
+				Config:      testAccCustomDomainAssociationConfig_wwwSubdomain(rName, wildcard, true),
 				ExpectError: regexache.MustCompile(`enable_www_subdomain must be false for wildcard domains`),
 			},
 		},
