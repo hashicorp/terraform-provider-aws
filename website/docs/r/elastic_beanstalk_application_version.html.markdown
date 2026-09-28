@@ -49,7 +49,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
 
 ### Container Image Usage
 
-Application versions for the `Kubernetes` environment tier are backed by a container image instead of a source bundle. Specify a container image that you built and pushed to a registry yourself:
+Application versions for the `Cluster` environment tier are backed by a container image instead of a source bundle. Specify a container image that you built and pushed to a registry yourself:
 
 ```terraform
 resource "aws_elastic_beanstalk_application_version" "image" {
