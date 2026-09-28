@@ -44,7 +44,6 @@ func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 const (
-	ResNameUser             = "User"
 	userResourceIDPartCount = 2
 )
 
