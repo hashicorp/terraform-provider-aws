@@ -58,39 +58,6 @@ func resourceApplicationVersion() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"build_configuration": {
-					Type:          schema.TypeList,
-					Optional:      true,
-					ForceNew:      true,
-					MaxItems:      1,
-					ConflictsWith: []string{"image_configuration"},
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"artifact_name": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"code_build_service_role": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"compute_type": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.ComputeType](),
-							},
-							"image": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"timeout_in_minutes": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								ValidateFunc: validation.IntBetween(5, 480),
-							},
-						},
-					},
-				},
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -101,11 +68,10 @@ func resourceApplicationVersion() *schema.Resource {
 					Default:  false,
 				},
 				"image_configuration": {
-					Type:          schema.TypeList,
-					Optional:      true,
-					ForceNew:      true,
-					MaxItems:      1,
-					ConflictsWith: []string{"build_configuration"},
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"build": {
@@ -228,10 +194,6 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]any)) > 0 {
 		input.ImageConfiguration = expandImageConfiguration(v.([]any))
-	}
-
-	if v, ok := d.GetOk("build_configuration"); ok && len(v.([]any)) > 0 {
-		input.BuildConfiguration = expandBuildConfiguration(v.([]any))
 	}
 
 	_, err := conn.CreateApplicationVersion(ctx, input)
@@ -367,32 +329,6 @@ func expandImageSource(tfList []any) *awstypes.ImageSource {
 	return &awstypes.ImageSource{
 		Uri: aws.String(tfMap[names.AttrURI].(string)),
 	}
-}
-
-func expandBuildConfiguration(tfList []any) *awstypes.BuildConfiguration {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap := tfList[0].(map[string]any)
-	result := &awstypes.BuildConfiguration{}
-
-	if v, ok := tfMap["artifact_name"].(string); ok && v != "" {
-		result.ArtifactName = aws.String(v)
-	}
-	if v, ok := tfMap["code_build_service_role"].(string); ok && v != "" {
-		result.CodeBuildServiceRole = aws.String(v)
-	}
-	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
-		result.ComputeType = awstypes.ComputeType(v)
-	}
-	if v, ok := tfMap["image"].(string); ok && v != "" {
-		result.Image = aws.String(v)
-	}
-	if v, ok := tfMap["timeout_in_minutes"].(int); ok && v > 0 {
-		result.TimeoutInMinutes = aws.Int32(int32(v))
-	}
-
-	return result
 }
 
 func expandImageBuildConfiguration(tfList []any) *awstypes.ImageBuildConfiguration {
