@@ -206,6 +206,52 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 }
 ```
 
+### Usage with Automated Backups
+
+You can define up to four automated backup schedules for a DB instance. Each schedule has its own type and retention period.
+
+```terraform
+resource "aws_timestreaminfluxdb_db_instance" "example" {
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  username               = "admin"
+  password               = "example-password"
+  organization           = "organization"
+  vpc_subnet_ids         = [aws_subnet.example.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
+  name                   = "example-db-instance"
+
+  db_backup_configuration {
+    enabled        = true
+    type           = "DAILY"
+    retention_days = 7
+  }
+}
+```
+
+### Usage with Restore
+
+You can create a DB instance by restoring an existing backup. When the `restore` block is configured, the source configuration (such as `allocated_storage`, `db_instance_type`, and the initial InfluxDB credentials) is inherited from the backup and must be omitted.
+
+```terraform
+resource "aws_timestreaminfluxdb_db_backup" "example" {
+  db_resource_id = aws_timestreaminfluxdb_db_instance.source.id
+  name           = "example-backup"
+}
+
+resource "aws_timestreaminfluxdb_db_instance" "example" {
+  name                   = "example-db-instance-restored"
+  vpc_subnet_ids         = [aws_subnet.example.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
+
+  restore {
+    source_db_backup_id = aws_timestreaminfluxdb_db_backup.example.id
+    restore_mode        = "NEW_RESOURCE"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -220,9 +266,13 @@ The following arguments are required:
 * `vpc_security_group_ids` - (Required) List of VPC security group IDs to associate with the DB instance.
 * `vpc_subnet_ids` - (Required) List of VPC subnet IDs to associate with the DB instance. Provide at least two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.
 
+~> **Note:** When the [`restore`](#restore) block is configured, `allocated_storage`, `bucket`, `db_instance_type`, `organization`, `password`, and `username` are inherited from the backup and must be omitted. `name` is always required, and `vpc_security_group_ids` and `vpc_subnet_ids` may optionally be provided to override the values from the backup.
+
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `db_backup_configuration` - (Optional) Automated backup schedules for the DB instance. Up to four blocks are supported. This argument is updatable. See [`db_backup_configuration`](#db_backup_configuration) below.
+* `restore` - (Optional, Forces new resource) Restore the DB instance from an existing backup instead of creating a new one. See [`restore`](#restore) below.
 * `db_parameter_group_identifier` - (Optional) ID of the DB parameter group assigned to your DB instance. This argument is updatable. If added to an existing Timestream for InfluxDB instance or given a new value, will cause an in-place update to the instance. However, if an instance already has a value for `db_parameter_group_identifier`, removing `db_parameter_group_identifier` will cause the instance to be destroyed and recreated.
 * `db_storage_type` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400. This argument is updatable. For a single instance, after this argument has been updated once, it can only be updated again after 6 hours have passed.
 * `deployment_type` - (Default `"SINGLE_AZ"`) Specifies whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`. This argument is updatable.
@@ -247,7 +297,20 @@ The following arguments are optional:
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Indicates whether log delivery to the S3 bucket is enabled.
 
-**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
+#### `db_backup_configuration`
+
+* `enabled` - (Required) Whether this automated backup configuration is enabled.
+* `retention_days` - (Required) Number of days to retain automated backups. Valid values are `1` to `365`.
+* `type` - (Required) Automated backup schedule type. Valid values are `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_SCHEDULE`, and `CONTINUOUS`.
+* `custom_schedule` - (Optional) Cron expression defining the backup schedule. Required when `type` is `CUSTOM_SCHEDULE` and must not be set otherwise.
+
+#### `restore`
+
+* `source_db_backup_id` - (Required, Forces new resource) Identifier of the backup to restore from.
+* `restore_mode` - (Optional, Forces new resource) Whether to restore to a new resource (`NEW_RESOURCE`, the default) or replace an existing resource (`REPLACE_EXISTING`). Only `NEW_RESOURCE` is currently supported.
+* `restore_to_time` - (Optional, Forces new resource) Point in time to restore to, in RFC3339 format. Only applies to `CONTINUOUS` backups.
+
+**Note**: The following arguments do updates in-place: `db_backup_configuration`, `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
 
 ## Attribute Reference
 
