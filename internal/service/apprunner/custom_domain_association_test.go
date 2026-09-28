@@ -251,7 +251,7 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_tr
 func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_apprunner_connection" {
+			if rs.Type != "aws_apprunner_custom_domain_association" {
 				continue
 			}
 
