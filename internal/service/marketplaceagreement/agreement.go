@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -243,7 +243,7 @@ func (r *agreementResource) Create(ctx context.Context, request resource.CreateR
 	proposalID := fwflex.StringValueFromFramework(ctx, plan.AgreementProposalID)
 	input := marketplaceagreement.CreateAgreementRequestInput{
 		AgreementProposalIdentifier: aws.String(proposalID),
-		ClientToken:                 aws.String(sdkid.UniqueId()),
+		ClientToken:                 aws.String(create.UniqueId(ctx)),
 		Intent:                      awstypes.IntentNew,
 	}
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan.RequestedTerms, &input.RequestedTerms))
