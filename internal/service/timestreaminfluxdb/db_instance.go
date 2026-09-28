@@ -466,32 +466,35 @@ func dbInstanceDBParameterGroupIdentifierReplaceIf(ctx context.Context, req plan
 }
 
 func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.Plan.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() || req.Config.Raw.IsNull() {
 		// Resource deletion.
 		return
 	}
 
-	var plan dbInstanceResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// These checks read the configuration rather than the plan. Several of the arguments below are
+	// Optional+Computed, so after the first apply the plan carries values sourced from state; only
+	// the configuration tells us what the practitioner actually set.
+	var config dbInstanceResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	isRestore := !plan.Restore.IsNull() && !plan.Restore.IsUnknown()
+	isRestore := !config.Restore.IsNull() && !config.Restore.IsUnknown()
 
 	// Arguments that are required for a normal create but are inherited from the backup on restore.
 	requiredUnlessRestore := []struct {
 		val  attr.Value
 		path string
 	}{
-		{plan.AllocatedStorage, names.AttrAllocatedStorage},
-		{plan.Bucket, names.AttrBucket},
-		{plan.DBInstanceType, "db_instance_type"},
-		{plan.Organization, "organization"},
-		{plan.Password, names.AttrPassword},
-		{plan.Username, names.AttrUsername},
-		{plan.VPCSecurityGroupIDs, names.AttrVPCSecurityGroupIDs},
-		{plan.VPCSubnetIDs, "vpc_subnet_ids"},
+		{config.AllocatedStorage, names.AttrAllocatedStorage},
+		{config.Bucket, names.AttrBucket},
+		{config.DBInstanceType, "db_instance_type"},
+		{config.Organization, "organization"},
+		{config.Password, names.AttrPassword},
+		{config.Username, names.AttrUsername},
+		{config.VPCSecurityGroupIDs, names.AttrVPCSecurityGroupIDs},
+		{config.VPCSubnetIDs, "vpc_subnet_ids"},
 	}
 
 	if !isRestore {
@@ -512,13 +515,13 @@ func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.Modify
 		val  attr.Value
 		path string
 	}{
-		{plan.AllocatedStorage, names.AttrAllocatedStorage},
-		{plan.Bucket, names.AttrBucket},
-		{plan.DBInstanceType, "db_instance_type"},
-		{plan.DBStorageType, "db_storage_type"},
-		{plan.Organization, "organization"},
-		{plan.Password, names.AttrPassword},
-		{plan.Username, names.AttrUsername},
+		{config.AllocatedStorage, names.AttrAllocatedStorage},
+		{config.Bucket, names.AttrBucket},
+		{config.DBInstanceType, "db_instance_type"},
+		{config.DBStorageType, "db_storage_type"},
+		{config.Organization, "organization"},
+		{config.Password, names.AttrPassword},
+		{config.Username, names.AttrUsername},
 	}
 	for _, f := range inheritedFromBackup {
 		if !isNullOrUnknownValue(f.val) {

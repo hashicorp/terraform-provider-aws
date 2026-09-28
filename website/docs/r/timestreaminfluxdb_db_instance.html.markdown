@@ -299,6 +299,8 @@ The following arguments are optional:
 
 #### `db_backup_configuration`
 
+~> **Note:** Automated backup configurations can be added and updated, but the AWS API does not remove an existing configuration when its block is removed from the configuration. Removing a `db_backup_configuration` block will therefore leave the schedule in place on the DB instance and produce a persistent difference.
+
 * `enabled` - (Required) Whether this automated backup configuration is enabled.
 * `retention_days` - (Required) Number of days to retain automated backups. Valid values are `1` to `365`.
 * `type` - (Required) Automated backup schedule type. Valid values are `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_SCHEDULE`, and `CONTINUOUS`.

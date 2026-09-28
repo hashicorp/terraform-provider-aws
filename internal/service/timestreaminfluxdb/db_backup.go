@@ -16,8 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,21 +60,33 @@ func (r *dbBackupResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: `The allocated storage of the resource at the time of backup, in GiB.`,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType:  timetypes.RFC3339Type{},
-				Computed:    true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The time when the backup was created.`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The DB instance type of the resource at the time of backup.`,
 			},
 			"db_parameter_group_id": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The identifier of the DB parameter group associated with the backup.`,
 			},
 			"db_resource_id": schema.StringAttribute{
@@ -83,32 +97,53 @@ func (r *dbBackupResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: `The id of the DB instance or DB cluster to back up.`,
 			},
 			"db_storage_type": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The storage type of the resource at the time of backup.`,
 			},
 			"deployment_type": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The deployment type of the resource that the backup was created from.`,
 			},
 			"engine_type": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The engine type of the resource that the backup was created from.`,
 			},
 			"expires_after": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The date after which the backup will be automatically deleted.`,
 			},
 			"failover_mode": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The failover mode of the resource at the time of backup.`,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"influx_auth_parameters_secret_arn": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The ARN of the Secrets Manager secret containing the InfluxDB auth parameters.`,
 			},
 			names.AttrKMSKeyID: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The AWS KMS key ARN used for encryption of the resource at the time of backup.`,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -119,15 +154,24 @@ func (r *dbBackupResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: `The name of the backup. Must be unique within the account and Region.`,
 			},
 			"network_type": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The network type of the resource at the time of backup.`,
 			},
 			names.AttrPort: schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: `The port number of the resource at the time of backup.`,
 			},
 			names.AttrPubliclyAccessible: schema.BoolAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 				Description: `Indicates whether the resource was publicly accessible at the time of backup.`,
 			},
 			"retention_days": schema.Int32Attribute{
@@ -141,23 +185,35 @@ func (r *dbBackupResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: `The number of days to retain the backup. Valid values are 1 to 3650.`,
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The current status of the backup.`,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The type of backup.`,
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				Computed:    true,
+				CustomType: fwtypes.SetOfStringType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The VPC security group IDs associated with the resource at the time of backup.`,
 			},
 			"vpc_subnet_ids": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				Computed:    true,
+				CustomType: fwtypes.SetOfStringType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The VPC subnet IDs associated with the resource at the time of backup.`,
 			},
 		},

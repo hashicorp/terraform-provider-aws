@@ -1467,13 +1467,20 @@ func TestAccTimestreamInfluxDBDBCluster_dbBackupConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDBClusterConfig_dbBackupConfiguration(rName, string(awstypes.AutomatedDbBackupTypeWeekly), 30),
+				// Only additive changes are exercised here: the AWS API does not remove an existing
+				// automated backup configuration when it is dropped from DbBackupConfigurations.
+				Config: testAccDBClusterConfig_dbBackupConfigurationMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "db_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "db_backup_configuration.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "db_backup_configuration.*", map[string]string{
-						names.AttrType:   string(awstypes.AutomatedDbBackupTypeWeekly),
-						"retention_days": "30",
+						names.AttrType:   string(awstypes.AutomatedDbBackupTypeDaily),
+						"retention_days": "7",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "db_backup_configuration.*", map[string]string{
+						names.AttrType:    string(awstypes.AutomatedDbBackupTypeCustomSchedule),
+						"retention_days":  "30",
+						"custom_schedule": "cron(0 0 * * ? *)",
 					}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1513,6 +1520,36 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   }
 }
 `, rName, backupType, retentionDays))
+}
+
+func testAccDBClusterConfig_dbBackupConfigurationMultiple(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+# InfluxDB V2.
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  allocated_storage      = 20
+  bucket                 = "initial"
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
+  organization           = "organization"
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  db_backup_configuration {
+    enabled        = true
+    type           = "DAILY"
+    retention_days = 7
+  }
+
+  db_backup_configuration {
+    enabled         = true
+    type            = "CUSTOM_SCHEDULE"
+    retention_days  = 30
+    custom_schedule = "cron(0 0 * * ? *)"
+  }
+}
+`, rName))
 }
 
 func TestAccTimestreamInfluxDBDBCluster_restore(t *testing.T) {

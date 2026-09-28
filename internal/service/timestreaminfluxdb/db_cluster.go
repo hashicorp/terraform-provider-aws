@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -73,6 +74,10 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Int64{
 					int64validator.Between(20, 16384),
 				},
@@ -736,13 +741,16 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 }
 
 func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.Plan.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() || req.Config.Raw.IsNull() {
 		// Resource deletion.
 		return
 	}
 
+	// These checks read the configuration rather than the plan. Several of the arguments below are
+	// Optional+Computed, so after the first apply the plan carries values sourced from state; only
+	// the configuration tells us what the practitioner actually set.
 	var data dbClusterResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
