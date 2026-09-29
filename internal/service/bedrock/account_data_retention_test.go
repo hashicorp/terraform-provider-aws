@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,7 +30,7 @@ func testAccAccountDataRetention_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_bedrock_account_data_retention.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -43,7 +42,7 @@ func testAccAccountDataRetention_basic(t *testing.T) {
 			{
 				Config: testAccAccountDataRetentionConfig_basic(string(awstypes.DataRetentionModeDefault)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountDataRetentionMode(ctx, awstypes.DataRetentionModeDefault),
+					testAccCheckAccountDataRetentionMode(ctx, t, awstypes.DataRetentionModeDefault),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), knownvalue.StringExact(string(awstypes.DataRetentionModeDefault))),
@@ -58,7 +57,7 @@ func testAccAccountDataRetention_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_bedrock_account_data_retention.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -70,7 +69,7 @@ func testAccAccountDataRetention_update(t *testing.T) {
 			{
 				Config: testAccAccountDataRetentionConfig_basic(string(awstypes.DataRetentionModeNone)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountDataRetentionMode(ctx, awstypes.DataRetentionModeNone),
+					testAccCheckAccountDataRetentionMode(ctx, t, awstypes.DataRetentionModeNone),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), knownvalue.StringExact(string(awstypes.DataRetentionModeNone))),
@@ -79,7 +78,7 @@ func testAccAccountDataRetention_update(t *testing.T) {
 			{
 				Config: testAccAccountDataRetentionConfig_basic(string(awstypes.DataRetentionModeDefault)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountDataRetentionMode(ctx, awstypes.DataRetentionModeDefault),
+					testAccCheckAccountDataRetentionMode(ctx, t, awstypes.DataRetentionModeDefault),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), knownvalue.StringExact(string(awstypes.DataRetentionModeDefault))),
@@ -107,9 +106,9 @@ func testAccCheckAccountDataRetentionExists(ctx context.Context, t *testing.T, n
 
 // testAccCheckAccountDataRetentionMode asserts the mode AWS actually reports,
 // rather than only what is recorded in state.
-func testAccCheckAccountDataRetentionMode(ctx context.Context, want awstypes.DataRetentionMode) resource.TestCheckFunc {
+func testAccCheckAccountDataRetentionMode(ctx context.Context, t *testing.T, want awstypes.DataRetentionMode) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		out, err := conn.GetAccountDataRetention(ctx, &bedrock.GetAccountDataRetentionInput{})
 		if err != nil {
