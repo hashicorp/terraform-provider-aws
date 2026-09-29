@@ -149,13 +149,14 @@ func (r *ipRouteResource) Create(ctx context.Context, request resource.CreateReq
 		UpdateSecurityGroupForDirectoryControllers: fwflex.BoolValueFromFramework(ctx, data.UpdateSecurityGroupForDirectoryControllers),
 	}
 
-	timeout := r.CreateTimeout(ctx, data.Timeouts)
-	if err := addIPRoutes(ctx, conn, &input, timeout); err != nil {
+	// The add call's retries and the waiter share one deadline.
+	deadline := time.Now().Add(r.CreateTimeout(ctx, data.Timeouts))
+	if err := addIPRoutes(ctx, conn, &input, time.Until(deadline)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	if err := waitIPRoutesAdded(ctx, conn, directoryID, []string{cidr}, timeout); err != nil {
+	if err := waitIPRoutesAdded(ctx, conn, directoryID, []string{cidr}, time.Until(deadline)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
@@ -218,8 +219,9 @@ func (r *ipRouteResource) Delete(ctx context.Context, request resource.DeleteReq
 		input.CidrIps = []string{cidr}
 	}
 
-	timeout := r.DeleteTimeout(ctx, data.Timeouts)
-	err := removeIPRoutes(ctx, conn, &input, timeout)
+	// The remove call's retries and the waiter share one deadline.
+	deadline := time.Now().Add(r.DeleteTimeout(ctx, data.Timeouts))
+	err := removeIPRoutes(ctx, conn, &input, time.Until(deadline))
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) || errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return
@@ -230,7 +232,7 @@ func (r *ipRouteResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if err := waitIPRoutesRemoved(ctx, conn, directoryID, []string{cidr}, timeout); err != nil {
+	if err := waitIPRoutesRemoved(ctx, conn, directoryID, []string{cidr}, time.Until(deadline)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
