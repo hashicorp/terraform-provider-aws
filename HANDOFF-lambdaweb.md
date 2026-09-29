@@ -59,9 +59,11 @@ Client operations the shim exposes (same names the generated client will have):
 ### GA swap (single dependency-only change)
 
 When the official module ships (Trebuchet build `awsSdkGoV2.zip`):
-1. `go mod edit -replace` to drop the local replace, pin the real module version.
+1. `go mod edit -dropreplace` to drop the local replace, then pin the real module version.
 2. Delete `.pre-ga-sdk/lambdaweb/`.
 3. `go mod tidy`.
+
+The exact commands are in section 7.
 
 Per the contributor guide, this dependency swap is a separate change from the
 resource logic. The shim is isolated in its own commit for exactly this reason.
@@ -81,12 +83,19 @@ AWS_DEFAULT_REGION=us-east-1 AWS_ALTERNATE_REGION=eu-west-1 TF_ACC=1 \
 
 Tests skip automatically in regions where the Lambda Web API is not rolled
 out yet: a service-level `testAccPreCheck` makes a cheap `ListWebFunctions`
-call and skips on the not-available signature. Run in any of the 17 available
-regions (see below).
+call and skips on the not-available signature. Run in any of the 17 regions
+verified on 2026-08-21 (see below).
 
 Last full run (us-east-1, 2026-08-27): 45 acceptance PASS, 0 FAIL, single
 clean run. `make ci-quick` green (providerlint, golangci-lint 0 issues,
 import-lint, semgrep 0 findings). 0 orphan resources after runs.
+
+That run predates the 2026-09-29 changes (HomeRegion `auto_deployment_mode`
+default, `auth_type` replacement, `kms_key_arn` validator, regions and
+required-block validation) and the new acceptance test
+`TestAccLambdaWebFunction_endpointFollowsLatestRevision`. Those changes are
+verified by build, vet and unit tests only; the acceptance suite has to be
+re-run against the real SDK (section 7).
 
 Multi-region validation (2026-08-21): `Function_basic` + `Endpoint_basic` +
 `ResourcePolicy_basic` pass in all 17 regions where the API is available:
@@ -98,11 +107,27 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
 ## 5. Contract notes worth knowing during review
 
 - **Endpoint type and auth type are immutable after creation**: `HomeRegion` /
-  `MultiRegion` / `PerRegion`; `ApplicationManaged` / `IamAuth`.
+  `MultiRegion` / `PerRegion`; `ApplicationManaged` / `IamAuth`. Both carry
+  `RequiresReplace` on the standalone endpoint and on the inline
+  `endpoint_config`. `auth_type` immutability comes from the launch contract
+  and is marked `// GA: re-verify` (the 2026-08-27 run still updated it in
+  place; the endpoint test now asserts a replacement instead).
+- **`auto_deployment_mode` defaults to `LatestRevision` for `HomeRegion`.**
+  `CreateWebFunction` and `CreateWebFunctionEndpoint` default a missing mode
+  to `Disabled`, which pins the endpoint to revision 1, so both resources send
+  `LatestRevision` explicitly when the mode is unset. The value is read back
+  into state.
 - **`MultiRegion` and `PerRegion` require `auto_deployment_mode = "Disabled"`.**
-  The service auto-pins the initial revision at 100%.
+  The provider requires it explicitly at plan time. The service auto-pins the
+  initial revision at 100%.
 - **`PerRegion` requires at least 2 distinct regions** (the home region is
-  auto-added). `regions` order is API-owned, so it is modeled as a set.
+  auto-added). The provider enforces this for `PerRegion` only; no minimum is
+  confirmed for `MultiRegion`, so that is left to the API. The per-endpoint
+  region count is a service quota, so the schema only applies the model limit
+  (1-100). `regions` order is API-owned, so it is modeled as a set.
+- **`revision_config` and `endpoint_config` are required**, as are the nested
+  `build_config`, `runtime_config`, `code_config`, `s3_object` and
+  `service_config` blocks (`listvalidator.IsRequired`).
 - **Traffic shifting is only settable through `UpdateWebFunctionEndpoint`**
   (`revision_weights`). The inline `endpoint_config` on the function cannot
   express weights, so publishing a new revision on a `Disabled` endpoint does
@@ -116,8 +141,10 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
   enabled`) is retried on create.
 - **KMS contract**: a customer CMK works end to end only with an unconditioned
   `lambda.amazonaws.com` service principal in the key policy. `aws:SourceAccount`
-  breaks it (the service does not propagate source context). Documented on the
-  `kms_key_arn` attribute.
+  breaks it (the service does not propagate source context). Alias ARNs are
+  rejected, so `kms_key_arn` is validated against the key ARN pattern
+  `arn:(aws[a-z-]*):kms:[a-z0-9-]+:\d{12}:key/[a-z0-9-]+`. Both are documented
+  on the `kms_key_arn` attribute.
 - **`scaling_config` and `throttle_config`**: endpoint-level `maxEnvironments`
   and `rateLimit`. Modeled as Optional+Computed `ObjectAttribute`s (blocks
   cannot be Computed; proto5 carries object attribute types fine). Live
@@ -136,10 +163,60 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
 ## 6. Still pending (external, not code)
 
 1. **Official Go v2 SDK build (Trebuchet)** for `aws-sdk-go-v2/service/lambdaweb`.
-   Hard blocker for the GA swap. Requested from the Lambda Web service team.
+   Hard blocker for the GA swap. Requested from the Lambda Web service team,
+   together with confirmation of the module path and a preview drop.
 
 HashiCorp's test accounts (primary 187416307283, alternate 067819342479) are
 allowlisted for the pre-release API in us-east-1 and eu-west-1, so acceptance
-tests run there directly.
+tests run there directly. Re-confirm after GA.
 
-Everything on the provider side is complete and verified against the shim.
+The provider-side changes that do not depend on the SDK are done and verified
+against the shim with build, vet and unit tests. What remains is the SDK swap
+and an acceptance re-run (section 7).
+
+## 7. Remaining: SDK swap and acceptance re-run
+
+1. Swap the SDK, in its own commit (replace `vX.Y.Z` with the published
+   version; if the module path is not `service/lambdaweb`, stop: the package,
+   `names/data/names_data.hcl`, resource names and docs need a rename first):
+
+   ```
+   go mod edit -dropreplace=github.com/aws/aws-sdk-go-v2/service/lambdaweb
+   go mod edit -require=github.com/aws/aws-sdk-go-v2/service/lambdaweb@vX.Y.Z
+   git rm -r .pre-ga-sdk/lambdaweb
+   GOPROXY=direct go mod tidy
+   ```
+
+2. Fix type drift the shim hid (it declares `TimeoutSeconds`,
+   `MaxConcurrencyPerEnvironment`, `MaxEnvironments`, `RateLimit` and
+   `RevisionWeight.Weight` as `int64`; generated code usually uses `int32`) and
+   replace the message match in `testAccPreCheck` (`function_test.go`) with the
+   typed error the real SDK returns:
+
+   ```
+   GOPROXY=direct go build ./internal/service/lambdaweb/...
+   GOPROXY=direct go vet ./internal/service/lambdaweb/...
+   go test ./internal/service/lambdaweb/... -run 'Test[^A]'
+   make gen
+   ```
+
+3. Re-run the acceptance suite in both regions, then CI:
+
+   ```
+   AWS_DEFAULT_REGION=us-east-1 AWS_ALTERNATE_REGION=eu-west-1 TF_ACC=1 \
+     go test ./internal/service/lambdaweb/ -v -timeout 90m \
+     -run 'TestAccLambdaWebFunction|TestAccLambdaWebEndpoint|TestAccLambdaWebResourcePolicy'
+   AWS_DEFAULT_REGION=eu-west-1 AWS_ALTERNATE_REGION=us-east-1 TF_ACC=1 \
+     go test ./internal/service/lambdaweb/ -v -timeout 90m \
+     -run 'TestAccLambdaWebFunction|TestAccLambdaWebEndpoint|TestAccLambdaWebResourcePolicy'
+   make ci-quick
+   ```
+
+4. Resolve every `// GA: re-verify` comment (`grep -rn "GA: re-verify"
+   internal/service/lambdaweb`) against the live API.
+
+5. PR prep: rename `.changelog/1.txt` and
+   `.changelog/lambdaweb-tagging-resourcepolicy.txt` to `{PR_NUMBER}.txt`,
+   remove the "Pre-GA" header comments (`function.go`, `endpoint.go`,
+   `resource_policy.go`) and the pre-GA wording in `function_test.go`, delete
+   this file, then open the PR.
