@@ -4,20 +4,18 @@
 package ds
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -34,13 +32,13 @@ func RegisterSweepers() {
 			"aws_fsx_windows_file_system",
 			"aws_transfer_server",
 			"aws_workspaces_directory",
-			"aws_directory_service_ip_routes",
+			"aws_directory_service_ip_route",
 			"aws_directory_service_region",
 		},
 	})
 
-	resource.AddTestSweepers("aws_directory_service_ip_routes", &resource.Sweeper{
-		Name: "aws_directory_service_ip_routes",
+	resource.AddTestSweepers("aws_directory_service_ip_route", &resource.Sweeper{
+		Name: "aws_directory_service_ip_route",
 		F:    sweepIPRoutes,
 	})
 
@@ -160,15 +158,15 @@ func sweepIPRoutes(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DSClient(ctx)
-	input := &directoryservice.DescribeDirectoriesInput{}
+	var input directoryservice.DescribeDirectoriesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := directoryservice.NewDescribeDirectoriesPaginator(conn, input)
+	pages := directoryservice.NewDescribeDirectoriesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Directory Service IP Routes sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping Directory Service IP Route sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -187,21 +185,17 @@ func sweepIPRoutes(region string) error {
 				return fmt.Errorf("error listing Directory Service IP Routes (%s): %w", directoryID, err)
 			}
 
-			var cidrIPs, cidrIPv6s []string
 			for _, route := range routes {
-				if route.CidrIp != nil {
-					cidrIPs = append(cidrIPs, aws.ToString(route.CidrIp))
-				} else if route.CidrIpv6 != nil {
-					cidrIPv6s = append(cidrIPv6s, aws.ToString(route.CidrIpv6))
+				cidr := framework.NewAttribute("cidr_ip", aws.ToString(route.CidrIp))
+				if route.CidrIp == nil {
+					cidr = framework.NewAttribute("cidr_ipv6", aws.ToString(route.CidrIpv6))
 				}
-			}
 
-			sweepResources = append(sweepResources, &ipRoutesSweeper{
-				conn:        conn,
-				directoryID: directoryID,
-				cidrIPs:     cidrIPs,
-				cidrIPv6s:   cidrIPv6s,
-			})
+				sweepResources = append(sweepResources, framework.NewSweepResource(newIPRouteResource, client,
+					framework.NewAttribute("directory_id", directoryID),
+					cidr,
+				))
+			}
 		}
 	}
 
@@ -212,36 +206,4 @@ func sweepIPRoutes(region string) error {
 	}
 
 	return nil
-}
-
-const ipRoutesSweepTimeout = 30 * time.Minute
-
-// ipRoutesSweeper removes IP routes directly. The resource's Delete relies on
-// the configured route set from state, which a sweeper does not have, so the
-// removal is issued against the CIDRs discovered by ListIpRoutes.
-type ipRoutesSweeper struct {
-	conn        *directoryservice.Client
-	directoryID string
-	cidrIPs     []string
-	cidrIPv6s   []string
-}
-
-func (s *ipRoutesSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
-	_, err := s.conn.RemoveIpRoutes(ctx, &directoryservice.RemoveIpRoutesInput{
-		DirectoryId: aws.String(s.directoryID),
-		CidrIps:     s.cidrIPs,
-		CidrIpv6s:   s.cidrIPv6s,
-	})
-
-	if errs.IsA[*awstypes.EntityDoesNotExistException](err) || errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
-		return nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	// RemoveIpRoutes is asynchronous. Wait for the routes to finish removing so
-	// the dependent directory sweeper does not race an in-progress removal.
-	return waitIPRoutesRemoved(ctx, s.conn, s.directoryID, slices.Concat(s.cidrIPs, s.cidrIPv6s), ipRoutesSweepTimeout)
 }

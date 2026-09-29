@@ -1,15 +1,13 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_directory_service_ip_routes" "test" {
+resource "aws_directory_service_ip_route" "test" {
+  count  = var.resource_count
   region = var.region
 
   directory_id = aws_directory_service_directory.test.id
-
-  ip_route {
-    cidr_ip     = "192.0.2.0/24"
-    description = var.rName
-  }
+  cidr_ip      = cidrsubnet("192.0.2.0/24", 4, count.index)
+  description  = var.rName
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -37,9 +35,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
+  count  = 2
   region = var.region
-
-  count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
@@ -64,6 +61,12 @@ data "aws_availability_zones" "available" {
 variable "rName" {
   description = "Name for resource"
   type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
   nullable    = false
 }
 

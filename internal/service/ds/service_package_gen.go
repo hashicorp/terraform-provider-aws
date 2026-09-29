@@ -28,9 +28,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newIPRoutesResource,
-			TypeName: "aws_directory_service_ip_routes",
-			Name:     "IP Routes",
+			Factory:  newIPRouteResource,
+			TypeName: "aws_directory_service_ip_route",
+			Name:     "IP Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("cidr_ip", false),
+				inttypes.StringIdentityAttribute("cidr_ipv6", false),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      ipRouteImportID{},
+			},
+		},
+		{
+			Factory:  newIPRoutesExclusiveResource,
+			TypeName: "aws_directory_service_ip_routes_exclusive",
+			Name:     "IP Routes Exclusive",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -49,11 +64,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  newIPRoutesResourceAsListResource,
-			TypeName: "aws_directory_service_ip_routes",
-			Name:     "IP Routes",
+			Factory:  newIPRouteResourceAsListResource,
+			TypeName: "aws_directory_service_ip_route",
+			Name:     "IP Route",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("cidr_ip", false),
+				inttypes.StringIdentityAttribute("cidr_ipv6", false),
+			}),
 		},
 	})
 }

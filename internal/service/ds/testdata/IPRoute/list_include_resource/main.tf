@@ -1,21 +1,16 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_directory_service_ip_routes" "test" {
+resource "aws_directory_service_ip_route" "test" {
   count = var.resource_count
 
-  directory_id = aws_directory_service_directory.test[count.index].id
-
-  ip_route {
-    cidr_ip     = "192.0.2.0/24"
-    description = var.rName
-  }
+  directory_id = aws_directory_service_directory.test.id
+  cidr_ip      = cidrsubnet("192.0.2.0/24", 4, count.index)
+  description  = var.rName
 }
 
 resource "aws_directory_service_directory" "test" {
-  count = var.resource_count
-
-  name     = "corp${count.index}.example.com"
+  name     = "corp.example.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"

@@ -18,14 +18,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDSIPRoutes_Identity_basic(t *testing.T) {
+func TestAccDSIPRoute_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.IpRouteInfo
-	resourceName := "aws_directory_service_ip_routes.test"
+	resourceName := "aws_directory_service_ip_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -37,17 +38,17 @@ func TestAccDSIPRoutes_Identity_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
-		CheckDestroy:             testAccCheckIPRoutesDestroy(ctx, t),
+		CheckDestroy:             testAccCheckIPRouteDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPRoutesExists(ctx, t, resourceName, &v),
+					testAccCheckIPRouteExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -55,38 +56,38 @@ func TestAccDSIPRoutes_Identity_basic(t *testing.T) {
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						"directory_id":      knownvalue.NotNull(),
+						"cidr_ip":           knownvalue.NotNull(),
+						"cidr_ipv6":         knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("directory_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("cidr_ip")),
 				},
 			},
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", "cidr_ip"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "directory_id",
-				ImportStateVerifyIgnore: []string{
-					"update_security_group_for_directory_controllers",
-				},
 			},
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", "cidr_ip"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
@@ -97,7 +98,7 @@ func TestAccDSIPRoutes_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -115,10 +116,10 @@ func TestAccDSIPRoutes_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccDSIPRoutes_Identity_regionOverride(t *testing.T) {
+func TestAccDSIPRoute_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_directory_service_ip_routes.test"
+	resourceName := "aws_directory_service_ip_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -135,7 +136,7 @@ func TestAccDSIPRoutes_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -146,32 +147,32 @@ func TestAccDSIPRoutes_Identity_regionOverride(t *testing.T) {
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 						"directory_id":      knownvalue.NotNull(),
+						"cidr_ip":           knownvalue.NotNull(),
+						"cidr_ipv6":         knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("directory_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("cidr_ip")),
 				},
 			},
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", "cidr_ip"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "directory_id",
-				ImportStateVerifyIgnore: []string{
-					"update_security_group_for_directory_controllers",
-				},
 			},
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -179,7 +180,7 @@ func TestAccDSIPRoutes_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", "cidr_ip"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
@@ -190,7 +191,7 @@ func TestAccDSIPRoutes_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IPRoutes/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

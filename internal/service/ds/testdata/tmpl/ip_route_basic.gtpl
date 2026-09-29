@@ -1,11 +1,8 @@
-resource "aws_directory_service_ip_routes" "test" {
+resource "aws_directory_service_ip_route" "test" {
 {{- template "region" }}
   directory_id = aws_directory_service_directory.test.id
-
-  ip_route {
-    cidr_ip     = "192.0.2.0/24"
-    description = var.rName
-  }
+  cidr_ip      = "192.0.2.0/24"
+  description  = var.rName
 }
 
 resource "aws_directory_service_directory" "test" {

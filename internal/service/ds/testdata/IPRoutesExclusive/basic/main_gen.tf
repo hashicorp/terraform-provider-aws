@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_directory_service_ip_routes" "test" {
+resource "aws_directory_service_ip_routes_exclusive" "test" {
   directory_id = aws_directory_service_directory.test.id
 
   ip_route {
