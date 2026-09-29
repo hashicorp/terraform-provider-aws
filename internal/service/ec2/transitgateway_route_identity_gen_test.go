@@ -40,7 +40,6 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_basic(t *testing.T) {
 
 	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -57,9 +56,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
 				),
@@ -78,10 +75,8 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -91,9 +86,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_basic(t *testing.T) {
 			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -109,9 +102,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_basic(t *testing.T) {
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -131,7 +122,6 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_regionOverride(t *testing
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_transit_gateway_route.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -149,8 +139,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_regionOverride(t *testing
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -169,8 +158,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_regionOverride(t *testing
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -183,8 +171,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_regionOverride(t *testing
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -203,8 +190,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_regionOverride(t *testing
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -227,7 +213,6 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_basic(t 
 
 	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -243,9 +228,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_basic(t 
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic_v6.66.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
 				),
@@ -258,9 +241,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_basic(t 
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -290,7 +271,6 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_noRefres
 
 	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -311,9 +291,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_noRefres
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic_v6.66.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
 				),
@@ -326,9 +304,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_noRefres
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayRoute/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),

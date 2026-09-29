@@ -35,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayRoute")
 // @Testing(preCheck="testAccPreCheckTransitGateway")
 // @Testing(serialize=true)
+// @Testing(generator=false)
 func resourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,
