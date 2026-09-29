@@ -2118,6 +2118,7 @@ func TestAccElasticBeanstalkEnvironment_clusterTier(t *testing.T) {
 	applicationRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_APPLICATION_ROLE_ARN")
 	observabilityRoleARN := acctest.SkipIfEnvVarNotSet(t, "AWS_ELASTIC_BEANSTALK_EKS_OBSERVABILITY_ROLE_ARN")
 	resourceName := "aws_elastic_beanstalk_environment.test"
+	randInt := acctest.RandInt(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2126,10 +2127,11 @@ func TestAccElasticBeanstalkEnvironment_clusterTier(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_clusterTier(acctest.RandInt(t), imageURI, subnets,
+				Config: testAccEnvironmentConfig_clusterTier(randInt, "Cluster", imageURI, subnets,
 					clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, t, resourceName, &env),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Cluster"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "cluster_arn", "eks", regexache.MustCompile(`cluster/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTriggers+".#", "2"),
@@ -2141,9 +2143,10 @@ func TestAccElasticBeanstalkEnvironment_clusterTier(t *testing.T) {
 				),
 			},
 			{
-				// The API reports the tier as "Cluster", so a configuration spelling it
-				// "Kubernetes" must not plan a replacement.
-				Config: testAccEnvironmentConfig_clusterTier(acctest.RandInt(t), imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN),
+				// "Kubernetes" is an alias for "Cluster", so respelling the tier must
+				// not plan a replacement.
+				Config: testAccEnvironmentConfig_clusterTier(randInt, "Kubernetes", imageURI, subnets,
+					clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -2154,7 +2157,7 @@ func TestAccElasticBeanstalkEnvironment_clusterTier(t *testing.T) {
 	})
 }
 
-func testAccEnvironmentConfig_clusterTier(randInt int, imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN string) string {
+func testAccEnvironmentConfig_clusterTier(randInt int, tier, imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "test" {
   name        = "tf-test-name-%[1]d"
@@ -2175,7 +2178,7 @@ resource "aws_elastic_beanstalk_application_version" "test" {
 resource "aws_elastic_beanstalk_environment" "test" {
   application   = aws_elastic_beanstalk_application.test.name
   name          = "tf-test-name-%[1]d"
-  tier          = "Kubernetes"
+  tier          = %[9]q
   version_label = aws_elastic_beanstalk_application_version.test.name
 
   setting {
@@ -2244,5 +2247,5 @@ resource "aws_elastic_beanstalk_environment" "test" {
     value     = "Utilization"
   }
 }
-`, randInt, imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN)
+`, randInt, imageURI, subnets, clusterRoleARN, nodeRoleARN, operationRoleARN, applicationRoleARN, observabilityRoleARN, tier)
 }

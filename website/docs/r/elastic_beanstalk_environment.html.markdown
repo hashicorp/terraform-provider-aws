@@ -43,10 +43,10 @@ This resource supports the following arguments:
   the Environment.
 * `description` - (Optional) Short description of the Environment
 * `tier` - (Optional) Elastic Beanstalk Environment tier. Valid values are `Worker`,
-  `WebServer` and `Kubernetes`. If tier is left blank `WebServer` will be used. A
-  `Kubernetes` tier environment runs on an Amazon EKS cluster and is configured
-  through the `aws:elasticbeanstalk:eks` option setting namespaces. The API reports
-  this tier as `Cluster`, which is accepted here as an alias for `Kubernetes`.
+  `WebServer` and `Cluster`. If tier is left blank `WebServer` will be used. A
+  `Cluster` tier environment runs on an Amazon EKS cluster and is configured
+  through the `aws:elasticbeanstalk:eks` option setting namespaces. `Kubernetes` is
+  accepted as an alias for `Cluster`.
 * `setting` - (Optional) Option settings to configure the new Environment. These
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
@@ -123,7 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
   the configuration.
 * `cname` - Fully qualified DNS name for this Environment.
 * `autoscaling_groups` - The autoscaling groups used by this Environment.
-* `cluster_arn` - ARN of the Amazon EKS cluster backing this Environment. Only set for the `Kubernetes` tier.
+* `cluster_arn` - ARN of the Amazon EKS cluster backing this Environment. Only set for the `Cluster` tier.
 * `instances` - Instances used by this Environment.
 * `launch_configurations` - Launch configurations in use by this Environment.
 * `load_balancers` - Elastic load balancers in use by this Environment.

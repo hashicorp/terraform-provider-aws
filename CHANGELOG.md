@@ -1,4 +1,60 @@
-## 6.65.0 (Unreleased)
+## 6.67.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+
+FEATURES:
+
+* **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
+* resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
+* resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
+* resource/aws_sns_topic: Add `maximum_message_size` argument ([#50111](https://github.com/hashicorp/terraform-provider-aws/issues/50111))
+
+BUG FIXES:
+
+* list-resource/aws_dynamodb_table_replica: Fix eventual consistency error when replacing resource. ([#50133](https://github.com/hashicorp/terraform-provider-aws/issues/50133))
+* resource/aws_autoscaling_group: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#50084](https://github.com/hashicorp/terraform-provider-aws/issues/50084))
+* resource/aws_bedrockagentcore_harness: Fix "inconsistent result after apply" when `environment_variables` is unset ([#50088](https://github.com/hashicorp/terraform-provider-aws/issues/50088))
+* resource/aws_rds_global_cluster: Wait for source cluster promotion to complete when `source_db_cluster_identifier` is specified, fixing race condition with downstream resources ([#48076](https://github.com/hashicorp/terraform-provider-aws/issues/48076))
+
+## 6.66.0 (September 21, 2026)
+
+NOTES:
+
+* resource/aws_iam_openid_connect_provider: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024))
+
+FEATURES:
+
+* **New List Resource:** `aws_efs_mount_target` ([#50057](https://github.com/hashicorp/terraform-provider-aws/issues/50057))
+* **New List Resource:** `aws_iam_openid_connect_provider` ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024))
+* **New Resource:** `aws_msk_channel` ([#49266](https://github.com/hashicorp/terraform-provider-aws/issues/49266))
+
+ENHANCEMENTS:
+
+* data-source/aws_ecs_service: Add `target_type` and `timeout_configuration` attributes to the `lifecycle_hook` block. ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add Resource Identity support ([#48629](https://github.com/hashicorp/terraform-provider-aws/issues/48629))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add `api_key_secret_source` argument and `api_key_secret_config` configuration block to support customer-managed AWS Secrets Manager secrets ([#48629](https://github.com/hashicorp/terraform-provider-aws/issues/48629))
+* resource/aws_ecs_service: Add `target_type` and `timeout_configuration` arguments to the `lifecycle_hook` configuration block to support ECS `PAUSE` deployment hooks. `hook_target_arn` and `role_arn` are now Optional (still required for `AWS_LAMBDA` hooks). ([#48128](https://github.com/hashicorp/terraform-provider-aws/issues/48128))
+* resource/aws_efs_access_point: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_backup_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_file_system: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_file_system_policy: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_mount_target: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+* resource/aws_efs_replication_configuration: Add Resource Identity support ([#50026](https://github.com/hashicorp/terraform-provider-aws/issues/50026))
+
+BUG FIXES:
+
+* list-resource/aws_rds_cluster_instance: Cache cluster using the DBClusterIdentifier as the key ([#50040](https://github.com/hashicorp/terraform-provider-aws/issues/50040))
+* resource/aws_pipes_pipe: Fix `source_parameters.self_managed_kafka_parameters.server_root_ca_certificate` being sent to the API as an empty string instead of being omitted, which caused `UpdatePipe` to fail with a `ValidationException` when the attribute was unset ([#40116](https://github.com/hashicorp/terraform-provider-aws/issues/40116))
+* resource/aws_redshiftserverless_workgroup: Filter server-only `config_parameter` entries from state and allow newly returned config parameter keys without a provider update ([#49939](https://github.com/hashicorp/terraform-provider-aws/issues/49939))
+
+## 6.65.0 (September 16, 2026)
 
 NOTES:
 
@@ -18,7 +74,9 @@ FEATURES:
 * **New List Resource:** `aws_iam_group` ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
 * **New List Resource:** `aws_iam_user_policy` ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
+* **New List Resource:** `aws_network_acl` ([#50020](https://github.com/hashicorp/terraform-provider-aws/issues/50020))
 * **New List Resource:** `aws_network_acl_rule` ([#49916](https://github.com/hashicorp/terraform-provider-aws/issues/49916))
+* **New List Resource:** `aws_rds_cluster_instance` ([#50036](https://github.com/hashicorp/terraform-provider-aws/issues/50036))
 * **New List Resource:** `aws_wafv2_ip_set` ([#50031](https://github.com/hashicorp/terraform-provider-aws/issues/50031))
 * **New Resource:** `aws_dms_migration_project` ([#49936](https://github.com/hashicorp/terraform-provider-aws/issues/49936))
 * **New Resource:** `aws_ec2_transit_gateway_policy_table_entry` ([#49256](https://github.com/hashicorp/terraform-provider-aws/issues/49256))
@@ -48,7 +106,9 @@ ENHANCEMENTS:
 * resource/aws_iam_group: Add resource identity support ([#49994](https://github.com/hashicorp/terraform-provider-aws/issues/49994))
 * resource/aws_iam_user_policy: Add resource identity support ([#49993](https://github.com/hashicorp/terraform-provider-aws/issues/49993))
 * resource/aws_mailmanager_ingress_point: Add `status_to_update` argument ([#49954](https://github.com/hashicorp/terraform-provider-aws/issues/49954))
+* resource/aws_network_acl: Add resource identity support ([#50020](https://github.com/hashicorp/terraform-provider-aws/issues/50020))
 * resource/aws_network_acl_rule: Remove filtering of default Ipv4 and Ipv6 rules from list ([#50017](https://github.com/hashicorp/terraform-provider-aws/issues/50017))
+* resource/aws_rds_cluster_instance: Add resource identity support ([#50036](https://github.com/hashicorp/terraform-provider-aws/issues/50036))
 * resource/aws_wafv2_ip_set: Add Resource Identity support ([#50031](https://github.com/hashicorp/terraform-provider-aws/issues/50031))
 
 BUG FIXES:

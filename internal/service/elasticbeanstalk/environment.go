@@ -67,8 +67,9 @@ func settingSchema() *schema.Resource {
 const (
 	environmentTierWebServer = "WebServer"
 	environmentTierWorker    = "Worker"
-	// The cluster tier accepts both spellings on input; a response only ever
-	// carries "Cluster".
+	// "Cluster" is the documented name of the cluster tier. The service also
+	// accepts "Kubernetes", its launch name, but a response only ever carries
+	// "Cluster".
 	environmentTierCluster    = "Cluster"
 	environmentTierKubernetes = "Kubernetes"
 )
@@ -227,6 +228,9 @@ func resourceEnvironment() *schema.Resource {
 					ForceNew:     true,
 					Default:      environmentTierWebServer,
 					ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return isSameEnvironmentTier(old, new)
+					},
 				},
 				names.AttrTriggers: {
 					Type:     schema.TypeList,
@@ -300,9 +304,8 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		tierType = environmentTierTypeStandard
 	case environmentTierWorker:
 		tierType = environmentTierTypeSQSHTTP
-	case environmentTierKubernetes:
-		tierType = environmentTierTypeStandard
-	case environmentTierCluster:
+	case environmentTierCluster, environmentTierKubernetes:
+		tier = environmentTierCluster
 		tierType = environmentTierTypeEKS
 	}
 	input.Tier = &awstypes.EnvironmentTier{
@@ -423,11 +426,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrName, env.EnvironmentName)
 	d.Set("platform_arn", env.PlatformArn)
 	d.Set("solution_stack_name", env.SolutionStackName)
-	// tier is ForceNew, so accepting the response name verbatim would plan a
-	// replacement for a configuration that spells the tier the other way.
-	if tier := aws.ToString(env.Tier.Name); !isSameEnvironmentTier(tier, d.Get("tier").(string)) {
-		d.Set("tier", tier)
-	}
+	d.Set("tier", env.Tier.Name)
 	d.Set("version_label", env.VersionLabel)
 
 	var configuredSettings []any

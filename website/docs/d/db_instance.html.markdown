@@ -54,7 +54,7 @@ This data source exports the following attributes in addition to the arguments a
 * `iops` - Provisioned IOPS (I/O operations per second) value.
 * `kms_key_id` - If StorageEncrypted is true, the KMS key identifier for the encrypted DB instance.
 * `license_model` - License model information for this DB instance.
-* `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
+* `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret-block).
 * `master_username` - Master username for the DB instance.
 * `max_allocated_storage` - Upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.

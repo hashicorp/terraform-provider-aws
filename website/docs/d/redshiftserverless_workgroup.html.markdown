@@ -53,7 +53,7 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - The port that Amazon Redshift Serverless listens on.
 * `network_interface` - The network interfaces of the endpoint.. See `Network Interface` below.
 
-##### Network Interface
+#### Network Interface
 
 * `availability_zone` - The availability Zone.
 * `network_interface_id` - The unique identifier of the network interface.
