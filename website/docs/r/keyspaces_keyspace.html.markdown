@@ -32,7 +32,7 @@ This resource supports the following arguments:
 ### `replication_specification` Block
 
 * `region_list` - (Optional) Replication regions. If `replication_strategy` is `MULTI_REGION`, `region_list` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
-* `replication_strategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
+* `replication_strategy` - (Optional) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
 
 ## Attribute Reference
 
