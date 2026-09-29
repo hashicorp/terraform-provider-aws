@@ -129,12 +129,12 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCFlowLogConfig_destinationError(rName),
                 Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""), // this should not be empty
 				),
 			},
@@ -238,12 +238,12 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCFlowLogConfig_destinationError(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
                      // log_group_name should be "xyz-123"
                      // See https://github.com/hashicorp/terraform-provider-aws/issues/45912
 					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),

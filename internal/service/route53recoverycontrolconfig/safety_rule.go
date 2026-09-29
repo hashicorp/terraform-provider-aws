@@ -263,17 +263,16 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	output, err := conn.CreateSafetyRule(ctx, input)
-	result := output.AssertionRule
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Assertion Rule: %s", err)
 	}
 
-	if result == nil {
+	if output == nil || output.AssertionRule == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Assertion Rule empty response")
 	}
 
-	d.SetId(aws.ToString(result.SafetyRuleArn))
+	d.SetId(aws.ToString(output.AssertionRule.SafetyRuleArn))
 
 	if _, err := waitSafetyRuleCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %s", d.Id(), err)
@@ -305,17 +304,16 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	output, err := conn.CreateSafetyRule(ctx, input)
-	result := output.GatingRule
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Gating Rule: %s", err)
 	}
 
-	if result == nil {
+	if output == nil || output.GatingRule == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Gating Rule empty response")
 	}
 
-	d.SetId(aws.ToString(result.SafetyRuleArn))
+	d.SetId(aws.ToString(output.GatingRule.SafetyRuleArn))
 
 	if _, err := waitSafetyRuleCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Gating Rule (%s) to be Deployed: %s", d.Id(), err)

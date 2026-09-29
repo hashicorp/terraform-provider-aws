@@ -50,7 +50,6 @@ import (
 // @IdentityAttribute("online_evaluation_config_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput")
 // @Testing(generator="testAccRandomOnlineEvaluationConfigName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="online_evaluation_config_id")
 // @Testing(importIgnore="enable_on_create")
@@ -106,7 +105,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 			"online_evaluation_config_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), "must start with a letter and contain only alphanumeric characters and underscores, up to 48 characters"),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -287,7 +286,7 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		out, err = conn.CreateOnlineEvaluationConfig(ctx, &input)
 
-		if tfawserr.ErrMessageContains(err, errCodeValidationException, "The provided execution role cannot be assumed") {
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "The provided execution role") {
 			return tfresource.RetryableError(err)
 		}
 

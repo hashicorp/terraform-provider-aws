@@ -10,7 +10,6 @@
 set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-POLICY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TFLINT_CONFIG="${SCRIPT_DIR}/tflint.hcl"
 
 exit_code=0

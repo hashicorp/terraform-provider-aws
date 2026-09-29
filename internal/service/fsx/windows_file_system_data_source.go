@@ -115,6 +115,10 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 						Type: schema.TypeString,
 					},
 				},
+				"network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -201,6 +205,7 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrID, filesystem.FileSystemId)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
+	d.Set("network_type", filesystem.NetworkType)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)

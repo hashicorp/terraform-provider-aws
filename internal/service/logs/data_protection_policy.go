@@ -26,16 +26,15 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_log_data_protection_policy", name="Data Protection Policy")
+// @IdentityAttribute("log_group_name")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetDataProtectionPolicyOutput")
 func resourceDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataProtectionPolicyPut,
 		ReadWithoutTimeout:   resourceDataProtectionPolicyRead,
 		UpdateWithoutTimeout: resourceDataProtectionPolicyPut,
 		DeleteWithoutTimeout: resourceDataProtectionPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -61,12 +60,12 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 	}
 
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
-	input := &cloudwatchlogs.PutDataProtectionPolicyInput{
+	input := cloudwatchlogs.PutDataProtectionPolicyInput{
 		LogGroupIdentifier: aws.String(logGroupName),
 		PolicyDocument:     aws.String(policy),
 	}
 
-	_, err = conn.PutDataProtectionPolicy(ctx, input)
+	_, err = conn.PutDataProtectionPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Data Protection Policy (%s): %s", logGroupName, err)
@@ -116,9 +115,10 @@ func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
-	_, err := conn.DeleteDataProtectionPolicy(ctx, &cloudwatchlogs.DeleteDataProtectionPolicyInput{
+	input := cloudwatchlogs.DeleteDataProtectionPolicyInput{
 		LogGroupIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataProtectionPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

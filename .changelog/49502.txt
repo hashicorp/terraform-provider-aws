@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_mailmanager_ingress_point: Include `FAILED` as a pending state while an ingress point is deleting
+```
+
+```release-note:bug
+resource/aws_observabilityadmin_telemetry_enrichment: Prevent `couldn't find resource (21 retries)` errors on delete if enrichment has never been started in the Region
+```
+
+```release-note:bug
+resource/aws_observabilityadmin_telemetry_evaluation: Include `NOT_STARTED` as a target state while the resource is deleting
+```

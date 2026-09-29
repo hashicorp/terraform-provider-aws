@@ -41,7 +41,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_trust_store", name="Trust Store")
 // @Tags(identifierAttribute="trust_store_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.TrustStore")
 // @Testing(importStateIdAttribute="trust_store_arn")

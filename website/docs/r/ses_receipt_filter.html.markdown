@@ -24,17 +24,17 @@ resource "aws_ses_receipt_filter" "filter" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the filter
-* `cidr` - (Required) The IP address or address range to filter, in CIDR notation
+* `cidr` - (Required) IP address or address range to filter, in CIDR notation
+* `name` - (Required) Name of the filter
 * `policy` - (Required) Block or Allow
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The SES receipt filter name.
-* `arn` - The SES receipt filter ARN.
+* `arn` - SES receipt filter ARN.
+* `id` - SES receipt filter name.
 
 ## Import
 

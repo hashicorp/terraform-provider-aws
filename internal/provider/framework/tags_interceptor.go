@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -68,7 +68,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 	}
 }
 
-func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) dataSourceCRUDInterceptor {
+func dataSourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) dataSourceCRUDInterceptor {
 	return &tagsDataSourceInterceptor{
 		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
@@ -105,6 +105,9 @@ func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOpt
 		// Remove system tags.
 		tags = tags.IgnoreSystem(sp.ServicePackageName())
 		tagsInContext.TagsIn = option.Some(tags)
+		tflog.Info(ctx, "tagsResourceInterceptor before create", map[string]any{
+			"context tags": tags,
+		})
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
@@ -114,6 +117,9 @@ func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOpt
 		if opts.response.Diagnostics.HasError() {
 			return
 		}
+		tflog.Info(ctx, "tagsResourceInterceptor after create", map[string]any{
+			"state tags_all": tftags.NewMapFromMapValue(stateTagsAll),
+		})
 	}
 }
 
@@ -170,6 +176,11 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		if opts.response.Diagnostics.HasError() {
 			return
 		}
+		tflog.Info(ctx, "tagsResourceInterceptor after read", map[string]any{
+			"API tags":       apiTags,
+			"state tags":     stateTags,
+			"state tags_all": stateTagsAll,
+		})
 	}
 }
 
@@ -221,6 +232,12 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 			}
 			// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 		}
+		tflog.Info(ctx, "tagsResourceInterceptor before update", map[string]any{
+			"plan tags":      planTags,
+			"context tags":   tags,
+			"state tags_all": oldTagsAll,
+			"plan tags_all":  newTagsAll,
+		})
 	}
 }
 
@@ -244,8 +261,16 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 		if planTags.IsWhollyKnown() {
 			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(c.IgnoreTagsConfig(ctx))
 			opts.response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
+			tflog.Info(ctx, "tagsResourceInterceptor before modify plan", map[string]any{
+				"plan tags":     planTags,
+				"plan tags_all": allTags,
+			})
 		} else {
 			opts.response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)
+			tflog.Info(ctx, "tagsResourceInterceptor before modify plan", map[string]any{
+				"plan tags":     planTags,
+				"plan tags_all": "unknown",
+			})
 		}
 
 		if opts.response.Diagnostics.HasError() {
@@ -254,7 +279,7 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 	}
 }
 
-func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) interface {
+func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) interface {
 	resourceCRUDInterceptor
 	resourceModifyPlanInterceptor
 } {

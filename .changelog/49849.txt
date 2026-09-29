@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_workspaces_directory: Fix `setting workspace_access_properties: Invalid address to set` errors
+```
+
+```release-note:enhancement
+data-source/aws_workspaces_directory: Add `workspace_access_properties.access_endpoint_config` attribute
+```

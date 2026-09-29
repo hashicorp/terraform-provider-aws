@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appstream_fleet: Support `0` as a valid value for `idle_disconnect_timeout_in_seconds`
-```

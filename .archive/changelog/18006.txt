@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_efs_backup_policy
-```

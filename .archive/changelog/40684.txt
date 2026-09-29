@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ses_identity_notification_topic: Prevent destroy failure when resource is already deleted outside of Terraform
-```

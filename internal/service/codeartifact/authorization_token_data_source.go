@@ -29,8 +29,9 @@ func dataSourceAuthorizationToken() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				"authorization_token": {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
 				},
 				names.AttrDomain: {
 					Type:     schema.TypeString,

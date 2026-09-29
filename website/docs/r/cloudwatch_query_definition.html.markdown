@@ -42,11 +42,38 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The query definition ARN.
 * `query_definition_id` - The query definition ID.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch query definitions using the query definition ARN. The ARN can be found on the "Edit Query" page for the query in the AWS Console. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_query_definition.example
+  identity = {
+    query_definition_id = "269951d7-6f75-496d-9d7b-6b7a5486bdbd"
+  }
+}
+
+resource "aws_cloudwatch_query_definition" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `query_definition_id` (String) ID of the query definition.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Query Definitions using `arn`. The ARN can be found on the "Edit Query" page for the query in the AWS Console. For example:
 
 ```terraform
 import {
@@ -55,7 +82,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch query definitions using the query definition ARN. The ARN can be found on the "Edit Query" page for the query in the AWS Console. For example:
+Using `terraform import`, import Query Definitions using `arn`. The ARN can be found on the "Edit Query" page for the query in the AWS Console. For example:
 
 ```console
 % terraform import aws_cloudwatch_query_definition.example arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd

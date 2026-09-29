@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,7 +29,7 @@ func TestAccODBListNetworksDataSource_basic(t *testing.T) {
 	var output odb.ListOdbNetworksOutput
 
 	dataSourceName := "data.aws_odb_networks.test"
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			networkListTest.testAccPreCheck(ctx, t)
@@ -44,7 +43,7 @@ func TestAccODBListNetworksDataSource_basic(t *testing.T) {
 
 					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
 						pattern := `^odbnet_`
-						networkListTest.count(ctx, dataSourceName, &output)
+						networkListTest.count(ctx, t, dataSourceName, &output)
 						resource.TestCheckResourceAttr(dataSourceName, "aws_odb_networks.#", strconv.Itoa(len(output.OdbNetworks)))
 						i := 0
 						for i < len(output.OdbNetworks) {
@@ -64,13 +63,13 @@ func (odbNetworksListTestDS) basic() string {
 	return `data "aws_odb_networks" "test" {}`
 }
 
-func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.ListOdbNetworksOutput) resource.TestCheckFunc {
+func (odbNetworksListTestDS) count(ctx context.Context, t *testing.T, name string, list *odb.ListOdbNetworksOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, name, errors.New("not found"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		resp, err := tfodb.ListOracleDBNetworks(ctx, conn)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, rs.Primary.ID, err)
@@ -81,7 +80,7 @@ func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.L
 	}
 }
 func (odbNetworksListTestDS) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListOdbNetworksInput{}
 	_, err := conn.ListOdbNetworks(ctx, &input)
 	if acctest.PreCheckSkipError(err) {

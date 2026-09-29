@@ -2365,6 +2365,40 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRule_sourceIPAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_sourceIPAddressType(rName, string(awstypes.SourceIpAddressTypeEnumIpv4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.source_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.source_ip.0.ip_address_type", string(awstypes.SourceIpAddressTypeEnumIpv4)),
+				),
+			},
+			{
+				Config: testAccListenerRuleConfig_sourceIPAddressType(rName, string(awstypes.SourceIpAddressTypeEnumIpv6)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.source_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.source_ip.0.ip_address_type", string(awstypes.SourceIpAddressTypeEnumIpv6)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, t *testing.T, rule *awstypes.Rule, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newActions []awstypes.Action
@@ -5214,4 +5248,96 @@ resource "aws_lb_listener_rule" "test" {
   }
 }
 `)
+}
+
+func testAccListenerRuleConfig_sourceIPAddressType(rName string, ipAddressType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Used for NLB Testing"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  deregistration_delay = 200
+  slow_start           = 0
+
+  health_check {
+    interval = 10
+    port     = 81
+    protocol = "TCP"
+    timeout  = 4
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  protocol          = "TCP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  load_balancer_type = "network"
+  internal           = true
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+  ip_address_type    = "dualstack"
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    source_ip {
+      ip_address_type = "%[2]s"
+    }
+  }
+}
+`, rName, ipAddressType))
 }

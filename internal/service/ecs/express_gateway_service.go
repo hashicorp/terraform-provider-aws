@@ -28,12 +28,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -108,8 +106,8 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrNetworkConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceNetworkConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"scaling_target":               framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayScalingTargetModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrNetworkConfiguration: framework.ResourceOptionalComputedSingleNestedObjectAttribute[expressGatewayServiceNetworkConfigurationModel](ctx),
+			"scaling_target":               framework.ResourceOptionalComputedSingleNestedObjectAttribute[expressGatewayScalingTargetModel](ctx),
 			"service_arn":                  framework.ARNAttributeComputedOnly(),
 			names.AttrServiceName: schema.StringAttribute{
 				Optional: true,
@@ -144,7 +142,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"aws_logs_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceAWSLogsConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+						"aws_logs_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[expressGatewayServiceAWSLogsConfigurationModel](ctx),
 						"command": schema.ListAttribute{
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
@@ -534,10 +532,10 @@ const (
 )
 
 func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
 		Target:  []string{gatewayServiceStatusActive},
-		Refresh: statusExpressGatewayService(ctx, conn, ARN),
+		Refresh: statusExpressGatewayService(conn, ARN),
 		Timeout: timeout,
 	}
 
@@ -550,10 +548,10 @@ func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN 
 }
 
 func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining, gatewayServiceStatusPending},
 		Target:  []string{gatewayServiceStatusActive, gatewayServiceStatusStable},
-		Refresh: statusExpressGatewayServiceWaitForStable(ctx, conn, gatewayServiceARN, operationTime),
+		Refresh: statusExpressGatewayServiceWaitForStable(conn, gatewayServiceARN, operationTime),
 		Timeout: timeout,
 	}
 
@@ -566,10 +564,10 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 }
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
 		Target:     []string{gatewayServiceStatusInactive},
-		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
+		Refresh:    statusExpressGatewayServiceForDeletion(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
@@ -582,8 +580,8 @@ func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id
 	return nil, smarterr.NewError(err)
 }
 
-func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExpressGatewayService(conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -597,8 +595,8 @@ func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayS
 	}
 }
 
-func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExpressGatewayServiceForDeletion(conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
 			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
@@ -645,16 +643,14 @@ func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs
 	out, err := conn.DescribeExpressGatewayService(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
@@ -691,11 +687,11 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 	return err
 }
 
-func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) sdkretry.StateRefreshFunc {
+func statusExpressGatewayServiceWaitForStable(conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) retry.StateRefreshFunc {
 	var deploymentArn *string
 
-	return func() (any, string, error) {
-		outputRaw, serviceStatus, err := statusExpressGatewayService(ctx, conn, gatewayServiceARN)()
+	return func(ctx context.Context) (any, string, error) {
+		outputRaw, serviceStatus, err := statusExpressGatewayService(conn, gatewayServiceARN)(ctx)
 		if err != nil {
 			return nil, "", err
 		}

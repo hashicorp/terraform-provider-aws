@@ -49,7 +49,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF GeoMatchSet.
-* `arn` - Amazon Resource Name (ARN)
+* `arn` - ARN
 
 ## Import
 

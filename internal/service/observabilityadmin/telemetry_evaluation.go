@@ -231,7 +231,7 @@ func waitTelemetryEvaluationRunning(ctx context.Context, conn *observabilityadmi
 func waitTelemetryEvaluationStopped(ctx context.Context, conn *observabilityadmin.Client, timeout time.Duration) (*observabilityadmin.GetTelemetryEvaluationStatusOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusRunning, awstypes.StatusStopping, awstypes.StatusFailedStart, awstypes.StatusFailedStop),
-		Target:  enum.Slice(awstypes.StatusStopped),
+		Target:  enum.Slice(awstypes.StatusNotStarted, awstypes.StatusStopped),
 		Refresh: statusTelemetryEvaluation(conn),
 		Timeout: timeout,
 	}

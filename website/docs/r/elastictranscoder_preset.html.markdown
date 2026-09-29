@@ -166,7 +166,7 @@ The `video_codec_options` map supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Elastic Transcoder Preset.
+* `arn` - ARN of the Elastic Transcoder Preset.
 
 ## Import
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ec2_client_vpn_endpoint: `connection_log_options.cloudwatch_log_stream` argument is Computed, preventing spurious resource diffs
-```

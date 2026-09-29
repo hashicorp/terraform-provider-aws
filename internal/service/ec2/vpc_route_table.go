@@ -239,6 +239,12 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
+	return resourceRouteTableFlatten(ctx, c, conn, d, routeTable)
+}
+
+func resourceRouteTableFlatten(ctx context.Context, c *conns.AWSClient, conn *ec2.Client, d *schema.ResourceData, routeTable *awstypes.RouteTable) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	ownerID := aws.ToString(routeTable.OwnerId)
 	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)

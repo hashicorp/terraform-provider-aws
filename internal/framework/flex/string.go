@@ -97,3 +97,11 @@ func EmptyStringAsNull(v types.String) types.String {
 
 	return v
 }
+
+func NullAsEmptyString(v types.String) types.String {
+	if v.IsNull() {
+		return types.StringValue("")
+	}
+
+	return v
+}

@@ -29,7 +29,6 @@ import (
 )
 
 // @SDKResource("aws_vpclattice_target_group_attachment", name="Target Group Attachment")
-// @Testing(tagsTest=false)
 func resourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupAttachmentCreate,

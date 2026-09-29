@@ -47,6 +47,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "rate_limiter_status.#"),
 				),
 			},
 			{

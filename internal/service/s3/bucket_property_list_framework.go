@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-type bucketPropertyListHandlerFramework interface {
+type bucketPropertyListHandler interface {
 	parseQuery(ctx context.Context, config tfsdk.Config) diag.Diagnostics
 	list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult]
 }

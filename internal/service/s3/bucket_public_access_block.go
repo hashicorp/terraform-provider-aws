@@ -133,6 +133,12 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
+	return resourceBucketPublicAccessBlockFlatten(d, bucket, pabc)
+}
+
+func resourceBucketPublicAccessBlockFlatten(d *schema.ResourceData, bucket string, pabc *types.PublicAccessBlockConfiguration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrBucket, bucket)
 	d.Set("block_public_acls", pabc.BlockPublicAcls)
 	d.Set("block_public_policy", pabc.BlockPublicPolicy)

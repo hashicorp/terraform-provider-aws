@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_fis_experiment_template: Fix validation error when not using `target.resource_arns` or `target.resource_tag` attributes.
-```

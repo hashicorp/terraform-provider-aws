@@ -1,8 +1,0 @@
-```release-note:new-resource
-aws_odb_cloud_exadata_infrastructure
-```
-
-```release-note:new-data-source
-aws_odb_cloud_exadata_infrastructure
-```
-

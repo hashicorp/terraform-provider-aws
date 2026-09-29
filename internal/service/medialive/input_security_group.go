@@ -29,7 +29,9 @@ import (
 
 // @SDKResource("aws_medialive_input_security_group", name="Input Security Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
+// @Testing(preIdentityVersion="v6.60.0")
 // @Testing(generator=false)
 func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
@@ -37,10 +39,6 @@ func resourceInputSecurityGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceInputSecurityGroupRead,
 		UpdateWithoutTimeout: resourceInputSecurityGroupUpdate,
 		DeleteWithoutTimeout: resourceInputSecurityGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

@@ -96,7 +96,7 @@ The `service_now` block supports the following:
 
 * `auth_status` - (Computed) Status of the authorization between ServiceNow and the service.
 * `instance_name` - (Required) Instance name of ServiceNow ITSM.
-* `secret_arn` - (Required) Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the ServiceNow credentials.
+* `secret_arn` - (Required) ARN of the AWS Secrets Manager secret that contains the ServiceNow credentials.
 
 ## Attribute Reference
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ses_configuration_set: Fix crash when `reputation_metrics_enabled` is set to `true`
-```

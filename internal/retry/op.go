@@ -90,7 +90,7 @@ func (op opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 			t   T
 			err error
 		)
-		for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
+		for l = backoff.NewLoopWithOptions(ctx, timeout, opts...); l.Continue(ctx); {
 			t, err = op(ctx)
 
 			var retry bool

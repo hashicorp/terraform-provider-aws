@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_redshift_cluster: Allow `availability_zone_relocation_enabled` to be `true` when `publicly_accessible` is `true`
-```

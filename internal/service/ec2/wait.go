@@ -1533,7 +1533,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 	return nil, err
 }
 
-func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusUnassigning),
 		Target:  []string{},
@@ -1546,6 +1546,29 @@ func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natG
 	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
 		if output.Status == awstypes.NatGatewayAddressStatusFailed {
 			retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+	}
+
+	return err
+}
+
+func waitNATGatewaySecondaryPrivateIPAddressCount(ctx context.Context, conn *ec2.Client, natGatewayID string, expectedCount int, timeout time.Duration) (*awstypes.NatGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"pending"},
+		Target:                    []string{"ready"},
+		Refresh:                   statusNATGatewaySecondaryPrivateIPAddressCount(conn, natGatewayID, expectedCount),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 4,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
+		for _, natGatewayAddress := range output.NatGatewayAddresses {
+			if !aws.ToBool(natGatewayAddress.IsPrimary) && natGatewayAddress.Status == awstypes.NatGatewayAddressStatusFailed {
+				retry.SetLastError(err, errors.New(aws.ToString(natGatewayAddress.FailureMessage)))
+				break
+			}
 		}
 
 		return output, err

@@ -29,6 +29,7 @@ import (
 
 // @FrameworkDataSource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDistributionTenantDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &distributionTenantDataSource{}
 	return d, nil

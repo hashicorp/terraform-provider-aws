@@ -56,8 +56,9 @@ func ResourceBucketAccessKey() *schema.Resource {
 					Computed: true,
 				},
 				"secret_access_key": {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
 				},
 				names.AttrStatus: {
 					Type:     schema.TypeString,

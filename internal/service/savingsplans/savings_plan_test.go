@@ -18,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Note: These tests are commented out because running them would create
-// actual Savings Plans with real financial commitments that cannot be cancelled.
+// Note: These tests are skipped because running them would create actual
+// Savings Plans with real financial commitments that cannot be cancelled.
 // Use these as templates for manual testing only.
 
 func TestAccSavingsPlansSavingsPlan_basic(t *testing.T) {
+	t.Skip("Savings Plans require real financial commitments. This resource " +
+		"is best effort as it cannot be consistently acceptance tested.")
 	ctx := acctest.Context(t)
 	var savingsPlan awstypes.SavingsPlan
 	resourceName := "aws_savingsplans_savings_plan.test"

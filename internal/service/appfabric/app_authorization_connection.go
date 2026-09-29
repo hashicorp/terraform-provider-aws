@@ -36,6 +36,8 @@ import (
 
 // @FrameworkResource("aws_appfabric_app_authorization_connection", name="App Authorization Connection")
 // @Testing(serialize=true)
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newAppAuthorizationConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationConnectionResource{}
 

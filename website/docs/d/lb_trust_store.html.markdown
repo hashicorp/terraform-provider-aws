@@ -8,8 +8,6 @@ description: |-
 
 # Data Source: aws_lb_trust_store
 
-~> **Note:** `aws_alb_trust_store` is known as `aws_lb_trust_store`. The functionality is identical.
-
 Provides information about a Load Balancer Trust Store.
 
 This data source can prove useful when a module accepts an LB Trust Store as an
