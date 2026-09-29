@@ -8,12 +8,14 @@ FEATURES:
 
 * **New Ephemeral Resource:** `aws_bedrockruntime_apply_guardrail` ([#50155](https://github.com/hashicorp/terraform-provider-aws/issues/50155))
 * **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* **New List Resource:** `aws_ec2_transit_gateway_route_table_propagation` ([#50193](https://github.com/hashicorp/terraform-provider-aws/issues/50193))
 
 ENHANCEMENTS:
 
 * resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* resource/aws_ec2_transit_gateway_route_table_propagation: Add Resource Identity support ([#50193](https://github.com/hashicorp/terraform-provider-aws/issues/50193))
 * resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone ([#48525](https://github.com/hashicorp/terraform-provider-aws/issues/48525))
 * resource/aws_sns_topic: Add `maximum_message_size` argument ([#50111](https://github.com/hashicorp/terraform-provider-aws/issues/50111))
 
