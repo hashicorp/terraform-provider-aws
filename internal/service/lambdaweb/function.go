@@ -294,6 +294,12 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						"auth_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
 							Required:   true,
+							// GA: re-verify. The launch contract says the auth
+							// type is chosen at creation and cannot be edited
+							// afterward, so a change replaces the function.
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						// Defaults to LatestRevision for HomeRegion endpoints (set
 						// explicitly in Create; the API default would be Disabled).
@@ -775,7 +781,8 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 
 		// UpdateWebFunctionEndpoint takes description/authType/
 		// autoDeploymentMode at the top level; expand the endpoint_config
-		// block, not the resource model.
+		// block, not the resource model. auth_type forces replacement, so the
+		// authType sent here always equals the current one.
 		endpointConfig, diags := plan.EndpointConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		if resp.Diagnostics.HasError() {

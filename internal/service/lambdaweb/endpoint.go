@@ -106,6 +106,11 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 			"auth_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
 				Required:   true,
+				// GA: re-verify. The launch contract says the auth type is
+				// chosen at creation and cannot be edited afterward.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"auto_deployment_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),

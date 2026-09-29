@@ -59,7 +59,14 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
 			},
 			{
+				// GA: re-verify. auth_type is immutable per the launch
+				// contract, so changing it replaces the endpoint.
 				Config: testAccEndpointConfig_authType(rName, string(awstypes.AuthTypeIamAuth)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),

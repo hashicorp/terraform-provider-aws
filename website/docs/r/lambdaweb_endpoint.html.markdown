@@ -134,7 +134,7 @@ primary and failover members.
 
 The following arguments are required:
 
-* `auth_type` - (Required) Authentication mode. Valid values are `ApplicationManaged` and `IamAuth`. This attribute is mutable and can be updated in place.
+* `auth_type` - (Required) Authentication mode. Valid values are `ApplicationManaged` and `IamAuth`. The authentication type is chosen at creation and cannot be edited afterward, so changing it forces a new resource.
 * `endpoint_name` - (Required) Name of the endpoint, up to 64 characters. Changing this forces a new resource.
 * `endpoint_type` - (Required) Endpoint type. Valid values are `HomeRegion`, `MultiRegion`, and `PerRegion`. Changing this forces a new resource.
 * `function_name` - (Required) Name of the function this endpoint belongs to, up to 64 characters. Changing this forces a new resource.
