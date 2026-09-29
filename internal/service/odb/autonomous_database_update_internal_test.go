@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -219,7 +220,7 @@ func testAutonomousDatabaseUpdate(t *testing.T, plan, state, config autonomousDa
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
 	})})
 	client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
-	providerConfig := conns.Config{AccessKey: "test", SecretKey: "test", Region: "us-east-1", SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+	providerConfig := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
 	client, diagnostics := providerConfig.ConfigureProvider(ctx, client)
 	if diagnostics.HasError() {
 		t.Fatal(diagnostics)

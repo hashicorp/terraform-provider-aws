@@ -3,6 +3,10 @@
 
 # Write-only arguments require Terraform 1.11 or later.
 
+terraform {
+  required_version = ">= 1.11"
+}
+
 variable "odb_network_id" {
   description = "ID of an existing ODB network"
   type        = string

@@ -19,6 +19,7 @@ import (
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -47,19 +48,19 @@ func TestAutonomousDatabaseSecretsManagerIntegrationCreateState(t *testing.T) {
 		regionOverride string
 	}{
 		"success":                               {},
-		"success with region override":          {regionOverride: "us-west-2"},
+		"success with region override":          {regionOverride: endpoints.UsWest2RegionID},
 		"initialization failed":                 {failure: "initialize"},
 		"status API failed":                     {failure: "status API"},
 		"provisioning failed":                   {failure: "provisioning"},
 		"waiter timed out":                      {failure: names.AttrTimeout},
-		"waiter timed out with region override": {failure: names.AttrTimeout, regionOverride: "us-west-2"},
+		"waiter timed out with region override": {failure: names.AttrTimeout, regionOverride: endpoints.UsWest2RegionID},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			synctest.Test(t, func(t *testing.T) {
 				ctx := t.Context()
-				wantRegion := "us-east-1"
+				wantRegion := endpoints.UsEast1RegionID
 				if tc.regionOverride != "" {
 					wantRegion = tc.regionOverride
 					ctx = conns.NewResourceContext(ctx, "", "", "aws_odb_autonomous_database_secrets_manager_integration", wantRegion)
@@ -100,7 +101,7 @@ func TestAutonomousDatabaseSecretsManagerIntegrationCreateState(t *testing.T) {
 					return &http.Response{StatusCode: code, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: req}, nil
 				})})
 				client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
-				config := conns.Config{AccessKey: "test", SecretKey: "test", Region: "us-east-1", SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+				config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
 				client, diags := config.ConfigureProvider(ctx, client)
 				if diags.HasError() {
 					t.Fatal(diags)
@@ -178,15 +179,15 @@ func TestAutonomousDatabaseSecretsManagerIntegrationImport(t *testing.T) {
 		wantRegion  string
 		wantError   string
 	}{
-		"regional ID":                           {id: "us-east-1", wantRegion: "us-east-1"},
-		"regional ID override":                  {id: "us-west-2", stateRegion: "us-west-2", wantRegion: "us-west-2"},
-		"mismatched regional ID":                {id: "us-west-2", stateRegion: "us-east-1", wantError: "does not match"},
-		"unreleased literal is not regional ID": {id: "secrets-manager", stateRegion: "us-east-1", wantError: "does not match"},
+		"regional ID":                           {id: endpoints.UsEast1RegionID, wantRegion: endpoints.UsEast1RegionID},
+		"regional ID override":                  {id: endpoints.UsWest2RegionID, stateRegion: endpoints.UsWest2RegionID, wantRegion: endpoints.UsWest2RegionID},
+		"mismatched regional ID":                {id: endpoints.UsWest2RegionID, stateRegion: endpoints.UsEast1RegionID, wantError: "does not match"},
+		"unreleased literal is not regional ID": {id: "secrets-manager", stateRegion: endpoints.UsEast1RegionID, wantError: "does not match"},
 		// nosemgrep:ci.semgrep.acctest.naming.attr-names-as-test-names -- identity attribute keys, not test names
-		"identity explicit":        {identity: map[string]string{names.AttrAccountID: testAutonomousDatabaseAccountID, names.AttrRegion: "us-east-1"}, wantRegion: "us-east-1"},
-		"identity defaults":        {identity: map[string]string{}, wantRegion: "us-east-1"},
-		"identity region override": {identity: map[string]string{names.AttrRegion: "us-west-2"}, wantRegion: "us-west-2"},
-		"identity account only":    {identity: map[string]string{names.AttrAccountID: testAutonomousDatabaseAccountID}, wantRegion: "us-east-1"},
+		"identity explicit":        {identity: map[string]string{names.AttrAccountID: testAutonomousDatabaseAccountID, names.AttrRegion: endpoints.UsEast1RegionID}, wantRegion: endpoints.UsEast1RegionID},
+		"identity defaults":        {identity: map[string]string{}, wantRegion: endpoints.UsEast1RegionID},
+		"identity region override": {identity: map[string]string{names.AttrRegion: endpoints.UsWest2RegionID}, wantRegion: endpoints.UsWest2RegionID},
+		"identity account only":    {identity: map[string]string{names.AttrAccountID: testAutonomousDatabaseAccountID}, wantRegion: endpoints.UsEast1RegionID},
 		"identity wrong account":   {identity: map[string]string{names.AttrAccountID: "987654321098"}, wantError: "cannot be used to import resources from account"},
 	}
 
@@ -282,7 +283,7 @@ func (autonomousDatabaseIntegrationImportClient) AccountID(context.Context) stri
 }
 
 func (autonomousDatabaseIntegrationImportClient) Region(context.Context) string {
-	return "us-east-1"
+	return endpoints.UsEast1RegionID
 }
 
 func TestAutonomousDatabaseSecretsManagerIntegrationSchema(t *testing.T) {
@@ -389,7 +390,7 @@ func TestAutonomousDatabaseSecretsManagerIntegrationWaiters(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				calls := 0
 				conn := odb.New(odb.Options{
-					Region:      "us-east-1",
+					Region:      endpoints.UsEast1RegionID,
 					Credentials: aws.AnonymousCredentials{},
 					HTTPClient: smithyhttp.ClientDoFunc(func(req *http.Request) (*http.Response, error) {
 						if calls >= len(tc.statuses) {
@@ -453,7 +454,7 @@ func TestAutonomousDatabaseSecretsManagerIntegrationWaiterErrors(t *testing.T) {
 					transportErr := errors.New("test transport failure")
 					calls := 0
 					conn := odb.New(odb.Options{
-						Region:      "us-east-1",
+						Region:      endpoints.UsEast1RegionID,
 						Credentials: aws.AnonymousCredentials{},
 						Retryer:     aws.NopRetryer{},
 						HTTPClient: smithyhttp.ClientDoFunc(func(req *http.Request) (*http.Response, error) {
@@ -534,7 +535,7 @@ func TestAutonomousDatabaseSecretsManagerIntegrationStatus(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			conn := odb.New(odb.Options{
-				Region:      "us-east-1",
+				Region:      endpoints.UsEast1RegionID,
 				Credentials: aws.AnonymousCredentials{},
 				HTTPClient: smithyhttp.ClientDoFunc(func(req *http.Request) (*http.Response, error) {
 					return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": []string{"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(tc.body)), Request: req}, nil
