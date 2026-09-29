@@ -26,4 +26,3 @@ This list resource supports the following arguments:
 
 * `directory_id` - (Required) ID of the directory.
 * `region` - (Optional) Region to query. Defaults to provider region.
-
