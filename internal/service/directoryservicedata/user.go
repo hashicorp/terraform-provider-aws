@@ -259,13 +259,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			}
 		}
 
-		// For when more than one attribute needs to be updated
-		for _, updateType := range []awstypes.UpdateType{awstypes.UpdateTypeAdd, awstypes.UpdateTypeReplace, awstypes.UpdateTypeRemove} {
-			input, ok := updateInputs[updateType]
-			if !ok {
-				continue
-			}
-
+		for _, input := range updateInputs {
 			_, err := conn.UpdateUser(ctx, input)
 			if err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
