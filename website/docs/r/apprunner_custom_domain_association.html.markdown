@@ -14,10 +14,27 @@ Manages an App Runner Custom Domain association.
 
 ## Example Usage
 
+The attribute `certificate_validation_records` has a fixed count of records, 3 when `enable_www_subdomain` is `true` (the default) or 2 otherwise. Due to a limitation in how the [`for_each`](https://developer.hashicorp.com/terraform/language/meta-arguments/for_each#expressions-in-for_each) and [`count`](https://developer.hashicorp.com/terraform/language/meta-arguments/count#expressions-in-count) meta-arguments are handled, they cannot directly use the value of `certificate_validation_records` when creating a new `aws_apprunner_custom_domain_association`, as the value is unknown. A workaround is shown below, using a fixed `count` based on the value of `enable_www_subdomain`.
+
 ```terraform
 resource "aws_apprunner_custom_domain_association" "example" {
   domain_name = "example.com"
   service_arn = aws_apprunner_service.example.arn
+}
+
+locals {
+  certificate_validation_records = tolist(aws_apprunner_custom_domain_association.example.certificate_validation_records)
+}
+
+resource "aws_route53_record" "validation" {
+  count = aws_apprunner_custom_domain_association.example.enable_www_subdomain ? 3 : 2
+
+  zone_id = data.aws_route53_zone.example.zone_id
+  name    = local.certificate_validation_records[count.index].name
+  type    = "CNAME"
+  ttl     = 300
+
+  records = [local.certificate_validation_records[count.index].value]
 }
 ```
 
