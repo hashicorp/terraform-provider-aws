@@ -232,10 +232,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			changeType := updateType(plan.EmailAddress, state.EmailAddress)
 			input := updateInput(changeType)
 
+			input.EmailAddress = plan.EmailAddress.ValueStringPointer()
 			if changeType == awstypes.UpdateTypeRemove {
 				input.EmailAddress = state.EmailAddress.ValueStringPointer()
-			} else {
-				input.EmailAddress = plan.EmailAddress.ValueStringPointer()
 			}
 		}
 
@@ -243,10 +242,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			changeType := updateType(plan.GivenName, state.GivenName)
 			input := updateInput(changeType)
 
+			input.GivenName = plan.GivenName.ValueStringPointer()
 			if changeType == awstypes.UpdateTypeRemove {
 				input.GivenName = state.GivenName.ValueStringPointer()
-			} else {
-				input.GivenName = plan.GivenName.ValueStringPointer()
 			}
 		}
 
@@ -254,10 +252,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			changeType := updateType(plan.Surname, state.Surname)
 			input := updateInput(changeType)
 
+			input.Surname = plan.Surname.ValueStringPointer()
 			if changeType == awstypes.UpdateTypeRemove {
 				input.Surname = state.Surname.ValueStringPointer()
-			} else {
-				input.Surname = plan.Surname.ValueStringPointer()
 			}
 		}
 
