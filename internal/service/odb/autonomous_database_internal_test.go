@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -468,7 +469,7 @@ func TestAutonomousDatabaseIdentityImport(t *testing.T) {
 	t.Parallel()
 
 	const accountID = testAutonomousDatabaseAccountID
-	const region = "us-east-1"
+	const region = endpoints.UsEast1RegionID
 	const databaseID = "adb-test"
 	testCases := map[string]struct {
 		id         string
@@ -479,7 +480,7 @@ func TestAutonomousDatabaseIdentityImport(t *testing.T) {
 		"legacy ID":                            {id: databaseID, wantRegion: region},
 		"identity defaults":                    {identity: map[string]string{names.AttrID: databaseID}, wantRegion: region},
 		"identity explicit account and region": {identity: map[string]string{names.AttrID: databaseID, names.AttrAccountID: accountID, names.AttrRegion: region}, wantRegion: region},
-		"identity region override":             {identity: map[string]string{names.AttrID: databaseID, names.AttrRegion: "us-west-2"}, wantRegion: "us-west-2"},
+		"identity region override":             {identity: map[string]string{names.AttrID: databaseID, names.AttrRegion: endpoints.UsWest2RegionID}, wantRegion: endpoints.UsWest2RegionID},
 		"different account rejected":           {identity: map[string]string{names.AttrID: databaseID, names.AttrAccountID: "111111111111"}, wantError: "account"},
 	}
 	for name, testCase := range testCases {

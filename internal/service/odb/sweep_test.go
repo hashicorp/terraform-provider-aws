@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -83,7 +84,7 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 				return &http.Response{StatusCode: status, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
 			})})
 			client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
-			config := conns.Config{AccessKey: "test", SecretKey: "test", Region: "us-east-1", SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+			config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
 			client, diags := config.ConfigureProvider(ctx, client)
 			if diags.HasError() {
 				t.Fatal(diags)

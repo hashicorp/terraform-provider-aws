@@ -307,13 +307,40 @@ make examples-tflint
 !!! note
     Install [tools](#before-running-tests) before running this check.
 
-#### validate-terraform (0.12.31)
+#### validate-terraform (0.12.31, 1.0.6, 1.11.4)
 
-This check is not currently available in the Makefile.
+The legacy jobs validate all example modules except
+`examples/odb/autonomous-database` with Terraform 0.12.31 and 1.0.6. The
+Autonomous Database example uses write-only arguments and declares Terraform
+1.11 or later; a separate Terraform 1.11.4 job validates that module. Other ODB
+examples continue to run in both legacy jobs.
 
-#### validate-terraform (1.0.6)
+CI and local validation use the same script to select modules and run
+`terraform init -backend=false -input=false`, `terraform fmt -check`, and
+`terraform validate`. The script stops at the first failed command. It does
+not run `plan` or `apply`.
 
-This check is not currently available in the Makefile.
+Build and install the development provider using the same local plugin
+directories as `.github/workflows/examples.yml`, then select the corresponding
+Terraform executable and version:
+
+```console
+make examples-validate TERRAFORM_VERSION=0.12.31 TERRAFORM_BIN=/path/to/terraform-0.12.31
+make examples-validate TERRAFORM_VERSION=1.0.6 TERRAFORM_BIN=/path/to/terraform-1.0.6
+make examples-validate TERRAFORM_VERSION=1.11.4 TERRAFORM_BIN=/path/to/terraform-1.11.4
+```
+
+`TERRAFORM_BIN` defaults to `terraform` on `PATH`, and `TERRAFORM_VERSION`
+defaults to `1.11.4`. The script verifies the executable's version before
+validation. Update the explicit version list in the script together with the
+workflow matrix when changing the supported validation versions.
+
+Run the selection and failure-propagation tests without Terraform or AWS
+credentials:
+
+```console
+make examples-validate-test
+```
 
 ### golangci-lint Checks
 
