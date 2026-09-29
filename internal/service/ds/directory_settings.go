@@ -69,6 +69,7 @@ func (r *directorySettingsResource) Schema(ctx context.Context, req resource.Sch
 			"setting": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[directorySettingModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
