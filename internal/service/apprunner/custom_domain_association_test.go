@@ -98,6 +98,42 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAppRunnerCustomDomainAssociation_disappears_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+	resource2Name := "aws_apprunner_custom_domain_association.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_multiple(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resource2Name, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resource2Name, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_false(t *testing.T) {
 	ctx := acctest.Context(t)
 	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
@@ -356,8 +392,36 @@ func TestAccAppRunnerCustomDomainAssociation_Route53Records_Wildcard(t *testing.
 	})
 }
 
-// TODO:
-// * fix `dns_target` import ignore issue
+func TestAccAppRunnerCustomDomainAssociation_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+	resource2Name := "aws_apprunner_custom_domain_association.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_multiple(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					testAccCheckCustomDomainAssociationExists(ctx, t, resource2Name),
+					resource.TestCheckResourceAttrPair(resourceName, "dns_target", resource2Name, "dns_target"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -519,4 +583,33 @@ resource "aws_route53_record" "validation" {
   records = [local.certificate_validation_records[count.index].value]
 }
 `, root))
+}
+
+func testAccCustomDomainAssociationConfig_multiple(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_custom_domain_association" "test" {
+  domain_name = %[2]q
+  service_arn = aws_apprunner_service.test.arn
+}
+
+resource "aws_apprunner_custom_domain_association" "test2" {
+  domain_name = "other-%[2]s"
+  service_arn = aws_apprunner_service.test.arn
+}
+
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName, domain)
 }
