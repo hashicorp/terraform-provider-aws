@@ -143,7 +143,7 @@ func resourceTransitGatewayRouteFlatten(d *schema.ResourceData, transitGatewayRo
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 	if err := d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock); err != nil {
-		return fmt.Errorf("setting destination_cidr_block: %s", err)
+		return fmt.Errorf("setting destination_cidr_block: %w", err)
 	}
 
 	return nil
