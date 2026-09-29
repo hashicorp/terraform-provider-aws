@@ -72,6 +72,7 @@ resource "aws_elastic_beanstalk_application_version" "build" {
   application = aws_elastic_beanstalk_application.default.name
   bucket      = aws_s3_bucket.default.id
   key         = aws_s3_object.default.key
+  process     = true
 
   image_configuration {
     build {
@@ -106,7 +107,7 @@ The following arguments are optional:
 Exactly one of `source` and `build` must be specified.
 
 * `source` - (Optional) Configuration block for a container image that you built and pushed to a registry yourself. Elastic Beanstalk deploys the image without a build step. Conflicts with `bucket` and `key`. Detailed below.
-* `build` - (Optional) Configuration block for the settings Elastic Beanstalk uses to build a container image from the Application Version source bundle. Requires `bucket` and `key`. Detailed below.
+* `build` - (Optional) Configuration block for the settings Elastic Beanstalk uses to build a container image from the Application Version source bundle. Requires `bucket` and `key`. Elastic Beanstalk starts the build only when `process` is `true`, in which case Terraform waits for the build to complete. Detailed below.
 
 #### source
 

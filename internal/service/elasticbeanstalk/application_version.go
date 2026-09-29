@@ -7,7 +7,9 @@ package elasticbeanstalk
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -203,6 +205,19 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(name)
+
+	// Elastic Beanstalk rejects deploying or deleting a version while its image
+	// build runs, and stops the build after timeout_in_minutes.
+	if v, ok := d.GetOk("image_configuration.0.build"); ok && len(v.([]any)) > 0 && d.Get("process").(bool) {
+		timeout := time.Duration(int64(d.Get("image_configuration.0.build.0.timeout_in_minutes").(int)) * int64(time.Minute))
+		if timeout == 0 {
+			timeout = applicationVersionImageBuildDefaultTimeout
+		}
+
+		if _, err := waitApplicationVersionImageBuilt(ctx, conn, d.Get("application").(string), name, timeout+applicationVersionImageBuildTimeoutMargin); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Application Version (%s) image build: %s", name, err)
+		}
+	}
 
 	return append(diags, resourceApplicationVersionRead(ctx, d, meta)...)
 }
@@ -400,4 +415,53 @@ func findApplicationVersions(ctx context.Context, conn *elasticbeanstalk.Client,
 	}
 
 	return output, nil
+}
+
+const (
+	applicationVersionImageBuildDefaultTimeout = 60 * time.Minute
+	applicationVersionImageBuildTimeoutMargin  = 10 * time.Minute
+)
+
+func statusApplicationVersion(conn *elasticbeanstalk.Client, applicationName, versionLabel string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findApplicationVersionByTwoPartKey(ctx, conn, applicationName, versionLabel)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// The service reports statuses in upper case, unlike the SDK's enum values.
+		return output, strings.ToUpper(string(output.Status)), nil
+	}
+}
+
+func waitApplicationVersionImageBuilt(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, versionLabel string, timeout time.Duration) (*awstypes.ApplicationVersionDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			strings.ToUpper(string(awstypes.ApplicationVersionStatusUnprocessed)),
+			strings.ToUpper(string(awstypes.ApplicationVersionStatusBuilding)),
+			strings.ToUpper(string(awstypes.ApplicationVersionStatusProcessing)),
+		},
+		Target:     []string{strings.ToUpper(string(awstypes.ApplicationVersionStatusProcessed))},
+		Refresh:    statusApplicationVersion(conn, applicationName, versionLabel),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApplicationVersionDescription); ok {
+		if strings.EqualFold(string(output.Status), string(awstypes.ApplicationVersionStatusFailed)) {
+			retry.SetLastError(err, fmt.Errorf("image build failed, see AWS CodeBuild build %s", aws.ToString(output.BuildArn)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
