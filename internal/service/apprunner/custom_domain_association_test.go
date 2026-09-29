@@ -248,6 +248,117 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_tr
 	})
 }
 
+func TestAccAppRunnerCustomDomainAssociation_Route53Records_WWWSubdomain_false(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain_route53Records(rName, root, domain, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(
+						domainValidationRecords(domain),
+					)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerCustomDomainAssociation_Route53Records_WWWSubdomain_true(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domain := acctest.RandomSubdomainForRoot(t, root)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain_route53Records(rName, root, domain, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtTrue),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(append(
+						domainValidationRecords(domain),
+						wwwValidationRecord(domain),
+					))),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerCustomDomainAssociation_Route53Records_Wildcard(t *testing.T) {
+	ctx := acctest.Context(t)
+	root := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
+	domainName := acctest.NewDomainName(root).RandomSubdomain(t)
+	wildcard := domainName.Subdomain("*").String()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_custom_domain_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDomainAssociationConfig_wwwSubdomain_route53Records(rName, root, wildcard, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, wildcard),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_validation_records"), knownvalue.SetExact(
+						domainValidationRecords(domainName.String()),
+					)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
+			},
+		},
+	})
+}
+
+// TODO:
+// * fix `dns_target` import ignore issue
+
 func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -363,4 +474,49 @@ resource "aws_apprunner_service" "test" {
   }
 }
 `, rName, domain, enabled)
+}
+
+func testAccCustomDomainAssociationConfig_wwwSubdomain_route53Records(rName, root, domain string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccCustomDomainAssociationConfig_wwwSubdomain(rName, domain, enabled),
+		fmt.Sprintf(`
+data "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "dns_target" {
+  zone_id = data.aws_route53_zone.test.zone_id
+  name    = aws_apprunner_custom_domain_association.test.domain_name
+  type    = "CNAME"
+  ttl     = 300
+
+  records = [aws_apprunner_custom_domain_association.test.dns_target]
+}
+
+resource "aws_route53_record" "www" {
+  count = aws_apprunner_custom_domain_association.test.enable_www_subdomain ? 1 : 0
+
+  zone_id = data.aws_route53_zone.test.zone_id
+  name    = "www.${aws_apprunner_custom_domain_association.test.domain_name}"
+  type    = "CNAME"
+  ttl     = 300
+
+  records = [aws_apprunner_custom_domain_association.test.dns_target]
+}
+
+locals {
+  certificate_validation_records = tolist(aws_apprunner_custom_domain_association.test.certificate_validation_records)
+}
+
+resource "aws_route53_record" "validation" {
+  count = aws_apprunner_custom_domain_association.test.enable_www_subdomain ? 3 : 2
+
+  zone_id = data.aws_route53_zone.test.zone_id
+  name    = local.certificate_validation_records[count.index].name
+  type    = "CNAME"
+  ttl     = 300
+
+  records = [local.certificate_validation_records[count.index].value]
+}
+`, root))
 }
