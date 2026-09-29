@@ -1,7 +1,3 @@
 ```release-note:new-resource
 aws_lambdaweb_resource_policy
 ```
-
-```release-note:enhancement
-resource/aws_lambdaweb_function: Manage tags through the native Lambda Web tagging API
-```

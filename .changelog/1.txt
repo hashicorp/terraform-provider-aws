@@ -6,15 +6,10 @@ aws_lambdaweb_function
 aws_lambdaweb_endpoint
 ```
 
-
 ```release-note:new-data-source
 aws_lambdaweb_function
 ```
 
 ```release-note:new-data-source
 aws_lambdaweb_endpoint
-```
-
-```release-note:enhancement
-resource/aws_lambdaweb_endpoint: Add `regional_domain_names` attribute
 ```
