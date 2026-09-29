@@ -128,7 +128,9 @@ The following arguments are optional:
 
 * `build_config` - (Required) Code source and runtime. [See below](#build_config-block).
 * `description` - (Optional) Description of the revision.
-* `kms_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the function's code and environment variables.
+* `kms_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the function's code and environment variables. Must be a key ARN (`arn:<partition>:kms:<region>:<account>:key/<key-id>`); alias ARNs are rejected.
+
+~> **Note:** The key policy must allow the `lambda.amazonaws.com` service principal to use the key **without conditions** (the configuration verified end to end, including multi-Region replication, grants `kms:Encrypt`, `kms:Decrypt`, `kms:GenerateDataKey*`, `kms:DescribeKey` and `kms:CreateGrant`). The service does not propagate the calling account as source context, so a statement conditioned on `aws:SourceAccount` does not match: function creation fails with `AccessDeniedException`, or the endpoint answers `HTTP 500` at runtime while the function, revision and endpoint all report `Active`.
 
 ~> **Note:** A revision encrypted with a single-Region customer managed key cannot be deployed to the other Regions of a `MultiRegion` or `PerRegion` endpoint: those Regions report `Failed to deploy all the specified revision(s)` while the home Region goes `Active`, so the endpoint ends up `Failed` even though the function and the revision report `Active`. Either keep `kms_key_arn` with a `HomeRegion` endpoint, or use an [AWS KMS multi-Region key](https://docs.aws.amazon.com/kms/latest/developerguide/multi-region-keys-overview.html) replicated into every Region of the endpoint, which is verified to work.
 * `service_config` - (Required) Execution environment configuration. [See below](#service_config-block).

@@ -126,6 +126,13 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
+							Validators: []validator.String{
+								// Key ARNs only: the service rejects alias ARNs.
+								stringvalidator.RegexMatches(
+									regexache.MustCompile(`^arn:(aws[a-z-]*):kms:[a-z0-9-]+:\d{12}:key/[a-z0-9-]+$`),
+									"must be a KMS key ARN (arn:<partition>:kms:<region>:<account>:key/<key-id>); alias ARNs are not accepted",
+								),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
