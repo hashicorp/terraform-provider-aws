@@ -23,13 +23,13 @@ resource "aws_apprunner_custom_domain_association" "example" {
 }
 
 locals {
-  certificate_validation_records = tolist(aws_apprunner_custom_domain_association.test.certificate_validation_records)
+  certificate_validation_records = tolist(aws_apprunner_custom_domain_association.example.certificate_validation_records)
 }
 
 resource "aws_route53_record" "validation" {
-  count = aws_apprunner_custom_domain_association.test.enable_www_subdomain ? 3 : 2
+  count = aws_apprunner_custom_domain_association.example.enable_www_subdomain ? 3 : 2
 
-  zone_id = data.aws_route53_zone.test.zone_id
+  zone_id = data.aws_route53_zone.example.zone_id
   name    = local.certificate_validation_records[count.index].name
   type    = "CNAME"
   ttl     = 300
