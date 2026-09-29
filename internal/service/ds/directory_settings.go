@@ -32,7 +32,6 @@ import (
 
 // @FrameworkResource("aws_directory_service_directory_settings", name="Directory Settings")
 // @IdentityAttribute("directory_id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directoryservice;directoryservice.DescribeSettingsOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 func newDirectorySettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
