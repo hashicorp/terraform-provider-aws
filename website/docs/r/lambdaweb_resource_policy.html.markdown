@@ -10,7 +10,7 @@ description: |-
 
 Manages a resource-based policy for an AWS Lambda Web function. A resource policy attaches an IAM policy document directly to the function ARN, letting you grant or restrict who may reach the function's endpoints. A common use is locking a function down so that only a specific CloudFront distribution (or another trusted principal) can invoke it, keeping the raw endpoint domain from being reachable directly.
 
-~> **Note:** Lambda Web is available in select regions. As of August 2026 the API is active in 17 commercial regions, including `us-east-1` and `eu-west-1`. In regions where the service is not yet deployed, API calls fail with `AccessDeniedException`.
+~> **Note:** Lambda Web is not available in every AWS Region. In a Region where the service is not available, API calls fail with `AccessDeniedException`.
 
 ~> **Note:** A resource policy attaches to the parent web function only. Endpoint and revision ARNs (`.../endpoint/<name>`, `.../revision/<id>`) are not accepted.
 

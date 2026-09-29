@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Lambda Web endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 10 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_lambdaweb_function`](lambdaweb_function.html.markdown) and additional endpoints with this resource.
 
-~> **Note:** Lambda Web is available in select regions. As of August 2026 the API is active in 17 commercial regions, including `us-east-1` and `eu-west-1`. In regions where the service is not yet deployed, API calls fail with `AccessDeniedException`.
+~> **Note:** Lambda Web is not available in every AWS Region. In a Region where the service is not available, API calls fail with `AccessDeniedException`.
 
 ## Example Usage
 

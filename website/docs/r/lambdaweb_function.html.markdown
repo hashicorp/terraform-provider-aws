@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Lambda Web function, including its revision (code + runtime + execution configuration) and its initial endpoint.
 
-~> **Note:** Lambda Web is available in select regions. As of August 2026 the API is active in 17 commercial regions, including `us-east-1` and `eu-west-1`. In regions where the service is not yet deployed, API calls fail with `AccessDeniedException`.
+~> **Note:** Lambda Web is not available in every AWS Region. In a Region where the service is not available, API calls fail with `AccessDeniedException`.
 
 ## Example Usage
 
@@ -162,7 +162,7 @@ The following arguments are optional:
 * `telemetry_config` - (Optional) Telemetry configuration. The service assigns default telemetry (a log group and `INFO` log levels) to every revision; Terraform tracks this block as written, so leaving it out does not produce drift against those defaults. [See below](#telemetry_config-block).
 * `timeout_seconds` - (Optional) Request timeout in seconds (3-900, default 30).
 
-~> **Note:** The runtime starts `index.js` and expects it to listen on `0.0.0.0:3000`. To serve an entry point with another name, set `AWS_LAMBDA_ENTRYPOINT` in `environment_variables` to that file. Without it a package whose server lives elsewhere starts nothing, and the endpoint answers an opaque `HTTP 500` with no log line explaining it.
+~> **Note:** The runtime starts `index.js` and sets `AWS_LAMBDA_HTTP_ENDPOINT` (currently `0.0.0.0:3000`) to the address the server must listen on; read that variable rather than hard-coding the address. To serve an entry point with another name, set `AWS_LAMBDA_NODEJS_ENTRYPOINT` in `environment_variables` to that file. Without it a package whose server lives elsewhere starts nothing, and the endpoint answers an opaque `HTTP 500` with no log line explaining it.
 
 ##### `telemetry_config` Block
 

@@ -430,14 +430,6 @@ func (r *functionResource) ValidateConfig(ctx context.Context, req resource.Vali
 	}
 }
 
-// ModifyPlan warns when an apply is about to publish a revision that the inline
-// endpoint will not serve. An endpoint with `auto_deployment_mode = "Disabled"`
-// keeps the traffic weights it already has, and weights are only settable
-// through UpdateWebFunctionEndpoint: CreateWebFunction's endpointConfig has no
-// revisionWeights member, so `endpoint_config` cannot express them. Without a
-// warning the apply reports success, the next plan is empty, and the endpoint
-// keeps serving the old revision indefinitely. `MultiRegion` and `PerRegion`
-// endpoints are always affected because the service requires `Disabled` there.
 // environmentVariablesMaxBytes is the documented 32 KB limit the service
 // enforces on a revision's environment variables.
 const environmentVariablesMaxBytes = 32 * 1024
@@ -483,6 +475,14 @@ func validateEnvironmentVariablesSize(ctx context.Context, cfg functionResourceM
 	}
 }
 
+// ModifyPlan warns when an apply is about to publish a revision that the inline
+// endpoint will not serve. An endpoint with `auto_deployment_mode = "Disabled"`
+// keeps the traffic weights it already has, and weights are only settable
+// through UpdateWebFunctionEndpoint: CreateWebFunction's endpointConfig has no
+// revisionWeights member, so `endpoint_config` cannot express them. Without a
+// warning the apply reports success, the next plan is empty, and the endpoint
+// keeps serving the old revision indefinitely. `MultiRegion` and `PerRegion`
+// endpoints are always affected because the service requires `Disabled` there.
 func (r *functionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
