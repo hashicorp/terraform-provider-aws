@@ -358,6 +358,10 @@ func flattenCustomDomainCertificateValidationRecords(records []types.Certificate
 }
 
 func validateCustomDomainAssociationCustomDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown(names.AttrDomainName) || !d.NewValueKnown("enable_www_subdomain") {
+		return nil
+	}
+
 	domainName := d.Get(names.AttrDomainName).(string)
 	if !strings.HasPrefix(domainName, "*.") {
 		return nil
