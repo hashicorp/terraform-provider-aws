@@ -66,7 +66,7 @@ import {
 
 #### Required
 
-* `destination_cidr_block` (String) IPv4 or IPv6 RFC1924 CIDR used for destination matches.
+* `destination_cidr_block` (String) IPv4 or IPv6 CIDR block used for destination matches.
 * `transit_gateway_route_table_id` (String) Identifier of EC2 Transit Gateway Route Table.
 
 #### Optional
