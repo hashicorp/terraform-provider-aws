@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -50,7 +51,12 @@ import (
 )
 
 // @FrameworkResource("aws_odb_autonomous_database", name="Autonomous Database")
+// @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/odb/types;odbtypes;odbtypes.AutonomousDatabase")
+// @Testing(preCheck="testAccAutonomousDatabasePreCheck")
+// @Testing(identityRegionOverrideTest=false)
 // @Testing(importIgnore="admin_password;admin_password_wo;admin_password_wo_version;source;source_configuration;transportable_tablespace")
 func newResourceAutonomousDatabase(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAutonomousDatabase{}
@@ -66,7 +72,7 @@ const ResNameAutonomousDatabase = "Autonomous Database"
 type resourceAutonomousDatabase struct {
 	framework.ResourceWithModel[autonomousDatabaseResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *resourceAutonomousDatabase) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -1144,6 +1150,39 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 		}
 	}
 
+	if updated.LongTermBackupSchedule == nil && isConfiguredAutonomousDatabaseBlock(plan.LongTermBackupSchedule) {
+		schedule, diags := plan.LongTermBackupSchedule.ToPtr(ctx)
+		resp.Diagnostics.Append(diags...)
+		previous, diags := state.LongTermBackupSchedule.ToPtr(ctx)
+		resp.Diagnostics.Append(diags...)
+		if previous == nil {
+			previous, diags = config.LongTermBackupSchedule.ToPtr(ctx)
+			resp.Diagnostics.Append(diags...)
+		}
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if previous != nil {
+			if schedule.IsDisabled.IsUnknown() {
+				schedule.IsDisabled = previous.IsDisabled
+			}
+			if schedule.RepeatCadence.IsUnknown() {
+				schedule.RepeatCadence = previous.RepeatCadence
+			}
+			if schedule.RetentionPeriodInDays.IsUnknown() {
+				schedule.RetentionPeriodInDays = previous.RetentionPeriodInDays
+			}
+			if schedule.TimeOfBackup.IsUnknown() {
+				schedule.TimeOfBackup = previous.TimeOfBackup
+			}
+			plan.LongTermBackupSchedule, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, schedule)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
+
 	planTags, planTagsAll := plan.Tags, plan.TagsAll
 	flattenAutonomousDatabase(ctx, updated, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -1202,6 +1241,9 @@ func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, confi
 	}
 	if plan.CustomerContactsToSendToOCI.Equal(state.CustomerContactsToSendToOCI) {
 		input.CustomerContactsToSendToOCI = nil
+	} else if !plan.CustomerContactsToSendToOCI.IsUnknown() && !isConfiguredAutonomousDatabaseBlock(plan.CustomerContactsToSendToOCI) && isConfiguredAutonomousDatabaseBlock(state.CustomerContactsToSendToOCI) {
+		input.CustomerContactsToSendToOCI = []odbtypes.CustomerContact{}
+		tflog.Debug(ctx, "Clearing ODB Autonomous Database customer contacts")
 	}
 	if plan.DataStorageSizeInGBs.Equal(state.DataStorageSizeInGBs) {
 		input.DataStorageSizeInGBs = nil
@@ -1259,6 +1301,9 @@ func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, confi
 	}
 	if plan.LongTermBackupSchedule.Equal(state.LongTermBackupSchedule) {
 		input.LongTermBackupSchedule = nil
+	} else if !plan.LongTermBackupSchedule.IsUnknown() && !isConfiguredAutonomousDatabaseBlock(plan.LongTermBackupSchedule) && isConfiguredAutonomousDatabaseBlock(state.LongTermBackupSchedule) {
+		input.LongTermBackupSchedule = &odbtypes.LongTermBackupSchedule{IsDisabled: aws.Bool(true)}
+		tflog.Debug(ctx, "Disabling ODB Autonomous Database long-term backup schedule")
 	}
 	if plan.OpenMode.Equal(state.OpenMode) {
 		input.OpenMode = ""
@@ -1280,9 +1325,15 @@ func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, confi
 	}
 	if plan.ResourcePoolSummary.Equal(state.ResourcePoolSummary) {
 		input.ResourcePoolSummary = nil
+	} else if !plan.ResourcePoolSummary.IsUnknown() && !isConfiguredAutonomousDatabaseBlock(plan.ResourcePoolSummary) && isConfiguredAutonomousDatabaseBlock(state.ResourcePoolSummary) {
+		input.ResourcePoolSummary = &odbtypes.ResourcePoolSummary{IsDisabled: aws.Bool(true)}
+		tflog.Debug(ctx, "Disabling ODB Autonomous Database resource pool")
 	}
 	if plan.ScheduledOperations.Equal(state.ScheduledOperations) {
 		input.ScheduledOperations = nil
+	} else if !plan.ScheduledOperations.IsUnknown() && !isConfiguredAutonomousDatabaseBlock(plan.ScheduledOperations) && isConfiguredAutonomousDatabaseBlock(state.ScheduledOperations) {
+		input.ScheduledOperations = []odbtypes.ScheduledOperationDetails{}
+		tflog.Debug(ctx, "Clearing ODB Autonomous Database scheduled operations")
 	} else {
 		input.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, diags)
 	}
@@ -1629,6 +1680,8 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 		model.DbToolsDetails = dbToolsDetails
 	}
 	if apiObject.LongTermBackupSchedule == nil && isConfiguredAutonomousDatabaseBlock(longTermBackupSchedule) {
+		model.LongTermBackupSchedule = longTermBackupSchedule
+	} else if !longTermBackupSchedule.IsUnknown() && !isConfiguredAutonomousDatabaseBlock(longTermBackupSchedule) && apiObject.LongTermBackupSchedule != nil && aws.ToBool(apiObject.LongTermBackupSchedule.IsDisabled) {
 		model.LongTermBackupSchedule = longTermBackupSchedule
 	}
 	if !resourcePoolSummary.IsUnknown() && resourcePoolSummary.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {

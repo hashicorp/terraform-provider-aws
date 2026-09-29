@@ -6,6 +6,8 @@ package odb
 import (
 	"context"
 	"net/http"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,10 +15,18 @@ import (
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,9 +67,9 @@ func TestAutonomousDatabaseScheduledOperationsRoundTrip(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	value := inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseScheduledOperationModel{
+	value := fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseScheduledOperationModel{
 		{
-			DayOfWeek:          inttypes.StringEnumValue(odbtypes.DayOfWeekNameMonday),
+			DayOfWeek:          fwtypes.StringEnumValue(odbtypes.DayOfWeekNameMonday),
 			ScheduledStartTime: types.StringValue("08:00"),
 			ScheduledStopTime:  types.StringValue("18:00"),
 		},
@@ -77,7 +87,7 @@ func TestAutonomousDatabaseScheduledOperationsRoundTrip(t *testing.T) {
 		t.Fatalf("day of week = %#v, want MONDAY", apiObjects[0].DayOfWeek)
 	}
 
-	var result inttypes.ListNestedObjectValueOf[autonomousDatabaseScheduledOperationModel]
+	var result fwtypes.ListNestedObjectValueOf[autonomousDatabaseScheduledOperationModel]
 	diags := flattenAutonomousDatabaseScheduledOperations(ctx, apiObjects, &result)
 	if diags.HasError() {
 		t.Fatalf("flattening scheduled operations: %v", diags)
@@ -122,7 +132,7 @@ func TestAutonomousDatabaseAdminPasswordSourceRoundTrip(t *testing.T) {
 		t.Fatalf("external_id_type = %q, want %q", got, want)
 	}
 
-	var result inttypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]
+	var result fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]
 	diags := flattenAutonomousDatabaseAdminPasswordSource(ctx, &odbtypes.AdminPasswordSourceSummary{
 		AdminPasswordSource: odbtypes.AdminPasswordSourceCustomerManagedAwsSecret,
 		AdminPasswordSourceConfiguration: &odbtypes.AdminPasswordSourceConfigurationMemberCustomerManagedAwsSecret{
@@ -145,7 +155,7 @@ func TestAutonomousDatabaseUpdateInputAdminPasswordSource(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	state, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	state, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
@@ -166,7 +176,7 @@ func TestAutonomousDatabaseUpdateInputAdminPasswordSource(t *testing.T) {
 	}
 
 	state.AdminPasswordSource = plan.AdminPasswordSource
-	plan.AdminPasswordSource = inttypes.NewListNestedObjectValueOfNull[autonomousDatabaseAdminPasswordSourceModel](ctx)
+	plan.AdminPasswordSource = fwtypes.NewListNestedObjectValueOfNull[autonomousDatabaseAdminPasswordSourceModel](ctx)
 	input = expandAutonomousDatabaseUpdateInput(ctx, plan, state, plan, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("expanding removal update input: %v", response.Diagnostics)
@@ -179,12 +189,12 @@ func TestAutonomousDatabaseUpdateInputAdminPasswordSource(t *testing.T) {
 	}
 }
 
-func testAutonomousDatabaseAdminPasswordSource(ctx context.Context, secretARN, iamRoleARN string, externalIDType odbtypes.ExternalIdType) inttypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel] {
-	return inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseAdminPasswordSourceModel{
+func testAutonomousDatabaseAdminPasswordSource(ctx context.Context, secretARN, iamRoleARN string, externalIDType odbtypes.ExternalIdType) fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel] {
+	return fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseAdminPasswordSourceModel{
 		{
-			CustomerManagedAWSSecret: inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerManagedAWSSecretModel{
+			CustomerManagedAWSSecret: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerManagedAWSSecretModel{
 				{
-					ExternalIDType: inttypes.StringEnumValue(externalIDType),
+					ExternalIDType: fwtypes.StringEnumValue(externalIDType),
 					IAMRoleARN:     types.StringValue(iamRoleARN),
 					SecretARN:      types.StringValue(secretARN),
 				},
@@ -197,7 +207,7 @@ func TestAutonomousDatabaseUpdateInputChangesOnly(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	state, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	state, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
@@ -244,13 +254,13 @@ func TestAutonomousDatabasePostCreateUpdateInput(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	plan, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	plan, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
 	plan.DbName = types.StringValue("TESTDB")
 	plan.DisplayName = types.StringValue("example")
-	plan.LongTermBackupSchedule = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseLongTermBackupScheduleModel{
+	plan.LongTermBackupSchedule = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseLongTermBackupScheduleModel{
 		{
 			IsDisabled: types.BoolValue(true),
 		},
@@ -282,7 +292,7 @@ func TestAutonomousDatabaseNumericFlatten(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	model, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	model, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
@@ -306,7 +316,7 @@ func TestAutonomousDatabaseEncryptionFlatten(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	model, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	model, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
@@ -340,12 +350,12 @@ func TestAutonomousDatabaseDefaultBlocksFlatten(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	model, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	model, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
-	model.DbToolsDetails = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseToolModel{})
-	model.ResourcePoolSummary = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseResourcePoolSummaryModel{})
+	model.DbToolsDetails = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseToolModel{})
+	model.ResourcePoolSummary = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseResourcePoolSummaryModel{})
 
 	flattenAutonomousDatabase(ctx, &odbtypes.AutonomousDatabase{
 		DbToolsDetails: []odbtypes.DatabaseTool{{Name: aws.String("APEX")}},
@@ -356,10 +366,10 @@ func TestAutonomousDatabaseDefaultBlocksFlatten(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("flattening Autonomous Database defaults: %v", diags)
 	}
-	if got := model.DbToolsDetails.Length(inttypes.CollectionLengthUnhandledAsZero); got != 0 {
+	if got := model.DbToolsDetails.Length(fwtypes.CollectionLengthUnhandledAsZero); got != 0 {
 		t.Fatalf("db_tools_details block count = %d, want 0", got)
 	}
-	if got := model.ResourcePoolSummary.Length(inttypes.CollectionLengthUnhandledAsZero); got != 0 {
+	if got := model.ResourcePoolSummary.Length(fwtypes.CollectionLengthUnhandledAsZero); got != 0 {
 		t.Fatalf("resource_pool_summary block count = %d, want 0", got)
 	}
 }
@@ -368,16 +378,16 @@ func TestAutonomousDatabaseConfiguredBlocksFlatten(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	model, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	model, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
 	if diags.HasError() {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
-	model.CustomerContactsToSendToOCI = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerContactModel{
+	model.CustomerContactsToSendToOCI = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerContactModel{
 		{
 			Email: types.StringValue("terraform@example.test"),
 		},
 	})
-	model.LongTermBackupSchedule = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseLongTermBackupScheduleModel{
+	model.LongTermBackupSchedule = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseLongTermBackupScheduleModel{
 		{
 			IsDisabled: types.BoolValue(true),
 		},
@@ -387,10 +397,10 @@ func TestAutonomousDatabaseConfiguredBlocksFlatten(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("flattening Autonomous Database: %v", diags)
 	}
-	if got, want := model.CustomerContactsToSendToOCI.Length(inttypes.CollectionLengthUnhandledAsZero), 1; got != want {
+	if got, want := model.CustomerContactsToSendToOCI.Length(fwtypes.CollectionLengthUnhandledAsZero), 1; got != want {
 		t.Fatalf("customer_contacts_to_send_to_oci block count = %d, want %d", got, want)
 	}
-	if got, want := model.LongTermBackupSchedule.Length(inttypes.CollectionLengthUnhandledAsZero), 1; got != want {
+	if got, want := model.LongTermBackupSchedule.Length(fwtypes.CollectionLengthUnhandledAsZero), 1; got != want {
 		t.Fatalf("long_term_backup_schedule block count = %d, want %d", got, want)
 	}
 }
@@ -399,7 +409,7 @@ func TestAutonomousDatabaseCloneTableSpaceListExpansion(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	tableSpaceList := inttypes.NewListValueOfMust[types.Int32](ctx, []attr.Value{
+	tableSpaceList := fwtypes.NewListValueOfMust[types.Int32](ctx, []attr.Value{
 		types.Int32Value(1),
 		types.Int32Value(2),
 	})
@@ -409,7 +419,7 @@ func TestAutonomousDatabaseCloneTableSpaceListExpansion(t *testing.T) {
 
 		model := autonomousDatabasePointInTimeRestoreModel{
 			CloneTableSpaceList:        tableSpaceList,
-			CloneType:                  inttypes.StringEnumValue(odbtypes.CloneTypeFull),
+			CloneType:                  fwtypes.StringEnumValue(odbtypes.CloneTypeFull),
 			SourceAutonomousDatabaseId: types.StringValue("adb-source"),
 		}
 		var apiObject odbtypes.PointInTimeRestoreConfiguration
@@ -428,7 +438,7 @@ func TestAutonomousDatabaseCloneTableSpaceListExpansion(t *testing.T) {
 		model := autonomousDatabaseRestoreFromBackupModel{
 			AutonomousDatabaseBackupId: types.StringValue("backup-source"),
 			CloneTableSpaceList:        tableSpaceList,
-			CloneType:                  inttypes.StringEnumValue(odbtypes.CloneTypeFull),
+			CloneType:                  fwtypes.StringEnumValue(odbtypes.CloneTypeFull),
 		}
 		var apiObject odbtypes.RestoreFromBackupConfiguration
 		diags := fwflex.Expand(ctx, model, &apiObject)
@@ -453,3 +463,105 @@ func TestWaitAutonomousDatabaseDeletedNotFound(t *testing.T) {
 		t.Fatalf("waiting for deleted Autonomous Database: %v", err)
 	}
 }
+
+func TestAutonomousDatabaseIdentityImport(t *testing.T) {
+	t.Parallel()
+
+	const accountID = testAutonomousDatabaseAccountID
+	const region = "us-east-1"
+	const databaseID = "adb-test"
+	testCases := map[string]struct {
+		id         string
+		identity   map[string]string
+		wantRegion string
+		wantError  string
+	}{
+		"legacy ID":                            {id: databaseID, wantRegion: region},
+		"identity defaults":                    {identity: map[string]string{names.AttrID: databaseID}, wantRegion: region},
+		"identity explicit account and region": {identity: map[string]string{names.AttrID: databaseID, names.AttrAccountID: accountID, names.AttrRegion: region}, wantRegion: region},
+		"identity region override":             {identity: map[string]string{names.AttrID: databaseID, names.AttrRegion: "us-west-2"}, wantRegion: "us-west-2"},
+		"different account rejected":           {identity: map[string]string{names.AttrID: databaseID, names.AttrAccountID: "111111111111"}, wantError: "account"},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := importer.Context(t.Context(), testAutonomousDatabaseImportClient{accountID: accountID, region: region})
+			var registration *inttypes.ServicePackageFrameworkResource
+			for _, candidate := range (&servicePackage{}).FrameworkResources(ctx) {
+				if candidate.TypeName == "aws_odb_autonomous_database" {
+					registration = candidate
+					break
+				}
+			}
+			if registration == nil {
+				t.Fatal("Autonomous Database registration missing")
+			}
+			wantIdentity := inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true))
+			if !reflect.DeepEqual(registration.Identity, wantIdentity) {
+				t.Fatalf("identity registration = %#v, want %#v", registration.Identity, wantIdentity)
+			}
+			raw, err := registration.Factory(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			identityResource, ok := raw.(framework.ImportByIdentityer)
+			if !ok {
+				t.Fatal("Autonomous Database must support identity import")
+			}
+			identityResource.SetIdentitySpec(registration.Identity)
+			identityResource.SetImportSpec(registration.Import)
+			var schemaResponse resource.SchemaResponse
+			raw.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+			schemaResponse.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			identitySchema := identity.NewIdentitySchema(registration.Identity)
+			resourceIdentity := &tfsdk.ResourceIdentity{Raw: tftypes.NewValue(identitySchema.Type().TerraformType(ctx), nil), Schema: &identitySchema}
+			for key, value := range testCase.identity {
+				if diags := resourceIdentity.SetAttribute(ctx, path.Root(key), value); diags.HasError() {
+					t.Fatal(diags)
+				}
+			}
+			request := resource.ImportStateRequest{ID: testCase.id, Identity: resourceIdentity}
+			response := resource.ImportStateResponse{
+				State:    tfsdk.State{Raw: tftypes.NewValue(schemaResponse.Schema.Type().TerraformType(ctx), nil), Schema: schemaResponse.Schema},
+				Identity: resourceIdentity,
+			}
+			// The provider's region interceptor seeds this before invoking the resource importer.
+			if diags := response.State.SetAttribute(ctx, path.Root(names.AttrRegion), region); diags.HasError() {
+				t.Fatal(diags)
+			}
+			raw.(resource.ResourceWithImportState).ImportState(ctx, request, &response)
+			if testCase.wantError != "" {
+				if !response.Diagnostics.HasError() || !strings.Contains(strings.ToLower(response.Diagnostics.Errors()[0].Detail()), testCase.wantError) {
+					t.Fatalf("diagnostics = %v, want %q error", response.Diagnostics, testCase.wantError)
+				}
+				return
+			}
+			if response.Diagnostics.HasError() {
+				t.Fatal(response.Diagnostics)
+			}
+			for key, want := range map[string]string{names.AttrID: databaseID, names.AttrRegion: testCase.wantRegion} {
+				var got string
+				if diags := response.State.GetAttribute(ctx, path.Root(key), &got); diags.HasError() {
+					t.Fatal(diags)
+				}
+				if got != want {
+					t.Errorf("state %s = %q, want %q", key, got, want)
+				}
+			}
+			for key, want := range map[string]string{names.AttrID: databaseID, names.AttrAccountID: accountID, names.AttrRegion: testCase.wantRegion} {
+				var got string
+				if diags := response.Identity.GetAttribute(ctx, path.Root(key), &got); diags.HasError() {
+					t.Fatal(diags)
+				}
+				if got != want {
+					t.Errorf("identity %s = %q, want %q", key, got, want)
+				}
+			}
+		})
+	}
+}
+
+type testAutonomousDatabaseImportClient struct{ accountID, region string }
+
+func (c testAutonomousDatabaseImportClient) AccountID(context.Context) string { return c.accountID }
+func (c testAutonomousDatabaseImportClient) Region(context.Context) string    { return c.region }

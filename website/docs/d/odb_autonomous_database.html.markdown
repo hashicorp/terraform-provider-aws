@@ -3,12 +3,12 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_autonomous_database"
 page_title: "AWS: aws_odb_autonomous_database"
 description: |-
-  Terraform data source for reading an Oracle Database@AWS Autonomous Database Serverless instance.
+  Provides details about an Oracle Database@AWS Autonomous Database Serverless instance.
 ---
 
 # Data Source: aws_odb_autonomous_database
 
-Reads an Oracle Database@AWS Autonomous Database Serverless (ADB-S) instance by its unique identifier.
+Provides details about an Oracle Database@AWS Autonomous Database Serverless (ADB-S) instance by its unique identifier.
 
 ## Example Usage
 
@@ -20,9 +20,12 @@ data "aws_odb_autonomous_database" "example" {
 
 ## Argument Reference
 
-This data source supports the following arguments:
+The following arguments are required:
 
 * `id` - (Required) Unique Autonomous Database identifier.
+
+The following arguments are optional:
+
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference

@@ -18,14 +18,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// The Secrets Manager integration is account-wide. Do not run this test in
+// The Secrets Manager integration is a regional singleton. Do not run this test in
 // parallel with other tests that manage the same integration.
-func TestAccODBAutonomousDatabaseSecretsManagerIntegration_basic(t *testing.T) {
+func TestAccODBAutonomousDatabaseSecretsManagerIntegration_serial(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running acceptance test in short mode")
+	}
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccODBAutonomousDatabaseSecretsManagerIntegration_basic,
+		"Identity":      testAccODBAutonomousDatabaseSecretsManagerIntegration_identitySerial,
+	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccODBAutonomousDatabaseSecretsManagerIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role odbtypes.OciIamRole
 	resourceName := "aws_odb_autonomous_database_secrets_manager_integration.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- account-wide integration tests must remain serialized
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- regional singleton integration tests must remain serialized
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccAutonomousDatabaseSecretsManagerIntegrationPreCheck(ctx, t)
@@ -38,6 +50,7 @@ func TestAccODBAutonomousDatabaseSecretsManagerIntegration_basic(t *testing.T) {
 				Config: testAccAutonomousDatabaseSecretsManagerIntegrationConfigBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutonomousDatabaseSecretsManagerIntegrationExists(ctx, t, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(odbtypes.OciIamRoleStatusAvailable)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
@@ -52,6 +65,15 @@ func TestAccODBAutonomousDatabaseSecretsManagerIntegration_basic(t *testing.T) {
 }
 
 func testAccAutonomousDatabaseSecretsManagerIntegrationPreCheck(ctx context.Context, t *testing.T) {
+	testAccAutonomousDatabaseSecretsManagerIntegrationPreCheckRegion(ctx, t, acctest.Region())
+}
+
+func testAccAutonomousDatabaseSecretsManagerIntegrationPreCheckRegion(ctx context.Context, t *testing.T, region string) {
+	if testing.Short() {
+		t.Skip("skipping long-running acceptance test in short mode")
+	}
+
+	ctx = acctest.NewTestResourceContext(ctx, "aws_odb_autonomous_database_secrets_manager_integration", region)
 	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 	_, err := tfodb.FindAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
@@ -62,7 +84,7 @@ func testAccAutonomousDatabaseSecretsManagerIntegrationPreCheck(ctx context.Cont
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
-	t.Skip("skipping acceptance testing: AWS Secrets Manager integration already exists; this test destroys the account-level integration")
+	t.Skip("skipping acceptance testing: AWS Secrets Manager integration already exists; this test destroys the regional integration")
 }
 
 func testAccCheckAutonomousDatabaseSecretsManagerIntegrationExists(ctx context.Context, t *testing.T, name string, role *odbtypes.OciIamRole) resource.TestCheckFunc {
@@ -75,6 +97,7 @@ func testAccCheckAutonomousDatabaseSecretsManagerIntegrationExists(ctx context.C
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAutonomousDatabaseSecretsManagerIntegration, name, errors.New("ID not set"))
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, "aws_odb_autonomous_database_secrets_manager_integration", rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		found, err := tfodb.FindAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
 		if err != nil {
@@ -93,6 +116,7 @@ func testAccCheckAutonomousDatabaseSecretsManagerIntegrationDestroy(ctx context.
 				continue
 			}
 
+			ctx := acctest.NewTestResourceContext(ctx, "aws_odb_autonomous_database_secrets_manager_integration", rs.Primary.Attributes[names.AttrRegion])
 			conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 			_, err := tfodb.FindAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
 			if retry.NotFound(err) {

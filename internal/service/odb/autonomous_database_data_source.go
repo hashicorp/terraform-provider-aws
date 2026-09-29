@@ -23,6 +23,7 @@ import (
 
 // @FrameworkDataSource("aws_odb_autonomous_database", name="Autonomous Database")
 // @Tags(identifierAttribute="arn")
+// @Testing(preCheck="testAccAutonomousDatabasePreCheck")
 func newDataSourceAutonomousDatabase(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAutonomousDatabase{}, nil
 }
