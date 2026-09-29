@@ -35,6 +35,7 @@ import (
 // @IdentityAttribute("directory_id")
 // @Testing(preCheck="acctest.PreCheckDirectoryService")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="directory_id")
 func newDirectorySettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directorySettingsResource{}
 

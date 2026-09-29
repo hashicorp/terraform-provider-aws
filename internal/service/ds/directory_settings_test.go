@@ -60,9 +60,11 @@ func TestAccDSDirectorySettings_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateVerifyIdentifierAttribute: "directory_id",
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -117,15 +119,17 @@ func testAccCheckDirectorySettingsDestroy(ctx context.Context, t *testing.T) res
 				continue
 			}
 
-			_, err := tfds.FindDirectorySettingsByDirectoryID(ctx, conn, rs.Primary.ID)
+			directoryID := rs.Primary.Attributes["directory_id"]
+
+			_, err := tfds.FindDirectorySettingsByDirectoryID(ctx, conn, directoryID)
 			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.DS, create.ErrActionCheckingDestroyed, tfds.ResNameDirectorySettingsExported, rs.Primary.ID, err)
+				return create.Error(names.DS, create.ErrActionCheckingDestroyed, tfds.ResNameDirectorySettingsExported, directoryID, err)
 			}
 
-			return create.Error(names.DS, create.ErrActionCheckingDestroyed, tfds.ResNameDirectorySettingsExported, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.DS, create.ErrActionCheckingDestroyed, tfds.ResNameDirectorySettingsExported, directoryID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -139,14 +143,15 @@ func testAccCheckDirectorySettingsExists(ctx context.Context, t *testing.T, name
 			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		directoryID := rs.Primary.Attributes["directory_id"]
+		if directoryID == "" {
 			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, name, errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
-		_, err := tfds.FindDirectorySettingsByDirectoryID(ctx, conn, rs.Primary.ID)
-		return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, rs.Primary.ID, err)
+		_, err := tfds.FindDirectorySettingsByDirectoryID(ctx, conn, directoryID)
+		return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, directoryID, err)
 	}
 }
 
