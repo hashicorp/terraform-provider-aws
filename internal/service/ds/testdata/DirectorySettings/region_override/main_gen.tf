@@ -50,6 +50,7 @@ resource "aws_directory_service_directory" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
