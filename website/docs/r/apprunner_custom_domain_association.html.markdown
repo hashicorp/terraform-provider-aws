@@ -25,8 +25,8 @@ resource "aws_apprunner_custom_domain_association" "example" {
 
 This resource supports the following arguments:
 
-* `domain_name` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
-* `enable_www_subdomain` - (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
+* `domain_name` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`. Must not end with a trailing period. `enable_www_subdomain` must be set to `false` when using a wildcard domain.
+* `enable_www_subdomain` - (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`. Must be set to `false` when `domain_name` is a wildcard domain.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_arn` - (Required) ARN of the App Runner service.
 
@@ -36,17 +36,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `certificate_validation_records` - Set of certificate CNAME records used for this domain name. See [`certificate_validation_records` Block](#certificate_validation_records-block) below for more details.
 * `dns_target` - App Runner subdomain of the App Runner service. The custom domain name is mapped to this target name. Attribute only available if resource created (not imported) with Terraform.
-* `id` - `domain_name` and `service_arn` separated by a comma (`,`).
 * `status` - Current state of the certificate CNAME record validation.
 
 ### `certificate_validation_records` Block
 
 The `certificate_validation_records` block exports the following attributes:
 
-* `name` - Certificate CNAME record name.
-* `status` - Current state of the certificate CNAME record validation. It should change to `SUCCESS` after App Runner completes validation with your DNS.
+* `name` - Certificate `CNAME` record name.
+* `status` - Current state of the certificate `CNAME` record validation. It should change to `SUCCESS` after App Runner completes validation with your DNS.
 * `type` - Record type, always `CNAME`.
-* `value` - Certificate CNAME record value.
+* `value` - Certificate `CNAME` record value.
 
 ## Import
 

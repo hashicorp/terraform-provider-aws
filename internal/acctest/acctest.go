@@ -1897,6 +1897,10 @@ func PreCheckAssumeRoleARN(t *testing.T) {
 
 type domainName string
 
+func NewDomainName(name string) domainName {
+	return domainName(name)
+}
+
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
 const domainNameTestTopLevelDomain domainName = "test"
@@ -1908,6 +1912,13 @@ const domainNameTestTopLevelDomain domainName = "test"
 func RandomSubdomain(t *testing.T) string {
 	t.Helper()
 	return string(RandomDomain(t).RandomSubdomain(t))
+}
+
+// RandomSubdomainForRoot creates a random subdomain for the given root domain in the form
+// "<random>.<root>"
+func RandomSubdomainForRoot(t *testing.T, root string) string {
+	t.Helper()
+	return string(NewDomainName(root).RandomSubdomain(t))
 }
 
 // RandomDomainName creates a random two-level domain name in the form
