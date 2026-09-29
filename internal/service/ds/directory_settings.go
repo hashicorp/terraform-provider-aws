@@ -80,18 +80,6 @@ func (r *directorySettingsResource) Schema(ctx context.Context, req resource.Sch
 						names.AttrValue: schema.StringAttribute{
 							Required: true,
 						},
-						"applied_value": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-						"request_status": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
 						names.AttrType: schema.StringAttribute{
 							Computed: true,
 							PlanModifiers: []planmodifier.String{
@@ -329,23 +317,17 @@ func findDirectorySettingsByDirectoryID(ctx context.Context, conn *directoryserv
 
 func mergeSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, requested []*directorySettingModel, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[directorySettingModel] {
 	// Build a lookup from name → SettingEntry for fast access.
-	byName := make(map[string]awstypes.SettingEntry, len(entries))
-	for _, e := range entries {
-		if e.Name != nil {
-			byName[aws.ToString(e.Name)] = e
-		}
-	}
+	byName := settingEntriesByName(entries)
 
+	// Only the settings declared in config/state are included: the API may also return
+	// other, unrelated directory settings that this resource does not manage.
 	models := make([]*directorySettingModel, len(requested))
 	for i, req := range requested {
-		name := req.Name.ValueString()
 		m := &directorySettingModel{
 			Name:  req.Name,
 			Value: req.Value,
 		}
-		if e, ok := byName[name]; ok {
-			m.AppliedValue = types.StringPointerValue(e.AppliedValue)
-			m.RequestStatus = types.StringValue(string(e.RequestStatus))
+		if e, ok := byName[req.Name.ValueString()]; ok {
 			m.Type = types.StringPointerValue(e.Type)
 		}
 		models[i] = m
@@ -356,6 +338,17 @@ func mergeSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, r
 	return result
 }
 
+// settingEntriesByName indexes Directory Settings API entries by name for lookup.
+func settingEntriesByName(entries []awstypes.SettingEntry) map[string]awstypes.SettingEntry {
+	byName := make(map[string]awstypes.SettingEntry, len(entries))
+	for _, e := range entries {
+		if e.Name != nil {
+			byName[aws.ToString(e.Name)] = e
+		}
+	}
+	return byName
+}
+
 type directorySettingsResourceModel struct {
 	framework.WithRegionModel
 	DirectoryID types.String                                           `tfsdk:"directory_id"`
@@ -364,9 +357,7 @@ type directorySettingsResourceModel struct {
 }
 
 type directorySettingModel struct {
-	Name          types.String `tfsdk:"name"`
-	Value         types.String `tfsdk:"value"`
-	AppliedValue  types.String `tfsdk:"applied_value"`
-	RequestStatus types.String `tfsdk:"request_status"`
-	Type          types.String `tfsdk:"type"`
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+	Type  types.String `tfsdk:"type"`
 }

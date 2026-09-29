@@ -122,11 +122,9 @@ func TestAccDSDirectorySettings_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("setting"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrName:   knownvalue.StringExact("TLS_1_0"),
-								names.AttrValue:  knownvalue.StringExact("Disable"),
-								"applied_value":  knownvalue.NotNull(),
-								"request_status": knownvalue.NotNull(),
-								names.AttrType:   knownvalue.NotNull(),
+								names.AttrName:  knownvalue.StringExact("TLS_1_0"),
+								names.AttrValue: knownvalue.StringExact("Disable"),
+								names.AttrType:  knownvalue.NotNull(),
 							}),
 						})),
 					}),

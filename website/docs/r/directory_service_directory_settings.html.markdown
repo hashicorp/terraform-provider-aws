@@ -58,8 +58,6 @@ The `setting` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `setting.applied_value` - Value that was applied for the directory setting.
-* `setting.request_status` - Status of the request to update the directory setting.
 * `setting.type` - Type of the directory setting.
 
 ## Timeouts

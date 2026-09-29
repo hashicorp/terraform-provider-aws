@@ -114,17 +114,15 @@ type listDirectorySettingsModel struct {
 // Create/Read/Update: those merge against a known list of requested settings from
 // plan or state, while listing has no such prior knowledge and instead relies on the
 // API's RequestedValue field to identify managed settings.
-func flattenDirectorySettingsForList(ctx context.Context, entries []awstypes.SettingEntry, data *directorySettingsResourceModel) diag.Diagnostics {
+func flattenDirectorySettingsForList(ctx context.Context, entries []awstypes.SettingEntry, data *directorySettingsResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	models := make([]*directorySettingModel, len(entries))
 	for i, e := range entries {
 		models[i] = &directorySettingModel{
-			Name:          fwflex.StringToFramework(ctx, e.Name),
-			Value:         fwflex.StringToFramework(ctx, e.RequestedValue),
-			AppliedValue:  fwflex.StringToFramework(ctx, e.AppliedValue),
-			RequestStatus: fwflex.StringValueToFramework(ctx, e.RequestStatus),
-			Type:          fwflex.StringToFramework(ctx, e.Type),
+			Name:  fwflex.StringToFramework(ctx, e.Name),
+			Value: fwflex.StringToFramework(ctx, e.RequestedValue),
+			Type:  fwflex.StringToFramework(ctx, e.Type),
 		}
 	}
 
