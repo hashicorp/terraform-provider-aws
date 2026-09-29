@@ -9,10 +9,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -27,29 +30,37 @@ func TestAccDSDirectorySettings_basic(t *testing.T) {
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_directory_service_directory_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DSServiceID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectorySettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectorySettingsConfig_basic(rName),
+				Config: testAccDirectorySettingsConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectorySettingsExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "directory_id"),
-					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "setting.0.name", "TLS_1_0"),
-					resource.TestCheckResourceAttr(resourceName, "setting.0.value", "Disable"),
-					resource.TestCheckResourceAttrSet(resourceName, "setting.0.type"),
-					resource.TestCheckResourceAttrSet(resourceName, "setting.0.request_status"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("TLS_1_0"),
+							names.AttrValue:  knownvalue.StringExact("Disable"),
+							"applied_value":  knownvalue.NotNull(),
+							"request_status": knownvalue.NotNull(),
+							names.AttrType:   knownvalue.NotNull(),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -67,25 +78,34 @@ func TestAccDSDirectorySettings_disappears(t *testing.T) {
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_directory_service_directory_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DSServiceID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectorySettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectorySettingsConfig_basic(rName),
+				Config: testAccDirectorySettingsConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectorySettingsExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfds.ResourceDirectorySettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -133,28 +153,15 @@ func testAccCheckDirectorySettingsExists(ctx context.Context, t *testing.T, name
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
-
-	input := &directoryservice.DescribeDirectoriesInput{}
-	_, err := conn.DescribeDirectories(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccDirectorySettingsConfig_basic(rName string) string {
+func testAccDirectorySettingsConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.%[1]s.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -170,6 +177,6 @@ resource "aws_directory_service_directory_settings" "test" {
     value = "Disable"
   }
 }
-`, rName),
+`, domain),
 	)
 }
