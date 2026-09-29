@@ -1,18 +1,20 @@
 ---
 subcategory: "Directory Service"
 layout: "aws"
-page_title: "AWS: aws_directory_service_ip_routes"
+page_title: "AWS: aws_directory_service_ip_routes_exclusive"
 description: |-
-  Manages IP routes for an AWS Directory Service directory.
+  Manages an exclusive set of IP routes for an AWS Directory Service directory.
 ---
 
-# Resource: aws_directory_service_ip_routes
+# Resource: aws_directory_service_ip_routes_exclusive
 
-Manages IP routes for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to an IPv4 or IPv6 CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
+Manages an exclusive set of IP routes for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to an IPv4 or IPv6 CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
 
-~> **Note:** This resource manages the complete set of IP routes for a directory. Any IP routes added outside of Terraform are removed on the next apply.
+!> This resource takes exclusive ownership over the IP routes of a directory. This includes removal of IP routes which are not explicitly configured. To prevent persistent drift, ensure any `aws_directory_service_ip_route` resources managed alongside this resource have an equivalent `ip_route` block.
 
-~> **Note:** Adding an IPv6 route (`cidr_ipv6`) requires the directory's network type to be dual-stack (IPv4 and IPv6). Enabling IPv6 support on a directory is a one-way operation performed outside of Terraform; see [Updating directory network type](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_update-directory-type.html).
+~> Destruction of this resource means Terraform will no longer manage reconciliation of the configured IP routes. It __will not__ remove the configured IP routes from the directory.
+
+~> Adding an IPv6 route (`cidr_ipv6`) requires the directory's network type to be dual-stack (IPv4 and IPv6). Enabling IPv6 support on a directory is a one-way operation performed outside of Terraform; see [Updating directory network type](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_update-directory-type.html).
 
 ## Example Usage
 
@@ -30,7 +32,7 @@ resource "aws_directory_service_directory" "example" {
   }
 }
 
-resource "aws_directory_service_ip_routes" "example" {
+resource "aws_directory_service_ip_routes_exclusive" "example" {
   directory_id = aws_directory_service_directory.example.id
 
   update_security_group_for_directory_controllers = true
@@ -52,17 +54,27 @@ resource "aws_directory_service_ip_routes" "example" {
 }
 ```
 
+### Disallow IP Routes
+
+To remove all IP routes from a directory and prevent new ones from being added outside of Terraform, omit all `ip_route` blocks.
+
+```terraform
+resource "aws_directory_service_ip_routes_exclusive" "example" {
+  directory_id = aws_directory_service_directory.example.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `directory_id` - (Required) Identifier of the directory to which to add the IP routes. Changing this forces a new resource to be created.
-* `ip_route` - (Required) Set of IP routes to add to the directory. Detailed below.
+* `directory_id` - (Required) Identifier of the directory. Changing this forces a new resource to be created.
 
 The following arguments are optional:
 
+* `ip_route` - (Optional) Set of IP routes the directory should have. Omit all `ip_route` blocks to remove every IP route from the directory. See [`ip_route` Block](#ip_route-block) below.
 * `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `update_security_group_for_directory_controllers` - (Optional) Whether to update the inbound and outbound rules of the security group for the directory controllers. Changing this forces a new resource to be created. Defaults to `false`.
+* `update_security_group_for_directory_controllers` - (Optional) Whether to update the inbound and outbound rules of the security group for the directory controllers when adding IP routes. Applies only to IP routes added by this resource. Defaults to `false`.
 
 ### `ip_route` Block
 
@@ -82,7 +94,6 @@ This resource exports no additional attributes.
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
-* `delete` - (Default `30m`)
 
 ## Import
 
@@ -90,13 +101,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_directory_service_ip_routes.example
+  to = aws_directory_service_ip_routes_exclusive.example
   identity = {
     directory_id = "d-1234567890"
   }
 }
 
-resource "aws_directory_service_ip_routes" "example" {
+resource "aws_directory_service_ip_routes_exclusive" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -112,17 +123,17 @@ resource "aws_directory_service_ip_routes" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IP routes using the directory ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import exclusive management of IP routes using the directory ID. For example:
 
 ```terraform
 import {
-  to = aws_directory_service_ip_routes.example
+  to = aws_directory_service_ip_routes_exclusive.example
   id = "d-1234567890"
 }
 ```
 
-Using `terraform import`, import IP routes using the directory ID. For example:
+Using `terraform import`, import exclusive management of IP routes using the directory ID. For example:
 
 ```console
-% terraform import aws_directory_service_ip_routes.example d-1234567890
+% terraform import aws_directory_service_ip_routes_exclusive.example d-1234567890
 ```
