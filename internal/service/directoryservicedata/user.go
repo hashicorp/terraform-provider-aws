@@ -201,10 +201,10 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	if diff.HasChanges() {
-		inputs := map[awstypes.UpdateType]*directoryservicedata.UpdateUserInput{}
+		updateInputs := map[awstypes.UpdateType]*directoryservicedata.UpdateUserInput{}
 
 		updateInput := func(updateType awstypes.UpdateType) *directoryservicedata.UpdateUserInput {
-			if input, ok := inputs[updateType]; ok {
+			if input, ok := updateInputs[updateType]; ok {
 				return input
 			}
 
@@ -213,10 +213,11 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
 				UpdateType:     updateType,
 			}
-			inputs[updateType] = input
+			updateInputs[updateType] = input
 			return input
 		}
 
+		// Choose the API operation based on whether an optional value is being added, removed, or replaced.
 		updateType := func(planValue, stateValue types.String) awstypes.UpdateType {
 			switch {
 			case stateValue.IsNull():
@@ -260,7 +261,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		// For when more than one attribute needs to be updated
 		for _, updateType := range []awstypes.UpdateType{awstypes.UpdateTypeAdd, awstypes.UpdateTypeReplace, awstypes.UpdateTypeRemove} {
-			input, ok := inputs[updateType]
+			input, ok := updateInputs[updateType]
 			if !ok {
 				continue
 			}
