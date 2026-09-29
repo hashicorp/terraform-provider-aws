@@ -111,20 +111,16 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation, transitGatewayRouteTableID, d); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation, transitGatewayRouteTableID, d)
 
 	return diags
 }
 
-func resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation *awstypes.TransitGatewayRouteTablePropagation, transitGatewayRouteTableID string, d *schema.ResourceData) error {
+func resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation *awstypes.TransitGatewayRouteTablePropagation, transitGatewayRouteTableID string, d *schema.ResourceData) {
 	d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId)
 	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
-
-	return nil
 }
 
 func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -91,11 +91,7 @@ func (l *transitGatewayRouteTablePropagationListResource) List(ctx context.Conte
 			rd.Set("transit_gateway_route_table_id", routeTableID)
 
 			if request.IncludeResource {
-				if err := resourceTransitGatewayRouteTablePropagationFlatten(&propagation, routeTableID, rd); err != nil {
-					result := fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
+				resourceTransitGatewayRouteTablePropagationFlatten(&propagation, routeTableID, rd)
 			}
 
 			result.DisplayName = fmt.Sprintf("%s (%s)", routeTableID, attachmentID)
