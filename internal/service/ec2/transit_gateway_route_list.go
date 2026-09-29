@@ -78,7 +78,7 @@ func (l *transitGatewayRouteListResource) List(ctx context.Context, request list
 			}
 
 			for _, route := range page.Routes {
-				if route.State == awstypes.TransitGatewayRouteStateDeleted {
+				if route.State == awstypes.TransitGatewayRouteStateDeleted || aws.ToString(route.DestinationCidrBlock) == "" {
 					continue
 				}
 
