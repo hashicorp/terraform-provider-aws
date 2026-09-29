@@ -175,6 +175,12 @@ func sweepIPRoutes(region string) error {
 		}
 
 		for _, v := range page.DirectoryDescriptions {
+			// IP routes are only supported on AWS Managed Microsoft AD; listing them
+			// on other directory types errors and would abort the sweep.
+			if v.Type != awstypes.DirectoryTypeMicrosoftAd {
+				continue
+			}
+
 			directoryID := aws.ToString(v.DirectoryId)
 
 			routes, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
