@@ -36,6 +36,7 @@ import (
 // @FrameworkResource("aws_directory_service_ip_routes_exclusive", name="IP Routes Exclusive")
 // @IdentityAttribute("directory_id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(domainTfVar="domain")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importStateIdAttribute="directory_id")
 // @Testing(importIgnore="update_security_group_for_directory_controllers")

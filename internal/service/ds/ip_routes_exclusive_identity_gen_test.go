@@ -25,6 +25,7 @@ func TestAccDSIPRoutesExclusive_Identity_basic(t *testing.T) {
 
 	resourceName := "aws_directory_service_ip_routes_exclusive.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -43,6 +44,7 @@ func TestAccDSIPRoutesExclusive_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPRoutesExclusiveExists(ctx, t, resourceName),
@@ -63,6 +65,7 @@ func TestAccDSIPRoutesExclusive_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
@@ -80,6 +83,7 @@ func TestAccDSIPRoutesExclusive_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -98,6 +102,7 @@ func TestAccDSIPRoutesExclusive_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -118,6 +123,7 @@ func TestAccDSIPRoutesExclusive_Identity_regionOverride(t *testing.T) {
 
 	resourceName := "aws_directory_service_ip_routes_exclusive.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -136,6 +142,7 @@ func TestAccDSIPRoutesExclusive_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -154,6 +161,7 @@ func TestAccDSIPRoutesExclusive_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
@@ -172,6 +180,7 @@ func TestAccDSIPRoutesExclusive_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
@@ -191,6 +200,7 @@ func TestAccDSIPRoutesExclusive_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoutesExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,

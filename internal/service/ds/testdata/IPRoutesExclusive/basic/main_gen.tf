@@ -11,7 +11,7 @@ resource "aws_directory_service_ip_routes_exclusive" "test" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.example.com"
+  name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -56,3 +56,8 @@ variable "rName" {
   type        = string
   nullable    = false
 }
+variable "domain" {
+  type     = string
+  nullable = false
+}
+
