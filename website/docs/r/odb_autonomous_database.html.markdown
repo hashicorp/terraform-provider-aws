@@ -3,7 +3,7 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_autonomous_database"
 page_title: "AWS: aws_odb_autonomous_database"
 description: |-
-  Terraform resource for managing an Oracle Database@AWS Autonomous Database Serverless instance.
+  Manages an Oracle Database@AWS Autonomous Database Serverless instance.
 ---
 
 # Resource: aws_odb_autonomous_database
@@ -72,11 +72,11 @@ data "aws_odb_autonomous_database" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are optional:
 
-* `admin_password` - (Optional, Sensitive) Password for the `ADMIN` user. Must be between 12 and 30 characters. This value is stored in Terraform state. Conflicts with `admin_password_wo`.
+* `admin_password` - (Optional) Sensitive password for the `ADMIN` user. Must be between 12 and 30 characters. This value is stored in Terraform state. Conflicts with `admin_password_source` and `admin_password_wo`.
 * `admin_password_source` - (Optional) Source of the `ADMIN` password. Conflicts with `admin_password` and `admin_password_wo`. See [`admin_password_source` Block](#admin_password_source-block) below.
-* `admin_password_wo` - (Optional, Sensitive, Write-only) Password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Requires Terraform 1.11 or later. Set `admin_password_wo_version` with this argument. Conflicts with `admin_password`.
+* `admin_password_wo` - (Optional) Sensitive write-only password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Requires Terraform 1.11 or later. Set `admin_password_wo_version` with this argument. Conflicts with `admin_password` and `admin_password_source`.
 * `admin_password_wo_version` - (Optional) Arbitrary integer stored in state. Change this value together with `admin_password_wo` to rotate the ADMIN password.
 * `allowlisted_ips` - (Optional) List of between 1 and 1024 IP addresses allowed to access the database.
 * `auto_refresh_frequency_in_seconds` - (Optional) Automatic refresh frequency, in seconds, for a refreshable clone.
@@ -122,7 +122,7 @@ This resource supports the following arguments:
 * `source_configuration` - (Optional) Source-specific configuration used during creation. See [`source_configuration` Block](#source_configuration-block) below. Changing this value creates a new resource.
 * `standby_allowlisted_ips` - (Optional) List of between 1 and 1024 IP addresses allowed to access the standby database.
 * `standby_allowlisted_ips_source` - (Optional) Source of the standby allowlist. Valid values are `PRIMARY`, `SEPARATE`, and `NOT_APPLICABLE`.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys overwrite those defined at the provider level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `time_of_auto_refresh_start` - (Optional) RFC3339 timestamp at which automatic refresh begins.
 * `transportable_tablespace` - (Optional) Transportable tablespace configuration. See [`transportable_tablespace` Block](#transportable_tablespace-block) below. Changing this value creates a new resource.
 
@@ -140,6 +140,8 @@ Exactly one `customer_managed_aws_secret` block must be configured.
 
 ### `customer_contacts_to_send_to_oci` Block
 
+Removing all configured blocks clears the database's customer contacts.
+
 * `email` - (Required) Email address that receives operational notifications from OCI.
 
 ### `db_tools_details` Block
@@ -151,7 +153,7 @@ Exactly one `customer_managed_aws_secret` block must be configured.
 
 ### `long_term_backup_schedule` Block
 
-At most one block can be configured.
+At most one block can be configured. Removing this block disables the long-term backup schedule.
 
 * `is_disabled` - (Optional) Whether the long-term backup schedule is disabled.
 * `repeat_cadence` - (Optional) Backup cadence. Valid values are `ONE_TIME`, `WEEKLY`, `MONTHLY`, and `YEARLY`.
@@ -160,13 +162,15 @@ At most one block can be configured.
 
 ### `resource_pool_summary` Block
 
-At most one block can be configured.
+At most one block can be configured. Removing this block disables the resource pool.
 
 * `is_disabled` - (Optional) Whether the resource pool is disabled.
 * `pool_size` - (Optional) Number of Autonomous Databases the pool can contain.
 * `pool_storage_size_in_tbs` - (Optional) Pool storage size in TB.
 
 ### `scheduled_operations` Block
+
+Removing all configured blocks clears the scheduled database start and stop times.
 
 * `day_of_week` - (Required) Day of the week.
 * `scheduled_start_time` - (Optional) Scheduled start time in UTC.
@@ -246,7 +250,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `sql_web_developer_url` - Oracle SQL Developer Web URL.
 * `status` - Current database lifecycle status.
 * `status_reason` - Additional lifecycle status information.
-* `tags_all` - Map of tags assigned to the resource, including tags inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `resource_pool_summary` Block
 
@@ -265,6 +269,28 @@ The `resource_pool_summary` block exports the following attributes in addition t
 * `delete` - (Default `24h`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_odb_autonomous_database.example
+  identity = {
+    id = "adb-example123"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Unique Autonomous Database identifier.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the Autonomous Database ID. For example:
 

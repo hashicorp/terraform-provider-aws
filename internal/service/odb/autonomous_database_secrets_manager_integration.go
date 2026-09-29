@@ -5,15 +5,19 @@ package odb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -24,7 +28,12 @@ import (
 )
 
 // @FrameworkResource("aws_odb_autonomous_database_secrets_manager_integration", name="Autonomous Database Secrets Manager Integration")
+// @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
 // @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/odb/types;odbtypes;odbtypes.OciIamRole")
+// @Testing(preCheckWithRegion="testAccAutonomousDatabaseSecretsManagerIntegrationPreCheckRegion")
 func newResourceAutonomousDatabaseSecretsManagerIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAutonomousDatabaseSecretsManagerIntegration{}
 	r.SetDefaultCreateTimeout(15 * time.Minute)
@@ -33,14 +42,11 @@ func newResourceAutonomousDatabaseSecretsManagerIntegration(_ context.Context) (
 	return r, nil
 }
 
-const (
-	ResNameAutonomousDatabaseSecretsManagerIntegration = "Autonomous Database Secrets Manager Integration"
-	autonomousDatabaseSecretsManagerIntegrationID      = "secrets-manager"
-)
+const ResNameAutonomousDatabaseSecretsManagerIntegration = "Autonomous Database Secrets Manager Integration"
 
 type resourceAutonomousDatabaseSecretsManagerIntegration struct {
 	framework.ResourceWithModel[autonomousDatabaseSecretsManagerIntegrationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -83,25 +89,33 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Create(ctx context
 	input := odb.InitializeServiceInput{
 		AutonomousDatabaseOciAwsSecretsManagerIntegration: odbtypes.AccessEnabled,
 	}
+	region := r.Meta().Region(ctx)
+	tflog.Debug(ctx, "Enabling ODB Autonomous Database Secrets Manager integration", map[string]any{names.AttrRegion: region})
 	_, err := conn.InitializeService(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAutonomousDatabaseSecretsManagerIntegration, autonomousDatabaseSecretsManagerIntegrationID, err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAutonomousDatabaseSecretsManagerIntegration, region, err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), region)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrRegion), region)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	role, err := waitAutonomousDatabaseSecretsManagerIntegrationCreated(ctx, conn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAutonomousDatabaseSecretsManagerIntegration, autonomousDatabaseSecretsManagerIntegrationID, err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAutonomousDatabaseSecretsManagerIntegration, region, err),
 			err.Error(),
 		)
 		return
 	}
 
-	plan.ID = types.StringValue(autonomousDatabaseSecretsManagerIntegrationID)
+	plan.ID = types.StringValue(region)
 	flattenAutonomousDatabaseSecretsManagerIntegration(role, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -117,6 +131,7 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Read(ctx context.C
 
 	role, err := findAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
 	if retry.NotFound(err) {
+		tflog.Debug(ctx, "ODB Autonomous Database Secrets Manager integration no longer exists; removing from state")
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -129,7 +144,7 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Read(ctx context.C
 		return
 	}
 
-	state.ID = types.StringValue(autonomousDatabaseSecretsManagerIntegrationID)
+	state.ID = types.StringValue(r.Meta().Region(ctx))
 	flattenAutonomousDatabaseSecretsManagerIntegration(role, &state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -146,6 +161,7 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Delete(ctx context
 	input := odb.InitializeServiceInput{
 		AutonomousDatabaseOciAwsSecretsManagerIntegration: odbtypes.AccessDisabled,
 	}
+	tflog.Debug(ctx, "Disabling ODB Autonomous Database Secrets Manager integration", map[string]any{names.AttrRegion: r.Meta().Region(ctx)})
 	_, err := conn.InitializeService(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -186,17 +202,20 @@ func statusAutonomousDatabaseSecretsManagerIntegration(conn *odb.Client) retry.S
 	return func(ctx context.Context) (any, string, error) {
 		role, err := findAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
 		if retry.NotFound(err) {
+			tflog.Trace(ctx, "ODB Autonomous Database Secrets Manager integration is not yet visible or has been removed")
 			return nil, "", nil
 		}
 		if err != nil {
 			return nil, "", err
 		}
 
+		tflog.Trace(ctx, "Read ODB Autonomous Database Secrets Manager integration lifecycle state", map[string]any{names.AttrStatus: role.Status})
 		return role, string(role.Status), nil
 	}
 }
 
 func waitAutonomousDatabaseSecretsManagerIntegrationCreated(ctx context.Context, conn *odb.Client, timeout time.Duration) (*odbtypes.OciIamRole, error) {
+	tflog.Debug(ctx, "Waiting for ODB Autonomous Database Secrets Manager integration to become available")
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.OciIamRoleStatusProvisioning),
 		Target:  enum.Slice(odbtypes.OciIamRoleStatusAvailable),
@@ -206,6 +225,9 @@ func waitAutonomousDatabaseSecretsManagerIntegrationCreated(ctx context.Context,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*odbtypes.OciIamRole); ok {
+		if out.StatusReason != nil {
+			retry.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
+		}
 		return out, err
 	}
 
@@ -213,14 +235,18 @@ func waitAutonomousDatabaseSecretsManagerIntegrationCreated(ctx context.Context,
 }
 
 func waitAutonomousDatabaseSecretsManagerIntegrationDeleted(ctx context.Context, conn *odb.Client, timeout time.Duration) error {
+	tflog.Debug(ctx, "Waiting for ODB Autonomous Database Secrets Manager integration to be removed")
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(odbtypes.OciIamRoleStatusTerminating),
+		Pending: enum.Slice(odbtypes.OciIamRoleStatusAvailable, odbtypes.OciIamRoleStatusProvisioning, odbtypes.OciIamRoleStatusTerminating),
 		Target:  []string{},
 		Refresh: statusAutonomousDatabaseSecretsManagerIntegration(conn),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*odbtypes.OciIamRole); ok && out.StatusReason != nil {
+		retry.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
+	}
 	return err
 }
 

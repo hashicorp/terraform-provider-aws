@@ -5,6 +5,8 @@ package odb
 
 // Exports for use in tests only.
 var (
+	ListTags = listTags
+
 	ResourceCloudAutonomousVMCluster   = newResourceCloudAutonomousVmCluster
 	ResourceAutonomousDatabase         = newResourceAutonomousDatabase
 	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure

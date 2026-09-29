@@ -355,6 +355,10 @@ func TestAccODBAutonomousDatabase_validation(t *testing.T) {
 }
 
 func testAccAutonomousDatabasePreCheck(ctx context.Context, t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseAdminPasswordEnv)
 	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseNetworkIDEnv)
 	testAccAutonomousDatabaseServicePreCheck(ctx, t)

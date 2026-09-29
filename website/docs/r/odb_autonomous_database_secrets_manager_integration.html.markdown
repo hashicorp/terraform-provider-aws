@@ -3,16 +3,18 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_autonomous_database_secrets_manager_integration"
 page_title: "AWS: aws_odb_autonomous_database_secrets_manager_integration"
 description: |-
-  Terraform resource for enabling the Oracle Database@AWS Autonomous Database Serverless integration with AWS Secrets Manager.
+  Manages the Oracle Database@AWS Autonomous Database Serverless integration with AWS Secrets Manager.
 ---
 
 # Resource: aws_odb_autonomous_database_secrets_manager_integration
 
-Enables Oracle Database@AWS Autonomous Database Serverless to use AWS Secrets Manager credentials. The resource provisions an Oracle-managed service role that can assume a customer-managed role to read an administrator-password secret.
+Manages the Oracle Database@AWS Autonomous Database Serverless integration with AWS Secrets Manager. The resource provisions an Oracle-managed service role that can assume a customer-managed role to read an administrator-password secret.
 
 Create the customer-managed IAM role separately. Its trust policy must allow the exported `role_arn` to assume it, and its permissions must grant access to the selected secret. See the [AWS Secrets Manager documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access.html) for IAM permission guidance.
 
 ## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_odb_autonomous_database_secrets_manager_integration" "example" {}
@@ -24,7 +26,7 @@ output "adbs_secrets_manager_service_role_arn" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
@@ -32,7 +34,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier for the integration.
+* `id` - Region where the integration is managed.
 * `role_arn` - ARN of the Oracle-managed service role that assumes the customer-managed IAM role.
 * `status` - Current lifecycle status of the service role.
 * `status_reason` - Additional lifecycle-status information, if available.
@@ -46,17 +48,37 @@ The `timeouts` configuration block supports the following arguments:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `secrets-manager` identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_odb_autonomous_database_secrets_manager_integration.example
-  id = "secrets-manager"
+  identity = {
+    region = "us-east-1"
+  }
 }
 ```
 
-Using `terraform import`, import the integration using the `secrets-manager` identifier. For example:
+### Identity Schema
+
+#### Required
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the Region where the integration is managed. For example:
+
+```terraform
+import {
+  to = aws_odb_autonomous_database_secrets_manager_integration.example
+  id = "us-east-1"
+}
+```
+
+Using `terraform import`, import the integration using its Region. For example:
 
 ```console
-% terraform import aws_odb_autonomous_database_secrets_manager_integration.example secrets-manager
+% terraform import aws_odb_autonomous_database_secrets_manager_integration.example us-east-1
 ```
