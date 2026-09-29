@@ -295,6 +295,9 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
 							Required:   true,
 						},
+						// Defaults to LatestRevision for HomeRegion endpoints (set
+						// explicitly in Create; the API default would be Disabled).
+						// MultiRegion and PerRegion require an explicit Disabled.
 						"auto_deployment_mode": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
 							Optional:   true,
@@ -506,6 +509,16 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	input.Tags = getTagsIn(ctx)
+
+	// CreateWebFunction defaults a missing autoDeploymentMode to Disabled,
+	// which pins the endpoint to the initial revision forever: every later
+	// revision_config change would publish a revision the endpoint never
+	// serves. Default HomeRegion endpoints to LatestRevision explicitly, the
+	// value ValidateConfig assumes and aws_lambdaweb_endpoint sends. MultiRegion
+	// and PerRegion must set Disabled explicitly (enforced in ValidateConfig).
+	if ep := input.EndpointConfig; ep != nil && ep.AutoDeploymentMode == "" && ep.EndpointType == awstypes.EndpointTypeHomeRegion {
+		ep.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
+	}
 
 	name := plan.FunctionName.ValueString()
 

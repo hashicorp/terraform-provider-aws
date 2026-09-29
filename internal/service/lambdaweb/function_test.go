@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflambdaweb "github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -147,6 +150,65 @@ func TestAccLambdaWebFunction_update(t *testing.T) {
 	})
 }
 
+// TestAccLambdaWebFunction_endpointFollowsLatestRevision covers the inline
+// endpoint's auto_deployment_mode default: without an explicit mode the API
+// would create the endpoint Disabled and pin it to the first revision, so a
+// revision_config change would publish a revision that never receives traffic.
+func TestAccLambdaWebFunction_endpointFollowsLatestRevision(t *testing.T) {
+	ctx := acctest.Context(t)
+	var function lambdaweb.GetWebFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function.test"
+	var initialRevisionID string
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_revisionDescription(rName, "first"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_config.0.auto_deployment_mode", string(awstypes.AutoDeploymentModeLatestRevision)),
+					resource.TestCheckResourceAttrWith(resourceName, "latest_revision_id", func(v string) error {
+						if v == "" {
+							return errors.New("latest_revision_id is empty")
+						}
+						initialRevisionID = v
+						return nil
+					}),
+					testAccCheckFunctionEndpointServesLatestRevision(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_revisionDescription(rName, "second"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_config.0.auto_deployment_mode", string(awstypes.AutoDeploymentModeLatestRevision)),
+					resource.TestCheckResourceAttr(resourceName, "revision_config.0.description", "second"),
+					resource.TestCheckResourceAttrWith(resourceName, "latest_revision_id", func(v string) error {
+						if v == initialRevisionID {
+							return fmt.Errorf("expected a new revision, still %s", v)
+						}
+						return nil
+					}),
+					testAccCheckFunctionEndpointServesLatestRevision(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaWebFunction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var function lambdaweb.GetWebFunctionOutput
@@ -221,6 +283,80 @@ func testAccCheckFunctionExists(ctx context.Context, t *testing.T, n string, v *
 
 		return nil
 	}
+}
+
+// testAccCheckFunctionEndpointServesLatestRevision asserts that the inline
+// endpoint routes all traffic to the function's latest_revision_id. Traffic
+// moves asynchronously after a revision is published, so poll.
+func testAccCheckFunctionEndpointServesLatestRevision(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		functionName := rs.Primary.Attributes["function_name"]
+		endpointName := rs.Primary.Attributes["endpoint_config.0.endpoint_name"]
+		want := rs.Primary.Attributes["latest_revision_id"]
+		if want == "" {
+			return errors.New("latest_revision_id is empty")
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
+
+		var got []awstypes.RevisionWeight
+		err := tfresource.WaitUntil(ctx, 5*time.Minute, func(ctx context.Context) (bool, error) {
+			out, err := tflambdaweb.FindEndpointByName(ctx, conn, functionName, endpointName)
+			if err != nil {
+				return false, err
+			}
+			got = out.RevisionWeights
+			return len(got) == 1 && aws.ToString(got[0].RevisionId) == want && got[0].Weight == 100, nil
+		}, tfresource.WaitOpts{PollInterval: 10 * time.Second})
+		if err != nil {
+			return fmt.Errorf("endpoint %s of Lambda Web Function %s does not serve latest revision %s (revision weights: %+v): %w", endpointName, functionName, want, got, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccFunctionConfig_revisionDescription(rName, description string) string {
+	return acctest.ConfigCompose(testAccFunctionConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambdaweb_function" "test" {
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = %[1]q
+
+  revision_config {
+    description = %[2]q
+
+    build_config {
+      runtime_config {
+        runtime = "nodejs24.x"
+      }
+
+      code_config {
+        s3_object {
+          bucket = aws_s3_object.test.bucket
+          key    = aws_s3_object.test.key
+        }
+      }
+    }
+
+    service_config {
+      execution_role_arn = aws_iam_role.test.arn
+    }
+  }
+
+  # auto_deployment_mode deliberately omitted: HomeRegion defaults to LatestRevision.
+  endpoint_config {
+    endpoint_name = "default"
+    endpoint_type = "HomeRegion"
+    auth_type     = "ApplicationManaged"
+  }
+}
+`, rName, description))
 }
 
 func testAccFunctionConfig_basic(rName string) string {

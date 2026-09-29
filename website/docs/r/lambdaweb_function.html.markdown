@@ -175,7 +175,7 @@ The following arguments are optional:
 ### `endpoint_config` Block
 
 * `auth_type` - (Required) Authentication type. Valid values: `ApplicationManaged`, `IamAuth`.
-* `auto_deployment_mode` - (Optional) Automatic deployment mode. Valid values: `LatestRevision`, `Disabled`.
+* `auto_deployment_mode` - (Optional) Automatic deployment mode. Valid values: `LatestRevision`, `Disabled`. Defaults to `LatestRevision` for `HomeRegion` endpoints: the provider sends it explicitly, because the API would otherwise create the endpoint `Disabled` and pin it to the initial revision. `MultiRegion` and `PerRegion` endpoints require `Disabled`, which must be set explicitly.
 * `description` - (Optional) Description of the endpoint.
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
