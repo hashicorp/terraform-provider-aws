@@ -43,6 +43,7 @@ import (
 // @IdentityAttribute("cidr_ipv6", optional="true")
 // @ImportIDHandler("ipRouteImportID")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(domainTfVar="domain")
 // @Testing(importStateIdAttributes="directory_id;cidr_ip", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckDirectoryService")

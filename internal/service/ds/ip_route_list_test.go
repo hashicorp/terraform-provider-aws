@@ -30,6 +30,7 @@ func TestAccDSIPRoute_List_basic(t *testing.T) {
 	resourceName1 := "aws_directory_service_ip_route.test[0]"
 	resourceName2 := "aws_directory_service_ip_route.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -48,6 +49,7 @@ func TestAccDSIPRoute_List_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -62,6 +64,7 @@ func TestAccDSIPRoute_List_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
@@ -89,6 +92,7 @@ func TestAccDSIPRoute_List_includeResource(t *testing.T) {
 	listResourceName := "aws_directory_service_ip_route.test"
 	resourceName1 := "aws_directory_service_ip_route.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -106,6 +110,7 @@ func TestAccDSIPRoute_List_includeResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
 					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -119,6 +124,7 @@ func TestAccDSIPRoute_List_includeResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
@@ -149,6 +155,7 @@ func TestAccDSIPRoute_List_regionOverride(t *testing.T) {
 	resourceName1 := "aws_directory_service_ip_route.test[0]"
 	resourceName2 := "aws_directory_service_ip_route.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -173,6 +180,7 @@ func TestAccDSIPRoute_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -188,6 +196,7 @@ func TestAccDSIPRoute_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},

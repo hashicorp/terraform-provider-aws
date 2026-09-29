@@ -7,7 +7,7 @@ resource "aws_directory_service_ip_route" "test" {
 
 resource "aws_directory_service_directory" "test" {
 {{- template "region" }}
-  name     = "corp.example.com"
+  name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
