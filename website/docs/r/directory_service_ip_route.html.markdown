@@ -14,7 +14,7 @@ Manages an IP route for an AWS Directory Service directory. IP routes are used t
 
 ## Example Usage
 
-### IPv4
+### Basic Usage
 
 ```terraform
 resource "aws_directory_service_directory" "example" {
@@ -32,8 +32,6 @@ resource "aws_directory_service_ip_route" "example" {
   directory_id = aws_directory_service_directory.example.id
   cidr_ip      = "10.0.0.0/24"
   description  = "On-premises network"
-
-  update_security_group_for_directory_controllers = true
 }
 ```
 
