@@ -12,6 +12,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_apprunner_custom_domain_association: Add validation to prevent trailing dot on `domain_name` ([#50189](https://github.com/hashicorp/terraform-provider-aws/issues/50189))
+* resource/aws_apprunner_custom_domain_association: Add validation to require `enable_www_subdomain` to be `false` for wildcard domain ([#50189](https://github.com/hashicorp/terraform-provider-aws/issues/50189))
 * resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
