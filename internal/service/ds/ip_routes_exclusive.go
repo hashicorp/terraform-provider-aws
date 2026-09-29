@@ -236,9 +236,12 @@ func (r *ipRoutesExclusiveResource) Update(ctx context.Context, request resource
 
 // sync reconciles the directory's routes with the plan. It diffs against the
 // live routes rather than prior state so that routes added outside this
-// resource (including at create time) are removed.
+// resource (including at create time) are removed. All API retries and
+// waiters share one deadline.
 func (r *ipRoutesExclusiveResource) sync(ctx context.Context, plan ipRoutesExclusiveResourceModel, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	deadline := time.Now().Add(timeout)
 
 	conn := r.Meta().DSClient(ctx)
 	directoryID := fwflex.StringValueFromFramework(ctx, plan.DirectoryID)
@@ -264,7 +267,17 @@ func (r *ipRoutesExclusiveResource) sync(ctx context.Context, plan ipRoutesExclu
 	// There is no update API, so a changed description is a remove + add.
 	planByCIDR := make(map[string]*ipRouteModel, len(planRoutes))
 	for _, v := range planRoutes {
-		planByCIDR[v.routeKey()] = v
+		cidr := v.routeKey()
+		// ValidateConfig cannot check CIDRs that are unknown until apply.
+		if _, ok := planByCIDR[cidr]; ok {
+			smerr.AddOne(ctx, &diags, diag.NewAttributeErrorDiagnostic(
+				path.Root("ip_route"),
+				"Duplicate CIDR",
+				fmt.Sprintf("CIDR %q is configured in more than one ip_route block; each cidr_ip/cidr_ipv6 must be unique.", cidr),
+			))
+			return diags
+		}
+		planByCIDR[cidr] = v
 	}
 	currentByCIDR := make(map[string]awstypes.IpRouteInfo, len(current))
 	for _, v := range current {
@@ -302,7 +315,7 @@ func (r *ipRoutesExclusiveResource) sync(ctx context.Context, plan ipRoutesExclu
 			CidrIps:     removeV4,
 			CidrIpv6s:   removeV6,
 		}
-		if err := removeIPRoutes(ctx, conn, &input, timeout); err != nil {
+		if err := removeIPRoutes(ctx, conn, &input, time.Until(deadline)); err != nil {
 			smerr.AddError(ctx, &diags, err, smerr.ID, directoryID)
 			return diags
 		}
@@ -311,7 +324,7 @@ func (r *ipRoutesExclusiveResource) sync(ctx context.Context, plan ipRoutesExclu
 		for _, v := range slices.Concat(removeV4, removeV6) {
 			keys = append(keys, inttypes.CanonicalCIDRBlock(v))
 		}
-		if err := waitIPRoutesRemoved(ctx, conn, directoryID, keys, timeout); err != nil {
+		if err := waitIPRoutesRemoved(ctx, conn, directoryID, keys, time.Until(deadline)); err != nil {
 			smerr.AddError(ctx, &diags, err, smerr.ID, directoryID)
 			return diags
 		}
@@ -323,12 +336,12 @@ func (r *ipRoutesExclusiveResource) sync(ctx context.Context, plan ipRoutesExclu
 			IpRoutes:    add,
 			UpdateSecurityGroupForDirectoryControllers: fwflex.BoolValueFromFramework(ctx, plan.UpdateSecurityGroupForDirectoryControllers),
 		}
-		if err := addIPRoutes(ctx, conn, &input, timeout); err != nil {
+		if err := addIPRoutes(ctx, conn, &input, time.Until(deadline)); err != nil {
 			smerr.AddError(ctx, &diags, err, smerr.ID, directoryID)
 			return diags
 		}
 
-		if err := waitIPRoutesAdded(ctx, conn, directoryID, ipRoutesCIDRs(add), timeout); err != nil {
+		if err := waitIPRoutesAdded(ctx, conn, directoryID, ipRoutesCIDRs(add), time.Until(deadline)); err != nil {
 			smerr.AddError(ctx, &diags, err, smerr.ID, directoryID)
 			return diags
 		}

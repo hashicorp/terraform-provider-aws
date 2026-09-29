@@ -46,6 +46,16 @@ resource "aws_directory_service_ip_routes_exclusive" "example" {
     cidr_ip     = "192.168.100.0/24"
     description = "Peered VPC"
   }
+}
+```
+
+### IPv6
+
+IPv6 routes require an existing directory that has been updated to dual-stack.
+
+```terraform
+resource "aws_directory_service_ip_routes_exclusive" "example" {
+  directory_id = "d-1234567890"
 
   ip_route {
     cidr_ipv6   = "2001:db8::/64"
@@ -56,7 +66,7 @@ resource "aws_directory_service_ip_routes_exclusive" "example" {
 
 ### Disallow IP Routes
 
-To remove all IP routes from a directory and prevent new ones from being added outside of Terraform, omit all `ip_route` blocks.
+To remove all IP routes from a directory, omit all `ip_route` blocks. Any IP routes added outside of Terraform are detected on the next refresh and removed on the next apply.
 
 ```terraform
 resource "aws_directory_service_ip_routes_exclusive" "example" {
