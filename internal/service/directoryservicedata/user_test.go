@@ -22,8 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const testAccUserPrefix = "tfacctest-"
-
 func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -34,8 +32,8 @@ func TestAccDirectoryServiceDataUser_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName(t)
 	samAccountName := fmt.Sprintf(
 		"%s%s",
-		testAccUserPrefix,
-		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 20-len(acctest.ResourcePrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
 	)
 	resourceName := "aws_directoryservicedata_user.test"
 
@@ -82,8 +80,8 @@ func TestAccDirectoryServiceDataUser_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName(t)
 	samAccountName := fmt.Sprintf(
 		"%s%s",
-		testAccUserPrefix,
-		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 20-len(acctest.ResourcePrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
 	)
 	resourceName := "aws_directoryservicedata_user.test"
 
@@ -128,8 +126,8 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 	updatedEmailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountName := fmt.Sprintf(
 		"%s%s",
-		testAccUserPrefix,
-		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 20-len(acctest.ResourcePrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
 	)
 	resourceName := "aws_directoryservicedata_user.test"
 

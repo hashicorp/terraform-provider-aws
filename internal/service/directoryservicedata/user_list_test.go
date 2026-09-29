@@ -29,8 +29,8 @@ func TestAccDirectoryServiceDataUser_List_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName(t)
 	samAccountNamePrefix := fmt.Sprintf(
 		"%s%s",
-		testAccUserPrefix,
-		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix)-2, acctest.CharSetAlphaNum),
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 20-len(acctest.ResourcePrefix)-2, acctest.CharSetAlphaNum),
 	)
 
 	identity1 := tfstatecheck.Identity()
@@ -97,8 +97,8 @@ func TestAccDirectoryServiceDataUser_List_includeResource(t *testing.T) {
 	emailAddress := acctest.RandomEmailAddress(domainName)
 	samAccountNamePrefix := fmt.Sprintf(
 		"%s%s",
-		testAccUserPrefix,
-		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix)-2, acctest.CharSetAlphaNum),
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 20-len(acctest.ResourcePrefix)-2, acctest.CharSetAlphaNum),
 	)
 
 	identity1 := tfstatecheck.Identity()
@@ -171,8 +171,8 @@ func TestAccDirectoryServiceDataUser_List_regionOverride(t *testing.T) {
 	domainName := acctest.RandomDomainName(t)
 	samAccountNamePrefix := fmt.Sprintf(
 		"%s%s",
-		testAccUserPrefix,
-		acctest.RandStringFromCharSet(t, 20-len(testAccUserPrefix)-2, acctest.CharSetAlphaNum),
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 20-len(acctest.ResourcePrefix)-2, acctest.CharSetAlphaNum),
 	)
 
 	identity1 := tfstatecheck.Identity()

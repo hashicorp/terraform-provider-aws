@@ -1,7 +1,7 @@
 resource "aws_directoryservicedata_user" "test" {
 {{ template "region" }}
   directory_id     = aws_directory_service_directory.test.id
-  sam_account_name = "tfacctest-user"
+  sam_account_name = "tf-acc-test-user"
   email_address    = var.emailAddress
   given_name       = "Test"
   surname          = "User"
