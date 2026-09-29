@@ -409,9 +409,11 @@ func (r *functionResource) ValidateConfig(ctx context.Context, req resource.Vali
 			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"`.", endpointType))
 	}
 
-	// The home region is added automatically and at least two distinct regions
-	// are then required, so a single configured region is always rejected.
-	if !ep.Regions.IsNull() && !ep.Regions.IsUnknown() && len(ep.Regions.Elements()) == 1 {
+	// GA: re-verify. The home region is added to a PerRegion endpoint
+	// automatically and at least two distinct regions are then required, so a
+	// single configured region is always rejected. No minimum is confirmed for
+	// MultiRegion, so it is left to the API.
+	if endpointType == string(awstypes.EndpointTypePerRegion) && !ep.Regions.IsNull() && !ep.Regions.IsUnknown() && len(ep.Regions.Elements()) == 1 {
 		resp.Diagnostics.AddAttributeError(path.Root("endpoint_config"),
 			"Invalid regions",
 			fmt.Sprintf("%s endpoints require at least 2 distinct regions, or no `regions` at all: the home region is added automatically.", endpointType))

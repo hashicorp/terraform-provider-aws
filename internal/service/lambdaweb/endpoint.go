@@ -154,7 +154,9 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
-					setvalidator.SizeAtMost(5), // service replication quota (model ceiling is 100)
+					// Model limit. The number of regions an endpoint may
+					// replicate to is a service quota, enforced by the API.
+					setvalidator.SizeBetween(1, 100),
 				},
 			},
 			names.AttrDomainName: schema.StringAttribute{
@@ -250,10 +252,12 @@ func (r *endpointResource) ValidateConfig(ctx context.Context, req resource.Vali
 			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"` with explicit `revision_weights`.", endpointType))
 	}
 
-	// The service adds the home region automatically and then requires at least
-	// two distinct regions, so a single configured region is always rejected.
-	// Omitting regions entirely is accepted.
-	if multiRegional && !cfg.Regions.IsNull() && !cfg.Regions.IsUnknown() && len(cfg.Regions.Elements()) == 1 {
+	// GA: re-verify. The service adds the home region to a PerRegion endpoint
+	// automatically and then requires at least two distinct regions, so a
+	// single configured region is always rejected. Omitting regions entirely
+	// is accepted. No minimum is confirmed for MultiRegion, so it is left to
+	// the API.
+	if endpointType == string(awstypes.EndpointTypePerRegion) && !cfg.Regions.IsNull() && !cfg.Regions.IsUnknown() && len(cfg.Regions.Elements()) == 1 {
 		resp.Diagnostics.AddAttributeError(path.Root("regions"),
 			"Invalid regions",
 			fmt.Sprintf("%s endpoints require at least 2 distinct regions, or no `regions` at all: the home region is added automatically.", endpointType))

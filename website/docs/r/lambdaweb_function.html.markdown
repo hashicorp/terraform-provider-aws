@@ -181,7 +181,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the endpoint.
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
-* `regions` - (Optional) List of Regions for the endpoint (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically.
+* `regions` - (Optional) List of Regions for the endpoint. The maximum number of Regions per endpoint is a service quota, enforced by the API. `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically. Changing this forces a new resource to be created.
 * `scaling_config` - (Optional) Scaling limits for the endpoint, an object (assigned with `=`, not a block) with a single `max_environments` attribute: the maximum number of concurrent execution environments, minimum 2. When unset, the service applies account-level defaults and reports no value.
 * `throttle_config` - (Optional) Request throttling for the endpoint, an object (assigned with `=`, not a block) with a single `rate_limit` attribute: the maximum request rate in requests per second, quantized (`0`, `100`-`1000` in steps of 100, `2000`-`10000` in steps of 1000). When unset, the service applies account-level defaults and reports no value.
 
