@@ -39,9 +39,11 @@ resource "aws_directory_service_ip_route" "example" {
 
 ### IPv6
 
+IPv6 routes require an existing directory that has been updated to dual-stack.
+
 ```terraform
 resource "aws_directory_service_ip_route" "example" {
-  directory_id = aws_directory_service_directory.example.id
+  directory_id = "d-1234567890"
   cidr_ipv6    = "2001:db8::/64"
   description  = "On-premises IPv6 network"
 }
