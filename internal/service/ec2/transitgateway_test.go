@@ -163,6 +163,9 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtDisappears:                 testAccTransitGatewayRoute_disappears,
 			"disappearsTransitGatewayAttachment": testAccTransitGatewayRoute_disappears_TransitGatewayAttachment,
 			"Identity":                           testAccTransitGatewayRoute_identity,
+			"ListBasic":                          testAccTransitGatewayRoute_List_basic,
+			"ListIncludeResource":                testAccTransitGatewayRoute_List_includeResource,
+			"ListRegionOverride":                 testAccTransitGatewayRoute_List_regionOverride,
 		},
 		"RouteTable": {
 			acctest.CtBasic:            testAccTransitGatewayRouteTable_basic,

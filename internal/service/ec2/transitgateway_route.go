@@ -125,6 +125,14 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceTransitGatewayRouteFlatten(d, transitGatewayRoute, transitGatewayRouteTableID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening EC2 Transit Gateway Route (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceTransitGatewayRouteFlatten(d *schema.ResourceData, transitGatewayRoute *awstypes.TransitGatewayRoute, transitGatewayRouteTableID string) error {
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 {
 		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
@@ -134,8 +142,11 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		d.Set("blackhole", true)
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
+	if err := d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock); err != nil {
+		return fmt.Errorf("setting destination_cidr_block: %s", err)
+	}
 
-	return diags
+	return nil
 }
 
 func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

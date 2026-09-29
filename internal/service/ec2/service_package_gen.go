@@ -2021,6 +2021,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newTransitGatewayRouteResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_route",
+			Name:     "Transit Gateway Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_route_table_id", true),
+				inttypes.StringIdentityAttribute("destination_cidr_block", true),
+			}),
+		},
+		{
 			Factory:  newTransitGatewayRouteTablePropagationResourceAsListResource,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagation",
 			Name:     "Transit Gateway Route Table Propagation",
