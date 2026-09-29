@@ -1,14 +1,12 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_availability_zones" "available" {
+resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
+  count  = var.resource_count
   region = var.region
-  state  = "available"
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test[count.index].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
 
 resource "aws_ec2_transit_gateway" "test" {
@@ -50,12 +48,14 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
-  count  = var.resource_count
+data "aws_availability_zones" "available" {
   region = var.region
+  state  = "available"
 
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test[count.index].id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 variable "rName" {
