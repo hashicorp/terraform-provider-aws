@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Ephemeral Resource:** `aws_bedrockruntime_apply_guardrail` ([#50155](https://github.com/hashicorp/terraform-provider-aws/issues/50155))
 * **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
 
 ENHANCEMENTS:
