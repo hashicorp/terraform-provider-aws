@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -149,7 +150,7 @@ func (r *directorySettingsResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	plan.Settings = flattenSettingEntries(ctx, entries, requested, &resp.Diagnostics)
+	plan.Settings = mergeSettingEntries(ctx, entries, requested, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -186,7 +187,7 @@ func (r *directorySettingsResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	state.Settings = flattenSettingEntries(ctx, entries, existing, &resp.Diagnostics)
+	state.Settings = mergeSettingEntries(ctx, entries, existing, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -240,7 +241,7 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 			return
 		}
 
-		plan.Settings = flattenSettingEntries(ctx, entries, requested, &resp.Diagnostics)
+		plan.Settings = mergeSettingEntries(ctx, entries, requested, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -251,15 +252,15 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 
 func waitSettingsUpdated(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) ([]awstypes.SettingEntry, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.DirectoryConfigurationStatusRequested),
-			string(awstypes.DirectoryConfigurationStatusUpdating),
-		},
-		Target: []string{
-			string(awstypes.DirectoryConfigurationStatusUpdated),
-			string(awstypes.DirectoryConfigurationStatusDefault),
-		},
-		Refresh: statusDirectorySettings(ctx, conn, directoryID),
+		Pending: enum.Slice(
+			awstypes.DirectoryConfigurationStatusRequested,
+			awstypes.DirectoryConfigurationStatusUpdating,
+		),
+		Target: enum.Slice(
+			awstypes.DirectoryConfigurationStatusUpdated,
+			awstypes.DirectoryConfigurationStatusDefault,
+		),
+		Refresh: statusDirectorySettings(conn, directoryID),
 		Timeout: timeout,
 	}
 
@@ -271,8 +272,8 @@ func waitSettingsUpdated(ctx context.Context, conn *directoryservice.Client, dir
 	return nil, smarterr.NewError(err)
 }
 
-func statusDirectorySettings(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusDirectorySettings(conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		entries, err := findDirectorySettingsByDirectoryID(ctx, conn, directoryID)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -325,7 +326,7 @@ func findDirectorySettingsByDirectoryID(ctx context.Context, conn *directoryserv
 	return output, smarterr.NewError(err)
 }
 
-func flattenSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, requested []*directorySettingModel, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[directorySettingModel] {
+func mergeSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, requested []*directorySettingModel, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[directorySettingModel] {
 	// Build a lookup from name → SettingEntry for fast access.
 	byName := make(map[string]awstypes.SettingEntry, len(entries))
 	for _, e := range entries {

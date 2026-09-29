@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -29,14 +28,14 @@ func TestAccDSDirectorySettings_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_directory_service_directory_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DSServiceID)
+			acctest.PreCheckPartitionHasService(t, names.DSEndpointID)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
@@ -77,14 +76,14 @@ func TestAccDSDirectorySettings_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_directory_service_directory_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DSServiceID)
+			acctest.PreCheckPartitionHasService(t, names.DSEndpointID)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
