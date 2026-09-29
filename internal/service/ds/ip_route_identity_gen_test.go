@@ -28,6 +28,7 @@ func TestAccDSIPRoute_Identity_basic(t *testing.T) {
 	var v awstypes.IpRouteInfo
 	resourceName := "aws_directory_service_ip_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -46,6 +47,7 @@ func TestAccDSIPRoute_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPRouteExists(ctx, t, resourceName, &v),
@@ -69,6 +71,7 @@ func TestAccDSIPRoute_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", "cidr_ip"),
@@ -83,6 +86,7 @@ func TestAccDSIPRoute_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -101,6 +105,7 @@ func TestAccDSIPRoute_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -121,6 +126,7 @@ func TestAccDSIPRoute_Identity_regionOverride(t *testing.T) {
 
 	resourceName := "aws_directory_service_ip_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -139,6 +145,7 @@ func TestAccDSIPRoute_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -160,6 +167,7 @@ func TestAccDSIPRoute_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
@@ -175,6 +183,7 @@ func TestAccDSIPRoute_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
@@ -194,6 +203,7 @@ func TestAccDSIPRoute_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/IPRoute/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
