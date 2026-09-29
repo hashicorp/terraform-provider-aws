@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_transit_gateway_route_table_propagation
 
-Lists EC2 (Elastic Compute Cloud) Transit Gateway Route Table Propagation resources.
+Lists EC2 Transit Gateway Route Table Propagation resources.
 
 ## Example Usage
 
