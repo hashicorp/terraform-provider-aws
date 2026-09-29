@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -400,9 +401,10 @@ func TestAccElasticBeanstalkApplicationVersion_imageBuild(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.build.0.type", "docker"),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.build.0.code_build_service_role", serviceRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.source.#", "0"),
-					// The service pushes the built image and reports it back, so the
-					// computed attribute is populated while the request block is not.
-					resource.TestCheckResourceAttrSet(resourceName, "image_uri"),
+					resource.TestCheckResourceAttr(resourceName, "process", acctest.CtTrue),
+					// Create waits for the build, so the image it pushed is already reported.
+					resource.TestCheckResourceAttrSet(resourceName, "build_arn"),
+					resource.TestMatchResourceAttr(resourceName, "image_uri", regexache.MustCompile(`\.dkr\.ecr\..+@sha256:`)),
 				),
 			},
 		},
@@ -469,8 +471,8 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = "beanstalk/python-v1.zip"
-  source = "test-fixtures/python-v1.zip"
+  key    = "beanstalk/docker-v1.zip"
+  source = "test-fixtures/docker-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "test" {
@@ -483,6 +485,7 @@ resource "aws_elastic_beanstalk_application_version" "test" {
   name        = "tf-test-version-label-%[1]d"
   bucket      = aws_s3_object.test.bucket
   key         = aws_s3_object.test.key
+  process     = true
 
   image_configuration {
     build {
