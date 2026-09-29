@@ -113,9 +113,13 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			// revision_config and endpoint_config are both required by
+			// CreateWebFunction; IsRequired surfaces a missing block at plan
+			// time instead of midway through an apply.
 			"revision_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[revisionConfigModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -139,6 +143,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						"build_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[buildConfigModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -146,6 +151,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 									"runtime_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeConfigModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
@@ -165,6 +171,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 									"code_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
@@ -172,6 +179,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 												"s3_object": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ObjectModel](ctx),
 													Validators: []validator.List{
+														listvalidator.IsRequired(),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -197,6 +205,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						"service_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[serviceConfigModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -278,6 +287,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 			"endpoint_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointConfigModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lambdaweb_function
 
-Manages an AWS Lambda Web function, including an optional initial revision (code + runtime + execution configuration) and an optional endpoint.
+Manages an AWS Lambda Web function, including its revision (code + runtime + execution configuration) and its initial endpoint.
 
 ~> **Note:** Lambda Web is available in select regions. As of August 2026 the API is active in 17 commercial regions, including `us-east-1` and `eu-west-1`. In regions where the service is not yet deployed, API calls fail with `AccessDeniedException`.
 
@@ -115,13 +115,13 @@ Revisions are immutable: any change to `revision_config` (new package, runtime, 
 
 The following arguments are required:
 
+* `endpoint_config` - (Required) Configuration block for the function's endpoint. [See below](#endpoint_config-block).
 * `function_name` - (Required) Name of the function, up to 64 characters. Changing this forces a new resource to be created.
+* `revision_config` - (Required) Configuration block for the function's revision. A change publishes a new revision. [See below](#revision_config-block).
 
 The following arguments are optional:
 
-* `endpoint_config` - (Optional) Configuration block for the function's endpoint. [See below](#endpoint_config-block).
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
-* `revision_config` - (Optional) Configuration block for the function's initial revision. [See below](#revision_config-block).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `revision_config` Block
@@ -190,7 +190,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the function in the format `arn:aws:lambda:{region}:{account}:web-function/{name}`.
-* `domain_name` - Domain name of the endpoint, when an `endpoint_config` is configured.
+* `domain_name` - Domain name of the endpoint described by `endpoint_config`.
 * `latest_revision_id` - ID of the most recently published revision. Reference this from `aws_lambdaweb_endpoint` `revision_weights` to route traffic.
 * `regional_domain_names` - Map of Region to domain name. Populated for `PerRegion` endpoints, which serve an independent domain per Region; `MultiRegion` endpoints route through the single global `domain_name`.
 * `state` - Current state of the function.
