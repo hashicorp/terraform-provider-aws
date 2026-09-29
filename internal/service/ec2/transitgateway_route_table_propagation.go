@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,19 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_route_table_propagation", name="Transit Gateway Route Table Propagation")
+// @IdentityAttribute("transit_gateway_attachment_id")
+// @IdentityAttribute("transit_gateway_route_table_id")
+// @ImportIDHandler("transitGatewayRouteTablePropagationImportID")
+// @Testing(preCheck="testAccPreCheckTransitGateway", preIdentityVersion="v6.66.0")
 func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTablePropagationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTablePropagationRead,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteTablePropagationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -109,12 +111,28 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId)
-	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
-	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
-	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
+	if err := resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation, transitGatewayRouteTableID, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
+}
+
+func resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation *awstypes.TransitGatewayRouteTablePropagation, transitGatewayRouteTableID string, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId); err != nil {
+		return fmt.Errorf("setting resource_id: %w", err)
+	}
+	if err := d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType); err != nil {
+		return fmt.Errorf("setting resource_type: %w", err)
+	}
+	if err := d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId); err != nil {
+		return fmt.Errorf("setting transit_gateway_attachment_id: %w", err)
+	}
+	if err := d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID); err != nil {
+		return fmt.Errorf("setting transit_gateway_route_table_id: %w", err)
+	}
+
+	return nil
 }
 
 func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -222,4 +240,29 @@ func transitGatewayRouteTablePropagationParseResourceID(id string) (string, stri
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TRANSIT-GATEWAY-ROUTE-TABLE-ID%[2]sTRANSIT-GATEWAY-ATTACHMENT-ID", id, transitGatewayRouteTablePropagationIDSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = transitGatewayRouteTablePropagationImportID{}
+
+type transitGatewayRouteTablePropagationImportID struct{}
+
+func (transitGatewayRouteTablePropagationImportID) Parse(id string) (string, map[string]any, error) {
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := transitGatewayRouteTablePropagationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	attributes := map[string]any{
+		names.AttrTransitGatewayAttachmentID: transitGatewayAttachmentID,
+		"transit_gateway_route_table_id":     transitGatewayRouteTableID,
+	}
+
+	return transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID), attributes, nil
+}
+
+func (transitGatewayRouteTablePropagationImportID) Create(d *schema.ResourceData) string {
+	return transitGatewayRouteTablePropagationCreateResourceID(
+		d.Get("transit_gateway_route_table_id").(string),
+		d.Get(names.AttrTransitGatewayAttachmentID).(string),
+	)
 }
