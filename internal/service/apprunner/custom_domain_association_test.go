@@ -56,10 +56,9 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -160,10 +159,9 @@ func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_false(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -196,10 +194,9 @@ func TestAccAppRunnerCustomDomainAssociation_WWWSubdomain_true(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -254,10 +251,9 @@ func TestAccAppRunnerCustomDomainAssociation_DomainName_Wildcard_WWWSubdomain_fa
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -310,10 +306,9 @@ func TestAccAppRunnerCustomDomainAssociation_Route53Records_WWWSubdomain_false(t
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -346,10 +341,9 @@ func TestAccAppRunnerCustomDomainAssociation_Route53Records_WWWSubdomain_true(t 
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -383,10 +377,9 @@ func TestAccAppRunnerCustomDomainAssociation_Route53Records_Wildcard(t *testing.
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_target"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -432,7 +425,7 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.
 
 			conn := acctest.ProviderMeta(ctx, t).AppRunnerClient(ctx)
 
-			_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
+			_, _, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
 
 			if retry.NotFound(err) {
 				continue
@@ -458,7 +451,7 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, t *testing.T
 
 		conn := acctest.ProviderMeta(ctx, t).AppRunnerClient(ctx)
 
-		_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
+		_, _, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
 
 		return err
 	}
