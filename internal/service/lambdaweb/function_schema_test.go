@@ -40,20 +40,20 @@ func TestFunctionKMSKeyARNValidation(t *testing.T) {
 		wantError bool
 	}{
 		"key ARN": {
-			value: "arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			value: "arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 		},
 		"multi-Region key ARN": {
-			value: "arn:aws:kms:eu-west-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab",
+			value: "arn:aws:kms:eu-west-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab", //lintignore:AWSAT003,AWSAT005
 		},
 		"other partition": {
-			value: "arn:aws-eusc:kms:eusc-de-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			value: "arn:aws-eusc:kms:eusc-de-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab", //lintignore:AWSAT003,AWSAT005
 		},
 		"alias ARN": {
-			value:     "arn:aws:kms:us-east-1:123456789012:alias/example",
+			value:     "arn:aws:kms:us-east-1:123456789012:alias/example", //lintignore:AWSAT003,AWSAT005
 			wantError: true,
 		},
 		"non-KMS ARN": {
-			value:     "arn:aws:s3:::example-bucket",
+			value:     "arn:aws:s3:::example-bucket", //lintignore:AWSAT003,AWSAT005
 			wantError: true,
 		},
 	}
