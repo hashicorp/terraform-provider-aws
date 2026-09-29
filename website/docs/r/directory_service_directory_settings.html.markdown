@@ -1,21 +1,38 @@
 ---
 subcategory: "Directory Service"
 layout: "aws"
-page_title: "AWS: aws_ds_directory_service_settings"
+page_title: "AWS: aws_directory_service_directory_settings"
 description: |-
-  Manages an AWS Directory Service Settings.
+  Manages settings for an AWS Directory Service directory.
 ---
 
-# Resource: aws_ds_directory_service_settings
+# Resource: aws_directory_service_directory_settings
 
-Manages an AWS Directory Service Settings.
+Manages settings for an AWS Directory Service directory, such as enabling or disabling TLS protocol versions.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_ds_directory_service_settings" "example" {
+resource "aws_directory_service_directory" "example" {
+  name     = "corp.example.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.example.id
+    subnet_ids = aws_subnet.example[*].id
+  }
+}
+
+resource "aws_directory_service_directory_settings" "example" {
+  directory_id = aws_directory_service_directory.example.id
+
+  setting {
+    name  = "TLS_1_0"
+    value = "Disable"
+  }
 }
 ```
 
@@ -23,26 +40,34 @@ resource "aws_ds_directory_service_settings" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Brief description of the required argument.
+* `directory_id` - (Required) ID of the directory.
+* `setting` - (Required) Configuration block for a directory setting. See [`setting` Block](#setting-block) below.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `setting` Block
+
+The `setting` block supports the following arguments:
+
+* `name` - (Required) Name of the directory setting. For example, `TLS_1_0`.
+* `value` - (Required) Value of the directory setting. For example, `Disable` or `Enable`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Settings.
-* `example_attribute` - Brief description of the attribute.
+* `setting.applied_value` - Value that was applied for the directory setting.
+* `setting.request_status` - Status of the request to update the directory setting.
+* `setting.type` - Type of the directory setting.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -50,12 +75,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_ds_directory_service_settings.example
+  to = aws_directory_service_directory_settings.example
   identity = {
+    directory_id = "d-1234567890"
   }
 }
 
-resource "aws_ds_directory_service_settings" "example" {
+resource "aws_directory_service_directory_settings" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -64,21 +90,24 @@ resource "aws_ds_directory_service_settings" "example" {
 
 #### Required
 
+* `directory_id` (String) ID of the directory.
+
 #### Optional
+
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Directory Service Settings using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import directory settings using `directory_id`. For example:
 
 ```terraform
 import {
-  to = aws_ds_directory_service_settings.example
-  id = "directory_service_settings-id-12345678"
+  to = aws_directory_service_directory_settings.example
+  id = "d-1234567890"
 }
 ```
 
-Using `terraform import`, import Directory Service Settings using the `example_id_arg`. For example:
+Using `terraform import`, import directory settings using `directory_id`. For example:
 
 ```console
-% terraform import aws_ds_directory_service_settings.example directory_service_settings-id-12345678
+% terraform import aws_directory_service_directory_settings.example d-1234567890
 ```
