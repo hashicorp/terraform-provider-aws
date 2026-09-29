@@ -1,3 +1,9 @@
+resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
+{{- template "region" }}
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+}
+
 resource "aws_ec2_transit_gateway" "test" {
 {{- template "region" }}
   tags = {
@@ -23,12 +29,6 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
   tags = {
     Name = var.rName
   }
-}
-
-resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
-{{- template "region" }}
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
 
 {{ template "acctest.ConfigVPCWithSubnets" 1 }}
