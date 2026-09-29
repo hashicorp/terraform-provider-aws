@@ -119,18 +119,10 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 }
 
 func resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation *awstypes.TransitGatewayRouteTablePropagation, transitGatewayRouteTableID string, d *schema.ResourceData) error {
-	if err := d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId); err != nil {
-		return fmt.Errorf("setting resource_id: %w", err)
-	}
-	if err := d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType); err != nil {
-		return fmt.Errorf("setting resource_type: %w", err)
-	}
-	if err := d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId); err != nil {
-		return fmt.Errorf("setting transit_gateway_attachment_id: %w", err)
-	}
-	if err := d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID); err != nil {
-		return fmt.Errorf("setting transit_gateway_route_table_id: %w", err)
-	}
+	d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId)
+	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
+	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
 	return nil
 }
