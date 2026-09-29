@@ -2,10 +2,6 @@
 aws_directory_service_ip_route
 ```
 
-```release-note:new-resource
-aws_directory_service_ip_routes_exclusive
-```
-
 ```release-note:new-list-resource
 aws_directory_service_ip_route
 ```

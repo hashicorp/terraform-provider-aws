@@ -316,22 +316,6 @@ func removeIPRoutes(ctx context.Context, conn *directoryservice.Client, input *d
 	return smarterr.NewError(err)
 }
 
-// ipRoutesCIDRs returns the identifying CIDR (IPv4 or IPv6) of each route.
-func ipRoutesCIDRs(routes []awstypes.IpRoute) []string {
-	cidrs := make([]string, 0, len(routes))
-	for _, v := range routes {
-		cidrs = append(cidrs, ipRouteKey(v))
-	}
-	return cidrs
-}
-
-func ipRouteKey(v awstypes.IpRoute) string {
-	if v.CidrIp != nil {
-		return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIp))
-	}
-	return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIpv6))
-}
-
 func ipRouteInfoKey(v awstypes.IpRouteInfo) string {
 	if v.CidrIp != nil {
 		return inttypes.CanonicalCIDRBlock(aws.ToString(v.CidrIp))

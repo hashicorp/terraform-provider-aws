@@ -10,8 +10,6 @@ description: |-
 
 Manages an IP route for an AWS Directory Service directory. IP routes are used to route traffic from an AWS Managed Microsoft AD or AD Connector directory to an IPv4 or IPv6 CIDR block, such as an on-premises network reachable over a VPN or AWS Direct Connect connection, or a peered VPC.
 
-~> To manage the complete set of IP routes for a directory, and remove any not configured in Terraform, use [`aws_directory_service_ip_routes_exclusive`](directory_service_ip_routes_exclusive.html) instead. Using both resources for the same directory causes persistent drift unless every `aws_directory_service_ip_route` has an equivalent `ip_route` block.
-
 ~> Adding an IPv6 route (`cidr_ipv6`) requires the directory's network type to be dual-stack (IPv4 and IPv6). Enabling IPv6 support on a directory is a one-way operation performed outside of Terraform; see [Updating directory network type](https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_update-directory-type.html).
 
 ## Example Usage

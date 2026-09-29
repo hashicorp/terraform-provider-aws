@@ -43,16 +43,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newIPRoutesExclusiveResource,
-			TypeName: "aws_directory_service_ip_routes_exclusive",
-			Name:     "IP Routes Exclusive",
-			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
-			Import: inttypes.FrameworkImport{
-				WrappedImport: true,
-			},
-		},
-		{
 			Factory:  newTrustResource,
 			TypeName: "aws_directory_service_trust",
 			Name:     "Trust",
