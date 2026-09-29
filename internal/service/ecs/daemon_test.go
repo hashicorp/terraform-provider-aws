@@ -91,6 +91,7 @@ func TestAccECSDaemon_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", regexache.MustCompile(`daemon/.+/`+rName+`$`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "cluster_arn", "ecs", regexache.MustCompile(`cluster/`+rName+`$`)),
+					resource.TestCheckResourceAttr(resourceName, "critical", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "daemon_task_definition_arn", "ecs", regexache.MustCompile(`daemon-task-definition/`+rName+`:\d+$`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "deployment_arn", "ecs", regexache.MustCompile(`daemon-deployment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_provider_arns.#", "1"),
@@ -330,6 +331,52 @@ func TestAccECSDaemon_alarms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.alarms.0.alarm_names.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSDaemon_critical(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonConfig_critical(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "critical", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"capacity_provider_arns",
+					"daemon_task_definition_arn",
+					"deployment_configuration",
+				},
+			},
+			{
+				Config: testAccDaemonConfig_critical(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "critical", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -712,6 +759,18 @@ resource "aws_ecs_daemon" "test" {
   }
 }
 `, rName, enable))
+}
+
+func testAccDaemonConfig_critical(rName string, critical bool) string {
+	return acctest.ConfigCompose(testAccDaemonConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_daemon" "test" {
+  name                       = %[1]q
+  cluster_arn                = aws_ecs_cluster.test.arn
+  daemon_task_definition_arn = aws_ecs_daemon_task_definition.test.arn
+  capacity_provider_arns     = [aws_ecs_capacity_provider.test.arn]
+  critical                   = %[2]t
+}
+`, rName, critical))
 }
 
 func testAccDaemonConfig_enableECSManagedTags(rName string, enable bool) string { // nosemgrep:ci.ecs-in-func-name
