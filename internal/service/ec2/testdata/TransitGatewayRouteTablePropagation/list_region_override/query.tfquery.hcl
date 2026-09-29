@@ -5,7 +5,7 @@ list "aws_ec2_transit_gateway_route_table_propagation" "test" {
   provider = aws
 
   config {
-    region                          = var.region
+    region                         = var.region
     transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
   }
 }
