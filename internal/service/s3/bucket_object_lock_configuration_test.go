@@ -53,6 +53,83 @@ func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObjectLockConfiguration_eventHold(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectLockConfigurationConfig_eventHoldDays(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "60"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.0.days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.0.years", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketObjectLockConfigurationConfig_eventHoldYears(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.0.years", "2"),
+				),
+			},
+			// Removing the block leaves a plain fixed retention period.
+			{
+				Config: testAccBucketObjectLockConfigurationConfig_eventHoldRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketObjectLockConfiguration_eventHoldOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectLockConfigurationConfig_eventHoldOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.default_event_hold.0.days", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketObjectLockConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -348,6 +425,56 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
 `, bucketName, types.ObjectLockRetentionModeCompliance)
 }
 
+func testAccBucketObjectLockConfigurationConfig_eventHoldDays(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    default_retention {
+      mode = %[2]q
+      days = 60
+
+      default_event_hold {
+        days = 30
+      }
+    }
+  }
+}
+`, bucketName, types.ObjectLockRetentionModeGovernance)
+}
+
+func testAccBucketObjectLockConfigurationConfig_eventHoldYears(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    default_retention {
+      mode  = %[2]q
+      years = 3
+
+      default_event_hold {
+        years = 2
+      }
+    }
+  }
+}
+`, bucketName, types.ObjectLockRetentionModeGovernance)
+}
+
 func testAccBucketObjectLockConfigurationConfig_update(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -430,4 +557,49 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
   }
 }
 `, types.ObjectLockRetentionModeCompliance))
+}
+
+func testAccBucketObjectLockConfigurationConfig_eventHoldOnly(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    default_retention {
+      mode = %[2]q
+
+      default_event_hold {
+        days = 30
+      }
+    }
+  }
+}
+`, bucketName, types.ObjectLockRetentionModeGovernance)
+}
+
+func testAccBucketObjectLockConfigurationConfig_eventHoldRemoved(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    default_retention {
+      mode  = %[2]q
+      years = 3
+    }
+  }
+}
+`, bucketName, types.ObjectLockRetentionModeGovernance)
 }

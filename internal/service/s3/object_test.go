@@ -1350,6 +1350,277 @@ func TestAccS3Object_tagsViaFSxAccessPointARN(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_objectLockEventHold(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2, obj3 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_noLockEventHold(rName, "stuff", retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", ""),
+				),
+			},
+			{
+				Config: testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
+			},
+			{
+				Config: testAccObjectConfig_lockEventHoldReleased(rName, "stuff", retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj3),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_objectLockEventHoldForceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_objectLockEventHoldRetainUntilDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	// Just above the floor of now + the 1 day duration, so the floor overtakes it
+	// during the wait below. The margin must also survive provisioning.
+	retainUntilDate := time.Now().UTC().Add(24*time.Hour + 2*time.Minute).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+				),
+			},
+			// The reported date is now past the configured minimum.
+			{
+				PreConfig: func() { time.Sleep(240 * time.Second) },
+				Config:    testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
+				PlanOnly:  true,
+			},
+			// Changing the duration must not resend the older configured date.
+			{
+				Config: testAccObjectConfig_lockEventHoldDurationDays(rName, "stuff", retainUntilDate, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "2"),
+				),
+			},
+			// The frozen date stays past the minimum.
+			{
+				Config: testAccObjectConfig_lockEventHoldReleased(rName, "stuff", retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_objectLockEventHoldDurationUnits(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2, obj3 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	retainUntilDate := time.Now().UTC().AddDate(2, 0, 0).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_lockEventHoldDurationDays(rName, "stuff", retainUntilDate, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_years", "0"),
+				),
+			},
+			// Switching units must not resend the days value left in state.
+			{
+				Config: testAccObjectConfig_lockEventHoldDurationYears(rName, "stuff", retainUntilDate, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_years", "1"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_lockEventHoldDurationDays(rName, "stuff", retainUntilDate, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj3),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "2"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_years", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_objectLockEventHoldWithoutDate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// No retain-until date configured: S3 assigns one.
+			{
+				Config: testAccObjectConfig_lockEventHoldNoDate(rName, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_lock_retain_until_date"),
+				),
+			},
+			// The date advances between reads.
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy, "object_lock_retain_until_date"},
+			},
+			{
+				Config: testAccObjectConfig_lockEventHoldNoDateReleased(rName, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_objectLockEventHoldInherited(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Inherits everything from the bucket, whose default has no retention
+			// period so the date sits on the floor and advances. The plan is
+			// non-empty afterwards because object_lock_mode is Optional without
+			// Computed, which predates event holds.
+			{
+				Config: testAccObjectConfig_inheritedEventHold(rName, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_lock_retain_until_date"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			// Releasing restates the mode; the inherited duration must not follow.
+			{
+				Config: testAccObjectConfig_inheritedEventHoldReleased(rName, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_objectLockEventHoldDurationWithoutHold(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccObjectConfig_lockEventHoldDurationNoHold(rName, "stuff", retainUntilDate),
+				ExpectError: regexache.MustCompile(`require object_lock_event_hold to be ON`),
+			},
+			{
+				Config:      testAccObjectConfig_lockEventHoldDurationWithOff(rName, "stuff", retainUntilDate),
+				ExpectError: regexache.MustCompile(`cannot be set when object_lock_event_hold is`),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -3117,6 +3388,340 @@ resource "aws_s3_object" "object" {
   }
 }
 `, rName, metadataKey1, metadataValue1, metadataKey2, metadataValue2)
+}
+
+func testAccObjectConfig_noLockEventHold(rName, content, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.test.bucket
+  key                           = "test-key"
+  content                       = %[2]q
+  force_destroy                 = true
+  object_lock_mode              = "GOVERNANCE"
+  object_lock_retain_until_date = %[3]q
+}
+`, rName, content, retainUntilDate)
+}
+
+func testAccObjectConfig_lockEventHold(rName, content, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                               = aws_s3_bucket_versioning.test.bucket
+  key                                  = "test-key"
+  content                              = %[2]q
+  force_destroy                        = true
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_retain_until_date        = %[3]q
+  object_lock_event_hold               = "ON"
+  object_lock_event_hold_duration_days = 1
+}
+`, rName, content, retainUntilDate)
+}
+
+func testAccObjectConfig_lockEventHoldReleased(rName, content, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.test.bucket
+  key                           = "test-key"
+  content                       = %[2]q
+  force_destroy                 = true
+  object_lock_mode              = "GOVERNANCE"
+  object_lock_retain_until_date = %[3]q
+  object_lock_event_hold        = "OFF"
+}
+`, rName, content, retainUntilDate)
+}
+
+func testAccObjectConfig_lockEventHoldDurationDays(rName, content, retainUntilDate string, days int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                               = aws_s3_bucket_versioning.test.bucket
+  key                                  = "test-key"
+  content                              = %[2]q
+  force_destroy                        = true
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_retain_until_date        = %[3]q
+  object_lock_event_hold               = "ON"
+  object_lock_event_hold_duration_days = %[4]d
+}
+`, rName, content, retainUntilDate, days)
+}
+
+func testAccObjectConfig_lockEventHoldDurationYears(rName, content, retainUntilDate string, years int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                                = aws_s3_bucket_versioning.test.bucket
+  key                                   = "test-key"
+  content                               = %[2]q
+  force_destroy                         = true
+  object_lock_mode                      = "GOVERNANCE"
+  object_lock_retain_until_date         = %[3]q
+  object_lock_event_hold                = "ON"
+  object_lock_event_hold_duration_years = %[4]d
+}
+`, rName, content, retainUntilDate, years)
+}
+
+func testAccObjectConfig_lockEventHoldNoDate(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                               = aws_s3_bucket_versioning.test.bucket
+  key                                  = "test-key"
+  content                              = %[2]q
+  force_destroy                        = true
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_event_hold               = "ON"
+  object_lock_event_hold_duration_days = 1
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_lockEventHoldNoDateReleased(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                 = aws_s3_bucket_versioning.test.bucket
+  key                    = "test-key"
+  content                = %[2]q
+  force_destroy          = true
+  object_lock_mode       = "GOVERNANCE"
+  object_lock_event_hold = "OFF"
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_inheritedEventHold(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket_versioning.test.bucket
+
+  rule {
+    default_retention {
+      mode = "GOVERNANCE"
+
+      default_event_hold {
+        days = 1
+      }
+    }
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must be created after the Object Lock configuration to inherit it
+  bucket        = aws_s3_bucket_object_lock_configuration.test.bucket
+  key           = "test-key"
+  content       = %[2]q
+  force_destroy = true
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_inheritedEventHoldReleased(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket_versioning.test.bucket
+
+  rule {
+    default_retention {
+      mode = "GOVERNANCE"
+
+      default_event_hold {
+        days = 1
+      }
+    }
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must be created after the Object Lock configuration to inherit it
+  bucket                 = aws_s3_bucket_object_lock_configuration.test.bucket
+  key                    = "test-key"
+  content                = %[2]q
+  force_destroy          = true
+  object_lock_mode       = "GOVERNANCE"
+  object_lock_event_hold = "OFF"
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_lockEventHoldDurationNoHold(rName, content, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                               = aws_s3_bucket_versioning.test.bucket
+  key                                  = "test-key"
+  content                              = %[2]q
+  force_destroy                        = true
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_retain_until_date        = %[3]q
+  object_lock_event_hold_duration_days = 1
+}
+`, rName, content, retainUntilDate)
+}
+
+func testAccObjectConfig_lockEventHoldDurationWithOff(rName, content, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket                               = aws_s3_bucket_versioning.test.bucket
+  key                                  = "test-key"
+  content                              = %[2]q
+  force_destroy                        = true
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_retain_until_date        = %[3]q
+  object_lock_event_hold               = "OFF"
+  object_lock_event_hold_duration_days = 1
+}
+`, rName, content, retainUntilDate)
 }
 
 func testAccObjectConfig_noLockLegalHold(rName string, content string) string {
