@@ -22,11 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -125,18 +127,18 @@ func (r *directorySettingsResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	entries, err := waitSettingsUpdated(ctx, conn, directoryID, createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
-		return
-	}
-
 	// DescribeSettings returns SettingEntries; field name differs so we merge
 	// computed attributes back into the plan manually.
 	requested, d := plan.Settings.ToSlice(ctx)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	entries, err := waitSettingsUpdated(ctx, conn, directoryID, settingNames(requested), createTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
 		return
 	}
 
@@ -177,7 +179,17 @@ func (r *directorySettingsResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	state.Settings = mergeSettingEntries(ctx, entries, existing, &resp.Diagnostics)
+	if len(existing) == 0 {
+		// Import: state has no prior settings to match against, so discover the
+		// managed settings the same way the List Resource does, via entries that
+		// have an explicit requested value.
+		requested := tfslices.Filter(entries, func(e awstypes.SettingEntry) bool {
+			return e.RequestedValue != nil
+		})
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenDirectorySettingsForList(ctx, requested, &state))
+	} else {
+		state.Settings = mergeSettingEntries(ctx, entries, existing, &resp.Diagnostics)
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -204,6 +216,12 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 	if diff.HasChanges() {
 		directoryID := plan.DirectoryID.ValueString()
 
+		requested, d := plan.Settings.ToSlice(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		var input directoryservice.UpdateSettingsInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
@@ -217,17 +235,9 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		entries, err := waitSettingsUpdated(ctx, conn, directoryID, updateTimeout)
+		entries, err := waitSettingsUpdated(ctx, conn, directoryID, settingNames(requested), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
-			return
-		}
-
-		// DescribeSettings returns SettingEntries; field name differs so we merge
-		// computed attributes back into the plan manually.
-		requested, d := plan.Settings.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-		if resp.Diagnostics.HasError() {
 			return
 		}
 
@@ -240,7 +250,7 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func waitSettingsUpdated(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) ([]awstypes.SettingEntry, error) {
+func waitSettingsUpdated(ctx context.Context, conn *directoryservice.Client, directoryID string, names []string, timeout time.Duration) ([]awstypes.SettingEntry, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.DirectoryConfigurationStatusRequested,
@@ -250,7 +260,7 @@ func waitSettingsUpdated(ctx context.Context, conn *directoryservice.Client, dir
 			awstypes.DirectoryConfigurationStatusUpdated,
 			awstypes.DirectoryConfigurationStatusDefault,
 		),
-		Refresh: statusDirectorySettings(conn, directoryID),
+		Refresh: statusDirectorySettings(conn, directoryID, names),
 		Timeout: timeout,
 	}
 
@@ -262,7 +272,12 @@ func waitSettingsUpdated(ctx context.Context, conn *directoryservice.Client, dir
 	return nil, smarterr.NewError(err)
 }
 
-func statusDirectorySettings(conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+func statusDirectorySettings(conn *directoryservice.Client, directoryID string, names []string) retry.StateRefreshFunc {
+	managed := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		managed[name] = struct{}{}
+	}
+
 	return func(ctx context.Context) (any, string, error) {
 		entries, err := findDirectorySettingsByDirectoryID(ctx, conn, directoryID)
 		if retry.NotFound(err) {
@@ -272,8 +287,14 @@ func statusDirectorySettings(conn *directoryservice.Client, directoryID string) 
 			return nil, "", smarterr.NewError(err)
 		}
 
-		// Surface the worst status across all entries.
-		overall := overallSettingsStatus(entries)
+		// Only consider the status of entries this resource manages: unrelated
+		// directory settings should not affect this resource's wait outcome.
+		managedEntries := tfslices.Filter(entries, func(e awstypes.SettingEntry) bool {
+			_, ok := managed[aws.ToString(e.Name)]
+			return ok
+		})
+
+		overall := overallSettingsStatus(managedEntries)
 		return entries, overall, nil
 	}
 }
@@ -313,6 +334,12 @@ func findDirectorySettingsByDirectoryID(ctx context.Context, conn *directoryserv
 		return !lastPage
 	})
 
+	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
 	return output, smarterr.NewError(err)
 }
 
@@ -330,6 +357,11 @@ func mergeSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, r
 		}
 		if e, ok := byName[req.Name.ValueString()]; ok {
 			m.Type = types.StringPointerValue(e.Type)
+			// Reflect the API's requested value (not the prior state/plan value) so
+			// that out-of-band drift is correctly surfaced.
+			if e.RequestedValue != nil {
+				m.Value = types.StringPointerValue(e.RequestedValue)
+			}
 		}
 		models[i] = m
 	}
@@ -337,6 +369,16 @@ func mergeSettingEntries(ctx context.Context, entries []awstypes.SettingEntry, r
 	result, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, models, nil)
 	diags.Append(d...)
 	return result
+}
+
+// settingNames returns the setting names from a list of directorySettingModel,
+// for use in filtering the API entries this resource manages.
+func settingNames(models []*directorySettingModel) []string {
+	names := make([]string, len(models))
+	for i, m := range models {
+		names[i] = m.Name.ValueString()
+	}
+	return names
 }
 
 // settingEntriesByName indexes Directory Settings API entries by name for lookup.

@@ -70,7 +70,14 @@ func TestAccDSDirectorySettings_basic(t *testing.T) {
 	})
 }
 
-func TestAccDSDirectorySettings_disappears(t *testing.T) {
+// TestAccDSDirectorySettings_disappears_Directory verifies that Settings is
+// correctly detected as gone when its backing directory disappears out of
+// band. directory_settings implements framework.WithNoOpDelete, so disappearing
+// the settings resource itself would not exercise any real behavior; instead
+// this follows the same pattern as other dependent resources (e.g.
+// TestAccLambdaRuntimeManagementConfig_disappears_Function) and disappears the
+// parent resource.
+func TestAccDSDirectorySettings_disappears_Directory(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -79,6 +86,7 @@ func TestAccDSDirectorySettings_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_directory_service_directory_settings.test"
+	directoryResourceName := "aws_directory_service_directory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -94,7 +102,7 @@ func TestAccDSDirectorySettings_disappears(t *testing.T) {
 				Config: testAccDirectorySettingsConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectorySettingsExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfds.ResourceDirectorySettings, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceDirectory(), directoryResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

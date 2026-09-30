@@ -12,6 +12,8 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -62,11 +64,16 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		entries, err := findDirectorySettingsByDirectoryID(ctx, conn, directoryID)
-		if err != nil {
+		if errs.IsA[*awstypes.UnsupportedSettingsException](err) {
 			// Not all directory types (e.g. SimpleAD) support directory settings.
-			tflog.Debug(ctx, "Reading Directory Service Directory Settings", map[string]any{
+			tflog.Debug(ctx, "Directory type does not support Settings, skipping", map[string]any{
 				"error": err.Error(),
 			})
+			return
+		}
+		if err != nil {
+			result := fwdiag.NewListResultErrorDiagnostic(err)
+			yield(result)
 			return
 		}
 
