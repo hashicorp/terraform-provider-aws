@@ -8,6 +8,7 @@ var (
 	ResourceConditionalForwarder    = resourceConditionalForwarder
 	ResourceDirectory               = resourceDirectory
 	ResourceIPRoute                 = newIPRouteResource
+	ResourceIPRoutesExclusive       = newIPRoutesExclusiveResource
 	ResourceLogSubscription         = resourceLogSubscription
 	ResourceRadiusSettings          = resourceRadiusSettings
 	ResourceRegion                  = resourceRegion
@@ -22,6 +23,7 @@ var (
 	WaitIPRoutesAdded                    = waitIPRoutesAdded
 	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
 	IsIPRoutesUpdateRetryable            = isIPRoutesUpdateRetryable
+	IPRoutesSemanticEquals               = ipRoutesSemanticEquals
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
@@ -32,4 +34,5 @@ var (
 // Type aliases for use in tests only.
 type (
 	IPRouteImportID = ipRouteImportID
+	IPRouteModel    = ipRouteModel
 )
