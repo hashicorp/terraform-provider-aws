@@ -84,7 +84,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("client_id_list"); ok {
-		input.ClientIDList = flex.ExpandStringValueList(v.([]any))
+		input.ClientIDList = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("thumbprint_list"); ok {
@@ -140,14 +140,18 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading IAM OIDC Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, d.Id())
-	d.Set("client_id_list", output.ClientIDList)
-	d.Set("thumbprint_list", output.ThumbprintList)
-	d.Set(names.AttrURL, output.Url)
-
-	setTagsOut(ctx, output.Tags)
+	resourceOpenIDConnectProviderFlatten(ctx, output, d)
 
 	return diags
+}
+
+func resourceOpenIDConnectProviderFlatten(ctx context.Context, provider *iam.GetOpenIDConnectProviderOutput, d *schema.ResourceData) {
+	d.Set(names.AttrARN, d.Id())
+	d.Set("client_id_list", provider.ClientIDList)
+	d.Set("thumbprint_list", provider.ThumbprintList)
+	d.Set(names.AttrURL, provider.Url)
+
+	setTagsOut(ctx, provider.Tags)
 }
 
 func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
