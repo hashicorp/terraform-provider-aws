@@ -40,13 +40,13 @@ func TestResourcePolicyDocUnmarshal(t *testing.T) {
 				"Statement": [
 					{
 						"Effect": "Allow",
-						"Principal": {"Service": "redshift.amazonaws.com"},
+						"Principal": {"AWS": "123456789012"},
 						"Action": "redshift:AuthorizeInboundIntegration",
 						"Sid": "Authorize"
 					},
 					{
 						"Effect": "Allow",
-						"Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+						"Principal": {"AWS": "210987654321"},
 						"Action": "redshift:CreateInboundIntegration",
 						"Sid": "Create"
 					}
