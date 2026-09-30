@@ -8,7 +8,9 @@ FEATURES:
 
 * **New Ephemeral Resource:** `aws_bedrockruntime_apply_guardrail` ([#50155](https://github.com/hashicorp/terraform-provider-aws/issues/50155))
 * **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* **New List Resource:** `aws_directoryservicedata_user` ([#50001](https://github.com/hashicorp/terraform-provider-aws/issues/50001))
 * **New List Resource:** `aws_ec2_transit_gateway_route_table_propagation` ([#50193](https://github.com/hashicorp/terraform-provider-aws/issues/50193))
+* **New Resource:** `aws_directoryservicedata_user` ([#50001](https://github.com/hashicorp/terraform-provider-aws/issues/50001))
 
 ENHANCEMENTS:
 
