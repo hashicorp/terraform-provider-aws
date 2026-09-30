@@ -5,7 +5,6 @@ package directoryservicedata
 
 import (
 	"context"
-	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,9 +52,6 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 
 				for _, user := range page.Users {
 					samAccountName := aws.ToString(user.SAMAccountName)
-					if !strings.HasPrefix(samAccountName, sweep.ResourcePrefix) {
-						continue
-					}
 					sweepResources = append(sweepResources, framework.NewSweepResource(newUserResource, client,
 						framework.NewAttribute("directory_id", directoryID), framework.NewAttribute("sam_account_name", samAccountName)),
 					)
