@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayRoute_identity(t *testing.T, _ tfsync.Semaphore) {
-	testAccTransitGatewayTransitGatewayRoute_identitySerial(t)
+func testAccTransitGatewayRoute_identity(t *testing.T, semaphore tfsync.Semaphore) {
+	testAccTransitGatewayTransitGatewayRoute_identitySerial(t, semaphore)
 }
 
 func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
