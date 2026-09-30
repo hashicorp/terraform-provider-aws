@@ -60,6 +60,7 @@ func newIPRouteResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type ipRouteResource struct {
 	framework.ResourceWithModel[ipRouteResourceModel]
 	framework.WithImportByIdentity
+	// There is no API to update a route, so every argument forces replacement.
 	framework.WithNoUpdate
 	framework.WithTimeouts
 }
@@ -85,7 +86,6 @@ func (r *ipRouteResource) Schema(ctx context.Context, request resource.SchemaReq
 					fwvalidators.IPv6CIDRNetworkAddress(),
 				},
 			},
-			// There is no API to update a route, so every argument forces replacement.
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
