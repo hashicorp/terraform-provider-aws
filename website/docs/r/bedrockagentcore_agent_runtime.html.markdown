@@ -170,7 +170,7 @@ The following arguments are optional:
 
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration-block) below.
 * `description` - (Optional) Description of the agent runtime.
-* `environment_variables` - (Optional) Map of environment variables to pass to the container.
+* `environment_variables` - (Optional) Map of environment variables to pass to the container. Set to an empty map (`{}`) to remove all environment variables.
 * `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration-block) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration-block) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration-block) below.

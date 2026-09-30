@@ -47,6 +47,8 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
+
+	PreserveEnvironmentVariables = preserveEnvironmentVariables
 )
 
 type (
