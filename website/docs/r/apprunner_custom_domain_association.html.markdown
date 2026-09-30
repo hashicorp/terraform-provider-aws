@@ -52,7 +52,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `certificate_validation_records` - Set of certificate CNAME records used for this domain name. See [`certificate_validation_records` Block](#certificate_validation_records-block) below for more details.
-* `dns_target` - App Runner subdomain of the App Runner service. The custom domain name is mapped to this target name. Attribute only available if resource created (not imported) with Terraform.
+* `dns_target` - App Runner subdomain of the App Runner service. The custom domain name is mapped to this target name.
 * `status` - Current state of the certificate CNAME record validation.
 
 ### `certificate_validation_records` Block
