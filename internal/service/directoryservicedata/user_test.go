@@ -141,15 +141,15 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_updated(rName, domainName, samAccountName, emailAddress),
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, emailAddress, "John", "York"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress),
-					resource.TestCheckResourceAttr(resourceName, "given_name", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "surname", "Person"),
+					resource.TestCheckResourceAttr(resourceName, "given_name", "John"),
+					resource.TestCheckResourceAttr(resourceName, "surname", "York"),
 				),
 			},
 			{
-				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress),
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress, "John", "York"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -157,8 +157,38 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_address", updatedEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, "given_name", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "surname", "Person"),
+					resource.TestCheckResourceAttr(resourceName, "given_name", "John"),
+					resource.TestCheckResourceAttr(resourceName, "surname", "York"),
+				),
+			},
+			{
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress, "Janet", "York"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceName, "given_name", "Janet"),
+			},
+			{
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress, "Janet", "Newman"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceName, "surname", "Newman"),
+			},
+			{
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress, "James", "Smith"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "given_name", "James"),
+					resource.TestCheckResourceAttr(resourceName, "surname", "Smith"),
 				),
 			},
 			{
@@ -175,7 +205,7 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress),
+				Config: testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress, "John", "York"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -183,8 +213,8 @@ func TestAccDirectoryServiceDataUser_update(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_address", updatedEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, "given_name", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "surname", "Person"),
+					resource.TestCheckResourceAttr(resourceName, "given_name", "John"),
+					resource.TestCheckResourceAttr(resourceName, "surname", "York"),
 				),
 			},
 		},
@@ -256,7 +286,7 @@ resource "aws_directoryservicedata_user" "test" {
 	)
 }
 
-func testAccUserConfig_updated(rName, domainName, samAccountName, updatedEmailAddress string) string {
+func testAccUserConfig_updated(rName, domainName, samAccountName, emailAddress, givenName, surname string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -277,9 +307,9 @@ resource "aws_directoryservicedata_user" "test" {
   directory_id     = aws_directory_service_directory.test.id
   sam_account_name = %[2]q
   email_address    = %[3]q
-  given_name       = "Updated"
-  surname          = "Person"
+  given_name       = %[4]q
+  surname          = %[5]q
 }
-		`, domainName, samAccountName, updatedEmailAddress),
+		`, domainName, samAccountName, emailAddress, givenName, surname),
 	)
 }
