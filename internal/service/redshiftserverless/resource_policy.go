@@ -113,13 +113,15 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "unmarshaling policy: %s", err)
 	}
 
-	doc.Statement.Resources = nil
+	for _, statement := range doc.Statement {
+		statement.Resources = nil
+	}
 
 	policyDoc := tfiam.IAMPolicyDoc{}
 
 	policyDoc.Id = doc.Id
 	policyDoc.Version = doc.Version
-	policyDoc.Statements = []*tfiam.IAMPolicyStatement{doc.Statement}
+	policyDoc.Statements = doc.Statement
 
 	formattedPolicy, err := json.Marshal(policyDoc)
 	if err != nil {
@@ -188,7 +190,44 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.Clien
 }
 
 type resourcePolicyDoc struct {
-	Version   string                    `json:",omitempty"`
-	Id        string                    `json:",omitempty"`
-	Statement *tfiam.IAMPolicyStatement `json:"Statement,omitempty"`
+	Version   string                      `json:",omitempty"`
+	Id        string                      `json:",omitempty"`
+	Statement []*tfiam.IAMPolicyStatement `json:"Statement,omitempty"`
+}
+
+// UnmarshalJSON allows the Statement field to be either a single statement
+// object or an array of statement objects, matching the IAM policy JSON
+// grammar. The AWS API returns Statement as an array, so unmarshaling into a
+// single struct field previously failed with "cannot unmarshal array into Go
+// struct field resourcePolicyDoc.Statement".
+func (d *resourcePolicyDoc) UnmarshalJSON(b []byte) error {
+	// Alias to avoid recursing into this method.
+	type resourcePolicyDocAlias struct {
+		Version   string          `json:",omitempty"`
+		Id        string          `json:",omitempty"`
+		Statement json.RawMessage `json:"Statement,omitempty"`
+	}
+
+	var alias resourcePolicyDocAlias
+	if err := json.Unmarshal(b, &alias); err != nil {
+		return err
+	}
+
+	d.Version = alias.Version
+	d.Id = alias.Id
+
+	if len(alias.Statement) == 0 {
+		return nil
+	}
+
+	// Try to unmarshal as an array first, then fall back to a single object.
+	if err := json.Unmarshal(alias.Statement, &d.Statement); err != nil {
+		var single *tfiam.IAMPolicyStatement
+		if err := json.Unmarshal(alias.Statement, &single); err != nil {
+			return err
+		}
+		d.Statement = []*tfiam.IAMPolicyStatement{single}
+	}
+
+	return nil
 }
