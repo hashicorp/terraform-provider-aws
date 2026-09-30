@@ -75,17 +75,21 @@ resource "aws_iam_openid_connect_provider_client_id" "example" {
 - `openid_connect_provider_arn` - ARN of the Open ID Connect Provider.
 - `client_id` - Client ID argument of the Open ID Connect Provider Client ID list.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM (Identity & Access Management) Open ID Connect Provider Client ID using the `example_id_arg`. For example:
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM (Identity & Access Management) Open ID Connect Provider Client ID using the `openid_connect_provider_arn` and `client_id` separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_iam_openid_connect_provider_client_id.example
-  id = "arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io|266362248691-342342xasdasdasda-apps.googleusercontent.com"
+  id = "arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io,266362248691-342342xasdasdasda-apps.googleusercontent.com"
 }
 ```
 
-Using `terraform import`, import IAM (Identity & Access Management) Open ID Connect Provider Client ID using the `example_id_arg`. For example:
+Using `terraform import`, import IAM (Identity & Access Management) Open ID Connect Provider Client ID using the `openid_connect_provider_arn` and `client_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_iam_openid_connect_provider_client_id.example arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io|266362248691-342342xasdasdasda-apps.googleusercontent.com
+% terraform import aws_iam_openid_connect_provider_client_id.example arn:aws:iam::11111111111:oidc-provider/app.eu.terraform.io,266362248691-342342xasdasdasda-apps.googleusercontent.com
 ```
