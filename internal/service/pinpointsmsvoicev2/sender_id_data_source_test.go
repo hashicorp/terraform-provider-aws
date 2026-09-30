@@ -44,6 +44,9 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "sender_id", resourceName, "sender_id"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("message_types"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("TRANSACTIONAL"),
+					})),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
