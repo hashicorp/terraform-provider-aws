@@ -1,6 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+//go:generate go run ../../generate/listpages/main.go -ListOps=DescribeSettings
 //go:generate go run ../../generate/tags/main.go -ListTags -ListTagsOpPaginated -ListTagsInIDElem=ResourceId -ServiceTagsSlice -TagOp=AddTagsToResource -TagInIDElem=ResourceId -UntagOp=RemoveTagsFromResource -UpdateTags -CreateTags
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run ../../generate/identitytests/main.go
