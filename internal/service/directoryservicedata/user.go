@@ -203,7 +203,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	if diff.HasChanges() {
 		updateInputs := map[awstypes.UpdateType]*directoryservicedata.UpdateUserInput{}
 
-		updateInput := func(updateType awstypes.UpdateType) *directoryservicedata.UpdateUserInput {
+		getUpdateInput := func(updateType awstypes.UpdateType) *directoryservicedata.UpdateUserInput {
 			if input, ok := updateInputs[updateType]; ok {
 				return input
 			}
@@ -231,7 +231,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		if !plan.EmailAddress.Equal(state.EmailAddress) {
 			changeType := updateType(plan.EmailAddress, state.EmailAddress)
-			input := updateInput(changeType)
+			input := getUpdateInput(changeType)
 
 			input.EmailAddress = plan.EmailAddress.ValueStringPointer()
 			if changeType == awstypes.UpdateTypeRemove {
@@ -241,7 +241,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		if !plan.GivenName.Equal(state.GivenName) {
 			changeType := updateType(plan.GivenName, state.GivenName)
-			input := updateInput(changeType)
+			input := getUpdateInput(changeType)
 
 			input.GivenName = plan.GivenName.ValueStringPointer()
 			if changeType == awstypes.UpdateTypeRemove {
@@ -251,7 +251,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		if !plan.Surname.Equal(state.Surname) {
 			changeType := updateType(plan.Surname, state.Surname)
-			input := updateInput(changeType)
+			input := getUpdateInput(changeType)
 
 			input.Surname = plan.Surname.ValueStringPointer()
 			if changeType == awstypes.UpdateTypeRemove {
