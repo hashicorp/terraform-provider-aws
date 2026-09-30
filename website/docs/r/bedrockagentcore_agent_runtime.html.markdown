@@ -356,6 +356,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_runtime_arn` - ARN of the Agent Runtime.
 * `agent_runtime_id` - Unique identifier of the Agent Runtime.
 * `agent_runtime_version` - Version of the Agent Runtime.
+* `default_endpoint_arn` - ARN of the `DEFAULT` endpoint that AWS creates automatically alongside the agent runtime.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workload_identity_details` - Workload identity details for the agent runtime. See [`workload_identity_details`](#workload_identity_details-block) below.
 
