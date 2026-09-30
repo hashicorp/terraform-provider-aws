@@ -22,33 +22,36 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 
+# acctest.ConfigVPCWithSubnets(rName, 2)
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
+
+# acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = var.rName
-  }
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
 data "aws_availability_zones" "available" {
-  state = "available"
+  exclude_zone_ids = local.default_exclude_zone_ids
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
   }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
 
 variable "rName" {
