@@ -7,13 +7,13 @@ package odb
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"math"
 	"reflect"
 	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -44,6 +43,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -56,6 +56,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/odb/types;odbtypes;odbtypes.AutonomousDatabase")
 // @Testing(preCheck="testAccAutonomousDatabasePreCheck")
+// The fixture supplies one external ODB network ID, which cannot be reused in the alternate Region.
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(importIgnore="admin_password;admin_password_wo;admin_password_wo_version;source;source_configuration;transportable_tablespace")
 func newResourceAutonomousDatabase(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -250,13 +251,13 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			},
 			Description: "Data volume size in GB.",
 		},
-		"data_storage_size_in_tbs": schema.Int32Attribute{
+		"data_storage_size_in_tbs": schema.Float64Attribute{
 			Optional: true,
 			Computed: true,
-			Validators: []validator.Int32{
-				int32validator.Between(1, 384),
+			Validators: []validator.Float64{
+				float64validator.Between(1, 384),
 			},
-			Description: "Data volume size in TB.",
+			Description: "Data volume size in TB. Configured values must be whole numbers; computed values may be fractional when storage is configured in GB.",
 		},
 		"database_edition": schema.StringAttribute{
 			CustomType:  databaseEditionType,
@@ -449,7 +450,10 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			CustomType: sourceType,
 			Optional:   true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				// AWS does not return the creation source, so it is absent from imported state.
+				stringplanmodifier.RequiresReplaceIf(func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+					resp.RequiresReplace = !req.StateValue.IsNull()
+				}, "Replace when a known creation source changes", "Replace when a known creation source changes"),
 			},
 			Description: "Source from which to create the Autonomous Database.",
 		},
@@ -704,7 +708,10 @@ func transportableTablespaceResourceBlock(ctx context.Context) schema.ListNested
 			listvalidator.SizeAtMost(1),
 		},
 		PlanModifiers: []planmodifier.List{
-			listplanmodifier.RequiresReplace(),
+			// Imported state has no creation-only block because AWS does not return it.
+			listplanmodifier.RequiresReplaceIf(func(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+				resp.RequiresReplace = req.StateValue.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+			}, "Replace when known creation-only settings change", "Replace when known creation-only settings change"),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -740,7 +747,10 @@ func sourceConfigurationResourceBlock(ctx context.Context) schema.ListNestedBloc
 			listvalidator.SizeAtMost(1),
 		},
 		PlanModifiers: []planmodifier.List{
-			listplanmodifier.RequiresReplace(),
+			// Imported state has no creation-only block because AWS does not return it.
+			listplanmodifier.RequiresReplaceIf(func(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+				resp.RequiresReplace = req.StateValue.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+			}, "Replace when known creation-only settings change", "Replace when known creation-only settings change"),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
@@ -899,12 +909,23 @@ func autonomousDatabaseListOfInt32Type(ctx context.Context) basetypes.ListTypabl
 	return fwtypes.NewListValueOfNull[types.Int32](ctx).Type(ctx).(basetypes.ListTypable)
 }
 
+func (r *resourceAutonomousDatabase) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var storage types.Float64
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root("data_storage_size_in_tbs"), &storage))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := expandAutonomousDatabaseDataStorageSizeInTBs(storage); err != nil {
+		smerr.AddOne(ctx, &resp.Diagnostics, diag.NewAttributeErrorDiagnostic(path.Root("data_storage_size_in_tbs"), "Invalid TB storage size", err.Error()))
+	}
+}
+
 func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ODBClient(ctx)
 
 	var plan, config autonomousDatabaseResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -912,7 +933,7 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 	input := odb.CreateAutonomousDatabaseInput{
 		Tags: getTagsIn(ctx),
 	}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -926,37 +947,36 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 	input.EncryptionKeyProvider, input.EncryptionKeyConfiguration = expandAutonomousDatabaseEncryption(plan.EncryptionKeyProvider, plan.KMSKeyID)
 	input.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, &resp.Diagnostics)
 	input.SourceConfiguration = expandAutonomousDatabaseSourceConfiguration(ctx, plan.SourceConfiguration, &resp.Diagnostics)
+	if !config.DataStorageSizeInTBs.IsNull() {
+		var err error
+		input.DataStorageSizeInTBs, err = expandAutonomousDatabaseDataStorageSizeInTBs(plan.DataStorageSizeInTBs)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DisplayName.ValueString())
+			return
+		}
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateAutonomousDatabase(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAutonomousDatabase, plan.DisplayName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DisplayName.ValueString())
 		return
 	}
 	if out == nil || out.AutonomousDatabaseId == nil {
-		err := errors.New("empty output")
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAutonomousDatabase, plan.DisplayName.String(), err),
-			err.Error(),
-		)
+		err := tfresource.NewEmptyResultError()
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DisplayName.ValueString())
 		return
 	}
 
 	id := aws.ToString(out.AutonomousDatabaseId)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), id))
 
 	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, plan.Timeouts))
 	created, err := waitAutonomousDatabaseCreated(ctx, conn, id, deadline.Remaining())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAutonomousDatabase, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
@@ -968,27 +988,18 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 
 		out, err := conn.UpdateAutonomousDatabase(ctx, &updateInput)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, id, err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
 		if out == nil || out.AutonomousDatabaseId == nil {
-			err := errors.New("empty output")
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, id, err),
-				err.Error(),
-			)
+			err := tfresource.NewEmptyResultError()
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
 
 		created, err = waitAutonomousDatabaseUpdated(ctx, conn, id, deadline.Remaining())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameAutonomousDatabase, id, err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
 	}
@@ -1002,29 +1013,26 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceAutonomousDatabase) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ODBClient(ctx)
 
 	var state autonomousDatabaseResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findAutonomousDatabaseByID(ctx, conn, state.AutonomousDatabaseID.ValueString())
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.AutonomousDatabaseID.ValueString())
 		return
 	}
 
@@ -1032,7 +1040,7 @@ func (r *resourceAutonomousDatabase) Read(ctx context.Context, req resource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func autonomousDatabasePostCreateUpdateRequired(plan autonomousDatabaseResourceModel) bool {
@@ -1076,7 +1084,7 @@ func expandAutonomousDatabasePostCreateUpdateInput(ctx context.Context, id strin
 		RefreshableMode:                      plan.RefreshableMode,
 		TimeOfAutoRefreshStart:               plan.TimeOfAutoRefreshStart,
 	}
-	diags.Append(flex.Expand(ctx, postCreateUpdate, &input)...)
+	smerr.AddEnrich(ctx, diags, flex.Expand(ctx, postCreateUpdate, &input))
 
 	return input
 }
@@ -1099,9 +1107,9 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 	conn := r.Meta().ODBClient(ctx)
 
 	var plan, state, config autonomousDatabaseResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1115,49 +1123,37 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 	if autonomousDatabaseUpdateInputHasChanges(input) {
 		out, err := conn.UpdateAutonomousDatabase(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.AutonomousDatabaseID.ValueString())
 			return
 		}
 		if out == nil || out.AutonomousDatabaseId == nil {
-			err := errors.New("empty output")
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-				err.Error(),
-			)
+			err := tfresource.NewEmptyResultError()
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.AutonomousDatabaseID.ValueString())
 			return
 		}
 
 		updated, err = waitAutonomousDatabaseUpdated(ctx, conn, state.AutonomousDatabaseID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.AutonomousDatabaseID.ValueString())
 			return
 		}
 	} else {
 		var err error
 		updated, err = findAutonomousDatabaseByID(ctx, conn, state.AutonomousDatabaseID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.AutonomousDatabaseID.ValueString())
 			return
 		}
 	}
 
 	if updated.LongTermBackupSchedule == nil && isConfiguredAutonomousDatabaseBlock(plan.LongTermBackupSchedule) {
 		schedule, diags := plan.LongTermBackupSchedule.ToPtr(ctx)
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		previous, diags := state.LongTermBackupSchedule.ToPtr(ctx)
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		if previous == nil {
 			previous, diags = config.LongTermBackupSchedule.ToPtr(ctx)
-			resp.Diagnostics.Append(diags...)
+			smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		}
 		if resp.Diagnostics.HasError() {
 			return
@@ -1176,7 +1172,7 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 				schedule.TimeOfBackup = previous.TimeOfBackup
 			}
 			plan.LongTermBackupSchedule, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, schedule)
-			resp.Diagnostics.Append(diags...)
+			smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -1189,16 +1185,17 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 		return
 	}
 	plan.Tags, plan.TagsAll = planTags, planTagsAll
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-// AutoFlex converts the model before unchanged properties are cleared from the update payload.
+// AWS applies every supplied update field. Omit unchanged values so unrelated updates
+// do not replay computed settings or trigger additional database operations.
 // nosemgrep:ci.semgrep.framework.manual-expander-functions
 func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, config autonomousDatabaseResourceModel, diags *diag.Diagnostics) odb.UpdateAutonomousDatabaseInput {
 	input := odb.UpdateAutonomousDatabaseInput{
 		AutonomousDatabaseId: state.AutonomousDatabaseID.ValueStringPointer(),
 	}
-	diags.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, diags, flex.Expand(ctx, plan, &input))
 	if diags.HasError() {
 		return input
 	}
@@ -1248,8 +1245,15 @@ func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, confi
 	if plan.DataStorageSizeInGBs.Equal(state.DataStorageSizeInGBs) {
 		input.DataStorageSizeInGBs = nil
 	}
-	if plan.DataStorageSizeInTBs.Equal(state.DataStorageSizeInTBs) {
-		input.DataStorageSizeInTBs = nil
+	// AWS reads fractional TB values (for GB-sized storage), but accepts only integer TB writes.
+	// A computed value must not be sent back when another attribute changes.
+	if !config.DataStorageSizeInTBs.IsNull() && !plan.DataStorageSizeInTBs.Equal(state.DataStorageSizeInTBs) {
+		var err error
+		input.DataStorageSizeInTBs, err = expandAutonomousDatabaseDataStorageSizeInTBs(plan.DataStorageSizeInTBs)
+		if err != nil {
+			smerr.AddError(ctx, diags, err, smerr.ID, state.AutonomousDatabaseID.ValueString())
+			return input
+		}
 	}
 	if plan.DatabaseEdition.Equal(state.DatabaseEdition) {
 		input.DatabaseEdition = ""
@@ -1359,7 +1363,7 @@ func (r *resourceAutonomousDatabase) Delete(ctx context.Context, req resource.De
 	conn := r.Meta().ODBClient(ctx)
 
 	var state autonomousDatabaseResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1373,35 +1377,42 @@ func (r *resourceAutonomousDatabase) Delete(ctx context.Context, req resource.De
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionDeleting, ResNameAutonomousDatabase, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
 	err = waitAutonomousDatabaseDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAutonomousDatabase, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 	}
 }
 
 func findAutonomousDatabaseByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.AutonomousDatabase, error) {
+	out, err := findAutonomousDatabase(ctx, conn, id)
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+	if out.Status == odbtypes.AutonomousDatabaseResourceStatusTerminated {
+		tflog.Debug(ctx, "ODB Autonomous Database terminated; treating as absent", map[string]any{names.AttrID: id, names.AttrStatus: out.Status})
+		return nil, smarterr.NewError(&retry.NotFoundError{Message: string(out.Status)})
+	}
+	return out, nil
+}
+
+// Create and update waiters need the raw TERMINATED status to report the failure reason.
+func findAutonomousDatabase(ctx context.Context, conn *odb.Client, id string) (*odbtypes.AutonomousDatabase, error) {
 	input := odb.GetAutonomousDatabaseInput{
 		AutonomousDatabaseId: aws.String(id),
 	}
 	out, err := conn.GetAutonomousDatabase(ctx, &input)
 	if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{LastError: err}
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 	}
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	if out == nil || out.AutonomousDatabase == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.AutonomousDatabase, nil
@@ -1409,12 +1420,12 @@ func findAutonomousDatabaseByID(ctx context.Context, conn *odb.Client, id string
 
 func statusAutonomousDatabase(conn *odb.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findAutonomousDatabaseByID(ctx, conn, id)
+		out, err := findAutonomousDatabase(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, string(out.Status), nil
@@ -1453,11 +1464,11 @@ var autonomousDatabaseFailureStatuses = enum.Slice(
 )
 
 func waitAutonomousDatabaseCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.AutonomousDatabase, error) {
-	return waitAutonomousDatabaseReady(ctx, conn, id, timeout)
+	return smarterr.Assert(waitAutonomousDatabaseReady(ctx, conn, id, timeout))
 }
 
 func waitAutonomousDatabaseUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.AutonomousDatabase, error) {
-	return waitAutonomousDatabaseReady(ctx, conn, id, timeout)
+	return smarterr.Assert(waitAutonomousDatabaseReady(ctx, conn, id, timeout))
 }
 
 func waitAutonomousDatabaseReady(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.AutonomousDatabase, error) {
@@ -1471,29 +1482,37 @@ func waitAutonomousDatabaseReady(ctx context.Context, conn *odb.Client, id strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	out, ok := outputRaw.(*odbtypes.AutonomousDatabase)
 	if !ok || out == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 	if slices.Contains(autonomousDatabaseFailureStatuses, string(out.Status)) {
-		return out, fmt.Errorf("Autonomous Database (%s) entered status %s: %s", id, out.Status, aws.ToString(out.StatusReason))
+		return out, smarterr.Errorf("autonomous database (%s) entered status %s: %s", id, out.Status, aws.ToString(out.StatusReason))
 	}
 
 	return out, nil
 }
 
 func waitAutonomousDatabaseDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) error {
+	refresh := statusAutonomousDatabase(conn, id)
 	stateConf := &retry.StateChangeConf{
-		Pending: append(append(append([]string{}, autonomousDatabasePendingStatuses...), autonomousDatabaseSuccessStatuses...), string(odbtypes.AutonomousDatabaseResourceStatusTerminated)),
+		Pending: append(append([]string{}, autonomousDatabasePendingStatuses...), autonomousDatabaseSuccessStatuses...),
 		Target:  []string{},
-		Refresh: statusAutonomousDatabase(conn, id),
+		Refresh: func(ctx context.Context) (any, string, error) {
+			out, status, err := refresh(ctx)
+			if status == string(odbtypes.AutonomousDatabaseResourceStatusTerminated) {
+				tflog.Debug(ctx, "ODB Autonomous Database deletion completed at terminal status", map[string]any{names.AttrID: id, names.AttrStatus: status})
+				return nil, "", nil
+			}
+			return out, status, err
+		},
 		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
-	return err
+	return smarterr.NewError(err)
 }
 
 func expandAutonomousDatabaseEncryption(provider, kmsKeyID types.String) (odbtypes.EncryptionKeyProviderInput, odbtypes.EncryptionKeyConfigurationInput) {
@@ -1520,13 +1539,13 @@ func expandAutonomousDatabaseAdminPasswordSource(ctx context.Context, value fwty
 	}
 
 	source, d := value.ToPtr(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, diags, d)
 	if diags.HasError() || source == nil || source.CustomerManagedAWSSecret.IsNull() {
 		return "", nil
 	}
 
 	secret, d := source.CustomerManagedAWSSecret.ToPtr(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, diags, d)
 	if diags.HasError() || secret == nil {
 		return "", nil
 	}
@@ -1548,7 +1567,7 @@ func expandAutonomousDatabaseScheduledOperations(ctx context.Context, value fwty
 	}
 
 	models, d := value.ToSlice(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, diags, d)
 	if diags.HasError() {
 		return nil
 	}
@@ -1595,69 +1614,69 @@ func expandAutonomousDatabaseSourceConfiguration(ctx context.Context, value fwty
 	}
 
 	configuration, d := value.ToPtr(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, diags, d)
 	if diags.HasError() || configuration == nil {
 		return nil
 	}
 
 	if !configuration.CloneToRefreshable.IsNull() {
 		model, d := configuration.CloneToRefreshable.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.AddEnrich(ctx, diags, d)
 		if diags.HasError() || model == nil {
 			return nil
 		}
 		var apiObject odbtypes.CloneToRefreshableConfiguration
-		diags.Append(flex.Expand(ctx, model, &apiObject)...)
+		smerr.AddEnrich(ctx, diags, flex.Expand(ctx, model, &apiObject))
 		return &odbtypes.SourceConfigurationMemberCloneToRefreshable{Value: apiObject}
 	}
 	if !configuration.CrossRegionDataGuard.IsNull() {
 		model, d := configuration.CrossRegionDataGuard.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.AddEnrich(ctx, diags, d)
 		if diags.HasError() || model == nil {
 			return nil
 		}
 		var apiObject odbtypes.CrossRegionDataGuardConfiguration
-		diags.Append(flex.Expand(ctx, model, &apiObject)...)
+		smerr.AddEnrich(ctx, diags, flex.Expand(ctx, model, &apiObject))
 		return &odbtypes.SourceConfigurationMemberCrossRegionDataGuard{Value: apiObject}
 	}
 	if !configuration.CrossRegionDisasterRecovery.IsNull() {
 		model, d := configuration.CrossRegionDisasterRecovery.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.AddEnrich(ctx, diags, d)
 		if diags.HasError() || model == nil {
 			return nil
 		}
 		var apiObject odbtypes.CrossRegionDisasterRecoveryConfiguration
-		diags.Append(flex.Expand(ctx, model, &apiObject)...)
+		smerr.AddEnrich(ctx, diags, flex.Expand(ctx, model, &apiObject))
 		return &odbtypes.SourceConfigurationMemberCrossRegionDisasterRecovery{Value: apiObject}
 	}
 	if !configuration.DatabaseClone.IsNull() {
 		model, d := configuration.DatabaseClone.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.AddEnrich(ctx, diags, d)
 		if diags.HasError() || model == nil {
 			return nil
 		}
 		var apiObject odbtypes.DatabaseCloneConfiguration
-		diags.Append(flex.Expand(ctx, model, &apiObject)...)
+		smerr.AddEnrich(ctx, diags, flex.Expand(ctx, model, &apiObject))
 		return &odbtypes.SourceConfigurationMemberDatabaseClone{Value: apiObject}
 	}
 	if !configuration.PointInTimeRestore.IsNull() {
 		model, d := configuration.PointInTimeRestore.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.AddEnrich(ctx, diags, d)
 		if diags.HasError() || model == nil {
 			return nil
 		}
 		var apiObject odbtypes.PointInTimeRestoreConfiguration
-		diags.Append(flex.Expand(ctx, model, &apiObject)...)
+		smerr.AddEnrich(ctx, diags, flex.Expand(ctx, model, &apiObject))
 		return &odbtypes.SourceConfigurationMemberPointInTimeRestore{Value: apiObject}
 	}
 	if !configuration.RestoreFromBackup.IsNull() {
 		model, d := configuration.RestoreFromBackup.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.AddEnrich(ctx, diags, d)
 		if diags.HasError() || model == nil {
 			return nil
 		}
 		var apiObject odbtypes.RestoreFromBackupConfiguration
-		diags.Append(flex.Expand(ctx, model, &apiObject)...)
+		smerr.AddEnrich(ctx, diags, flex.Expand(ctx, model, &apiObject))
 		return &odbtypes.SourceConfigurationMemberRestoreFromBackup{Value: apiObject}
 	}
 
@@ -1672,7 +1691,7 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 	longTermBackupSchedule := model.LongTermBackupSchedule
 	resourcePoolSummary := model.ResourcePoolSummary
 
-	diags.Append(flex.Flatten(ctx, apiObject, model)...)
+	smerr.AddEnrich(ctx, diags, flex.Flatten(ctx, apiObject, model))
 	if diags.HasError() {
 		return
 	}
@@ -1689,18 +1708,17 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 	}
 
 	model.ByolComputeCountLimit = flattenAutonomousDatabaseByolComputeCountLimit(apiObject.ByolComputeCountLimit)
-	model.DataStorageSizeInTBs = flattenAutonomousDatabaseDataStorageSizeInTBs(apiObject.DataStorageSizeInTBs)
 	model.KMSKeyID = types.StringNull()
-	diags.Append(flattenAutonomousDatabaseAdminPasswordSource(ctx, apiObject.AdminPasswordSourceSummary, &model.AdminPasswordSource)...)
+	smerr.AddEnrich(ctx, diags, flattenAutonomousDatabaseAdminPasswordSource(ctx, apiObject.AdminPasswordSourceSummary, &model.AdminPasswordSource))
 	if diags.HasError() {
 		return
 	}
 	if len(apiObject.CustomerContacts) == 0 && isConfiguredAutonomousDatabaseBlock(customerContacts) {
 		model.CustomerContactsToSendToOCI = customerContacts
 	} else {
-		diags.Append(flex.Flatten(ctx, apiObject.CustomerContacts, &model.CustomerContactsToSendToOCI)...)
+		smerr.AddEnrich(ctx, diags, flex.Flatten(ctx, apiObject.CustomerContacts, &model.CustomerContactsToSendToOCI))
 	}
-	diags.Append(flattenAutonomousDatabaseScheduledOperations(ctx, apiObject.ScheduledOperations, &model.ScheduledOperations)...)
+	smerr.AddEnrich(ctx, diags, flattenAutonomousDatabaseScheduledOperations(ctx, apiObject.ScheduledOperations, &model.ScheduledOperations))
 	if diags.HasError() {
 		return
 	}
@@ -1741,7 +1759,7 @@ func flattenAutonomousDatabaseAdminPasswordSource(ctx context.Context, summary *
 			}),
 		},
 	})
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, &diags, d)
 	*target = value
 	return diags
 }
@@ -1762,12 +1780,17 @@ func flattenAutonomousDatabaseByolComputeCountLimit(value *int32) types.Float64 
 	return types.Float64Value(float64(*value))
 }
 
-func flattenAutonomousDatabaseDataStorageSizeInTBs(value *float64) types.Int32 {
-	if value == nil {
-		return types.Int32Null()
+// The SDK reads float64 TB values but only accepts int32 on Create and Update.
+// nosemgrep:ci.semgrep.framework.manual-expander-functions
+func expandAutonomousDatabaseDataStorageSizeInTBs(value types.Float64) (*int32, error) {
+	if value.IsNull() || value.IsUnknown() {
+		return nil, nil
 	}
-
-	return types.Int32Value(int32(*value))
+	v := value.ValueFloat64()
+	if v < 1 || v > 384 || math.Trunc(v) != v {
+		return nil, smarterr.Errorf("data_storage_size_in_tbs must be a whole number between 1 and 384; use data_storage_size_in_gbs for fractional TB sizes")
+	}
+	return aws.Int32(int32(v)), nil
 }
 
 type autonomousDatabaseResourceModel struct {
@@ -1796,7 +1819,7 @@ type autonomousDatabaseResourceModel struct {
 	CreatedAt                            timetypes.RFC3339                                                               `tfsdk:"created_at"`
 	CustomerContactsToSendToOCI          fwtypes.ListNestedObjectValueOf[autonomousDatabaseCustomerContactModel]         `tfsdk:"customer_contacts_to_send_to_oci" autoflex:",noflatten"`
 	DataStorageSizeInGBs                 types.Int32                                                                     `tfsdk:"data_storage_size_in_gbs"`
-	DataStorageSizeInTBs                 types.Int32                                                                     `tfsdk:"data_storage_size_in_tbs" autoflex:",noflatten"`
+	DataStorageSizeInTBs                 types.Float64                                                                   `tfsdk:"data_storage_size_in_tbs" autoflex:",noexpand"`
 	DatabaseEdition                      fwtypes.StringEnum[odbtypes.DatabaseEdition]                                    `tfsdk:"database_edition"`
 	DatabaseType                         fwtypes.StringEnum[odbtypes.DatabaseType]                                       `tfsdk:"database_type"`
 	DbName                               types.String                                                                    `tfsdk:"db_name"`

@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	tftypes "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -164,25 +164,22 @@ func (d *dataSourceAutonomousDatabase) Read(ctx context.Context, req datasource.
 	conn := d.Meta().ODBClient(ctx)
 
 	var data autonomousDatabaseDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findAutonomousDatabaseByID(ctx, conn, data.AutonomousDatabaseID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameAutonomousDatabase, data.AutonomousDatabaseID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.AutonomousDatabaseID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data))
 	data.ByolComputeCountLimit = flattenAutonomousDatabaseByolComputeCountLimit(out.ByolComputeCountLimit)
-	resp.Diagnostics.Append(flattenAutonomousDatabaseAdminPasswordSource(ctx, out.AdminPasswordSourceSummary, &data.AdminPasswordSource)...)
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.CustomerContacts, &data.CustomerContactsToSendToOCI)...)
-	resp.Diagnostics.Append(flattenAutonomousDatabaseScheduledOperations(ctx, out.ScheduledOperations, &data.ScheduledOperations)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAutonomousDatabaseAdminPasswordSource(ctx, out.AdminPasswordSourceSummary, &data.AdminPasswordSource))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.CustomerContacts, &data.CustomerContactsToSendToOCI))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAutonomousDatabaseScheduledOperations(ctx, out.ScheduledOperations, &data.ScheduledOperations))
 	if out.EncryptionSummary != nil {
 		data.EncryptionKeyProvider = tftypes.StringValue(string(out.EncryptionSummary.EncryptionKeyProvider))
 		if configuration, ok := out.EncryptionSummary.EncryptionKeyConfiguration.(*types.EncryptionKeyConfigurationMemberAwsEncryptionKey); ok {
@@ -193,7 +190,7 @@ func (d *dataSourceAutonomousDatabase) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type autonomousDatabaseDataSourceModel struct {

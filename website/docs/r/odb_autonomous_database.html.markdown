@@ -89,7 +89,7 @@ The following arguments are optional:
 * `cpu_core_count` - (Optional) Allocated CPU core count. Valid values are from `1` through `128`.
 * `customer_contacts_to_send_to_oci` - (Optional) Customer contacts that receive operational notifications from OCI. See [`customer_contacts_to_send_to_oci` Block](#customer_contacts_to_send_to_oci-block) below.
 * `data_storage_size_in_gbs` - (Optional) Data volume size in GB. Valid values are from `20` through `393216`.
-* `data_storage_size_in_tbs` - (Optional) Data volume size in whole TB. Valid values are from `1` through `384`.
+* `data_storage_size_in_tbs` - (Optional) Data volume size in TB. Configured values must be whole numbers from `1` through `384`. When this argument is omitted, AWS can return a fractional value, for example when storage is configured in GB.
 * `database_edition` - (Optional) Oracle Database edition. Valid values are `STANDARD_EDITION` and `ENTERPRISE_EDITION`.
 * `db_name` - (Optional) Database name. Must begin with a letter, contain only alphanumeric characters, and contain at most 30 characters.
 * `db_tools_details` - (Optional) Database management tools to enable. See [`db_tools_details` Block](#db_tools_details-block) below.
@@ -307,4 +307,4 @@ Using `terraform import`, import an Autonomous Database using its ID. For exampl
 % terraform import aws_odb_autonomous_database.example adb-example123
 ```
 
-The ADMIN password and creation-only source configuration are not returned by AWS. After import, configure `admin_password` or `admin_password_wo` only when setting or rotating the password.
+AWS does not return the ADMIN password or the creation-only `source`, `source_configuration`, and `transportable_tablespace` values. These values are absent from imported state. Adding creation-only values to configuration after import records them in state without replacing the database or applying them to AWS. Once recorded, changing or removing these values requires replacement. Configuring `admin_password` or `admin_password_wo` can still update the password, so review the plan after import and configure a password only when setting or rotating it.

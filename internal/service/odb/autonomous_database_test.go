@@ -40,7 +40,7 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 
 	var database1, databaseAfterTagUpdate, databaseAfterMutableUpdate odbtypes.AutonomousDatabase
 	resourceName := "aws_odb_autonomous_database.test"
-	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	config := testAccAutonomousDatabaseConfigBasic(displayName, dbName, 2, "AL32UTF8", "test")
@@ -73,6 +73,14 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"admin_password", "admin_password_wo", "admin_password_wo_version", names.AttrSource, "source_configuration", "transportable_tablespace"},
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: tagUpdatedConfig,
@@ -124,7 +132,7 @@ func TestAccODBAutonomousDatabase_allArguments(t *testing.T) {
 
 	var database odbtypes.AutonomousDatabase
 	resourceName := "aws_odb_autonomous_database.test"
-	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -188,7 +196,7 @@ func TestAccODBAutonomousDatabase_adminPasswordSource(t *testing.T) {
 	var database odbtypes.AutonomousDatabase
 	resourceName := "aws_odb_autonomous_database.test"
 	dataSourceName := "data.aws_odb_autonomous_database.test"
-	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -236,7 +244,7 @@ func TestAccODBAutonomousDatabase_adminPasswordSourceWithIntegration(t *testing.
 		resourceName            = "aws_odb_autonomous_database.test"
 		dataSourceName          = "data.aws_odb_autonomous_database.test"
 	)
-	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- account-wide integration tests must remain serialized
@@ -305,7 +313,7 @@ func TestAccODBAutonomousDatabase_disappears(t *testing.T) {
 
 	var database odbtypes.AutonomousDatabase
 	resourceName := "aws_odb_autonomous_database.test"
-	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
