@@ -298,23 +298,31 @@ func (ipRouteImportID) Parse(id string) (string, map[string]any, error) {
 	}, nil
 }
 
-// Directory Service serializes updates per directory and rejects a concurrent
-// one, e.g. when several aws_directory_service_ip_route resources target the
-// same directory.
-const errMessageUpdateInProgress = "update is already in progress"
+// Directory Service serializes updates per directory and briefly rejects new
+// ones while a previous update is applied, e.g. when several
+// aws_directory_service_ip_route resources target the same directory. Both of
+// these ClientException messages are transient.
+func isIPRoutesUpdateRetryable(err error) (bool, error) {
+	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "update is already in progress") ||
+		errs.IsAErrorMessageContains[*awstypes.ClientException](err, "currently unavailable for updates") {
+		return true, err
+	}
+
+	return false, err
+}
 
 func addIPRoutes(ctx context.Context, conn *directoryservice.Client, input *directoryservice.AddIpRoutesInput, timeout time.Duration) error {
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ClientException](ctx, timeout, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhen(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.AddIpRoutes(ctx, input)
-	}, errMessageUpdateInProgress)
+	}, isIPRoutesUpdateRetryable)
 
 	return smarterr.NewError(err)
 }
 
 func removeIPRoutes(ctx context.Context, conn *directoryservice.Client, input *directoryservice.RemoveIpRoutesInput, timeout time.Duration) error {
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ClientException](ctx, timeout, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhen(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.RemoveIpRoutes(ctx, input)
-	}, errMessageUpdateInProgress)
+	}, isIPRoutesUpdateRetryable)
 
 	return smarterr.NewError(err)
 }

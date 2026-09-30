@@ -21,6 +21,7 @@ var (
 	FindIPRoutesByDirectoryID            = findIPRoutesByDirectoryID
 	WaitIPRoutesAdded                    = waitIPRoutesAdded
 	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
+	IsIPRoutesUpdateRetryable            = isIPRoutesUpdateRetryable
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
