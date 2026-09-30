@@ -9,6 +9,7 @@ import (
 	"maps"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -72,6 +73,44 @@ func TestIPRouteImportIDParse(t *testing.T) {
 			}
 			if !maps.Equal(got, testCase.want) {
 				t.Errorf("Parse(%q) = %v, want %v", testCase.id, got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestIsIPRoutesUpdateRetryable(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		err  error
+		want bool
+	}{
+		"nil": {
+			err: nil,
+		},
+		"update in progress": {
+			err:  &awstypes.ClientException{Message: aws.String("An update is already in progress for directory d-1234567890. Please wait until this update is complete before making another change.")},
+			want: true,
+		},
+		"under maintenance": {
+			err:  &awstypes.ClientException{Message: aws.String("The directory is currently unavailable for updates. The directory d-1234567890 is under maintenance. Please retry the operation after a few minutes.")},
+			want: true,
+		},
+		"other ClientException": {
+			err: &awstypes.ClientException{Message: aws.String("Invalid Directory network configuration for the requested CIDR IPs")},
+		},
+		"other error type": {
+			err: &awstypes.EntityDoesNotExistException{Message: aws.String("update is already in progress")},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, _ := tfds.IsIPRoutesUpdateRetryable(testCase.err)
+			if got != testCase.want {
+				t.Errorf("IsIPRoutesUpdateRetryable() = %v, want %v", got, testCase.want)
 			}
 		})
 	}

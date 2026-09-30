@@ -22,6 +22,7 @@ var (
 	FindIPRoutesByDirectoryID            = findIPRoutesByDirectoryID
 	WaitIPRoutesAdded                    = waitIPRoutesAdded
 	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
+	IsIPRoutesUpdateRetryable            = isIPRoutesUpdateRetryable
 	IPRoutesSemanticEquals               = ipRoutesSemanticEquals
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
