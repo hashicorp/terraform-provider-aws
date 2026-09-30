@@ -43,7 +43,7 @@ func TestPreserveEnvironmentVariables(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	known := fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"KEY": types.StringValue("value")})
+	known := fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"KEY": types.StringValue(names.AttrValue)})
 	otherKnown := fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"OTHER": types.StringValue("other")})
 	null := fwtypes.NewMapValueOfNull[types.String](ctx)
 
