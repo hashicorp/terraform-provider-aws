@@ -145,7 +145,7 @@ func testAccCheckOpenIDConnectProviderClientIDExists(ctx context.Context, t *tes
 func testAccOpenIDConnectProviderClientIDConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url             = "https://accounts.testle.com/%[1]s"
+  url             = "https://accounts.example.com/%[1]s"
   thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 
