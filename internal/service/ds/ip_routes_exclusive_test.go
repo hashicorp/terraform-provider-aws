@@ -244,12 +244,8 @@ func TestAccDSIPRoutesExclusive_empty(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ip_route"), knownvalue.SetExact([]knownvalue.Check{})),
 				},
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccIPRoutesExclusiveConfig_empty(rName, domainName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectResourceAction(routeResourceName, plancheck.ResourceActionCreate),
 					},
