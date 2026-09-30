@@ -13,15 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -52,19 +49,19 @@ func TestAccODBCloudAutonomousVmCluster_basic(t *testing.T) {
 
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterResourceTestEntity.avmcBasic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &cloudAVMC),
 				),
 			},
 			{
@@ -82,16 +79,16 @@ func TestAccODBCloudAutonomousVmCluster_variables(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterResourceTestEntity.autonomousVmClusterDisplayNamePrefix)
+	avmcDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterResourceTestEntity.autonomousVmClusterDisplayNamePrefix)
 	resourceName := "oci_database_cloud_autonomous_vm_cluster.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVmClusterConfig_useVariables(avmcDisplayName),
@@ -116,14 +113,14 @@ func TestAccODBCloudAutonomousVmCluster_usingARN(t *testing.T) {
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
 	avmcWithoutTag, avmcWithTag := autonomousVMClusterResourceTestEntity.autonomousVmClusterByARN(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: avmcWithoutTag,
@@ -131,7 +128,7 @@ func TestAccODBCloudAutonomousVmCluster_usingARN(t *testing.T) {
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						return nil
 					}),
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &avmc1),
 				),
 			},
 			{
@@ -142,7 +139,7 @@ func TestAccODBCloudAutonomousVmCluster_usingARN(t *testing.T) {
 			{
 				Config: avmcWithTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &avmc2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
@@ -167,7 +164,7 @@ func TestAccODBCloudAutonomousVmCluster_withAllParams(t *testing.T) {
 
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
@@ -175,12 +172,12 @@ func TestAccODBCloudAutonomousVmCluster_withAllParams(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterResourceTestEntity.avmcAllParamsConfig(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &cloudAVMC),
 				),
 			},
 			{
@@ -201,21 +198,21 @@ func TestAccODBCloudAutonomousVmCluster_tagging(t *testing.T) {
 	var avmc1, avmc2 odbtypes.CloudAutonomousVmCluster
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 	withoutTag, withTag := autonomousVMClusterResourceTestEntity.avmcNoTagWithTag(t)
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 
 		Steps: []resource.TestStep{
 			{
 				Config: withoutTag,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &avmc1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -227,7 +224,7 @@ func TestAccODBCloudAutonomousVmCluster_tagging(t *testing.T) {
 			{
 				Config: withTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &avmc2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
@@ -250,19 +247,19 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 	var cloudautonomousvmcluster odbtypes.CloudAutonomousVmCluster
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterResourceTestEntity.avmcBasic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudautonomousvmcluster),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, t, resourceName, &cloudautonomousvmcluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -280,7 +277,7 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 }
 
 func (autonomousVMClusterResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListCloudAutonomousVmClustersInput{}
 	_, err := conn.ListCloudAutonomousVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
@@ -290,9 +287,9 @@ func (autonomousVMClusterResourceTest) testAccPreCheck(ctx context.Context, t *t
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-func (autonomousVMClusterResourceTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func (autonomousVMClusterResourceTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_autonomous_vm_cluster" {
@@ -314,7 +311,7 @@ func (autonomousVMClusterResourceTest) testAccCheckCloudAutonomousVmClusterDestr
 	}
 }
 
-func (autonomousVMClusterResourceTest) checkCloudAutonomousVmClusterExists(ctx context.Context, name string, cloudAutonomousVMCluster *odbtypes.CloudAutonomousVmCluster) resource.TestCheckFunc {
+func (autonomousVMClusterResourceTest) checkCloudAutonomousVmClusterExists(ctx context.Context, t *testing.T, name string, cloudAutonomousVMCluster *odbtypes.CloudAutonomousVmCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -325,7 +322,7 @@ func (autonomousVMClusterResourceTest) checkCloudAutonomousVmClusterExists(ctx c
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudAutonomousVmCluster, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		resp, err := autonomousVMClusterResourceTestEntity.findAVMC(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudAutonomousVmCluster, rs.Primary.ID, err)
@@ -344,9 +341,8 @@ func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.C
 	out, err := conn.GetCloudAutonomousVmCluster(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err
@@ -360,9 +356,9 @@ func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.C
 }
 
 func (autonomousVMClusterResourceTest) avmcBasic(t *testing.T) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
-	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
@@ -403,9 +399,9 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 }
 
 func (autonomousVMClusterResourceTest) avmcNoTagWithTag(t *testing.T) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
-	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
@@ -480,9 +476,9 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 }
 
 func (autonomousVMClusterResourceTest) avmcAllParamsConfig(t *testing.T) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
-	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
@@ -608,9 +604,9 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 }
 
 func (autonomousVMClusterResourceTest) autonomousVmClusterByARN(t *testing.T) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
-	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := acctest.RandomWithPrefix(t, autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 	domain := acctest.RandomDomainName(t)
 	emailAddress := acctest.RandomEmailAddress(domain)
 	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)

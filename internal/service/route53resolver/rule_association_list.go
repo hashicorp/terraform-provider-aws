@@ -37,14 +37,6 @@ type listResourceRuleAssociation struct {
 func (l *listResourceRuleAssociation) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().Route53ResolverClient(ctx)
 
-	var query listRuleAssociationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Route 53 Resolver Rule Association")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input route53resolver.ListResolverRuleAssociationsInput
@@ -62,17 +54,11 @@ func (l *listResourceRuleAssociation) List(ctx context.Context, request list.Lis
 			rd := l.ResourceData()
 			rd.SetId(id)
 
-			tflog.Info(ctx, "Reading Route 53 Resolver Rule Association")
-			diags := resourceRuleAssociationRead(ctx, rd, l.Meta())
+			diags := resourceRuleAssociationFlatten(rd, &item)
 			if diags.HasError() {
 				tflog.Error(ctx, "Reading Route 53 Resolver Rule Association", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+					"error": sdkdiag.DiagnosticsString(diags),
 				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
 				continue
 			}
 
@@ -89,10 +75,6 @@ func (l *listResourceRuleAssociation) List(ctx context.Context, request list.Lis
 			}
 		}
 	}
-}
-
-type listRuleAssociationModel struct {
-	framework.WithRegionModel
 }
 
 func listResolverRuleAssociations(ctx context.Context, conn *route53resolver.Client, input *route53resolver.ListResolverRuleAssociationsInput) iter.Seq2[awstypes.ResolverRuleAssociation, error] {

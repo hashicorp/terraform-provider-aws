@@ -1,3 +1,0 @@
-```release-note:bug
-provider/tags: Prevent crash when `tags_all` is null
-```

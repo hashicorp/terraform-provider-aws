@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,14 +40,6 @@ func (l *collectionGroupListResource) List(ctx context.Context, request list.Lis
 	awsClient := l.Meta()
 	conn := awsClient.OpenSearchServerlessClient(ctx)
 
-	var query listCollectionGroupModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input opensearchserverless.ListCollectionGroupsInput
 
@@ -60,6 +53,21 @@ func (l *collectionGroupListResource) List(ctx context.Context, request list.Lis
 			collectionGroupID := aws.ToString(item.Id)
 			ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), collectionGroupID)
 
+			var collectionGroup *awstypes.CollectionGroupDetail
+			if request.IncludeResource {
+				var err error
+				collectionGroup, err = findCollectionGroup(ctx, conn, &opensearchserverless.BatchGetCollectionGroupInput{
+					Ids: []string{collectionGroupID},
+				})
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 			var data collectionGroupResourceModel
 			data.ID = fwflex.StringToFramework(ctx, item.Id)
@@ -67,14 +75,6 @@ func (l *collectionGroupListResource) List(ctx context.Context, request list.Lis
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {
-					collectionGroup, err := findCollectionGroup(ctx, conn, &opensearchserverless.BatchGetCollectionGroupInput{
-						Ids: []string{collectionGroupID},
-					})
-					if err != nil {
-						result = fwdiag.NewListResultErrorDiagnostic(err)
-						return
-					}
-
 					result.Diagnostics.Append(fwflex.Flatten(ctx, collectionGroup, &data, fwflex.WithIgnoredFieldNamesAppend("CreatedDate"))...)
 					if result.Diagnostics.HasError() {
 						return
@@ -97,10 +97,6 @@ func (l *collectionGroupListResource) List(ctx context.Context, request list.Lis
 			}
 		}
 	}
-}
-
-type listCollectionGroupModel struct {
-	framework.WithRegionModel
 }
 
 func listCollectionGroups(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.ListCollectionGroupsInput) iter.Seq2[awstypes.CollectionGroupSummary, error] {

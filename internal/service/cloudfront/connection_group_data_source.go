@@ -25,7 +25,6 @@ import (
 
 // @FrameworkDataSource("aws_cloudfront_connection_group", name="Connection Group")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func newConnectionGroupDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &connectionGroupDataSource{}
 	return d, nil

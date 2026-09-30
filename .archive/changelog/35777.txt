@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_apigateway_domain_name: Properly send changes to `ownership_verification_certificate_arn` on update
-```

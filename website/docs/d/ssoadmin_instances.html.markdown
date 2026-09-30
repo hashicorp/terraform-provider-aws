@@ -34,6 +34,6 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arns` - Set of Amazon Resource Names (ARNs) of the SSO Instances.
+* `arns` - Set of ARNs of the SSO Instances.
 * `id` - AWS Region.
 * `identity_store_ids` - Set of identifiers of the identity stores connected to the SSO Instances.

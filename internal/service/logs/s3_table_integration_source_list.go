@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,7 +16,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +63,7 @@ func (l *s3TableIntegrationSourceListResource) List(ctx context.Context, request
 		input := cloudwatchlogs.ListSourcesForS3TableIntegrationInput{
 			IntegrationArn: aws.String(integrationARN),
 		}
-		for item, err := range listS3TableIntegrationSources(ctx, conn, &input, tfslices.PredicateTrue[awstypes.S3TableIntegrationSource]()) {
+		for item, err := range listS3TableIntegrationSources(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

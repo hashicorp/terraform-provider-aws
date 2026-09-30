@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_s3files_file_system
-```
-
-```release-note:new-list-resource
-aws_s3files_file_system
-```

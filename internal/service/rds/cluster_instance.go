@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,6 +33,11 @@ import (
 
 // @SDKResource("aws_rds_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("identifier")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
+// @Testing(importIgnore="apply_immediately;force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.64.0")
 // @Testing(tagsTest=false)
 func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
@@ -39,10 +45,6 @@ func resourceClusterInstance() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterInstanceRead,
 		UpdateWithoutTimeout: resourceClusterInstanceUpdate,
 		DeleteWithoutTimeout: resourceClusterInstanceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(90 * time.Minute),
@@ -238,6 +240,11 @@ func resourceClusterInstance() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				"writer": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -257,6 +264,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate(ctx)
+	createStart := time.Now().UTC()
 	input := &rds.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -362,6 +370,11 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
+	}
+
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
@@ -382,24 +395,24 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	dbClusterID := aws.ToString(db.DBClusterIdentifier)
-
 	if dbClusterID == "" {
 		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
 	dbc, err := findDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
-	for _, m := range dbc.DBClusterMembers {
+	resourceClusterInstanceFlatten(ctx, db, d, dbc)
+
+	return diags
+}
+
+func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) {
+	for _, m := range dbClusters.DBClusterMembers {
 		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
-			if aws.ToBool(m.IsClusterWriter) {
-				d.Set("writer", true)
-			} else {
-				d.Set("writer", false)
-			}
+			d.Set("writer", m.IsClusterWriter)
 		}
 	}
 
@@ -440,10 +453,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
-
 	setTagsOut(ctx, db.TagList)
-
-	return diags
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
@@ -511,6 +521,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PubliclyAccessible = aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool))
 		}
 
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBInstance(ctx, input)
@@ -523,6 +535,11 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("warning_event_categories"); ok {
+			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, modifyStart,
+				flex.ExpandStringValueSet(v.(*schema.Set)))...)
 		}
 	}
 

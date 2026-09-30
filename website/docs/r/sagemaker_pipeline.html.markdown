@@ -62,7 +62,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Pipeline.
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Pipeline.
+* `arn` - ARN assigned by AWS to this Pipeline.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

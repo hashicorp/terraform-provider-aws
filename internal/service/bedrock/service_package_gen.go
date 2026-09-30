@@ -7,7 +7,8 @@ package bedrock
 
 import (
 	"context"
-	"unique"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -41,6 +42,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newFoundationModelAgreementOffersDataSource,
+			TypeName: "aws_bedrock_foundation_model_agreement_offers",
+			Name:     "Foundation Model Agreement Offers",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newFoundationModelsDataSource,
 			TypeName: "aws_bedrock_foundation_models",
 			Name:     "Foundation Models",
@@ -58,6 +65,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Inference Profiles",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newUseCaseForModelAccessDataSource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
@@ -67,11 +80,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCustomModelResource,
 			TypeName: "aws_bedrock_custom_model",
 			Name:     "Custom Model",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "job_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newEvaluationJobResource,
+			TypeName: "aws_bedrock_evaluation_job",
+			Name:     "Evaluation Job",
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newFoundationModelAgreementResource,
+			TypeName: "aws_bedrock_foundation_model_agreement",
+			Name:     "Foundation Model Agreement",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("model_id", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -80,10 +112,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newGuardrailResource,
 			TypeName: "aws_bedrock_guardrail",
 			Name:     "Guardrail",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "guardrail_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("guardrail_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newGuardrailVersionResource,
@@ -95,10 +125,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newInferenceProfileResource,
 			TypeName: "aws_bedrock_inference_profile",
 			Name:     "Inference Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newModelInvocationJobResource,
+			TypeName: "aws_bedrock_model_invocation_job",
+			Name:     "Model Invocation Job",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newModelInvocationLoggingConfigurationResource,
@@ -114,16 +152,44 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newProvisionedModelThroughputResource,
 			TypeName: "aws_bedrock_provisioned_model_throughput",
 			Name:     "Provisioned Model Throughput",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "provisioned_model_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("provisioned_model_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("provisioned_model_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newUseCaseForModelAccessResource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newEvaluationJobResourceAsListResource,
+			TypeName: "aws_bedrock_evaluation_job",
+			Name:     "Evaluation Job",
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+		},
+		{
+			Factory:  newModelInvocationJobResourceAsListResource,
+			TypeName: "aws_bedrock_model_invocation_job",
+			Name:     "Model Invocation Job",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -140,7 +206,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrock.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*bedrock.Options){
 		bedrock.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

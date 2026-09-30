@@ -251,6 +251,12 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket ACL (%s): %s", d.Id(), err)
 	}
 
+	return resourceBucketACLFlatten(d, bucketACL, bucket, expectedBucketOwner, acl)
+}
+
+func resourceBucketACLFlatten(d *schema.ResourceData, bucketACL *s3.GetBucketAclOutput, bucket, expectedBucketOwner, acl string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if err := d.Set("access_control_policy", flattenBucketACL(bucketACL)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_control_policy: %s", err)
 	}

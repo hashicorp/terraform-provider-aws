@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpclattice_service: Add `idle_timeout_seconds` argument
+```
+
+```release-note:enhancement
+data-source/aws_vpclattice_service: Add `idle_timeout_seconds` attribute
+```

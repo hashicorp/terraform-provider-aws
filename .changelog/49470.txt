@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_network_acl_rule: Fix `Missing Resource Identity After Read` errors. This fixes a regression introduced in [v6.59.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6590-august-12-2026)
+```

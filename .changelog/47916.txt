@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudfront_function: Add `tags` and `tags_all` arguments
-```

@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
@@ -32,10 +31,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newConfigurationSetResource,
 			TypeName: "aws_pinpointsmsvoicev2_configuration_set",
 			Name:     "Configuration Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newEventDestinationResource,
@@ -52,22 +49,68 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newKeywordResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity_arn", true),
+				inttypes.StringIdentityAttribute("keyword", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      keywordImportID{},
+			},
+		},
+		{
 			Factory:  newOptOutListResource,
 			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
 			Name:     "Opt-out List",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newPhoneNumberResource,
 			TypeName: "aws_pinpointsmsvoicev2_phone_number",
 			Name:     "Phone Number",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newPoolResource,
+			TypeName: "aws_pinpointsmsvoicev2_pool",
+			Name:     "Pool",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_pinpointsmsvoicev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newSenderIDResource,
+			TypeName: "aws_pinpointsmsvoicev2_sender_id",
+			Name:     "Sender ID",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("sender_id", true),
+				inttypes.StringIdentityAttribute("iso_country_code", true),
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      senderIDImportID{},
+			},
 		},
 	}
 }
@@ -82,6 +125,42 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("configuration_set_name", true),
 				inttypes.StringIdentityAttribute("event_destination_name", true),
+			}),
+		},
+		{
+			Factory:  newKeywordResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity_arn", true),
+				inttypes.StringIdentityAttribute("keyword", true),
+			}),
+		},
+		{
+			Factory:  newPoolResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_pool",
+			Name:     "Pool",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+		},
+		{
+			Factory:  newSenderIDResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_sender_id",
+			Name:     "Sender ID",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("sender_id", true),
+				inttypes.StringIdentityAttribute("iso_country_code", true),
 			}),
 		},
 	})
@@ -101,7 +180,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*pinpointsmsvoicev2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*pinpointsmsvoicev2.Options){
 		pinpointsmsvoicev2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

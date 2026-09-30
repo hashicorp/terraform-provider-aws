@@ -31,17 +31,15 @@ import (
 
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
+// @Testing(preIdentityVersion="v6.60.0")
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
 		ReadWithoutTimeout:   resourceInputRead,
 		UpdateWithoutTimeout: resourceInputUpdate,
 		DeleteWithoutTimeout: resourceInputDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_event_bus", name="Event Bus")
+// @SDKDataSource("aws_cloudwatch_event_bus", name="Bus")
 func dataSourceBus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBusRead,

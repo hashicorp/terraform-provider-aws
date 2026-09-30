@@ -63,17 +63,44 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM User Policies using the `user_name:user_policy_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_iam_user_policy.mypolicy
-  id = "user_of_mypolicy_name:mypolicy_name"
+  to = aws_iam_user_policy.example
+  identity = {
+    user = "my-user"
+    name = "my-policy"
+  }
+}
+
+resource "aws_iam_user_policy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import IAM User Policies using the `user_name:user_policy_name`. For example:
+### Identity Schema
+
+#### Required
+
+* `user` (String) Name of the IAM user.
+* `name` (String) Name of the user policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM User Policies using a `:` delimited string separating `user` and `name`. For example:
+
+```terraform
+import {
+  to = aws_iam_user_policy.example
+  id = "my-user:my-policy"
+}
+```
+
+Using `terraform import`, import IAM User Policies using a `:` delimited string separating `user` and `name`. For example:
 
 ```console
-% terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name
+% terraform import aws_iam_user_policy.example my-user:my-policy
 ```

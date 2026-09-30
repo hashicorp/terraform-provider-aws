@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_fms_resource_set
-```

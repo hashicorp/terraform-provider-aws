@@ -257,18 +257,13 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			resourceRegion := tfMap["resource_region"].(string)
 			resourceType := awstypes.IpamPoolSourceResourceType(tfMap[names.AttrResourceType].(string))
 
-			if resourceType == awstypes.IpamPoolSourceResourceTypeVpc {
-				optFn := func(o *ec2.Options) { o.Region = resourceRegion }
-				if _, err := findVPCByID(ctx, conn, resourceID, optFn); err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s): %s", resourceID, err)
-				}
-			}
-
-			log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
+			// There is no way to validate the supplied resource ID since it could be in
+			// another account. If a bad ID is supplied the wait will timeout.
+			log.Printf("[DEBUG] Waiting for IPAM to manage the resource: %s", resourceID)
 
 			// Wait for the resource to be managed by IPAM - can take 20+ minutes
 			if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, addressFamily, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for %s to be managed by IPAM: %s", resourceID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for source resource to be managed by IPAM (%s %s): %s", resourceType, resourceID, err)
 			}
 
 			log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)

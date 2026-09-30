@@ -53,7 +53,7 @@ The `organizational_unit_exclusion` configuration block supports the following a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of IPAM Resource Discovery
+* `arn` - ARN of IPAM Resource Discovery
 * `id` - The ID of the IPAM Resource Discovery
 * `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery
 * `owner_id` - The account ID for the account that manages the Resource Discovery

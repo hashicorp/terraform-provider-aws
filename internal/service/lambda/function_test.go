@@ -1607,6 +1607,58 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_useResourceTimeoutForPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(t, 8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4569,6 +4621,21 @@ resource "aws_lambda_function" "test" {
   layers        = aws_lambda_layer_version.test[*].arn
 }
 `, rName))
+}
+
+func testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName string, useResourceTimeoutForPropagation bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(policyName, roleName, sgName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                             = "test-fixtures/lambdatest.zip"
+  function_name                        = "%s"
+  role                                 = aws_iam_role.iam_for_lambda.arn
+  handler                              = "exports.example"
+  runtime                              = "nodejs24.x"
+  use_resource_timeout_for_propagation = %t
+}
+`, funcName, useResourceTimeoutForPropagation))
 }
 
 func testAccFunctionConfig_vpc(rName string) string {

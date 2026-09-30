@@ -31,8 +31,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of Glue Registry.
-* `id` - Amazon Resource Name (ARN) of Glue Registry.
+* `arn` - ARN of Glue Registry.
+* `id` - ARN of Glue Registry.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -56,7 +56,7 @@ resource "aws_glue_registry" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Glue registry.
+- `arn` (String) ARN of the Glue registry.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Registries using `arn`. For example:
 

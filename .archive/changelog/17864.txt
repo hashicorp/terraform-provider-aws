@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_db_instance: Add `customer_owned_ip_enabled` argument
-```

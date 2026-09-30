@@ -13,17 +13,17 @@ Provides an Elastic File System (EFS) mount target.
 ## Example Usage
 
 ```terraform
-resource "aws_efs_mount_target" "alpha" {
-  file_system_id = aws_efs_file_system.foo.id
-  subnet_id      = aws_subnet.alpha.id
+resource "aws_efs_mount_target" "example" {
+  file_system_id = aws_efs_file_system.example.id
+  subnet_id      = aws_subnet.example.id
 }
 
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "alpha" {
-  vpc_id            = aws_vpc.foo.id
+resource "aws_subnet" "example" {
+  vpc_id            = aws_vpc.example.id
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.1.0/24"
 }
@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the mount target.
 * `dns_name` - The DNS name for the EFS file system.
 * `mount_target_dns_name` - The DNS name for the given subnet/AZ per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
-* `file_system_arn` - Amazon Resource Name of the file system.
+* `file_system_arn` - ARN of the file system.
 * `network_interface_id` - The ID of the network interface that Amazon EFS created when it created the mount target.
 * `availability_zone_name` - The name of the Availability Zone (AZ) that the mount target resides in.
 * `availability_zone_id` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.
@@ -69,11 +69,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_efs_mount_target.example
+  identity = {
+    id = "fsmt-52a643fb"
+  }
+}
+
+resource "aws_efs_mount_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the mount target.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS mount targets using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_efs_mount_target.alpha
+  to = aws_efs_mount_target.example
   id = "fsmt-52a643fb"
 }
 ```
@@ -81,5 +107,5 @@ import {
 Using `terraform import`, import the EFS mount targets using the `id`. For example:
 
 ```console
-% terraform import aws_efs_mount_target.alpha fsmt-52a643fb
+% terraform import aws_efs_mount_target.example fsmt-52a643fb
 ```

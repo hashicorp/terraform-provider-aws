@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb: Fix bug causing an error on update if tags unsupported in ISO region
-```
