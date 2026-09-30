@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
@@ -18,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,7 +82,7 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Create(ctx context
 	conn := r.Meta().ODBClient(ctx)
 
 	var plan autonomousDatabaseSecretsManagerIntegrationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -93,38 +94,32 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Create(ctx context
 	tflog.Debug(ctx, "Enabling ODB Autonomous Database Secrets Manager integration", map[string]any{names.AttrRegion: region})
 	_, err := conn.InitializeService(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAutonomousDatabaseSecretsManagerIntegration, region, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, region)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), region)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrRegion), region)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), region))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrRegion), region))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	role, err := waitAutonomousDatabaseSecretsManagerIntegrationCreated(ctx, conn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAutonomousDatabaseSecretsManagerIntegration, region, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, region)
 		return
 	}
 
 	plan.ID = types.StringValue(region)
 	flattenAutonomousDatabaseSecretsManagerIntegration(role, &plan)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ODBClient(ctx)
 
 	var state autonomousDatabaseSecretsManagerIntegrationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -132,28 +127,43 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Read(ctx context.C
 	role, err := findAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
 	if retry.NotFound(err) {
 		tflog.Debug(ctx, "ODB Autonomous Database Secrets Manager integration no longer exists; removing from state")
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAutonomousDatabaseSecretsManagerIntegration, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		return
+	}
+
+	// Read treats an integration being disabled outside Terraform as drift. The
+	// waiter still needs the raw role to wait for termination to finish.
+	switch role.Status {
+	case odbtypes.OciIamRoleStatusTerminating:
+		tflog.Debug(ctx, "ODB Autonomous Database Secrets Manager integration is terminating; removing from state", map[string]any{names.AttrStatus: role.Status})
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(smarterr.Errorf("integration is terminating (%s)", role.Status)))
+		resp.State.RemoveResource(ctx)
+		return
+	case odbtypes.OciIamRoleStatusTerminateFailed:
+		tflog.Warn(ctx, "ODB Autonomous Database Secrets Manager integration termination failed; retaining state", map[string]any{names.AttrStatus: role.Status})
+		reason := aws.ToString(role.StatusReason)
+		if reason == "" {
+			reason = "no status reason was returned"
+		}
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.Errorf("integration termination failed (%s): %s; resolve the service role failure before retrying", role.Status, reason), smerr.ID, state.ID.ValueString())
 		return
 	}
 
 	state.ID = types.StringValue(r.Meta().Region(ctx))
 	flattenAutonomousDatabaseSecretsManagerIntegration(role, &state)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ODBClient(ctx)
 
 	var state autonomousDatabaseSecretsManagerIntegrationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -164,18 +174,12 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Delete(ctx context
 	tflog.Debug(ctx, "Disabling ODB Autonomous Database Secrets Manager integration", map[string]any{names.AttrRegion: r.Meta().Region(ctx)})
 	_, err := conn.InitializeService(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionDeleting, ResNameAutonomousDatabaseSecretsManagerIntegration, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
 	if err := waitAutonomousDatabaseSecretsManagerIntegrationDeleted(ctx, conn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAutonomousDatabaseSecretsManagerIntegration, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 	}
 }
 
@@ -183,10 +187,10 @@ func findAutonomousDatabaseSecretsManagerIntegration(ctx context.Context, conn *
 	input := odb.GetOciOnboardingStatusInput{}
 	out, err := conn.GetOciOnboardingStatus(ctx, &input)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	if out == nil {
-		return nil, &retry.NotFoundError{LastError: fmt.Errorf("empty GetOciOnboardingStatus result")}
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: fmt.Errorf("empty GetOciOnboardingStatus result")})
 	}
 
 	for _, role := range out.AutonomousDatabaseOciIntegrationIamRoles {
@@ -195,7 +199,7 @@ func findAutonomousDatabaseSecretsManagerIntegration(ctx context.Context, conn *
 		}
 	}
 
-	return nil, &retry.NotFoundError{LastError: fmt.Errorf("%s not found", ResNameAutonomousDatabaseSecretsManagerIntegration)}
+	return nil, smarterr.NewError(&retry.NotFoundError{LastError: fmt.Errorf("%s not found", ResNameAutonomousDatabaseSecretsManagerIntegration)})
 }
 
 func statusAutonomousDatabaseSecretsManagerIntegration(conn *odb.Client) retry.StateRefreshFunc {
@@ -206,7 +210,7 @@ func statusAutonomousDatabaseSecretsManagerIntegration(conn *odb.Client) retry.S
 			return nil, "", nil
 		}
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		tflog.Trace(ctx, "Read ODB Autonomous Database Secrets Manager integration lifecycle state", map[string]any{names.AttrStatus: role.Status})
@@ -225,13 +229,10 @@ func waitAutonomousDatabaseSecretsManagerIntegrationCreated(ctx context.Context,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*odbtypes.OciIamRole); ok {
-		if out.StatusReason != nil {
-			retry.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
-		}
-		return out, err
+		return out, autonomousDatabaseSecretsManagerIntegrationWaitError(ctx, out, err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitAutonomousDatabaseSecretsManagerIntegrationDeleted(ctx context.Context, conn *odb.Client, timeout time.Duration) error {
@@ -244,10 +245,28 @@ func waitAutonomousDatabaseSecretsManagerIntegrationDeleted(ctx context.Context,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*odbtypes.OciIamRole); ok && out.StatusReason != nil {
-		retry.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
+	if out, ok := outputRaw.(*odbtypes.OciIamRole); ok {
+		return autonomousDatabaseSecretsManagerIntegrationWaitError(ctx, out, err)
 	}
-	return err
+	return smarterr.NewError(err)
+}
+
+func autonomousDatabaseSecretsManagerIntegrationWaitError(ctx context.Context, role *odbtypes.OciIamRole, err error) error {
+	if err == nil {
+		return nil
+	}
+	if role.StatusReason != nil {
+		retry.SetLastError(err, errors.New(aws.ToString(role.StatusReason)))
+	}
+	switch role.Status {
+	case odbtypes.OciIamRoleStatusProvisionFailed:
+		tflog.Warn(ctx, "ODB Autonomous Database Secrets Manager integration provisioning failed", map[string]any{names.AttrStatus: role.Status})
+		err = fmt.Errorf("integration provisioning failed; resolve the service role failure before retrying: %w", err)
+	case odbtypes.OciIamRoleStatusTerminateFailed:
+		tflog.Warn(ctx, "ODB Autonomous Database Secrets Manager integration termination failed", map[string]any{names.AttrStatus: role.Status})
+		err = fmt.Errorf("integration termination failed; resolve the service role failure before retrying: %w", err)
+	}
+	return smarterr.NewError(err)
 }
 
 func flattenAutonomousDatabaseSecretsManagerIntegration(role *odbtypes.OciIamRole, model *autonomousDatabaseSecretsManagerIntegrationResourceModel) {

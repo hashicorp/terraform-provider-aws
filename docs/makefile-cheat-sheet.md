@@ -77,8 +77,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `SWEEPARGS` - (Default: _None_) Raw arguments that define what to sweep, including dependencies. Similar to `SWEEPERS`. For example, `SWEEPARGS=-sweep-run=aws_example_thing`.
 * `SWEEPERS` - (Default: _None_) Resources to sweep, including dependencies. Similar to `SWEEPARGS`. For example, `SWEEPERS=aws_example_thing`. Assigns a value to `SWEEPARGS` overridding any value set.
 * `T` - (Default: _None_) Names of tests to run; may be a regular expression, like `go test -run`. When neither `PKG` nor `K` is set, the package is auto-detected from the test name (scanning `_test.go` files under `internal/`, including non-service packages), so `make t T=TestAccIAMRole_basic` scopes to `iam` automatically. Multiple matches use the first, with a warning; no match stops with an error. Set `PKG`/`K` or use `TESTS` to skip autodetection. Assigns a value to `RUNARGS` overridding any value set.
-* `TERRAFORM_BIN` - (Default: `terraform`) Terraform executable on `PATH`, or an absolute path, used by `examples-validate`.
-* `TERRAFORM_VERSION` - (Default: `1.11.4`) Expected Terraform version for `examples-validate`. Use `0.12.31` or `1.0.6` for legacy examples, or `1.11.4` for the Autonomous Database write-only example.
 * `TEST` - (Default: `./...`) Limit tests to this directory and dependencies. Overridden if `PKG` or `K` is set.
 * `TEST_COUNT` - (Default: `1`) Number of times to run each acceptance or unit test.
 * `TESTS` - (Default: _None_) Names of tests to run. Like `T` but without package auto-detection; set `PKG` or `K` to scope. Assigns a value to `RUNARGS` overridding any value set.
@@ -120,8 +118,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
 | `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
-| `examples-validate` | Examples Checks / validate-terraform | ✔️ |  | `TERRAFORM_BIN`, `TERRAFORM_VERSION` |
-| `examples-validate-test` | Examples Checks / validation script tests | ✔️ |  |  |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `fix-imports` | Fixing source code imports with goimports |  |  |  |
 | `fix-imports-core` | Fixing core directory imports with goimports |  |  |  |

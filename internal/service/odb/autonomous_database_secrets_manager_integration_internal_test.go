@@ -169,6 +169,117 @@ func (f autonomousDatabaseIntegrationTransport) RoundTrip(req *http.Request) (*h
 	return f(req)
 }
 
+func TestAutonomousDatabaseSecretsManagerIntegrationRead(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		status      odbtypes.OciIamRoleStatus
+		apiError    bool
+		omitReason  bool
+		wantRemoved bool
+		wantError   string
+	}{
+		"available":                         {status: odbtypes.OciIamRoleStatusAvailable},
+		"provisioning":                      {status: odbtypes.OciIamRoleStatusProvisioning},
+		"missing":                           {wantRemoved: true},
+		"terminating":                       {status: odbtypes.OciIamRoleStatusTerminating, wantRemoved: true},
+		"termination failed":                {status: odbtypes.OciIamRoleStatusTerminateFailed, wantError: "termination failed"},
+		"termination failed without reason": {status: odbtypes.OciIamRoleStatusTerminateFailed, omitReason: true, wantError: "termination failed"},
+		"status API failed":                 {apiError: true, wantError: "status lookup failed"},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			calls := 0
+			client := new(conns.AWSClient)
+			client.SetHTTPClient(ctx, &http.Client{Transport: autonomousDatabaseIntegrationTransport(func(req *http.Request) (*http.Response, error) {
+				if got := req.Header.Get("X-Amz-Target"); got != "Odb.GetOciOnboardingStatus" {
+					t.Fatalf("unexpected operation %q", got)
+				}
+				calls++
+				code, body := http.StatusOK, `{}`
+				if tc.apiError {
+					code, body = http.StatusBadRequest, `{"__type":"ValidationException","message":"status lookup failed"}`
+				} else if tc.status != "" {
+					body = fmt.Sprintf(`{"autonomousDatabaseOciIntegrationIamRoles":[{"awsIntegration":"SecretsManager","iamRoleArn":%q,"status":%q,"statusReason":"service role permissions are missing"}]}`, testAutonomousDatabaseServiceRoleARN, tc.status)
+					if tc.omitReason {
+						body = strings.Replace(body, `,"statusReason":"service role permissions are missing"`, "", 1)
+					}
+				}
+				return &http.Response{StatusCode: code, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: req}, nil
+			})})
+			client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
+			config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+			client, diags := config.ConfigureProvider(ctx, client)
+			if diags.HasError() {
+				t.Fatal(diags)
+			}
+			rawResource, err := newResourceAutonomousDatabaseSecretsManagerIntegration(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r := rawResource.(*resourceAutonomousDatabaseSecretsManagerIntegration)
+			r.Configure(ctx, resource.ConfigureRequest{ProviderData: client}, &resource.ConfigureResponse{})
+			var schemaResponse resource.SchemaResponse
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+			schemaResponse.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			terraformType := schemaResponse.Schema.Type().TerraformType(ctx)
+			values := map[string]tftypes.Value{}
+			for name, attributeType := range terraformType.(tftypes.Object).AttributeTypes {
+				values[name] = tftypes.NewValue(attributeType, nil)
+			}
+			values[names.AttrID] = tftypes.NewValue(tftypes.String, endpoints.UsEast1RegionID)
+			values[names.AttrRegion] = tftypes.NewValue(tftypes.String, endpoints.UsEast1RegionID)
+			values[names.AttrStatus] = tftypes.NewValue(tftypes.String, string(odbtypes.OciIamRoleStatusAvailable))
+			state := tfsdk.State{Raw: tftypes.NewValue(terraformType, values), Schema: schemaResponse.Schema}
+			response := resource.ReadResponse{State: state}
+			r.Read(ctx, resource.ReadRequest{State: state}, &response)
+			if calls != 1 {
+				t.Errorf("status calls = %d, want 1", calls)
+			}
+			if got, want := response.Diagnostics.HasError(), tc.wantError != ""; got != want {
+				t.Fatalf("diagnostics.HasError() = %t, want %t: %v", got, want, response.Diagnostics)
+			}
+			if got := response.State.Raw.IsNull(); got != tc.wantRemoved {
+				t.Fatalf("state removed = %t, want %t", got, tc.wantRemoved)
+			}
+			if tc.wantError != "" {
+				if !response.State.Raw.Equal(state.Raw) {
+					t.Error("failed Read must retain the prior state")
+				}
+				message := fmt.Sprint(response.Diagnostics)
+				if !strings.Contains(message, tc.wantError) {
+					t.Errorf("diagnostics = %s, want %q", message, tc.wantError)
+				}
+				if tc.status == odbtypes.OciIamRoleStatusTerminateFailed {
+					if !strings.Contains(message, string(tc.status)) {
+						t.Errorf("diagnostics = %s, want status %q", message, tc.status)
+					}
+					if !strings.Contains(message, "before retrying") {
+						t.Errorf("diagnostics lack recovery guidance: %s", message)
+					}
+					if !tc.omitReason && !strings.Contains(message, "service role permissions are missing") {
+						t.Errorf("diagnostics lost the service status reason: %s", message)
+					}
+				}
+			} else if tc.wantRemoved {
+				if response.Diagnostics.WarningsCount() != 1 {
+					t.Errorf("warnings = %d, want 1", response.Diagnostics.WarningsCount())
+				}
+			} else {
+				var status fwtypes.StringEnum[odbtypes.OciIamRoleStatus]
+				if diags := response.State.GetAttribute(ctx, path.Root(names.AttrStatus), &status); diags.HasError() {
+					t.Fatal(diags)
+				}
+				if got := status.ValueEnum(); got != tc.status {
+					t.Errorf("state status = %s, want %s", got, tc.status)
+				}
+			}
+		})
+	}
+}
+
 func TestAutonomousDatabaseSecretsManagerIntegrationImport(t *testing.T) {
 	t.Parallel()
 
@@ -426,6 +537,16 @@ func TestAutonomousDatabaseSecretsManagerIntegrationWaiters(t *testing.T) {
 					}
 					if !strings.Contains(err.Error(), tc.wantError) {
 						t.Errorf("expected error containing %q, got %v", tc.wantError, err)
+					}
+					switch tc.wantState {
+					case odbtypes.OciIamRoleStatusProvisionFailed, odbtypes.OciIamRoleStatusTerminateFailed:
+						want := "provisioning failed"
+						if tc.wantState == odbtypes.OciIamRoleStatusTerminateFailed {
+							want = "termination failed"
+						}
+						if !strings.Contains(err.Error(), want) {
+							t.Errorf("expected explicit failure %q, got %v", want, err)
+						}
 					}
 				} else if err != nil {
 					t.Fatalf("unexpected waiter error: %v", err)

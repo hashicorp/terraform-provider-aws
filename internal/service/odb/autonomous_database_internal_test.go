@@ -5,19 +5,27 @@ package odb
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -27,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -300,7 +309,7 @@ func TestAutonomousDatabaseNumericFlatten(t *testing.T) {
 
 	flattenAutonomousDatabase(ctx, &odbtypes.AutonomousDatabase{
 		ByolComputeCountLimit: aws.Int32(2),
-		DataStorageSizeInTBs:  aws.Float64(1),
+		DataStorageSizeInTBs:  aws.Float64(1.5),
 	}, &model, &diags)
 	if diags.HasError() {
 		t.Fatalf("flattening Autonomous Database: %v", diags)
@@ -308,8 +317,248 @@ func TestAutonomousDatabaseNumericFlatten(t *testing.T) {
 	if got, want := model.ByolComputeCountLimit.ValueFloat64(), float64(2); got != want {
 		t.Fatalf("byol_compute_count_limit = %g, want %g", got, want)
 	}
-	if got, want := model.DataStorageSizeInTBs.ValueInt32(), int32(1); got != want {
-		t.Fatalf("data_storage_size_in_tbs = %d, want %d", got, want)
+	if got, want := model.DataStorageSizeInTBs.ValueFloat64(), 1.5; got != want {
+		t.Fatalf("data_storage_size_in_tbs = %g, want %g", got, want)
+	}
+	for _, storage := range []*float64{nil, aws.Float64(1), aws.Float64(0.5)} {
+		flattenAutonomousDatabase(ctx, &odbtypes.AutonomousDatabase{DataStorageSizeInTBs: storage}, &model, &diags)
+		if diags.HasError() {
+			t.Fatal(diags)
+		}
+		if want := types.Float64PointerValue(storage); !model.DataStorageSizeInTBs.Equal(want) {
+			t.Errorf("data_storage_size_in_tbs = %s, want %s", model.DataStorageSizeInTBs, want)
+		}
+	}
+}
+
+func TestAutonomousDatabaseStorageConfiguration(t *testing.T) {
+	t.Parallel()
+	for name, testCase := range map[string]struct {
+		value     types.Float64
+		wantError bool
+	}{
+		"omitted":       {value: types.Float64Null()},
+		"unknown":       {value: types.Float64Unknown()},
+		"minimum":       {value: types.Float64Value(1)},
+		"maximum":       {value: types.Float64Value(384)},
+		"fractional":    {value: types.Float64Value(1.5), wantError: true},
+		"below minimum": {value: types.Float64Value(0.5), wantError: true},
+		"above maximum": {value: types.Float64Value(385), wantError: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			raw, err := newResourceAutonomousDatabase(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var schemaResponse resource.SchemaResponse
+			raw.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+			config := tfsdk.State{Schema: schemaResponse.Schema, Raw: tftypes.NewValue(schemaResponse.Schema.Type().TerraformType(ctx), nil)}
+			if diags := config.SetAttribute(ctx, path.Root("data_storage_size_in_tbs"), testCase.value); diags.HasError() {
+				t.Fatal(diags)
+			}
+			var response resource.ValidateConfigResponse
+			raw.(resource.ResourceWithValidateConfig).ValidateConfig(ctx, resource.ValidateConfigRequest{Config: tfsdk.Config{Schema: schemaResponse.Schema, Raw: config.Raw}}, &response)
+			if got := response.Diagnostics.HasError(); got != testCase.wantError {
+				t.Fatalf("HasError = %t, want %t; diagnostics: %v", got, testCase.wantError, response.Diagnostics)
+			}
+		})
+	}
+}
+
+func TestAutonomousDatabaseImportedCreationOnlyPlan(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	// The containing resource exists in both state and plan; only the attribute is absent after import.
+	state := tfsdk.State{Raw: tftypes.NewValue(tftypes.String, "existing")}
+	plan := tfsdk.Plan{Raw: tftypes.NewValue(tftypes.String, "existing")}
+	t.Run(names.AttrSource, func(t *testing.T) {
+		t.Parallel()
+		attribute := autonomousDatabaseResourceAttributes()[names.AttrSource].(schema.StringAttribute)
+		for name, testCase := range map[string]struct {
+			before, after types.String
+			wantReplace   bool
+		}{
+			"imported":  {before: types.StringNull(), after: types.StringValue("NONE")},
+			"unchanged": {before: types.StringValue("NONE"), after: types.StringValue("NONE")},
+			"changed":   {before: types.StringValue("NONE"), after: types.StringValue("DATABASE"), wantReplace: true},
+			"removed":   {before: types.StringValue("NONE"), after: types.StringNull(), wantReplace: true},
+		} {
+			t.Run(name, func(t *testing.T) {
+				t.Parallel()
+				request := planmodifier.StringRequest{State: state, Plan: plan, StateValue: testCase.before, PlanValue: testCase.after}
+				for _, modifier := range attribute.PlanModifiers {
+					response := planmodifier.StringResponse{PlanValue: testCase.after}
+					modifier.PlanModifyString(ctx, request, &response)
+					if response.Diagnostics.HasError() || response.RequiresReplace != testCase.wantReplace {
+						t.Fatalf("RequiresReplace = %t, want %t; diagnostics: %v", response.RequiresReplace, testCase.wantReplace, response.Diagnostics)
+					}
+				}
+			})
+		}
+	})
+	for name, block := range map[string]schema.ListNestedBlock{
+		"source_configuration":     sourceConfigurationResourceBlock(ctx),
+		"transportable_tablespace": transportableTablespaceResourceBlock(ctx),
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			// The modifier depends on list presence, not the nested block's contents.
+			null := types.ListNull(types.StringType)
+			empty := types.ListValueMust(types.StringType, nil)
+			first := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("first")})
+			second := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("second")})
+			for name, testCase := range map[string]struct {
+				before, after types.List
+				wantReplace   bool
+			}{
+				"imported null":  {before: null, after: first},
+				"imported empty": {before: empty, after: first},
+				"unchanged":      {before: first, after: first},
+				"changed":        {before: first, after: second, wantReplace: true},
+				"removed null":   {before: first, after: null, wantReplace: true},
+				"removed empty":  {before: first, after: empty, wantReplace: true},
+			} {
+				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+					request := planmodifier.ListRequest{State: state, Plan: plan, StateValue: testCase.before, PlanValue: testCase.after}
+					for _, modifier := range block.PlanModifiers {
+						response := planmodifier.ListResponse{PlanValue: testCase.after}
+						modifier.PlanModifyList(ctx, request, &response)
+						if response.Diagnostics.HasError() || response.RequiresReplace != testCase.wantReplace {
+							t.Fatalf("RequiresReplace = %t, want %t; diagnostics: %v", response.RequiresReplace, testCase.wantReplace, response.Diagnostics)
+						}
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestAutonomousDatabaseTerminatedLookup(t *testing.T) {
+	t.Parallel()
+	conn := odb.New(odb.Options{
+		Region:      endpoints.UsEast1RegionID,
+		Credentials: aws.AnonymousCredentials{},
+		Retryer:     aws.NopRetryer{},
+		HTTPClient: smithyhttp.ClientDoFunc(func(request *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(`{"autonomousDatabase":{"autonomousDatabaseId":"adb-terminated","status":"TERMINATED","statusReason":"creation failed"}}`)), Request: request}, nil
+		}),
+	})
+	if _, err := findAutonomousDatabaseByID(t.Context(), conn, "adb-terminated"); !retry.NotFound(err) {
+		t.Fatalf("finder error = %v, want resource not found", err)
+	}
+	if _, status, err := statusAutonomousDatabase(conn, "adb-terminated")(t.Context()); err != nil || status != "TERMINATED" {
+		t.Fatalf("waiter status = %q, error = %v; want TERMINATED without error", status, err)
+	}
+	if _, err := waitAutonomousDatabaseCreated(t.Context(), conn, "adb-terminated", time.Second); err == nil || !strings.Contains(err.Error(), "creation failed") {
+		t.Fatalf("create waiter error = %v, want terminal failure reason", err)
+	}
+	if _, err := waitAutonomousDatabaseUpdated(t.Context(), conn, "adb-terminated", time.Second); err == nil || !strings.Contains(err.Error(), "creation failed") {
+		t.Fatalf("update waiter error = %v, want terminal failure reason", err)
+	}
+}
+
+func TestAutonomousDatabaseDeleted(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		statuses    []odbtypes.AutonomousDatabaseResourceStatus
+		wantState   odbtypes.AutonomousDatabaseResourceStatus
+		apiError    bool
+		wantTimeout bool
+	}{
+		"already terminated": {
+			statuses: []odbtypes.AutonomousDatabaseResourceStatus{odbtypes.AutonomousDatabaseResourceStatusTerminated},
+		},
+		"already absent": {
+			statuses: []odbtypes.AutonomousDatabaseResourceStatus{""},
+		},
+		"available then terminating then terminated": {
+			statuses: []odbtypes.AutonomousDatabaseResourceStatus{odbtypes.AutonomousDatabaseResourceStatusAvailable, odbtypes.AutonomousDatabaseResourceStatusTerminating, odbtypes.AutonomousDatabaseResourceStatusTerminated},
+		},
+		"terminating then absent": {
+			statuses: []odbtypes.AutonomousDatabaseResourceStatus{odbtypes.AutonomousDatabaseResourceStatusTerminating, ""},
+		},
+		"updating then terminating then terminated": {
+			statuses: []odbtypes.AutonomousDatabaseResourceStatus{odbtypes.AutonomousDatabaseResourceStatusUpdating, odbtypes.AutonomousDatabaseResourceStatusTerminating, odbtypes.AutonomousDatabaseResourceStatusTerminated},
+		},
+		"failed": {
+			statuses:  []odbtypes.AutonomousDatabaseResourceStatus{odbtypes.AutonomousDatabaseResourceStatusFailed},
+			wantState: odbtypes.AutonomousDatabaseResourceStatusFailed,
+		},
+		"unexpected state": {
+			statuses:  []odbtypes.AutonomousDatabaseResourceStatus{"UNKNOWN"},
+			wantState: "UNKNOWN",
+		},
+		"API error": {
+			apiError: true,
+		},
+		"timeout while terminating": {
+			statuses:    []odbtypes.AutonomousDatabaseResourceStatus{odbtypes.AutonomousDatabaseResourceStatusTerminating},
+			wantTimeout: true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			synctest.Test(t, func(t *testing.T) {
+				calls := 0
+				conn := odb.New(odb.Options{
+					Region:      endpoints.UsEast1RegionID,
+					Credentials: aws.AnonymousCredentials{},
+					Retryer:     aws.NopRetryer{},
+					HTTPClient: smithyhttp.ClientDoFunc(func(request *http.Request) (*http.Response, error) {
+						calls++
+						statusCode := http.StatusOK
+						var body string
+						if testCase.apiError {
+							statusCode = http.StatusBadRequest
+							body = `{"__type":"ValidationException","message":"test API error"}`
+						} else {
+							status := testCase.statuses[min(calls, len(testCase.statuses))-1]
+							body = fmt.Sprintf(`{"autonomousDatabase":{"autonomousDatabaseId":"adb-deleting","status":%q}}`, status)
+							if status == "" {
+								statusCode = http.StatusBadRequest
+								body = `{"__type":"ResourceNotFoundException","message":"database disappeared"}`
+							}
+						}
+						return &http.Response{StatusCode: statusCode, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
+					}),
+				})
+				err := waitAutonomousDatabaseDeleted(t.Context(), conn, "adb-deleting", time.Minute)
+				switch {
+				case testCase.wantTimeout:
+					var timeoutError *retry.TimeoutError
+					if !errors.As(err, &timeoutError) || timeoutError.LastState != string(odbtypes.AutonomousDatabaseResourceStatusTerminating) {
+						t.Fatalf("waiter error = %v, want timeout in TERMINATING", err)
+					}
+				case testCase.apiError:
+					var apiError *odbtypes.ValidationException
+					if !errors.As(err, &apiError) || aws.ToString(apiError.Message) != "test API error" {
+						t.Fatalf("waiter error = %v, want original API error", err)
+					}
+				case testCase.wantState != "":
+					var unexpectedState *retry.UnexpectedStateError
+					if !errors.As(err, &unexpectedState) || unexpectedState.State != string(testCase.wantState) {
+						t.Fatalf("waiter error = %v, want unexpected state %q", err, testCase.wantState)
+					}
+				case err != nil:
+					t.Fatalf("waiting for deleted Autonomous Database: %v", err)
+				}
+				if !testCase.wantTimeout {
+					wantCalls := len(testCase.statuses)
+					if testCase.apiError {
+						wantCalls = 1
+					}
+					if calls != wantCalls {
+						t.Errorf("GetAutonomousDatabase calls = %d, want %d", calls, wantCalls)
+					}
+				}
+			})
+		})
 	}
 }
 

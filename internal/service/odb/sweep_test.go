@@ -29,13 +29,16 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 		"all pages and test names only": {
 			pages: []string{
 				`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-first","displayName":"tf-acc-test-first"},{"autonomousDatabaseId":"adb-production","displayName":"production"}],"nextToken":"second-page"}`,
-				`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-second","displayName":"tf-odb-adbs-second"},{"displayName":"tf-acc-test-without-id"},{"autonomousDatabaseId":"adb-without-name"},{"autonomousDatabaseId":"adb-terminated","displayName":"tf-acc-test-terminated","status":"TERMINATED"}]}`,
+				`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-second","displayName":"tf-acc-test-second"},{"displayName":"tf-acc-test-without-id"},{"autonomousDatabaseId":"adb-without-name"},{"autonomousDatabaseId":"adb-terminated","displayName":"tf-acc-test-terminated","status":"TERMINATED"}]}`,
 			},
 			wantIDs: []string{"adb-first", "adb-second"},
 		},
 		"empty page with continuation token": {
 			pages:   []string{`{"autonomousDatabases":[],"nextToken":"second-page"}`, `{"autonomousDatabases":[{"autonomousDatabaseId":"adb-second","displayName":"tf-acc-test-second"}]}`},
 			wantIDs: []string{"adb-second"},
+		},
+		"nonstandard prefixes are not swept": {
+			pages: []string{`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-old-prefix","displayName":"tf-odb-adbs-example"},{"autonomousDatabaseId":"adb-prefix-only","displayName":"tf-acc-test"},{"autonomousDatabaseId":"adb-prefix-lookalike","displayName":"tf-acc-testexample"},{"autonomousDatabaseId":"adb-prefix-suffix","displayName":"production-tf-acc-test-example"}]}`},
 		},
 		"empty inventory":                       {pages: []string{`{"autonomousDatabases":[]}`}},
 		"failure discards partial inventory":    {pages: []string{`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-first","displayName":"tf-acc-test-first"}],"nextToken":"second-page"}`}, errorCode: "ValidationException"},

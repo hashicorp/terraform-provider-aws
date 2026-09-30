@@ -21,7 +21,7 @@ func TestAccODBAutonomousDatabaseDataSource_basic(t *testing.T) {
 
 	resourceName := "aws_odb_autonomous_database.test"
 	dataSourceName := "data.aws_odb_autonomous_database.test"
-	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	config := acctest.ConfigCompose(

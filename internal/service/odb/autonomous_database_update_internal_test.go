@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -71,6 +72,138 @@ func TestAutonomousDatabaseUpdateRemoveBlocks(t *testing.T) {
 			}
 			if length != 0 {
 				t.Errorf("removed block %s has %d elements in final state", name, length)
+			}
+		})
+	}
+}
+
+func TestAutonomousDatabaseUpdateStorage(t *testing.T) {
+	t.Parallel()
+	for name, testCase := range map[string]struct {
+		before, after, configured types.Float64
+		wantTBs                   string
+	}{
+		"configured minimum":            {before: types.Float64Value(2), after: types.Float64Value(1), configured: types.Float64Value(1), wantTBs: "1"},
+		"configured maximum":            {before: types.Float64Value(1), after: types.Float64Value(384), configured: types.Float64Value(384), wantTBs: "384"},
+		"computed fractional unchanged": {before: types.Float64Value(0.5), after: types.Float64Value(0.5), configured: types.Float64Null()},
+		"computed fractional changed":   {before: types.Float64Value(0.5), after: types.Float64Value(1.5), configured: types.Float64Null()},
+		"unknown computed":              {before: types.Float64Value(0.5), after: types.Float64Unknown(), configured: types.Float64Null()},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			state, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
+			if diags.HasError() {
+				t.Fatal(diags)
+			}
+			state.AutonomousDatabaseID = types.StringValue("adb-test")
+			state.DataStorageSizeInTBs = testCase.before
+			state.DataStorageSizeInGBs = types.Int32Value(512)
+			plan := state
+			plan.DisplayName = types.StringValue("updated")
+			plan.DataStorageSizeInTBs = testCase.after
+			config := plan
+			config.DataStorageSizeInTBs = testCase.configured
+			apiTBs := testCase.wantTBs
+			if apiTBs == "" {
+				apiTBs = "0.5"
+			}
+			result, payload := testAutonomousDatabaseUpdate(t, plan, state, config, `,"dataStorageSizeInTBs":`+apiTBs)
+			if got := string(payload["dataStorageSizeInTBs"]); got != testCase.wantTBs {
+				t.Errorf("dataStorageSizeInTBs JSON = %q, want %q", got, testCase.wantTBs)
+			}
+			want, err := strconv.ParseFloat(apiTBs, 64)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := result.DataStorageSizeInTBs.ValueFloat64(); got != want {
+				t.Errorf("data_storage_size_in_tbs = %g, want %g", got, want)
+			}
+		})
+	}
+}
+
+func TestAutonomousDatabaseCreateStorage(t *testing.T) {
+	t.Parallel()
+	for name, testCase := range map[string]struct {
+		storage         types.Float64
+		gbs             types.Int32
+		wantTBs, apiTBs string
+		wantError       bool
+	}{
+		"configured minimum":                 {storage: types.Float64Value(1), wantTBs: "1", apiTBs: "1"},
+		"configured maximum":                 {storage: types.Float64Value(384), wantTBs: "384", apiTBs: "384"},
+		"configured GBs":                     {storage: types.Float64Null(), gbs: types.Int32Value(512), apiTBs: "0.5"},
+		"fractional TBs rejected before API": {storage: types.Float64Value(1.5), wantError: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			var payload map[string]json.RawMessage
+			raw := testAutonomousDatabaseResource(t, autonomousDatabaseSweepTransport(func(request *http.Request) (*http.Response, error) {
+				var body string
+				switch request.Header.Get("X-Amz-Target") {
+				case "Odb.CreateAutonomousDatabase":
+					if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
+						t.Fatal(err)
+					}
+					body = `{"autonomousDatabaseId":"adb-test"}`
+				case "Odb.GetAutonomousDatabase":
+					body = `{"autonomousDatabase":{"autonomousDatabaseId":"adb-test","status":"AVAILABLE","dataStorageSizeInTBs":` + testCase.apiTBs + `}}`
+				default:
+					t.Fatalf("unexpected AWS operation: %s", request.Header.Get("X-Amz-Target"))
+				}
+				return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
+			}))
+			var schemaResponse resource.SchemaResponse
+			raw.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+			schemaResponse.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			config, diags := fwtypes.Nullified[autonomousDatabaseResourceModel](ctx)
+			if diags.HasError() {
+				t.Fatal(diags)
+			}
+			config.Timeouts = timeouts.Value{Object: types.ObjectNull(map[string]attr.Type{"create": types.StringType, "update": types.StringType, "delete": types.StringType})}
+			config.DataStorageSizeInTBs, config.DataStorageSizeInGBs = testCase.storage, testCase.gbs
+			plan := config
+			if testCase.storage.IsNull() {
+				plan.DataStorageSizeInTBs = types.Float64Unknown()
+			}
+			request := resource.CreateRequest{Plan: tfsdk.Plan{Schema: schemaResponse.Schema}, Config: tfsdk.Config{Schema: schemaResponse.Schema}}
+			if diags := request.Plan.Set(ctx, plan); diags.HasError() {
+				t.Fatal(diags)
+			}
+			configPlan := tfsdk.Plan{Schema: schemaResponse.Schema}
+			if diags := configPlan.Set(ctx, config); diags.HasError() {
+				t.Fatal(diags)
+			}
+			request.Config.Raw = configPlan.Raw
+			response := resource.CreateResponse{State: tfsdk.State{Schema: schemaResponse.Schema, Raw: request.Plan.Raw}}
+			raw.Create(ctx, request, &response)
+			if response.Diagnostics.HasError() != testCase.wantError {
+				t.Fatalf("HasError = %t, want %t; diagnostics: %v", response.Diagnostics.HasError(), testCase.wantError, response.Diagnostics)
+			}
+			if testCase.wantError {
+				if payload != nil {
+					t.Fatal("invalid configured TB size reached CreateAutonomousDatabase")
+				}
+				return
+			}
+			if got := string(payload["dataStorageSizeInTBs"]); got != testCase.wantTBs {
+				t.Errorf("dataStorageSizeInTBs JSON = %q, want %q", got, testCase.wantTBs)
+			}
+			if !testCase.gbs.IsNull() && string(payload["dataStorageSizeInGBs"]) != "512" {
+				t.Errorf("dataStorageSizeInGBs JSON = %s, want 512", payload["dataStorageSizeInGBs"])
+			}
+			var result autonomousDatabaseResourceModel
+			if diags := response.State.Get(ctx, &result); diags.HasError() {
+				t.Fatal(diags)
+			}
+			want, err := strconv.ParseFloat(testCase.apiTBs, 64)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := result.DataStorageSizeInTBs.ValueFloat64(); got != want {
+				t.Errorf("data_storage_size_in_tbs = %g, want %g", got, want)
 			}
 		})
 	}
@@ -203,8 +336,7 @@ func testAutonomousDatabaseUpdate(t *testing.T, plan, state, config autonomousDa
 	t.Helper()
 	ctx := t.Context()
 	var payload map[string]json.RawMessage
-	client := new(conns.AWSClient)
-	client.SetHTTPClient(ctx, &http.Client{Transport: autonomousDatabaseSweepTransport(func(request *http.Request) (*http.Response, error) {
+	raw := testAutonomousDatabaseResource(t, autonomousDatabaseSweepTransport(func(request *http.Request) (*http.Response, error) {
 		var body string
 		switch request.Header.Get("X-Amz-Target") {
 		case "Odb.UpdateAutonomousDatabase":
@@ -218,22 +350,7 @@ func testAutonomousDatabaseUpdate(t *testing.T, plan, state, config autonomousDa
 			t.Fatalf("unexpected AWS operation: %s", request.Header.Get("X-Amz-Target"))
 		}
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
-	})})
-	client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
-	providerConfig := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
-	client, diagnostics := providerConfig.ConfigureProvider(ctx, client)
-	if diagnostics.HasError() {
-		t.Fatal(diagnostics)
-	}
-	raw, err := newResourceAutonomousDatabase(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var configureResponse resource.ConfigureResponse
-	raw.Configure(ctx, resource.ConfigureRequest{ProviderData: client}, &configureResponse)
-	if configureResponse.Diagnostics.HasError() {
-		t.Fatal(configureResponse.Diagnostics)
-	}
+	}))
 	var schemaResponse resource.SchemaResponse
 	raw.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 	schemaResponse.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
@@ -261,4 +378,27 @@ func testAutonomousDatabaseUpdate(t *testing.T, plan, state, config autonomousDa
 		t.Fatal(diags)
 	}
 	return result, payload
+}
+
+func testAutonomousDatabaseResource(t *testing.T, transport http.RoundTripper) resource.ResourceWithConfigure {
+	t.Helper()
+	ctx := t.Context()
+	client := new(conns.AWSClient)
+	client.SetHTTPClient(ctx, &http.Client{Transport: transport})
+	client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
+	providerConfig := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+	client, diagnostics := providerConfig.ConfigureProvider(ctx, client)
+	if diagnostics.HasError() {
+		t.Fatal(diagnostics)
+	}
+	raw, err := newResourceAutonomousDatabase(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var configureResponse resource.ConfigureResponse
+	raw.Configure(ctx, resource.ConfigureRequest{ProviderData: client}, &configureResponse)
+	if configureResponse.Diagnostics.HasError() {
+		t.Fatal(configureResponse.Diagnostics)
+	}
+	return raw
 }

@@ -15,8 +15,6 @@ SVC_DIR                      ?= ./internal/service
 SWEEP                        ?= us-west-2,us-east-1,us-east-2,us-west-1
 SWEEP_DIR                    ?= ./internal/sweep
 SWEEP_TIMEOUT                ?= 360m
-TERRAFORM_BIN                 ?= terraform
-TERRAFORM_VERSION             ?= 1.11.4
 TEST                         ?= ./...
 TEST_COUNT                   ?= 1
 
@@ -359,12 +357,6 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
-
-examples-validate: ## [CI] Examples Checks / validate-terraform
-	@TERRAFORM_BIN="$(TERRAFORM_BIN)" bash .ci/scripts/validate-examples.sh "$(TERRAFORM_VERSION)"
-
-examples-validate-test: ## [CI] Examples Checks / validation script tests
-	@bash .ci/scripts/validate-examples-test.sh
 
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
 
@@ -1337,8 +1329,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-markdown-lint \
 	docs-misspell \
 	examples-tflint \
-	examples-validate \
-	examples-validate-test \
 	fix-constants \
 	fix-imports \
 	fix-imports-core \

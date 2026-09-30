@@ -43,8 +43,7 @@ func sweepAutonomousDatabases(ctx context.Context, client *conns.AWSClient) ([]s
 				tflog.Warn(ctx, "Skipping ODB Autonomous Database without an ID", fields)
 				continue
 			}
-			// Older acceptance tests use tf-odb-adbs instead of the shared prefix.
-			if !strings.HasPrefix(name, sweep.ResourcePrefix+"-") && !strings.HasPrefix(name, "tf-odb-adbs-") {
+			if !strings.HasPrefix(name, sweep.ResourcePrefix+"-") {
 				tflog.Debug(ctx, "Skipping ODB Autonomous Database without an acceptance test name", fields)
 				continue
 			}
