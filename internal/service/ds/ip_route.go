@@ -194,7 +194,17 @@ func (r *ipRouteResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	// AWS returns CIDRs in canonical form (for example "2001:db8::/64" for a
+	// configured "2001:0db8::/64"). Keep an equivalent prior value so spelling
+	// differences do not force replacement.
+	cidrIP, cidrIPv6 := data.CidrIP, data.CidrIPv6
 	r.flatten(ctx, output, &data)
+	if inttypes.CanonicalCIDRBlock(cidrIP.ValueString()) == inttypes.CanonicalCIDRBlock(data.CidrIP.ValueString()) {
+		data.CidrIP = cidrIP
+	}
+	if inttypes.CanonicalCIDRBlock(cidrIPv6.ValueString()) == inttypes.CanonicalCIDRBlock(data.CidrIPv6.ValueString()) {
+		data.CidrIPv6 = cidrIPv6
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -238,21 +248,9 @@ func (r *ipRouteResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-// flatten copies an API route into the model. A configured CIDR is kept when
-// it is equivalent to the AWS-canonicalized value (for example "2001:0db8::/64"
-// vs. "2001:db8::/64") so that spelling differences do not force replacement.
 func (r *ipRouteResource) flatten(ctx context.Context, route *awstypes.IpRouteInfo, data *ipRouteResourceModel) {
-	if v := aws.ToString(route.CidrIp); v != "" {
-		if inttypes.CanonicalCIDRBlock(data.CidrIP.ValueString()) != inttypes.CanonicalCIDRBlock(v) {
-			data.CidrIP = types.StringValue(v)
-		}
-		data.CidrIPv6 = types.StringNull()
-	} else {
-		if inttypes.CanonicalCIDRBlock(data.CidrIPv6.ValueString()) != inttypes.CanonicalCIDRBlock(aws.ToString(route.CidrIpv6)) {
-			data.CidrIPv6 = fwflex.StringToFramework(ctx, route.CidrIpv6)
-		}
-		data.CidrIP = types.StringNull()
-	}
+	data.CidrIP = fwflex.StringToFramework(ctx, route.CidrIp)
+	data.CidrIPv6 = fwflex.StringToFramework(ctx, route.CidrIpv6)
 	data.Description = fwflex.StringToFramework(ctx, route.Description)
 }
 
