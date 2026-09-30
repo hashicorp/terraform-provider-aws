@@ -20,7 +20,6 @@ import (
 
 func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -34,7 +33,7 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -67,7 +66,6 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -81,7 +79,7 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_httpProxy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -114,7 +112,6 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -128,7 +125,7 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -147,7 +144,6 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -161,7 +157,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_dataMappingHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -198,7 +194,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_dataMappingHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -239,7 +235,6 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -253,7 +248,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -279,7 +274,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_typeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
@@ -316,7 +311,6 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -331,7 +325,7 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_lambdaWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -363,7 +357,6 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -378,7 +371,7 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_lambdaHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -410,7 +403,6 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	vpcLinkResourceName := "aws_api_gateway_vpc_link.test"
@@ -425,7 +417,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_vpcLinkWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -458,7 +450,6 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	vpcLinkResourceName := "aws_apigatewayv2_vpc_link.test"
@@ -474,7 +465,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_vpcLinkHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -505,7 +496,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_vpcLinkHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -539,7 +530,6 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -556,7 +546,7 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_sqs(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, names.AttrARN),
@@ -582,7 +572,7 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_sqs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, names.AttrARN),
@@ -641,7 +631,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, apiID *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -656,7 +646,6 @@ func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, 
 			return err
 		}
 
-		*apiID = rs.Primary.Attributes["api_id"]
 		*v = *output
 
 		return nil

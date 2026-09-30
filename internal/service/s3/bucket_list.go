@@ -38,14 +38,6 @@ type listResourceBucket struct {
 func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().S3Client(ctx)
 
-	var query listBucketModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -100,10 +92,6 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 			}
 		}
 	}
-}
-
-type listBucketModel struct {
-	framework.WithRegionModel
 }
 
 func listBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInput) iter.Seq2[awstypes.Bucket, error] {

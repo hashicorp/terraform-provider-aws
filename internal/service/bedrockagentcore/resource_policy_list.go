@@ -38,14 +38,6 @@ type resourcePolicyListResource struct {
 func (l *resourcePolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listResourcePolicyModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		// Check agent runtimes and their endpoints for resource policies.
 		var runtimesInput bedrockagentcorecontrol.ListAgentRuntimesInput
@@ -126,10 +118,6 @@ func (l *resourcePolicyListResource) yieldResourcePolicy(ctx context.Context, co
 	})
 
 	return yield(result)
-}
-
-type listResourcePolicyModel struct {
-	framework.WithRegionModel
 }
 
 func listAgentRuntimesForPolicies(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListAgentRuntimesInput) iter.Seq2[awstypes.AgentRuntime, error] {

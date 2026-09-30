@@ -1897,6 +1897,10 @@ func PreCheckAssumeRoleARN(t *testing.T) {
 
 type domainName string
 
+func NewDomainName(name string) domainName {
+	return domainName(name)
+}
+
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
 const domainNameTestTopLevelDomain domainName = "test"
@@ -1908,6 +1912,13 @@ const domainNameTestTopLevelDomain domainName = "test"
 func RandomSubdomain(t *testing.T) string {
 	t.Helper()
 	return string(RandomDomain(t).RandomSubdomain(t))
+}
+
+// RandomSubdomainForRoot creates a random subdomain for the given root domain in the form
+// "<random>.<root>"
+func RandomSubdomainForRoot(t *testing.T, root string) string {
+	t.Helper()
+	return string(NewDomainName(root).RandomSubdomain(t))
 }
 
 // RandomDomainName creates a random two-level domain name in the form
@@ -2282,6 +2293,13 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	t.Helper()
 	return envvar.SkipIfEmpty(t, key, "")
+}
+
+// SkipIfEnvVarNotTrue skips the current test if the specified environment variable is not set
+// to a true value.
+func SkipIfEnvVarNotTrue(t *testing.T, key string) {
+	t.Helper()
+	envvar.SkipIfNotTrue(t, key, "")
 }
 
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.

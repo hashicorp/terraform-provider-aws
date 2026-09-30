@@ -636,6 +636,17 @@ func testAccDataSource_managedKBConnector_mediaExtraction(t *testing.T) {
 				),
 			},
 			{
+				// Forces an Update call (not just Create) while deletion_protection_threshold
+				// stays unset, to guard against the same perpetual-diff regression on the
+				// update path.
+				Config: testAccDataSourceConfig_managedKBConnector_mediaExtraction_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.media_extraction_configuration.0.audio_extraction_configuration.0.audio_extraction_status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.media_extraction_configuration.0.image_extraction_configuration.0.image_extraction_status", "ENABLED"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1179,6 +1190,51 @@ resource "aws_bedrockagent_data_source" "test" {
         }
         image_extraction_configuration {
           image_extraction_status = "DISABLED"
+        }
+      }
+
+      deletion_protection_configuration {
+        deletion_protection_status = "DISABLED"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+// testAccDataSourceConfig_managedKBConnector_mediaExtraction_update is identical to
+// testAccDataSourceConfig_managedKBConnector_mediaExtraction except it toggles the
+// extraction statuses, forcing an Update call while deletion_protection_threshold
+// remains unset in both configs.
+func testAccDataSourceConfig_managedKBConnector_mediaExtraction_update(rName string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_managedKBConnector_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = aws_s3_bucket.test.bucket
+          bucketOwnerAccountId = data.aws_caller_identity.current.account_id
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        audio_extraction_configuration {
+          audio_extraction_status = "DISABLED"
+        }
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
         }
       }
 

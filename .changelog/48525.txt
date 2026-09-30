@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_route53_record: Add the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to reduce AWS API calls when managing many records in a zone
+```
+```release-note:note
+resource/aws_route53_record: Batched reads is experimental. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider.
+```

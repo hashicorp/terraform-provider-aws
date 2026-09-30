@@ -62,7 +62,7 @@ This resource supports the following arguments:
 
 * `automatic_backup_retention_days` - (Optional) Number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `daily_automatic_backup_start_time` - (Optional) Recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
-* `deployment_type` - (Optional) Filesystem deployment type. Supports `MULTI_AZ_1`, `MULTI_AZ_2`, `SINGLE_AZ_1`, and `SINGLE_AZ_2`.
+* `deployment_type` - (Required) Filesystem deployment type. Supports `MULTI_AZ_1`, `MULTI_AZ_2`, `SINGLE_AZ_1`, and `SINGLE_AZ_2`.
 * `disk_iops_configuration` - (Optional) SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system. See [`disk_iops_configuration`](#disk_iops_configuration-block) below.
 * `endpoint_ip_address_range` - (Optional) IP address range in which the endpoints to access your file system will be created. By default, Amazon FSx selects an unused IP address range for you from the 198.19.\* range. Note that the 198.19.\* range is also used by AWS services such as WorkSpaces and AppStream 2.0 for their [management network interfaces](https://docs.aws.amazon.com/appstream2/latest/developerguide/management_ports.html).
 * `fsx_admin_password` - (Optional) ONTAP administrative password for the fsxadmin user that you can use to administer your file system using the ONTAP CLI and REST API.

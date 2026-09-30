@@ -33,20 +33,8 @@ type archiveListResource struct {
 	framework.WithList
 }
 
-type listArchiveModel struct {
-	framework.WithRegionModel
-}
-
 func (l *archiveListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().MailManagerClient(ctx)
-
-	var query listArchiveModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input mailmanager.ListArchivesInput

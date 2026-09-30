@@ -7,11 +7,13 @@ package apprunner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
@@ -70,10 +72,13 @@ func resourceCustomDomainAssociation() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrDomainName: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					),
 				},
 				"enable_www_subdomain": {
 					Type:     schema.TypeBool,
@@ -93,6 +98,8 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: validateCustomDomainAssociationCustomDiff,
 	}
 }
 
@@ -348,4 +355,22 @@ func flattenCustomDomainCertificateValidationRecords(records []types.Certificate
 	}
 
 	return results
+}
+
+func validateCustomDomainAssociationCustomDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown(names.AttrDomainName) || !d.NewValueKnown("enable_www_subdomain") {
+		return nil
+	}
+
+	domainName := d.Get(names.AttrDomainName).(string)
+	if !strings.HasPrefix(domainName, "*.") {
+		return nil
+	}
+
+	enableWWW := d.Get("enable_www_subdomain").(bool)
+	if enableWWW {
+		return errors.New("enable_www_subdomain must be false for wildcard domains")
+	}
+
+	return nil
 }

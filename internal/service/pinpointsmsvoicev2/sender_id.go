@@ -48,7 +48,7 @@ import (
 // @ImportIDHandler("senderIDImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckSenderID")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.SenderIdInformation")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.SenderIdInformation")
 // @Testing(generator="testAccRandomSenderID(t)")
 // @Testing(importStateIdAttributes="sender_id;iso_country_code", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newSenderIDResource(context.Context) (resource.ResourceWithConfigure, error) {

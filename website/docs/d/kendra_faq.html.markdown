@@ -23,9 +23,9 @@ data "aws_kendra_faq" "test" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `faq_id` - (Required) Identifier of the FAQ.
 * `index_id` - (Required) Identifier of the index that contains the FAQ.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -42,10 +42,10 @@ This data source exports the following attributes in addition to the arguments a
 * `role_arn` - ARN of a role with permission to access the S3 bucket that contains the FAQs. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `s3_path` - S3 location of the FAQ input data. Detailed below.
 * `status` - Status of the FAQ. It is ready to use when the status is ACTIVE.
-* `updated_at` - Date and time that the FAQ was last updated.
 * `tags` - Metadata that helps organize the FAQs you create.
+* `updated_at` - Date and time that the FAQ was last updated.
 
-The `s3_path` configuration block supports the following attributes:
+### `s3_path` Block
 
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.

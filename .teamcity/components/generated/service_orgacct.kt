@@ -11,6 +11,7 @@ val orgacctServices = mapOf(
     "detective" to ServiceSpec("Detective"),
     "fms" to ServiceSpec("FMS (Firewall Manager)", regionOverride = "us-east-1"),
     "guardduty" to ServiceSpec("GuardDuty"),
+    "iam" to ServiceSpec("IAM (Identity & Access Management)", "TestAccIAMOpenIDConnectProvider"),
     "inspector" to ServiceSpec("Inspector Classic"),
     "inspector2" to ServiceSpec("Inspector"),
     "licensemanager" to ServiceSpec("License Manager"),

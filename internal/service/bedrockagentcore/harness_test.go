@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/acctest/config"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -38,10 +39,6 @@ const (
 	memoryManaged      memoryConfigType = "managed"
 )
 
-func testAccRandomHarnessName(t *testing.T) string {
-	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
-}
-
 func checkHarnessARN(name string) knownvalue.Check {
 	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`harness/`+name+`-[a-zA-Z0-9]{10}`))
 }
@@ -53,7 +50,7 @@ func checkHarnessARNAlternateRegion(name string) knownvalue.Check {
 func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -96,7 +93,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapSizeExact(0)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-[a-zA-Z0-9]{10}$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
@@ -122,14 +119,17 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"max_tokens":  knownvalue.Null(),
-									"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
-									"temperature": knownvalue.Null(),
-									"top_p":       knownvalue.Null(),
+									"additional_params": knownvalue.Null(),
+									"api_format":        knownvalue.NotNull(),
+									"max_tokens":        knownvalue.Null(),
+									"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+									"temperature":       knownvalue.Null(),
+									"top_p":             knownvalue.Null(),
 								}),
 							}),
-							"gemini_model_config": knownvalue.ListSizeExact(0),
-							"openai_model_config": knownvalue.ListSizeExact(0),
+							"gemini_model_config":  knownvalue.ListSizeExact(0),
+							"litellm_model_config": knownvalue.ListSizeExact(0),
+							"openai_model_config":  knownvalue.ListSizeExact(0),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListSizeExact(0)),
@@ -189,7 +189,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -228,7 +228,7 @@ func TestAccBedrockAgentCoreHarness_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -264,6 +264,17 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 				},
 			},
 			{
+				Config: testAccHarnessConfig_systemPrompt(rName, "You are a concise coding assistant."),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -278,7 +289,7 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -328,7 +339,7 @@ func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -375,10 +386,10 @@ func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
+func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -392,7 +403,10 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_bedrockModel(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.openai_model_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -401,18 +415,439 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_format":        knownvalue.NotNull(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gpt-5"),
+							"temperature":       knownvalue.Null(),
+							"top_p":             knownvalue.Null(),
+						})}),
+					})})),
+				},
 			},
 			{
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "harness_id",
-				ImportStateVerifyIgnore: []string{
-					names.AttrEnvironment,
-					"memory",
-					"model.0.bedrock_model_config.0.temperature",
-					"model.0.bedrock_model_config.0.top_p",
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.openai_model_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_format":    tfconfig.StringVariable(awstypes.HarnessOpenAiApiFormatChatCompletions),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatChatCompletions),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gpt-5"),
+							"temperature":       knownvalue.Null(),
+							"top_p":             knownvalue.Null(),
+						})}),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.openai_model_config.additional_params/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatChatCompletions), // Prior state value.
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Int32Exact(1000),
+							"model_id":          knownvalue.StringExact("gpt-5"),
+							"temperature":       knownvalue.Float64Exact(0.95),
+							"top_p":             knownvalue.Float64Exact(0.75),
+						})}),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.litellm_model_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_base":          knownvalue.StringExact("https://api.example.com/v1"),
+							"api_key_arn":       knownvalue.Null(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.7),
+							"top_p":             knownvalue.Float64Exact(0.9),
+						})}),
+						"openai_model_config": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.litellm_model_config.additional_params/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_base":          knownvalue.StringExact("https://api.example.com/v1"),
+							"api_key_arn":       knownvalue.Null(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.7),
+							"top_p":             knownvalue.Float64Exact(0.9),
+						})}),
+						"openai_model_config": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.gemini_model_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gemini-2.5-pro"),
+							"temperature":       knownvalue.Null(),
+							"top_k":             knownvalue.Null(),
+							"top_p":             knownvalue.Null(),
+						})}),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.gemini_model_config.additional_params/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gemini-2.5-pro"),
+							"temperature":       knownvalue.Null(),
+							"top_k":             knownvalue.Int32Exact(235),
+							"top_p":             knownvalue.Null(),
+						})}),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.bedrock_model_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_format":        knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.8),
+							"top_p":             knownvalue.Float64Exact(0.7),
+						})}),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.bedrock_model_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_format":    tfconfig.StringVariable(awstypes.HarnessBedrockApiFormatChatCompletions),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatChatCompletions),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.8),
+							"top_p":             knownvalue.Float64Exact(0.7),
+						})}),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.bedrock_model_config.additional_params/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"api_format":    tfconfig.StringVariable(awstypes.HarnessBedrockApiFormatChatCompletions),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatChatCompletions), // Prior state value.
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.8),
+							"top_p":             knownvalue.Float64Exact(0.7),
+						})}),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_skill(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.path/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills":   knownvalue.ListSizeExact(0),
+						"git":          knownvalue.ListSizeExact(0),
+						names.AttrPath: knownvalue.StringExact("/skills"),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.git/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills": knownvalue.ListSizeExact(0),
+						"git": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"auth":         knownvalue.ListSizeExact(0),
+							names.AttrPath: knownvalue.Null(),
+							names.AttrURL:  knownvalue.StringExact("https://github.com/example/skill.git"),
+						})}),
+						names.AttrPath: knownvalue.Null(),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.git.auth/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills": knownvalue.ListSizeExact(0),
+						"git": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"auth": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"credential_arn":   knownvalue.NotNull(),
+								names.AttrUsername: knownvalue.Null(),
+							})}),
+							names.AttrPath: knownvalue.StringExact("/test"),
+							names.AttrURL:  knownvalue.StringExact("https://github.com/example/skill.git"),
+						})}),
+						names.AttrPath: knownvalue.Null(),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.aws_skills/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"paths": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("/test/skills"),
+								knownvalue.StringExact("/skills"),
+							}),
+						})}),
+						"git":          knownvalue.ListSizeExact(0),
+						names.AttrPath: knownvalue.Null(),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.s3/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills":   knownvalue.ListSizeExact(0),
+						"git":          knownvalue.ListSizeExact(0),
+						names.AttrPath: knownvalue.Null(),
+						"s3": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrURI: knownvalue.NotNull(),
+						})}),
+					})})),
 				},
 			},
 		},
@@ -422,7 +857,7 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -472,7 +907,7 @@ func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -511,7 +946,7 @@ func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -550,7 +985,7 @@ func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -564,7 +999,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_environmentVariables(rName, "KEY1", acctest.CtValue1),
+				Config: testAccHarnessConfig_environmentVariables(rName, fmt.Sprintf(`{ KEY1 = %q }`, acctest.CtValue1)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -575,7 +1010,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccHarnessConfig_environmentVariables(rName, "KEY2", acctest.CtValue2),
+				Config: testAccHarnessConfig_environmentVariables(rName, fmt.Sprintf(`{ KEY2 = %q }`, acctest.CtValue2)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -583,6 +1018,20 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environmentVariables(rName, "null"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"KEY2": knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environmentVariables(rName, "{}"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapSizeExact(0)),
 				},
 			},
 			{
@@ -604,7 +1053,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -671,7 +1120,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_basic(t 
 func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_options(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -760,7 +1209,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_options(
 func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_addRetrievalConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -830,7 +1279,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_addRetri
 func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_removeRetrievalConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -893,7 +1342,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_removeRe
 func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -964,7 +1413,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_empty(t *t
 func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1035,7 +1484,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_update(t *
 func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_encryptionKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1086,7 +1535,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_encryption
 func TestAccBedrockAgentCoreHarness_Memory_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1170,7 +1619,7 @@ func TestAccBedrockAgentCoreHarness_Memory_changeType(t *testing.T) {
 		t.Run(fmt.Sprintf("%s_to_%s", tc.from, tc.to), func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var harness awstypes.Harness
-			rName := testAccRandomHarnessName(t)
+			rName := randomWithPrefixAndUnderscore(t)
 			resourceName := "aws_bedrockagentcore_harness.test"
 
 			fromConfig := testAccHarnessConfig_Memory_byType(t, rName, tc.from)
@@ -1214,7 +1663,7 @@ func TestAccBedrockAgentCoreHarness_Memory_changeType(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1264,7 +1713,7 @@ func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1316,7 +1765,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_VPC(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1383,7 +1832,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_VPC(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_Environment_Network_Public(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1444,7 +1893,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_Public(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_Environment_lifecycleConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1512,7 +1961,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_sessionS
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1588,7 +2037,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_sessionS
 func TestAccBedrockAgentCoreHarness_Environment_addEnvironment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1709,7 +2158,7 @@ func TestAccBedrockAgentCoreHarness_Environment_addEnvironment(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_Environment_removeEnvironment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1832,7 +2281,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_s3FilesA
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1888,7 +2337,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_efsAcces
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1944,7 +2393,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_multiple
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2012,7 +2461,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_addFiles
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2080,7 +2529,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_removeFi
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2148,7 +2597,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *tes
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2260,7 +2709,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updateVPCToPublic(t *tes
 
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2680,6 +3129,14 @@ resource "aws_bedrockagentcore_harness" "test" {
     text = %[2]q
   }
 
+  environment {
+    agentcore_runtime_environment {
+      network_configuration {
+        network_mode = "PUBLIC"
+      }
+    }
+  }
+
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, prompt))
@@ -2729,29 +3186,6 @@ resource "aws_bedrockagentcore_harness" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, maxIter, maxTokens, timeout))
-}
-
-func testAccHarnessConfig_bedrockModel(rName string) string {
-	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_harness" "test" {
-  harness_name       = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
-
-  model {
-    bedrock_model_config {
-      model_id    = "anthropic.claude-sonnet-4-20250514"
-      temperature = 0.7
-      top_p       = 0.9
-    }
-  }
-
-  system_prompt {
-    text = "You are a helpful assistant."
-  }
-
-  depends_on = [aws_iam_role_policy.test]
-}
-`, rName))
 }
 
 func testAccHarnessConfig_truncationSlidingWindow(rName string, messagesCount int) string {
@@ -2859,15 +3293,13 @@ resource "aws_bedrockagentcore_harness" "test" {
 `, rName))
 }
 
-func testAccHarnessConfig_environmentVariables(rName, key, value string) string {
+func testAccHarnessConfig_environmentVariables(rName, variables string) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
   execution_role_arn = aws_iam_role.test.arn
 
-  environment_variables = {
-    %[2]q = %[3]q
-  }
+  environment_variables = %[2]s
 
   model {
     bedrock_model_config {
@@ -2881,7 +3313,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 
   depends_on = [aws_iam_role_policy.test]
 }
-`, rName, key, value))
+`, rName, variables))
 }
 
 func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_basic(rName string) string {

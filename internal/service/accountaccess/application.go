@@ -13,12 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/accountaccess/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -26,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -60,15 +64,7 @@ type applicationResource struct {
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN:                     framework.ARNAttributeComputedOnly(),
-			"identity_center_application_arn": framework.ARNAttributeComputedOnly(),
-			"identity_center_instance_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"tenant_id": schema.StringAttribute{
@@ -79,6 +75,46 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"identity_source": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[identitySourceModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("identity_center"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"identity_center": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"application_arn": framework.ARNAttributeComputedOnly(),
+									"instance_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -96,16 +132,17 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 
 	conn := r.Meta().AccountAccessClient(ctx)
 
-	identityCenterInstanceARN := fwflex.StringValueFromFramework(ctx, plan.IdentityCenterInstanceARN)
-	input := &accountaccess.CreateApplicationInput{
-		IdentitySource: &awstypes.IdentitySourceMemberIdentityCenter{
-			Value: awstypes.IdentityCenter{
-				InstanceArn: aws.String(identityCenterInstanceARN),
-			},
-		},
+	var input accountaccess.CreateApplicationInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.CreateApplication(ctx, input)
+	// Additional fields.
+	// Setting tags on CreateApplication does not work. Apply tags after creation.
+	// input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreateApplication(ctx, &input)
 	// AlreadyCreatedException means an Application already exists for this
 	// IdC instance. Surface a clear, importable error rather than a generic
 	// "ConflictException" so users know the recovery path.
@@ -119,12 +156,11 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, identityCenterInstanceARN)
+		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
 
 	arn := aws.ToString(output.ApplicationArn)
-
 	app, err := waitApplicationCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		// Set ARN so the resource is tracked even if the waiter timed out;
@@ -143,7 +179,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
+	plan.ApplicationARN = fwflex.StringValueToFramework(ctx, arn)
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, app, &plan))
 	if response.Diagnostics.HasError() {
 		return
@@ -161,7 +197,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().AccountAccessClient(ctx)
 
-	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	arn := fwflex.StringValueFromFramework(ctx, state.ApplicationARN)
 	app, err := findApplicationByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -190,7 +226,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().AccountAccessClient(ctx)
 
-	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	arn := fwflex.StringValueFromFramework(ctx, state.ApplicationARN)
 	input := accountaccess.DeleteApplicationInput{
 		ApplicationArn: aws.String(arn),
 	}
@@ -211,17 +247,9 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 
 func (r *applicationResource) flatten(ctx context.Context, app *accountaccess.GetApplicationOutput, model *applicationResourceModel) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
-
-	model.TenantID = fwflex.StringToFramework(ctx, app.TenantId)
-
-	if details, ok := app.IdentitySource.(*awstypes.IdentitySourceDetailsMemberIdentityCenter); ok {
-		model.IdentityCenterApplicationARN = fwflex.StringToFramework(ctx, details.Value.ApplicationArn)
-		model.IdentityCenterInstanceARN = fwflex.StringToFrameworkARN(ctx, details.Value.InstanceArn)
-	}
-
+	diags.Append(fwflex.Flatten(ctx, app, model)...)
 	// The tags returned from GetApplication are not to be trusted.
 	// setTagsOut(ctx, app.Tags)
-
 	return diags
 }
 
@@ -299,11 +327,67 @@ func waitApplicationDeleted(ctx context.Context, conn *accountaccess.Client, arn
 // Account Access Application.
 type applicationResourceModel struct {
 	framework.WithRegionModel
-	ARN                          types.String   `tfsdk:"arn"`
-	IdentityCenterApplicationARN types.String   `tfsdk:"identity_center_application_arn"`
-	IdentityCenterInstanceARN    fwtypes.ARN    `tfsdk:"identity_center_instance_arn"`
-	Tags                         tftags.Map     `tfsdk:"tags"`
-	TagsAll                      tftags.Map     `tfsdk:"tags_all"`
-	TenantID                     types.String   `tfsdk:"tenant_id"`
-	Timeouts                     timeouts.Value `tfsdk:"timeouts"`
+	ApplicationARN types.String                                         `tfsdk:"arn"`
+	IdentitySource fwtypes.ListNestedObjectValueOf[identitySourceModel] `tfsdk:"identity_source"`
+	Tags           tftags.Map                                           `tfsdk:"tags"`
+	TagsAll        tftags.Map                                           `tfsdk:"tags_all"`
+	TenantID       types.String                                         `tfsdk:"tenant_id"`
+	Timeouts       timeouts.Value                                       `tfsdk:"timeouts"`
+}
+
+type identitySourceModel struct {
+	IdentityCenter fwtypes.ListNestedObjectValueOf[identityCenterModel] `tfsdk:"identity_center"`
+}
+
+var (
+	_ fwflex.Expander  = identitySourceModel{}
+	_ fwflex.Flattener = &identitySourceModel{}
+)
+
+func (m *identitySourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.IdentitySourceDetailsMemberIdentityCenter:
+		var model identityCenterModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.IdentityCenter, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("identitySourceModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m identitySourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.IdentityCenter.IsNull():
+		model, d := m.IdentityCenter.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.IdentitySourceMemberIdentityCenter
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type identityCenterModel struct {
+	ApplicationARN types.String `tfsdk:"application_arn"`
+	InstanceARN    fwtypes.ARN  `tfsdk:"instance_arn"`
 }
