@@ -24,8 +24,10 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * list-resource/aws_dynamodb_table_replica: Fix eventual consistency error when replacing resource. ([#50133](https://github.com/hashicorp/terraform-provider-aws/issues/50133))
+* resource/aws_apprunner_custom_domain_association: Populate `dns_target` when importing ([#50206](https://github.com/hashicorp/terraform-provider-aws/issues/50206))
 * resource/aws_autoscaling_group: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#50084](https://github.com/hashicorp/terraform-provider-aws/issues/50084))
 * resource/aws_bedrockagentcore_harness: Fix "inconsistent result after apply" when `environment_variables` is unset ([#50088](https://github.com/hashicorp/terraform-provider-aws/issues/50088))
+* resource/aws_config_aggregate_authorization: Fix `region` to `authorized_aws_region` migration incorrectly forcing resource replacement ([#49851](https://github.com/hashicorp/terraform-provider-aws/issues/49851))
 * resource/aws_rds_global_cluster: Wait for source cluster promotion to complete when `source_db_cluster_identifier` is specified, fixing race condition with downstream resources ([#48076](https://github.com/hashicorp/terraform-provider-aws/issues/48076))
 
 ## 6.66.0 (September 21, 2026)
