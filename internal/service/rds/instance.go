@@ -20,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -2399,16 +2398,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 			modifyStart := time.Now().UTC()
 
-			err := dbInstanceModifyRequest(ctx, conn, input, deadline.Remaining())
-			if err != nil && input.MasterUserAuthenticationType != "" && errs.IsA[smithy.APIError](err) {
-				old, _ := d.GetChange("master_user_authentication_type")
-				d.Set("master_user_authentication_type", old)
-			}
-			if err == nil {
-				if _, waitErr := waitDBInstanceAvailable(ctx, conn, d.Id(), deadline.Remaining()); waitErr != nil {
-					err = fmt.Errorf("waiting for completion: %w", waitErr)
-				}
-			}
+			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
 				// Handle virtual attribute
@@ -2807,18 +2797,6 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 }
 
 func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
-	if err := dbInstanceModifyRequest(ctx, conn, input, timeout); err != nil {
-		return err
-	}
-
-	if _, err := waitDBInstanceAvailable(ctx, conn, resourceID, timeout); err != nil {
-		return fmt.Errorf("waiting for completion: %w", err)
-	}
-
-	return nil
-}
-
-func dbInstanceModifyRequest(ctx context.Context, conn *rds.Client, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
 	_, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
@@ -2841,7 +2819,15 @@ func dbInstanceModifyRequest(ctx context.Context, conn *rds.Client, input *rds.M
 		},
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if _, err := waitDBInstanceAvailable(ctx, conn, resourceID, timeout); err != nil {
+		return fmt.Errorf("waiting for completion: %w", err)
+	}
+
+	return nil
 }
 
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
