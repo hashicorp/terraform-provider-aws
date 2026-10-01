@@ -1876,6 +1876,30 @@ service "networkflowmonitor" {
   brand                    = "Amazon"
 }
 
+service "cloudwatchomni" {
+  sdk {
+    id            = "CloudWatchOmni"
+    arn_namespace = "cloudwatch"
+  }
+
+  names {
+    provider_name_upper = "CloudWatchOmni"
+    human_friendly      = "CloudWatch Omni"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListDomains"
+  }
+
+  resource_prefix {
+    correct = "aws_cloudwatchomni_"
+  }
+
+  provider_package_correct = "cloudwatchomni"
+  doc_prefix               = ["cloudwatchomni_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
   go_packages {
     v1_package = "cloudwatchrum"

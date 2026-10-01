@@ -3673,6 +3673,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
     severity: WARNING
+  - id: cloudwatchomni-in-func-name
+    languages:
+      - go
+    message: Do not use "CloudWatchOmni" in func name inside cloudwatchomni package
+    paths:
+      include:
+        - "/internal/service/cloudwatchomni"
+      exclude:
+        - "/internal/service/cloudwatchomni/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudWatchOmni"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: cloudwatchomni-in-test-name
+    languages:
+      - go
+    message: Include "CloudWatchOmni" in test name
+    paths:
+      include:
+        - "/internal/service/cloudwatchomni/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCloudWatchOmni"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchomni-in-const-name
+    languages:
+      - go
+    message: Do not use "CloudWatchOmni" in const name inside cloudwatchomni package
+    paths:
+      include:
+        - "/internal/service/cloudwatchomni"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudWatchOmni"
+    severity: WARNING
+  - id: cloudwatchomni-in-var-name
+    languages:
+      - go
+    message: Do not use "CloudWatchOmni" in var name inside cloudwatchomni package
+    paths:
+      include:
+        - "/internal/service/cloudwatchomni"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudWatchOmni"
+    severity: WARNING
   - id: cloudwatchrum-in-func-name
     languages:
       - go
@@ -4697,51 +4758,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccConfigService"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - "/internal/service/configservice"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - "/internal/service/configservice"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: connect-in-func-name
-    languages:
-      - go
-    message: Do not use "Connect" in func name inside connect package
-    paths:
-      include:
-        - "/internal/service/connect"
-      exclude:
-        - "/internal/service/connect/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING

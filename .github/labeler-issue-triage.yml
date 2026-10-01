@@ -160,6 +160,8 @@ service/cloudtrail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudtrail'
 service/cloudwatch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_(?!(event_|log_|query_))'
+service/cloudwatchomni:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatchomni_'
 service/codeartifact:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeartifact_'
 service/codebuild:

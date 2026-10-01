@@ -58,6 +58,7 @@ CloudWatch Network Monitor
 CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
 CloudWatch Observability Admin
+CloudWatch Omni
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
