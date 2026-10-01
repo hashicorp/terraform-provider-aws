@@ -99,6 +99,13 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				Optional:   true,
 			},
 			"lifecycle_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[lifecycleConfigurationModel](ctx),
+			"platform_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -962,6 +969,7 @@ type agentRuntimeResourceModel struct {
 	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]    `tfsdk:"filesystem_configuration"`
 	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
 	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
+	PlatformVersion            types.String                                                     `tfsdk:"platform_version"`
 	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
 	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`

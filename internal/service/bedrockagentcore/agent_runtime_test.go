@@ -1598,3 +1598,102 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 `, rName, rImageUri, mountPath))
 }
+
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3 bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// 1. Create WITHOUT platform_version -> service assigns a default; Computed absorbs it.
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rImageUri, "description-1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "platform_version"),
+				),
+			},
+			// 2. Change ONLY an unrelated field; still no platform_version.
+			//    Prove: not recreated, and the platform version did NOT silently change.
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rImageUri, "description-2", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &v2),
+					testAccCheckAgentRuntimeNotRecreated(&v1, &v2),
+					testAccCheckAgentRuntimePlatformVersionEqual(&v1, &v2),
+				),
+			},
+			// 3. Explicitly set platform_version = "V2" -> in-place update, not a replacement.
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rImageUri, "description-2", "V2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &v3),
+					testAccCheckAgentRuntimeNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "platform_version", "V2"),
+				),
+			},
+			// 4. Import round-trip.
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func testAccCheckAgentRuntimeNotRecreated(before, after *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if beforeID, afterID := aws.ToString(before.AgentRuntimeId), aws.ToString(after.AgentRuntimeId); beforeID != afterID {
+			return fmt.Errorf("Agent Runtime recreated (%s -> %s); expected in-place update", beforeID, afterID)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAgentRuntimePlatformVersionEqual(before, after *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if beforeV, afterV := aws.ToString(before.PlatformVersion), aws.ToString(after.PlatformVersion); beforeV != afterV {
+			return fmt.Errorf("platform_version changed unexpectedly (%s -> %s) on an unrelated update", beforeV, afterV)
+		}
+		return nil
+	}
+}
+
+func testAccAgentRuntimeConfig_platformVersion(rName, rImageUri, description, platformVersion string) string {
+	platformVersionConfig := ""
+	if platformVersion != "" {
+		platformVersionConfig = fmt.Sprintf("platform_version = %q", platformVersion)
+	}
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  description        = %[2]q
+  %[4]s
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[3]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, description, rImageUri, platformVersionConfig))
+}
