@@ -2171,6 +2171,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
 			names.AttrAllowMajorVersionUpgrade,
+			names.AttrApplyImmediately,
 			"blue_green_update",
 			"delete_automated_backups",
 			names.AttrFinalSnapshotIdentifier,
