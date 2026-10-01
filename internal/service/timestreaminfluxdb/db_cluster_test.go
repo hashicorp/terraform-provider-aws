@@ -1467,8 +1467,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbBackupConfiguration(t *testing.T) {
 				),
 			},
 			{
-				// Only additive changes are exercised here: the AWS API does not remove an existing
-				// automated backup configuration when it is dropped from DbBackupConfigurations.
+				// Only additive changes: the AWS API does not remove a dropped backup configuration.
 				Config: testAccDBClusterConfig_dbBackupConfigurationMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),

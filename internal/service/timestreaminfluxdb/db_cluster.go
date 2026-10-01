@@ -555,9 +555,7 @@ func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// createFromRestore restores a DB cluster from a backup via RestoreFromDbBackup and returns the id
-// of the restored resource. The caller waits for the resource to become available using the normal
-// cluster waiter, because RestoreFromDbBackup only reports RESTORING.
+// createFromRestore restores a DB cluster from a backup and returns the restored resource's id.
 func (r *dbClusterResource) createFromRestore(ctx context.Context, conn *timestreaminfluxdb.Client, plan dbClusterResourceModel) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -698,7 +696,12 @@ func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteReque
 		DbClusterId: aws.String(clusterID),
 	}
 
-	_, err := conn.DeleteDbCluster(ctx, &input)
+	// A background update action blocks deletion with a ValidationException until it finishes.
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*timestreaminfluxdb.DeleteDbClusterOutput, *awstypes.ValidationException](ctx, deleteTimeout, func(ctx context.Context) (*timestreaminfluxdb.DeleteDbClusterOutput, error) {
+		return conn.DeleteDbCluster(ctx, &input)
+	}, "in progress")
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -707,7 +710,7 @@ func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	if _, err := waitDBClusterDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+	if _, err := waitDBClusterDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Cluster (%s) delete", clusterID), err.Error())
 		return
 	}
@@ -746,17 +749,14 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		return
 	}
 
-	// These checks read the configuration rather than the plan. Several of the arguments below are
-	// Optional+Computed, so after the first apply the plan carries values sourced from state; only
-	// the configuration tells us what the practitioner actually set.
+	// Read the configuration, not the plan: Optional+Computed arguments carry state values post-apply.
 	var data dbClusterResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// When restoring, the source configuration is inherited from the backup. Skip the V2/V3 field
-	// enforcement and reject arguments that cannot be overridden on restore.
+	// When restoring, configuration is inherited from the backup, so skip the V2/V3 enforcement.
 	if !data.Restore.IsNull() && !data.Restore.IsUnknown() {
 		inheritedFromBackup := []struct {
 			val  attr.Value
@@ -864,7 +864,7 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 
 func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ClusterStatusCreating),
+		Pending:                   enum.Slice(awstypes.ClusterStatusCreating, awstypes.ClusterStatusRestoring),
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
@@ -1030,10 +1030,7 @@ type maintenanceScheduleModel struct {
 	Timezone                   types.String `tfsdk:"timezone"`
 }
 
-// dbBackupConfigurationModel is shared by the DB instance and DB cluster resources. It maps to the
-// SDK input type DbBackupConfiguration and to the output type DbBackupConfigurationOutput. The
-// output-only NextAutomatedBackupTime field is intentionally not surfaced: a computed value inside a
-// set nested block produces unknown-value plan churn.
+// dbBackupConfigurationModel is shared by the DB instance and DB cluster resources; the output-only NextAutomatedBackupTime field is omitted to avoid set plan churn.
 type dbBackupConfigurationModel struct {
 	CustomSchedule types.String                                       `tfsdk:"custom_schedule"`
 	Enabled        types.Bool                                         `tfsdk:"enabled"`
@@ -1041,17 +1038,14 @@ type dbBackupConfigurationModel struct {
 	Type           fwtypes.StringEnum[awstypes.AutomatedDbBackupType] `tfsdk:"type"`
 }
 
-// restoreModel is shared by the DB instance and DB cluster resources and maps a subset of
-// RestoreFromDbBackupInput. When present, the resource is created via RestoreFromDbBackup rather than
-// CreateDbInstance/CreateDbCluster. It can only be set at creation time.
+// restoreModel is shared by the DB instance and DB cluster resources and maps a subset of RestoreFromDbBackupInput.
 type restoreModel struct {
 	RestoreMode      fwtypes.StringEnum[awstypes.RestoreMode] `tfsdk:"restore_mode"`
 	RestoreToTime    timetypes.RFC3339                        `tfsdk:"restore_to_time"`
 	SourceDBBackupID types.String                             `tfsdk:"source_db_backup_id"`
 }
 
-// dbBackupConfigurationCustomScheduleValidator enforces that custom_schedule is set when, and only
-// when, the automated backup type is CUSTOM_SCHEDULE.
+// dbBackupConfigurationCustomScheduleValidator requires custom_schedule exactly when type is CUSTOM_SCHEDULE.
 type dbBackupConfigurationCustomScheduleValidator struct{}
 
 func (dbBackupConfigurationCustomScheduleValidator) Description(_ context.Context) string {

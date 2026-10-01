@@ -471,9 +471,7 @@ func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.Modify
 		return
 	}
 
-	// These checks read the configuration rather than the plan. Several of the arguments below are
-	// Optional+Computed, so after the first apply the plan carries values sourced from state; only
-	// the configuration tells us what the practitioner actually set.
+	// Read the configuration, not the plan: Optional+Computed arguments carry state values post-apply.
 	var config dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -592,9 +590,7 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// createFromRestore restores a DB instance from a backup via RestoreFromDbBackup and returns the id
-// of the restored resource. The caller waits for the resource to become available using the normal
-// instance waiter, because RestoreFromDbBackup only reports RESTORING.
+// createFromRestore restores a DB instance from a backup and returns the restored resource's id.
 func (r *dbInstanceResource) createFromRestore(ctx context.Context, conn *timestreaminfluxdb.Client, plan dbInstanceResourceModel) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -744,7 +740,12 @@ func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequ
 		Identifier: aws.String(instanceID),
 	}
 
-	_, err := conn.DeleteDbInstance(ctx, &input)
+	// A background update action blocks deletion with a ValidationException until it finishes.
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*timestreaminfluxdb.DeleteDbInstanceOutput, *awstypes.ValidationException](ctx, deleteTimeout, func(ctx context.Context) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
+		return conn.DeleteDbInstance(ctx, &input)
+	}, "in progress")
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -753,7 +754,7 @@ func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	if _, err := waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+	if _, err := waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Instance (%s) delete", instanceID), err.Error())
 		return
 	}
@@ -761,7 +762,7 @@ func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.StatusCreating),
+		Pending:                   enum.Slice(awstypes.StatusCreating, awstypes.StatusRestoring),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
