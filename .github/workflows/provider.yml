@@ -61,6 +61,63 @@ jobs:
       - if: steps.cache-go-pkg-mod.outputs.cache-hit != 'true' || steps.cache-go-pkg-mod.outcome == 'failure'
         run: go mod download
 
+  # Single WRITER for the tools cache lane (see .github/workflows/README.md).
+  # Installs the full .ci/tools toolset and saves the installed binaries plus
+  # the tools build cache. Reader jobs in other workflows restore this cache
+  # read-only and skip `go install` on a hit. Saves only on refs/heads/main.
+  tools_cache:
+    name: tools cache
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .ci/tools/go.mod
+          cache: false
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_ENV"
+          echo "GOBIN_PATH=$(go env GOPATH)/bin" >> "$GITHUB_ENV"
+      # Restore first so an existing entry short-circuits reinstalling all tools.
+      - name: Restore tools cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: cache-tools
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: |
+            ${{ env.GOBIN_PATH }}
+            ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+      - name: Install tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        run: |
+          cd .ci/tools
+          go install \
+            github.com/YakDriver/copyplop \
+            github.com/YakDriver/swissshepherd \
+            github.com/client9/misspell/cmd/misspell \
+            github.com/golangci/golangci-lint/v2/cmd/golangci-lint \
+            github.com/hashicorp/go-changelog/cmd/changelog-build \
+            github.com/katbyte/tctest \
+            github.com/katbyte/terrafmt \
+            github.com/pavius/impi/cmd/impi \
+            github.com/rhysd/actionlint/cmd/actionlint \
+            github.com/terraform-linters/tflint \
+            golang.org/x/tools/cmd/stringer \
+            mvdan.cc/gofumpt
+      - name: Save tools cache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          path: |
+            ${{ env.GOBIN_PATH }}
+            ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+
   go_build:
     name: go build
     needs: [go_mod_download]

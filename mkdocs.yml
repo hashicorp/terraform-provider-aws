@@ -49,6 +49,7 @@ nav:
       - Enhanced Region Support: enhanced-region-support.md
       - Error Handling: error-handling.md
       - Finders and Listers: finders-and-listers.md
+      - Go Conventions: go-for-contributors.md
       - Go-VCR: go-vcr.md
       - GitHub Actions Caching: github-actions-caching.md
       - ID Attributes: id-attributes.md

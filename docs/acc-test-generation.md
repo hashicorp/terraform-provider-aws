@@ -20,6 +20,14 @@ To disable resource tagging tests for a specific resource or data source type, a
 @Testing(tagsTest=false)
 ```
 
+In some very rare cases, a resource or data source type supports tagging but cannot use transparent tagging.
+For example, the data source `aws_cognito_user_pool` has to manage both the standard `tags` and `tags_all` attributes as well as the deprecated `user_pool_tags`.
+Opt in to generated tagging tests by adding the following annotation to its source file:
+
+```
+@Testing(tagsTest=true)
+```
+
 To enable Resource Identity tests, add the following line:
 
 ```go
@@ -157,6 +165,10 @@ By default, the common name for the certificate is `example.com`.
 To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>)` to reference an existing variable.
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
+
+Some acceptance tests require an SSH public key.
+This can be included by setting the annotation `@Testing(sshKeyPair=true)`.
+The Terraform variable name will be `public_key`.
 
 Some acceptance tests require a TLS ECDSA public key PEM.
 This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.

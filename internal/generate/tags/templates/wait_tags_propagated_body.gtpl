@@ -8,11 +8,9 @@ func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, 
 
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := {{ .ListTagsFunc }}(ctx, conn, id, optFns...)
-
 		if retry.NotFound(err) {
 			return false, nil
 		}
-
 		if err != nil {
 			return false, smarterr.NewError(err)
 		}

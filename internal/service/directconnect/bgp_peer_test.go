@@ -83,7 +83,7 @@ func testAccCheckBGPPeerDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, err := tfdirectconnect.FindBGPPeerByThreePartKey(ctx, conn, rs.Primary.Attributes["virtual_interface_id"], awstypes.AddressFamily(rs.Primary.Attributes["address_family"]), flex.StringValueToInt32Value(rs.Primary.Attributes["bgp_asn"]))
+			_, err := tfdirectconnect.FindBGPPeerByThreePartKeyWithInt64ASN(ctx, conn, rs.Primary.Attributes["virtual_interface_id"], awstypes.AddressFamily(rs.Primary.Attributes["address_family"]), testAccBGPPeerEffectiveASN(rs.Primary.Attributes))
 
 			if retry.NotFound(err) {
 				continue
@@ -109,10 +109,18 @@ func testAccCheckBGPPeerExists(ctx context.Context, t *testing.T, n string) reso
 
 		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
-		_, err := tfdirectconnect.FindBGPPeerByThreePartKey(ctx, conn, rs.Primary.Attributes["virtual_interface_id"], awstypes.AddressFamily(rs.Primary.Attributes["address_family"]), flex.StringValueToInt32Value(rs.Primary.Attributes["bgp_asn"]))
+		_, err := tfdirectconnect.FindBGPPeerByThreePartKeyWithInt64ASN(ctx, conn, rs.Primary.Attributes["virtual_interface_id"], awstypes.AddressFamily(rs.Primary.Attributes["address_family"]), testAccBGPPeerEffectiveASN(rs.Primary.Attributes))
 
 		return err
 	}
+}
+
+func testAccBGPPeerEffectiveASN(attributes map[string]string) int64 {
+	if asnLong := attributes["bgp_asn_long"]; asnLong != "" {
+		return flex.StringValueToInt64Value(asnLong)
+	}
+
+	return int64(flex.StringValueToInt32Value(attributes["bgp_asn"]))
 }
 
 func testAccBGPPeerConfig_basic(vifID string, bgpAsn int) string {
@@ -124,4 +132,37 @@ resource "aws_dx_bgp_peer" "test" {
   bgp_asn        = %[2]d
 }
 `, vifID, bgpAsn)
+}
+
+func TestAccDirectConnectBGPPeer_bgpASNLong(t *testing.T) {
+	ctx := acctest.Context(t)
+	vifID := acctest.SkipIfEnvVarNotSet(t, "DX_VIRTUAL_INTERFACE_ID")
+	resourceName := "aws_dx_bgp_peer.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBGPPeerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBGPPeerConfig_bgpASNLong(vifID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBGPPeerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn_long", "4200012999"),
+				),
+			},
+		},
+	})
+}
+
+func testAccBGPPeerConfig_bgpASNLong(vifID string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_bgp_peer" "test" {
+  virtual_interface_id = %[1]q
+
+  address_family = "ipv6"
+  bgp_asn_long   = "4200012999"
+}
+`, vifID)
 }

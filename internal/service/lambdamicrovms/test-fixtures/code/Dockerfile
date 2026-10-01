@@ -1,3 +1,5 @@
+# Copyright IBM Corp. 2014, 2026
+
 FROM golang:1.24 AS build
 WORKDIR /src
 COPY main.go .

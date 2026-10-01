@@ -84,7 +84,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -138,7 +138,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -186,7 +186,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -222,7 +222,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -294,7 +294,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_null(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -354,7 +354,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_emptyMap(t *testing.T)
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -446,7 +446,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_addOnUpdate(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -517,7 +517,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_EmptyTag_onCreate(t *t
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -553,7 +553,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_EmptyTag_onCreate(t *t
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -661,7 +661,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_EmptyTag_OnUpdate_add(
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -709,7 +709,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_EmptyTag_OnUpdate_add(
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -811,7 +811,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_EmptyTag_OnUpdate_repl
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -881,7 +881,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_providerOn
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -933,7 +933,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_providerOn
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -981,7 +981,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_providerOn
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -1019,7 +1019,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_providerOn
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1099,7 +1099,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_nonOverlap
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -1163,7 +1163,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_nonOverlap
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -1201,7 +1201,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_nonOverlap
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1279,7 +1279,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_overlappin
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -1343,7 +1343,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_overlappin
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -1399,7 +1399,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_overlappin
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1501,7 +1501,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_updateToPr
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1602,7 +1602,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_updateToRe
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1680,7 +1680,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_emptyResou
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1750,7 +1750,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_emptyProvi
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1829,7 +1829,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_nullOverla
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1910,7 +1910,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_DefaultTags_nullNonOve
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -1977,7 +1977,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_ComputedTag_onCreate(t
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -2086,7 +2086,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_ComputedTag_OnUpdate_a
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -2185,7 +2185,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Tags_ComputedTag_OnUpdate_r
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},

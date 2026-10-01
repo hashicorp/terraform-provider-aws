@@ -98,6 +98,24 @@ func engineName_Values() []string {
 	}
 }
 
+func dataProviderEngine_Values() []string {
+	return []string{
+		engineNameAurora,
+		engineNameAuroraPostgresql,
+		engineNameDB2,
+		engineNameDB2zOS,
+		engineNameDocDB,
+		engineNameMariadb,
+		engineNameMongodb,
+		engineNameMySQL,
+		engineNameOracle,
+		engineNamePostgres,
+		engineNameRedshift,
+		engineNameSQLServer,
+		engineNameSybase,
+	}
+}
+
 const (
 	kafkaDefaultTopic = "kafka-default-topic"
 )
@@ -157,12 +175,21 @@ const (
 const (
 	networkTypeDual = "DUAL"
 	networkTypeIPv4 = "IPV4"
+	networkTypeIPv6 = "IPV6"
 )
 
 func networkType_Values() []string {
 	return []string{
 		networkTypeDual,
 		networkTypeIPv4,
+	}
+}
+
+func instanceProfileNetworkType_Values() []string {
+	return []string{
+		networkTypeIPv4,
+		networkTypeIPv6,
+		networkTypeDual,
 	}
 }
 

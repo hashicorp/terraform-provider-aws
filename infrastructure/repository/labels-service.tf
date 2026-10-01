@@ -44,6 +44,7 @@ variable "service_labels" {
     "bedrock",
     "bedrockagent",
     "bedrockagentcore",
+    "bedrockruntime",
     "billing",
     "billingconductor",
     "braket",

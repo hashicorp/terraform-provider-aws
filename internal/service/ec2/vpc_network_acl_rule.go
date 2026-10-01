@@ -223,6 +223,12 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 	}
 
+	return resourceNetworkACLRuleFlatten(d, naclEntry)
+}
+
+func resourceNetworkACLRuleFlatten(d *schema.ResourceData, naclEntry *awstypes.NetworkAclEntry) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrCIDRBlock, naclEntry.CidrBlock)
 	d.Set("egress", naclEntry.Egress)
 	d.Set("ipv6_cidr_block", naclEntry.Ipv6CidrBlock)

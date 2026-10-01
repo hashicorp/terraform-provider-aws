@@ -38,14 +38,6 @@ func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListReq
 	awsClient := l.Meta()
 	conn := awsClient.OpenSearchServerlessClient(ctx)
 
-	var query listVPCEndpointModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input opensearchserverless.ListVpcEndpointsInput
 
@@ -98,10 +90,6 @@ func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListReq
 			}
 		}
 	}
-}
-
-type listVPCEndpointModel struct {
-	framework.WithRegionModel
 }
 
 func listVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.ListVpcEndpointsInput) iter.Seq2[awstypes.VpcEndpointSummary, error] {

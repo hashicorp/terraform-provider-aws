@@ -1,0 +1,20 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_efs_access_point" "test" {
+  region = var.region
+
+  file_system_id = aws_efs_file_system.test.id
+}
+
+resource "aws_efs_file_system" "test" {
+  region = var.region
+
+}
+
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}

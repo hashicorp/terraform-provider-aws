@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -64,6 +65,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -207,6 +209,7 @@ func registerSweepers() {
 	accountaccess.RegisterSweepers()
 	acm.RegisterSweepers()
 	acmpca.RegisterSweepers()
+	agentregistry.RegisterSweepers()
 	amp.RegisterSweepers()
 	amplify.RegisterSweepers()
 	apigateway.RegisterSweepers()
@@ -261,6 +264,7 @@ func registerSweepers() {
 	deploy.RegisterSweepers()
 	devicefarm.RegisterSweepers()
 	directconnect.RegisterSweepers()
+	directoryservicedata.RegisterSweepers()
 	dlm.RegisterSweepers()
 	dms.RegisterSweepers()
 	docdb.RegisterSweepers()
