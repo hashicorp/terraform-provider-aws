@@ -117,6 +117,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -718,6 +719,10 @@ func (c *AWSClient) ElasticTranscoderClient(ctx context.Context) *elastictransco
 
 func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservice.Client {
 	return errs.Must(client[*elasticsearchservice.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
+}
+
+func (c *AWSClient) EventBridgeV2Client(ctx context.Context) *eventbridgev2.Client {
+	return errs.Must(client[*eventbridgev2.Client](ctx, c, names.EventBridgeV2, make(map[string]any)))
 }
 
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge.Client {

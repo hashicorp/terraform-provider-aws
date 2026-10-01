@@ -3905,6 +3905,30 @@ service "events" {
   brand                    = "AWS"
 }
 
+service "eventbridgev2" {
+  sdk {
+    id            = "EventBridgeV2"
+    arn_namespace = "events"
+  }
+
+  names {
+    provider_name_upper = "EventBridgeV2"
+    human_friendly      = "EventBridge V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEventBuses"
+  }
+
+  resource_prefix {
+    correct = "aws_eventbridgev2_"
+  }
+
+  provider_package_correct = "eventbridgev2"
+  doc_prefix               = ["eventbridgev2_"]
+  brand                    = "AWS"
+}
+
 service "schemas" {
   sdk {
     id            = "schemas"
