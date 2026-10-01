@@ -1389,41 +1389,6 @@ var (
 	defaultReplicationTaskFullLoadAndCdcSettings string
 )
 
-func TestReplicationTaskWaitTimeout(t *testing.T) {
-	t.Parallel()
-
-	t.Run("no deadline", func(t *testing.T) {
-		t.Parallel()
-
-		if got, want := tfdms.ReplicationTaskWaitTimeout(context.Background()), 5*time.Minute; got != want {
-			t.Errorf("got %s, want %s", got, want)
-		}
-	})
-
-	t.Run("deadline", func(t *testing.T) {
-		t.Parallel()
-
-		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
-		defer cancel()
-
-		got := tfdms.ReplicationTaskWaitTimeout(ctx)
-		if got <= 44*time.Minute || got > 45*time.Minute {
-			t.Errorf("got %s, want just under 45m", got)
-		}
-	})
-
-	t.Run("expired deadline", func(t *testing.T) {
-		t.Parallel()
-
-		ctx, cancel := context.WithTimeout(context.Background(), -time.Second)
-		defer cancel()
-
-		if got := tfdms.ReplicationTaskWaitTimeout(ctx); got != 0 {
-			t.Errorf("got %s, want 0", got)
-		}
-	})
-}
-
 func TestReplicationTaskTimeoutDefaults(t *testing.T) {
 	t.Parallel()
 
