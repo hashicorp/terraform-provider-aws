@@ -27,7 +27,6 @@ var (
 	FindReplicationInstanceByID    = findReplicationInstanceByID
 	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID
 	FindReplicationTaskByID        = findReplicationTaskByID
-	ReplicationTaskWaitTimeout     = replicationTaskWaitTimeout
 	TaskSettingsEqual              = taskSettingsEqual
 	ValidEndpointID                = validEndpointID
 	ValidReplicationInstanceID     = validReplicationInstanceID

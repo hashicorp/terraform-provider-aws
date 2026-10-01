@@ -433,19 +433,6 @@ func statusReplicationTask(conn *dms.Client, id string) retry.StateRefreshFunc {
 	}
 }
 
-// replicationTaskWaitTimeout returns the Timeout for a replication task waiter.
-// retry.StateChangeConf needs an explicit Timeout in addition to honoring ctx,
-// so waiters use the time remaining until ctx's deadline, keeping ctx the
-// binding limit. Without a deadline it returns replicationTaskDefaultTimeout.
-func replicationTaskWaitTimeout(ctx context.Context) time.Duration {
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return replicationTaskDefaultTimeout
-	}
-
-	return max(time.Until(deadline), 0)
-}
-
 func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTask) {
 	var errs []error
 
@@ -459,12 +446,17 @@ func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTas
 	retry.SetLastError(err, errors.Join(errs...))
 }
 
+// The replication task waiters set StateChangeConf.Timeout, which must be
+// positive, from ctx's deadline, so every caller must pass a context with a
+// deadline.
+
 func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    replicationTaskWaitTimeout(ctx),
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -480,11 +472,12 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string
 }
 
 func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    replicationTaskWaitTimeout(ctx),
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -500,11 +493,12 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id strin
 }
 
 func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    replicationTaskWaitTimeout(ctx),
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -520,11 +514,12 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string) 
 }
 
 func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    replicationTaskWaitTimeout(ctx),
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -540,11 +535,12 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string) 
 }
 
 func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    replicationTaskWaitTimeout(ctx),
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -560,11 +556,12 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string
 }
 
 func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:                    []string{replicationTaskStatusStopped},
 		Refresh:                   statusReplicationTask(conn, id),
-		Timeout:                   replicationTaskWaitTimeout(ctx),
+		Timeout:                   time.Until(deadline),
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -581,11 +578,12 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string
 }
 
 func waitReplicationTaskSteady(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
 		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
 		Refresh:                   statusReplicationTask(conn, id),
-		Timeout:                   replicationTaskWaitTimeout(ctx),
+		Timeout:                   time.Until(deadline),
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
