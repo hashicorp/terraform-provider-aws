@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -310,6 +312,67 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowFlow_forceDelete(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowOutput appflow.DescribeFlowOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_forceDelete(rName, scheduleStartTime, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, t, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, acctest.CtFalse),
+					testAccActivateFlow(ctx, t, resourceName),
+				),
+			},
+			{
+				Config:      testAccFlowConfig_base(rName),
+				ExpectError: regexache.MustCompile(`please set forceDelete to true`),
+			},
+			{
+				Config: testAccFlowConfig_forceDelete(rName, scheduleStartTime, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, t, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDelete,
+				},
+			},
+		},
+	})
+}
+
+func testAccActivateFlow(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AppFlowClient(ctx)
+
+		_, err := conn.StartFlow(ctx, &appflow.StartFlowInput{
+			FlowName: aws.String(rs.Primary.Attributes[names.AttrName]),
+		})
+
+		return err
+	}
+}
+
 func TestAccAppFlowFlow_metadataCatalog(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowOutput appflow.DescribeFlowOutput
@@ -468,6 +531,65 @@ resource "aws_appflow_flow" "test" {
   }
 }
 `, rName, scheduleStartTime),
+	)
+}
+
+func testAccFlowConfig_forceDelete(rName, scheduleStartTime string, forceDelete bool) string {
+	return acctest.ConfigCompose(
+		testAccFlowConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_appflow_flow" "test" {
+  name         = %[1]q
+  force_delete = %[3]t
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
+      }
+    }
+  }
+
+  task {
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
+  }
+
+  trigger_config {
+    trigger_type = "Scheduled"
+
+    trigger_properties {
+      scheduled {
+        data_pull_mode      = "Incremental"
+        schedule_expression = "rate(3hours)"
+        schedule_start_time = %[2]q
+      }
+    }
+  }
+}
+`, rName, scheduleStartTime, forceDelete),
 	)
 }
 
