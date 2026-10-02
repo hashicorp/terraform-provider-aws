@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -473,6 +474,152 @@ func TestAccS3ObjectCopy_objectLockLegalHold(t *testing.T) {
 					testAccCheckObjectCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectCopy_objectLockEventHold(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_lockEventHold(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "1"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldReleased(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectCopy_objectLockEventHoldDurationUnits(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	retainUntilDate := time.Now().UTC().AddDate(2, 0, 0).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_years", "0"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldDurationYears(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_years", "1"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "2"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_years", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectCopy_objectLockEventHoldWithoutDate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldNoDate(rName1, names.AttrSource, rName2, names.AttrTarget, 1, "initial"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.purpose", "initial"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_lock_retain_until_date"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldNoDate(rName1, names.AttrSource, rName2, names.AttrTarget, 1, "updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "metadata.purpose", "updated"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldNoDate(rName1, names.AttrSource, rName2, names.AttrTarget, 2, "updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold_duration_days", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectCopy_objectLockEventHoldRetainUntilDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	retainUntilDate := time.Now().UTC().Add(24*time.Hour + 2*time.Minute).Format(time.RFC3339)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+				),
+			},
+			{
+				PreConfig: func() { time.Sleep(240 * time.Second) },
+				Config:    testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
+				PlanOnly:  true,
 			},
 		},
 	})
@@ -1133,4 +1280,229 @@ resource "aws_s3_object_copy" "test" {
   source = "${aws_s3_access_point.source.arn}/object/${aws_s3_object.source.key}"
 }
 `, sourceBucket, sourceKey, targetBucket, targetKey)
+}
+
+func testAccObjectCopyConfig_lockEventHold(sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+
+  object_lock_enabled = true
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "target" {
+  bucket = aws_s3_bucket.target.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.target.bucket
+  key    = %[4]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_retain_until_date        = %[5]q
+  object_lock_event_hold               = "ON"
+  object_lock_event_hold_duration_days = 1
+  force_destroy                        = true
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate)
+}
+
+func testAccObjectCopyConfig_lockEventHoldReleased(sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+
+  object_lock_enabled = true
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "target" {
+  bucket = aws_s3_bucket.target.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.target.bucket
+  key    = %[4]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  object_lock_mode              = "GOVERNANCE"
+  object_lock_retain_until_date = %[5]q
+  object_lock_event_hold        = "OFF"
+  force_destroy                 = true
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate)
+}
+
+func testAccObjectCopyConfig_lockEventHoldDurationDays(sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate string, days int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+
+  object_lock_enabled = true
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "target" {
+  bucket = aws_s3_bucket.target.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.target.bucket
+  key    = %[4]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_retain_until_date        = %[5]q
+  object_lock_event_hold               = "ON"
+  object_lock_event_hold_duration_days = %[6]d
+  force_destroy                        = true
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate, days)
+}
+
+func testAccObjectCopyConfig_lockEventHoldDurationYears(sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate string, years int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+
+  object_lock_enabled = true
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "target" {
+  bucket = aws_s3_bucket.target.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.target.bucket
+  key    = %[4]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  object_lock_mode                      = "GOVERNANCE"
+  object_lock_retain_until_date         = %[5]q
+  object_lock_event_hold                = "ON"
+  object_lock_event_hold_duration_years = %[6]d
+  force_destroy                         = true
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey, retainUntilDate, years)
+}
+
+func testAccObjectCopyConfig_lockEventHoldNoDate(sourceBucket, sourceKey, targetBucket, targetKey string, days int, purpose string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+
+  object_lock_enabled = true
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "target" {
+  bucket = aws_s3_bucket.target.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.target.bucket
+  key    = %[4]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  # Without REPLACE the source object's metadata is copied and this map is
+  # ignored, so the value would never round-trip.
+  metadata_directive = "REPLACE"
+  metadata = {
+    purpose = %[6]q
+  }
+
+  object_lock_mode                     = "GOVERNANCE"
+  object_lock_event_hold               = "ON"
+  object_lock_event_hold_duration_days = %[5]d
+  force_destroy                        = true
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey, days, purpose)
 }
