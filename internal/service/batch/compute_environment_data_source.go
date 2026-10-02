@@ -39,6 +39,18 @@ func dataSourceComputeEnvironment() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"ecs_settings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_insights": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				names.AttrServiceRole: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -97,6 +109,13 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
+	if computeEnvironment.EcsSettings != nil {
+		if err := d.Set("ecs_settings", []any{flattenECSSettings(computeEnvironment.EcsSettings)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ecs_settings: %s", err)
+		}
+	} else {
+		d.Set("ecs_settings", nil)
+	}
 	d.Set(names.AttrServiceRole, computeEnvironment.ServiceRole)
 	d.Set(names.AttrState, computeEnvironment.State)
 	d.Set(names.AttrStatus, computeEnvironment.Status)

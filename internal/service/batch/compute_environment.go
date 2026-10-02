@@ -217,6 +217,21 @@ func resourceComputeEnvironment() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"ecs_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_insights": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ContainerInsights](),
+							},
+						},
+					},
+				},
 				"eks_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -313,6 +328,10 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.ComputeResources = expandComputeResource(ctx, v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("ecs_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EcsSettings = expandECSSettings(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.EksConfiguration = expandEKSConfiguration(v.([]any)[0].(map[string]any))
 	}
@@ -381,6 +400,13 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("compute_resources", nil)
 	}
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
+	if computeEnvironment.EcsSettings != nil {
+		if err := d.Set("ecs_settings", []any{flattenECSSettings(computeEnvironment.EcsSettings)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ecs_settings: %s", err)
+		}
+	} else {
+		d.Set("ecs_settings", nil)
+	}
 	if computeEnvironment.EksConfiguration != nil {
 		if err := d.Set("eks_configuration", []any{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting eks_configuration: %s", err)
@@ -409,6 +435,12 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
+		}
+
+		if d.HasChange("ecs_settings") {
+			if v, ok := d.GetOk("ecs_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.EcsSettings = expandECSSettings(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange(names.AttrServiceRole) {
@@ -989,6 +1021,20 @@ func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.
 	return apiObject
 }
 
+func expandECSSettings(tfMap map[string]any) *awstypes.EcsSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EcsSettings{}
+
+	if v, ok := tfMap["container_insights"].(string); ok && v != "" {
+		apiObject.ContainerInsights = awstypes.ContainerInsights(v)
+	}
+
+	return apiObject
+}
+
 func expandEKSConfiguration(tfMap map[string]any) *awstypes.EksConfiguration {
 	if tfMap == nil {
 		return nil
@@ -1201,6 +1247,18 @@ func flattenComputeResource(ctx context.Context, apiObject *awstypes.ComputeReso
 
 	if v := apiObject.Tags; v != nil {
 		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+	}
+
+	return tfMap
+}
+
+func flattenECSSettings(apiObject *awstypes.EcsSettings) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"container_insights": string(apiObject.ContainerInsights),
 	}
 
 	return tfMap

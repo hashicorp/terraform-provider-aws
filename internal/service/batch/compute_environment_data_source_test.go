@@ -70,6 +70,30 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 	})
 }
 
+func TestAccBatchComputeEnvironmentDataSource_ecsSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf_acc_test_")
+	resourceName := "aws_batch_compute_environment.test"
+	dataSourceName := "data.aws_batch_compute_environment.by_name"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentDataSourceConfig_ecsSettings(rName, "ENHANCED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "ecs_settings.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ecs_settings.0.container_insights", "ENHANCED"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ecs_settings.0.container_insights", resourceName, "ecs_settings.0.container_insights"),
+				),
+			},
+		},
+	})
+}
+
 func testAccComputeEnvironmentDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -184,4 +208,12 @@ data "aws_batch_compute_environment" "by_name" {
   name = aws_batch_compute_environment.test.name
 }
 `, rName, timeout, terminate))
+}
+
+func testAccComputeEnvironmentDataSourceConfig_ecsSettings(rName, containerInsights string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_ecsSettings(rName, containerInsights), `
+data "aws_batch_compute_environment" "by_name" {
+  name = aws_batch_compute_environment.test.name
+}
+`)
 }
