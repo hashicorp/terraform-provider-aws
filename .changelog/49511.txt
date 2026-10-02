@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_express_gateway_service: Fix "Provider produced inconsistent result after apply" errors when omitting `auto_scaling_metric` and `auto_scaling_target_value` in the `scaling_target` block
+```
