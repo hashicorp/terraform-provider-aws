@@ -604,7 +604,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("shared_resources", nil)
 	}
 	d.Set(names.AttrStorageType, output.StorageType)
-	d.Set("storage_size", aws.ToInt32(output.StorageSize))
+	d.Set("storage_size", output.StorageSize)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 	// AWS does not return user information for RabbitMQ brokers after creation.
 	// Skip setting user state to prevent non-idempotent behavior.
