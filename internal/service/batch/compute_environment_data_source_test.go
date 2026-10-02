@@ -132,7 +132,8 @@ resource "aws_iam_instance_profile" "ecs_instance_role" {
 }
 
 resource "aws_security_group" "sample" {
-  name = "%[1]s"
+  name   = "%[1]s"
+  vpc_id = aws_vpc.sample.id
 }
 
 resource "aws_vpc" "sample" {
