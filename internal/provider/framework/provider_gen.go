@@ -1296,6 +1296,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// marketplaceagreement
+
+				"marketplaceagreement": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// mediaconnect
 
 				"mediaconnect": schema.StringAttribute{

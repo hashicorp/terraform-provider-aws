@@ -244,6 +244,7 @@ provider "aws" {
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
 |SES Mail Manager|`mailmanager`|`AWS_ENDPOINT_URL_MAILMANAGER`|`mailmanager`|
+|Marketplace Agreement|`marketplaceagreement`|`AWS_ENDPOINT_URL_MARKETPLACE_AGREEMENT`|`marketplace_agreement`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
 |Elemental MediaConvert|`mediaconvert`|`AWS_ENDPOINT_URL_MEDIACONVERT`|`mediaconvert`|
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
