@@ -276,6 +276,9 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// Capture before flatten so the managed certificate can be reconciled against the plan.
+	plannedCustomizations := data.Customizations
+
 	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, data.Timeouts))
 
 	conn := r.Meta().CloudFrontClient(ctx)
@@ -347,6 +350,8 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		}
 	}
 
+	data.Customizations = suppressManagedCertCustomizations(ctx, plannedCustomizations, data.Customizations)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -356,6 +361,9 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	priorCustomizations := data.Customizations
+	priorManagedCertRequest := data.ManagedCertificateRequest
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
@@ -378,6 +386,12 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	}
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
+	// Skip on import (no prior managed cert request), where an explicitly configured
+	// certificate must round-trip unchanged.
+	if !priorManagedCertRequest.IsNull() && !priorManagedCertRequest.IsUnknown() {
+		data.Customizations = suppressManagedCertCustomizations(ctx, priorCustomizations, data.Customizations)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -388,6 +402,8 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	plannedCustomizations := new.Customizations
 
 	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
@@ -497,6 +513,8 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		}
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
 	}
+
+	new.Customizations = suppressManagedCertCustomizations(ctx, plannedCustomizations, new.Customizations)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
@@ -859,4 +877,37 @@ func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []
 	}
 
 	return domainItems
+}
+
+// suppressManagedCertCustomizations reconciles the certificate sub-block that the API
+// injects for a managed_certificate_request against the configured customizations, so a
+// certificate the user did not configure does not appear in state. It returns the planned
+// value when nothing was configured, and otherwise nulls only the certificate sub-block
+// while preserving other (possibly API-computed) sub-blocks. An explicitly configured
+// certificate is returned unchanged.
+func suppressManagedCertCustomizations(ctx context.Context, planned, flattened fwtypes.ListNestedObjectValueOf[customizationsModel]) fwtypes.ListNestedObjectValueOf[customizationsModel] {
+	if planned.IsNull() {
+		return planned
+	}
+
+	if planned.IsUnknown() {
+		return flattened
+	}
+
+	plannedElems, diags := planned.ToSlice(ctx)
+	if diags.HasError() || len(plannedElems) == 0 {
+		return planned
+	}
+
+	if !plannedElems[0].Certificate.IsNull() {
+		return flattened
+	}
+
+	flatElems, d := flattened.ToSlice(ctx)
+	if d.HasError() || len(flatElems) == 0 {
+		return planned
+	}
+
+	flatElems[0].Certificate = fwtypes.NewListNestedObjectValueOfNull[certificateModel](ctx)
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, flatElems[0])
 }
