@@ -179,6 +179,7 @@ Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
+Marketplace Agreement
 MemoryDB
 Meta Data Sources
 Multi-party Approval

@@ -1480,6 +1480,12 @@ service/managedblockchain:
           - any-glob-to-any-file:
               - 'internal/service/managedblockchain/**/*'
               - 'website/**/managedblockchain_*'
+service/marketplaceagreement:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/marketplaceagreement/**/*'
+              - 'website/**/marketplaceagreement_*'
 service/marketplacecatalog:
   - any:
       - changed-files:
