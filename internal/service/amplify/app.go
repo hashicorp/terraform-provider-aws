@@ -465,7 +465,10 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		d.Set("auto_branch_creation_config", nil)
 	}
 	d.Set("auto_branch_creation_patterns", app.AutoBranchCreationPatterns)
-	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
+	// The API may return basic auth credentials in an obfuscated form, so retain the configured value.
+	if app.BasicAuthCredentials == nil || d.Get("basic_auth_credentials").(string) == "" {
+		d.Set("basic_auth_credentials", app.BasicAuthCredentials)
+	}
 	d.Set("build_spec", app.BuildSpec)
 	if app.CacheConfig != nil {
 		if err := d.Set("cache_config", []any{flattenCacheConfig(app.CacheConfig)}); err != nil {
