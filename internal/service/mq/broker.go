@@ -354,6 +354,12 @@ func resourceBroker() *schema.Resource {
 					Computed:         true,
 					ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
 				},
+				"storage_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
 				names.AttrSubnetIDs: {
 					Type:     schema.TypeSet,
 					Elem:     &schema.Schema{Type: schema.TypeString},
@@ -478,6 +484,9 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
 	}
+	if v, ok := d.GetOk("storage_size"); ok {
+		input.StorageSize = aws.Int32(int32(v.(int)))
+	}
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -595,6 +604,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("shared_resources", nil)
 	}
 	d.Set(names.AttrStorageType, output.StorageType)
+	d.Set("storage_size", aws.ToInt32(output.StorageSize))
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 	// AWS does not return user information for RabbitMQ brokers after creation.
 	// Skip setting user state to prevent non-idempotent behavior.
@@ -698,6 +708,20 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
 		}
+	}
+	if d.HasChange("storage_size") {
+		input := mq.UpdateBrokerInput{
+			BrokerId:    aws.String(d.Id()),
+			StorageSize: aws.Int32(int32(d.Get("storage_size").(int))),
+		}
+
+		_, err := conn.UpdateBroker(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) storage size: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
 	}
 
 	if d.HasChange("maintenance_window_start_time") {
