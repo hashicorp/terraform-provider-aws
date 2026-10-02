@@ -49,6 +49,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `environment_role_permission_boundary` - (Optional) ARN of the IAM policy used as the permissions boundary for environment roles.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `global_parameters` - (Optional) A map of global parameters to configure for the blueprint across all regions.
 * `manage_access_role_arn` - (Optional) ARN of the manage access role with which this blueprint is created.
