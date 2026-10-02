@@ -794,6 +794,11 @@ func resourceDomain() *schema.Resource {
 								Optional: true,
 								Computed: true,
 							},
+							"use_latest_service_software_for_blue_green": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
