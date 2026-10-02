@@ -9,6 +9,7 @@ import (
 	"context"
 	"log"
 	"math/big"
+	"slices"
 	"strconv"
 	"time"
 
@@ -57,6 +58,10 @@ func resourceSpotInstanceRequest() *schema.Resource {
 			s := resourceInstanceSchema()
 
 			// Remove attributes added for spot instances.
+			delete(s, "ena_queue_count")
+			s["network_interface"].ConflictsWith = slices.DeleteFunc(s["network_interface"].ConflictsWith, func(v string) bool {
+				return v == "ena_queue_count"
+			})
 			delete(s, "instance_lifecycle")
 			delete(s, "instance_market_options")
 			delete(s, "spot_instance_request_id")
