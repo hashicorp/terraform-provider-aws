@@ -103,6 +103,29 @@ func main() {
 		g.Fatalf("%s", err.Error())
 	}
 
+	resourceTestTemplates := template.New("identitytests").Funcs(template.FuncMap{
+		"inc":                   func(i int) int { return i + 1 },
+		"NewVersion":            version.NewVersion,
+		"VersionDecrementMinor": common.VersionDecrementMinor,
+		"FirstUpper":            common.FirstUpper,
+	})
+	resourceTestTemplates, err = tests.AddCommonResourceTestTemplates(resourceTestTemplates)
+	if err != nil {
+		g.Fatalf("%s", err)
+	}
+	resourceTestTemplates, err = resourceTestTemplates.Parse(resourceTestGoTmpl)
+	if err != nil {
+		g.Fatalf("parsing base Go test template: %s", err)
+	}
+
+	tfTestTemplates, err := template.New("identitytests").Parse(testTfTmpl)
+	if err != nil {
+		g.Fatalf("parsing base Terraform config template: %s", err)
+	}
+	if _, err := tests.AddCommonTfTemplates(tfTestTemplates); err != nil {
+		g.Fatalf("%s", err)
+	}
+
 	for _, resource := range v.identityResources {
 		resource.service = &svc
 
@@ -125,27 +148,7 @@ func main() {
 
 		d := g.NewGoFileDestination(filename)
 
-		templateFuncMap := template.FuncMap{
-			"inc": func(i int) int {
-				return i + 1
-			},
-			"NewVersion":            version.NewVersion,
-			"VersionDecrementMinor": common.VersionDecrementMinor,
-			"FirstUpper":            common.FirstUpper,
-		}
-		templates := template.New("identitytests").Funcs(templateFuncMap)
-
-		templates, err = tests.AddCommonResourceTestTemplates(templates)
-		if err != nil {
-			g.Fatalf(err.Error())
-		}
-
-		templates, err = templates.Parse(resourceTestGoTmpl)
-		if err != nil {
-			g.Fatalf("parsing base Go test template: %w", err)
-		}
-
-		if err := d.BufferTemplateSet(templates, resource); err != nil {
+		if err := d.BufferTemplateSet(resourceTestTemplates, resource); err != nil {
 			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 		}
 
@@ -162,7 +165,7 @@ func main() {
 				configTmplFile = testCaseConfigTmplFile
 				configTmplPath = testCaseConfigTmplPath
 			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", testCaseConfigTmplPath, err)
+				g.Fatalf("accessing config template %q: %s", testCaseConfigTmplPath, err)
 			}
 
 			if configTmplPath == "" {
@@ -172,7 +175,7 @@ func main() {
 
 			b, err := os.ReadFile(configTmplPath)
 			if err != nil {
-				g.Fatalf("reading config template %q: %w", configTmplPath, err)
+				g.Fatalf("reading config template %q: %s", configTmplPath, err)
 			}
 			configTmpl := string(b)
 			resource.GenerateConfig = true
@@ -182,14 +185,9 @@ func main() {
 				slices.Sort(additionalTfVars)
 				testDirPath := path.Join("testdata", resource.Name)
 
-				tfTemplates, err := template.New("identitytests").Parse(testTfTmpl)
+				tfTemplates, err := tfTestTemplates.Clone()
 				if err != nil {
-					g.Fatalf("parsing base Terraform config template: %s", err)
-				}
-
-				tfTemplates, err = tests.AddCommonTfTemplates(tfTemplates)
-				if err != nil {
-					g.Fatalf(err.Error())
+					g.Fatalf("cloning base Terraform config template: %s", err)
 				}
 
 				_, err = tfTemplates.New("body").Parse(configTmpl)
@@ -781,7 +779,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	testName := test
 	dirPath = path.Join(dirPath, testName)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		g.Fatalf("creating test directory %q: %w", dirPath, err)
+		g.Fatalf("creating test directory %q: %s", dirPath, err)
 	}
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
