@@ -282,6 +282,10 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// On import, the full `config_parameter` set is returned, not just what is tracked
+				ImportStateVerifyIgnore: []string{
+					"config_parameter",
+				},
 			},
 			{
 				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
