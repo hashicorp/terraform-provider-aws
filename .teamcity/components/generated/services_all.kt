@@ -55,6 +55,7 @@ val services = mapOf(
     "cloudsearch" to ServiceSpec("CloudSearch"),
     "cloudtrail" to ServiceSpec("CloudTrail", parallelismOverride = 5),
     "cloudwatch" to ServiceSpec("CloudWatch"),
+    "cloudwatchomni" to ServiceSpec("CloudWatch Omni"),
     "codeartifact" to ServiceSpec("CodeArtifact"),
     "codebuild" to ServiceSpec("CodeBuild"),
     "codecatalyst" to ServiceSpec("CodeCatalyst"),

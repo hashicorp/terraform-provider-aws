@@ -69,6 +69,7 @@ variable "service_labels" {
     "cloudsearchdomain",
     "cloudtrail",
     "cloudwatch",
+    "cloudwatchomni",
     "codeartifact",
     "codebuild",
     "codecatalyst",

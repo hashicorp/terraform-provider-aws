@@ -519,6 +519,12 @@ service/cloudwatch:
               - 'website/**/cloudwatch_composite_*'
               - 'website/**/cloudwatch_contributor_*'
               - 'website/**/cloudwatch_otel_*'
+service/cloudwatchomni:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/cloudwatchomni/**/*'
+              - 'website/**/cloudwatchomni_*'
 service/codeartifact:
   - any:
       - changed-files:
