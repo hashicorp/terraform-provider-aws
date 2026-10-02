@@ -15,6 +15,9 @@
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "ACM" }}
+            - pattern-not-regex: "(?i)ACME"
+            {{- end }}
             {{- if eq .ServiceAlias "Deploy" }}
             - pattern-not-regex: Deployment(Group|Config|Style)
             {{- end }}
@@ -73,6 +76,9 @@
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "ACM" }}
+            - pattern-not-regex: "(?i)ACME"
+            {{- end }}
             {{- if eq .ServiceAlias "CE" }}
             - pattern-not-regex: "[Ss]ervice"
             {{- end }}
@@ -99,6 +105,9 @@
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "ACM" }}
+            - pattern-not-regex: "(?i)ACME"
+            {{- end }}
             {{- if eq .ServiceAlias "CE" }}
             - pattern-not-regex: "[Ss]ervice"
             - pattern-not-regex: "[Cc]ancel"
