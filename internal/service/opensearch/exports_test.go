@@ -26,6 +26,7 @@ var (
 	ExpandServerlessVectorAcceleration  = expandServerlessVectorAcceleration
 	FlattenServerlessVectorAcceleration = flattenServerlessVectorAcceleration
 	ParseEngineVersion                  = parseEngineVersion
+	ValidateAndSanitizeAIMLOptions      = validateAndSanitizeAIMLOptions
 	VPCEndpointsError                   = vpcEndpointsError
 	WaitForDomainCreation               = waitForDomainCreation
 )

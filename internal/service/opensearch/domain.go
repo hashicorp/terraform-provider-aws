@@ -882,6 +882,12 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+		if err := validateAndSanitizeAIMLOptions(input.AIMLOptions, d.Get(names.AttrEngineVersion).(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "validating aiml_options: %s", err)
+		}
+		if isAIMLOptionsInputEmpty(input.AIMLOptions) {
+			input.AIMLOptions = nil
+		}
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
@@ -1265,6 +1271,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		if d.HasChange("aiml_options") {
 			if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+				if err := validateAndSanitizeAIMLOptions(input.AIMLOptions, d.Get(names.AttrEngineVersion).(string)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "validating aiml_options: %s", err)
+				}
+				if isAIMLOptionsInputEmpty(input.AIMLOptions) {
+					input.AIMLOptions = nil
+				}
 			}
 		}
 
@@ -1865,6 +1877,53 @@ func parseEngineVersion(engineVersion string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+// validateAndSanitizeAIMLOptions checks if AIML options (such as serverless vector acceleration)
+// are supported for the given engine version. When unsupported and disabled, it clears the field
+// to avoid AWS ValidationException errors during domain create/update.
+func validateAndSanitizeAIMLOptions(aimlOptions *awstypes.AIMLOptionsInput, engineVersion string) error {
+	if aimlOptions == nil || aimlOptions.ServerlessVectorAcceleration == nil {
+		return nil
+	}
+
+	if engineVersion == "" {
+		return nil
+	}
+
+	engineType, version, err := parseEngineVersion(engineVersion)
+	if err != nil {
+		log.Printf("[WARN] unable to parse engine version %q: %s", engineVersion, err)
+		return nil
+	}
+
+	switch engineType {
+	case string(awstypes.EngineTypeElasticsearch):
+		if aws.ToBool(aimlOptions.ServerlessVectorAcceleration.Enabled) {
+			return fmt.Errorf("serverless_vector_acceleration is not supported with Elasticsearch")
+		}
+		aimlOptions.ServerlessVectorAcceleration = nil
+	case string(awstypes.EngineTypeOpenSearch):
+		if semver.LessThan(version, "3.1") {
+			if aws.ToBool(aimlOptions.ServerlessVectorAcceleration.Enabled) {
+				return fmt.Errorf("serverless_vector_acceleration requires OpenSearch 3.1 or later, got %s", engineVersion)
+			}
+			aimlOptions.ServerlessVectorAcceleration = nil
+		}
+	default:
+		log.Printf("[WARN] unknown engine type: %s", engineType)
+	}
+
+	return nil
+}
+
+func isAIMLOptionsInputEmpty(aimlOptions *awstypes.AIMLOptionsInput) bool {
+	if aimlOptions == nil {
+		return true
+	}
+	return aimlOptions.NaturalLanguageQueryGenerationOptions == nil &&
+		aimlOptions.S3VectorsEngine == nil &&
+		aimlOptions.ServerlessVectorAcceleration == nil
 }
 
 // EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
