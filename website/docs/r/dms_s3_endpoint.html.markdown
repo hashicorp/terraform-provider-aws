@@ -113,12 +113,12 @@ The following arguments are optional:
 * `cdc_min_file_size` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. (AWS default is 32000 KB.)
 * `cdc_path` - (Optional) Folder path of CDC files. If `cdc_path` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later. Required for CDC.
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
-* `compression_type` - (Optional) Set to compress target files. Valid values are `GZIP` and `NONE`. Default is `NONE`. (Ignored for source endpoints.)
+* `compression_type` - (Optional) Set to compress target files. Valid values are `GZIP` and `NONE`. Default is `NONE`.
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.
 * `csv_no_sup_value` - (Optional) Only applies if output files for a CDC load are written in .csv format. If `use_csv_no_sup_value` is set to `true`, string to use for all columns not included in the supplemental log. If you do not specify a string value, DMS uses the null value for these columns regardless of `use_csv_no_sup_value`. (Ignored for source endpoints.)
 * `csv_null_value` - (Optional) String to as null when writing to the target. (AWS default is `NULL`.)
 * `csv_row_delimiter` - (Optional) Delimiter used to separate rows in the source files. Default is newline (_i.e._, `\n`).
-* `data_format` - (Optional) Output format for the files that AWS DMS uses to create S3 objects. Valid values are `csv` and `parquet`.  (Ignored for source endpoints -- only `csv` is valid.)
+* `data_format` - (Optional) Format of the files that AWS DMS reads or writes. Valid values are `csv` and `parquet`. For source endpoints, `parquet` requires AWS DMS 3.5.3 or later.
 * `data_page_size` - (Optional) Size of one data page in bytes. (AWS default is 1 MiB, _i.e._, `1048576`.)
 * `date_partition_delimiter` - (Optional) Date separating delimiter to use during folder partitioning. Valid values are `SLASH`, `UNDERSCORE`, `DASH`, and `NONE`. (AWS default is `SLASH`.) (Ignored for source endpoints.)
 * `date_partition_enabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Default is `false`. (Ignored for source endpoints.)
