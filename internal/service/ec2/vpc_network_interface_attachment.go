@@ -11,8 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -24,6 +26,7 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceAttachmentCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceAttachmentRead,
+		UpdateWithoutTimeout: resourceNetworkInterfaceAttachmentUpdate,
 		DeleteWithoutTimeout: resourceNetworkInterfaceAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -40,6 +43,11 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 					Type:     schema.TypeInt,
 					Required: true,
 					ForceNew: true,
+				},
+				"ena_queue_count": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8, 16, 32, 64, 128}),
 				},
 				names.AttrInstanceID: {
 					Type:     schema.TypeString,
@@ -74,6 +82,10 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		InstanceId:         aws.String(d.Get(names.AttrInstanceID).(string)),
 		DeviceIndex:        aws.Int32(int32(d.Get("device_index").(int))),
+	}
+
+	if v, ok := d.GetOk("ena_queue_count"); ok {
+		input.EnaQueueCount = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("network_card_index"); ok {
@@ -114,12 +126,45 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 	attachment := eni.Attachment
 	d.Set("attachment_id", attachment.AttachmentId)
 	d.Set("device_index", attachment.DeviceIndex)
+	if _, ok := d.GetOk("ena_queue_count"); ok {
+		d.Set("ena_queue_count", attachment.EnaQueueCount)
+	}
 	d.Set(names.AttrInstanceID, attachment.InstanceId)
 	d.Set("network_card_index", attachment.NetworkCardIndex)
 	d.Set(names.AttrNetworkInterfaceID, eni.NetworkInterfaceId)
 	d.Set(names.AttrStatus, eni.Attachment.Status)
 
 	return diags
+}
+
+func resourceNetworkInterfaceAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	if d.HasChange("ena_queue_count") {
+		attachment := &awstypes.NetworkInterfaceAttachmentChanges{
+			AttachmentId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("ena_queue_count"); ok {
+			attachment.EnaQueueCount = aws.Int32(int32(v.(int)))
+		} else {
+			attachment.DefaultEnaQueueCount = aws.Bool(true)
+		}
+
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			Attachment:         attachment,
+			NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface Attachment (%s) ENA queue count: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceNetworkInterfaceAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

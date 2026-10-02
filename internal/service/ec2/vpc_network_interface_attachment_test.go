@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,6 +46,74 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-queues.html.
+// This test requires an expensive instance type that supports configurable ENA queue allocation, such as "c6i.4xlarge".
+// Set the environment variable `VPC_NETWORK_INTERFACE_TEST_ENA_QUEUE_COUNT` to run this test.
+func TestAccVPCNetworkInterfaceAttachment_enaQueueCount(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "VPC_NETWORK_INTERFACE_TEST_ENA_QUEUE_COUNT")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	resourceName := "aws_network_interface_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceAttachmentConfig_enaQueueCount(rName, "ena_queue_count = 4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, "aws_network_interface.test", &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_queue_count", "4"),
+					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 4),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceAttachmentConfig_enaQueueCount(rName, "ena_queue_count = 16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, "aws_network_interface.test", &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_queue_count", "16"),
+					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 16),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceAttachmentConfig_enaQueueCount(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, "aws_network_interface.test", &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_queue_count", "0"),
+					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 0),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ena_queue_count"},
+			},
+		},
+	})
+}
+
+func testAccCheckNetworkInterfaceAttachmentEnaQueueCount(conf *awstypes.NetworkInterface, expected int32) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if conf.Attachment == nil {
+			return fmt.Errorf("network interface attachment not found")
+		}
+
+		if got := aws.ToInt32(conf.Attachment.EnaQueueCount); got != expected {
+			return fmt.Errorf("expected ENA queue count %d, got %d", expected, got)
+		}
+
+		return nil
+	}
 }
 
 // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
@@ -145,6 +215,78 @@ resource "aws_network_interface_attachment" "test" {
   network_interface_id = aws_network_interface.test.id
 }
 `, rName))
+}
+
+func testAccVPCNetworkInterfaceAttachmentConfig_enaQueueCount(rName, enaQueueCount string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6i.4xlarge"),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.10.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_instance_state" "test" {
+  instance_id = aws_instance.test.id
+  state       = "stopped"
+}
+
+resource "aws_network_interface_attachment" "test" {
+  device_index         = 1
+  instance_id          = aws_instance.test.id
+  network_interface_id = aws_network_interface.test.id
+  %[2]s
+
+  depends_on = [aws_ec2_instance_state.test]
+}
+`, rName, enaQueueCount))
 }
 
 func testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName string, networkCardIndex int) string {
