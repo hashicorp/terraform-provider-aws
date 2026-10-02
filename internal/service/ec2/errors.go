@@ -56,6 +56,7 @@ const (
 	errCodeInvalidIPAMResourceDiscoveryIdNotFound                     = "InvalidIpamResourceDiscoveryId.NotFound"
 	errCodeInvalidIPAMScopeIdNotFound                                 = "InvalidIpamScopeId.NotFound"
 	errCodeInvalidInstanceConnectEndpointIdNotFound                   = "InvalidInstanceConnectEndpointId.NotFound"
+	errCodeInvalidInstanceEventWindowIDNotFound                       = "InvalidInstanceEventWindowIDNotFound"
 	errCodeInvalidInstanceID                                          = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                                  = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound                           = "InvalidInternetGatewayID.NotFound"
