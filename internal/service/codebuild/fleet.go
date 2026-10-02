@@ -48,7 +48,7 @@ func resourceFleet() *schema.Resource {
 				"base_capacity": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntAtLeast(1),
+					ValidateFunc: validation.IntAtLeast(0),
 				},
 				"compute_configuration": {
 					Type:     schema.TypeList,
