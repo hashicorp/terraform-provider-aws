@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add `monitoring` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_ecs_service: Add `monitoring` attribute
+```
