@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_servicequotas_service_quota: Add `wait_for_fulfillment` argument (default `false`) to wait until the applied quota meets or exceeds the configured minimum value during creation and updates. Reuse suitable existing requests and resume waiting after timeouts, with one configurable timeout covering request discovery, submission, and polling.
+```
