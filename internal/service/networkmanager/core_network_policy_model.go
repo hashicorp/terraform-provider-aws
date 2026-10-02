@@ -29,8 +29,8 @@ type coreNetworkPolicyCoreNetworkConfiguration struct {
 	InsideCidrBlocks                any                                         `json:"inside-cidr-blocks,omitempty"`
 	VpnEcmpSupport                  bool                                        `json:"vpn-ecmp-support"`
 	EdgeLocations                   []*coreNetworkPolicyCoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
-	DnsSupport                      bool                                        `json:"dns-support"`
-	SecurityGroupReferencingSupport bool                                        `json:"security-group-referencing-support"`
+	DnsSupport                      *bool                                       `json:"dns-support,omitempty"`
+	SecurityGroupReferencingSupport *bool                                       `json:"security-group-referencing-support,omitempty"`
 }
 
 type coreNetworkPolicyCoreNetworkEdgeLocation struct {
