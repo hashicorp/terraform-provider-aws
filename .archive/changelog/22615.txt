@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_cognito_user_pool_clients: Add `client_names` attribute
-```

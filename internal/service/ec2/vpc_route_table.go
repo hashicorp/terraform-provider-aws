@@ -70,105 +70,107 @@ func resourceRouteTable() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"propagating_vgws": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"route": {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Optional:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						///
-						// Destinations.
-						///
-						names.AttrCIDRBlock: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-						},
-						"destination_prefix_list_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-						},
-						//
-						// Targets.
-						//
-						"carrier_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"core_network_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"egress_only_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"local_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"nat_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"odb_network_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrTransitGatewayID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"propagating_vgws": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"route": {
+					Type:       schema.TypeSet,
+					Computed:   true,
+					Optional:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							///
+							// Destinations.
+							///
+							names.AttrCIDRBlock: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+							},
+							"destination_prefix_list_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ipv6_cidr_block": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+							},
+							//
+							// Targets.
+							//
+							"carrier_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"core_network_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"egress_only_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"local_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"nat_gateway_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"odb_network_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTransitGatewayID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"vpc_peering_connection_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					Set: resourceRouteTableHash,
 				},
-				Set: resourceRouteTableHash,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -236,6 +238,12 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
+
+	return resourceRouteTableFlatten(ctx, c, conn, d, routeTable)
+}
+
+func resourceRouteTableFlatten(ctx context.Context, c *conns.AWSClient, conn *ec2.Client, d *schema.ResourceData, routeTable *awstypes.RouteTable) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	ownerID := aws.ToString(routeTable.OwnerId)
 	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
@@ -824,6 +832,7 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		tfMap["egress_only_gateway_id"] = aws.ToString(v)
 	}
 
+	// VPC Endpoint ID is returned in Gateway ID field.
 	if v := apiObject.GatewayId; v != nil {
 		if strings.HasPrefix(aws.ToString(v), "vpce-") {
 			tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
@@ -844,7 +853,9 @@ func flattenRoute(apiObject *awstypes.Route) map[string]any {
 		tfMap[names.AttrNetworkInterfaceID] = aws.ToString(v)
 	}
 
+	// ODB Network ARN is also returned in Gateway ID field.
 	if v := apiObject.OdbNetworkArn; v != nil {
+		tfMap["gateway_id"] = nil
 		tfMap["odb_network_arn"] = aws.ToString(v)
 	}
 

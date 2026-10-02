@@ -44,393 +44,277 @@ func resourceClassificationJob() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_data_identifier_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"initial_run": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
-			},
-			"job_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 500),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 500-sdkid.UniqueIDSuffixLength),
-			},
-			"s3_job_definition": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_definitions": {
-							ConflictsWith: []string{"s3_job_definition.0.bucket_criteria"},
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"buckets": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"bucket_criteria": {
-							ConflictsWith: []string{"s3_job_definition.0.bucket_definitions"},
-							Type:          schema.TypeList,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"excludes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"and": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"simple_criterion": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
-																		},
-																		names.AttrValues: {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																		names.AttrKey: {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																		},
-																	},
-																},
-															},
-															"tag_criterion": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
-																		},
-																		"tag_values": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			ForceNew: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					names.AttrValue: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
-																					},
-																					names.AttrKey: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_data_identifier_ids": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 200),
+				},
+				"initial_run": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"job_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"job_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"job_status": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
+				},
+				"job_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JobType](),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(0, 500),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(0, 500-sdkid.UniqueIDSuffixLength),
+				},
+				"s3_job_definition": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bucket_definitions": {
+								ConflictsWith: []string{"s3_job_definition.0.bucket_criteria"},
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
 										},
-									},
-									"includes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"and": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"simple_criterion": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
-																		},
-																		names.AttrValues: {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																		names.AttrKey: {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																		},
-																	},
-																},
-															},
-															"tag_criterion": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
-																		},
-																		"tag_values": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			ForceNew: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					names.AttrValue: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
-																					},
-																					names.AttrKey: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
+										"buckets": {
+											Type:     schema.TypeList,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 									},
 								},
 							},
-						},
-						"scoping": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"excludes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"and": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"simple_scope_term": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
-																		},
-																		names.AttrValues: {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																		names.AttrKey: {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.ScopeFilterKey](),
+							"bucket_criteria": {
+								ConflictsWith: []string{"s3_job_definition.0.bucket_definitions"},
+								Type:          schema.TypeList,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"excludes": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"and": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"simple_criterion": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
+																			},
+																			names.AttrValues: {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																			names.AttrKey: {
+																				Type:     schema.TypeString,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"tag_scope_term": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
-																		},
-																		"tag_values": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					names.AttrValue: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
-																					},
-																					names.AttrKey: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
+																"tag_criterion": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
+																			},
+																			"tag_values": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				ForceNew: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						names.AttrValue: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
+																						names.AttrKey: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
 																					},
 																				},
 																			},
 																		},
-																		names.AttrKey: {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ForceNew:     true,
-																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"includes": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"and": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"simple_criterion": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
+																			},
+																			names.AttrValues: {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																			names.AttrKey: {
+																				Type:     schema.TypeString,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																			},
 																		},
-																		names.AttrTarget: {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
+																	},
+																},
+																"tag_criterion": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
+																			},
+																			"tag_values": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				ForceNew: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						names.AttrValue: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
+																						names.AttrKey: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
+																					},
+																				},
+																			},
 																		},
 																	},
 																},
@@ -441,99 +325,217 @@ func resourceClassificationJob() *schema.Resource {
 											},
 										},
 									},
-									"includes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"and": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"simple_scope_term": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
+								},
+							},
+							"scoping": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"excludes": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"and": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"simple_scope_term": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
+																			},
+																			names.AttrValues: {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																			names.AttrKey: {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.ScopeFilterKey](),
+																			},
 																		},
-																		names.AttrValues: {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																		names.AttrKey: {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
+																	},
+																},
+																"tag_scope_term": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
+																			},
+																			"tag_values": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						names.AttrValue: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
+																						names.AttrKey: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
+																					},
+																				},
+																			},
+																			names.AttrKey: {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				Computed:     true,
+																				ForceNew:     true,
+																				ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
+																			},
+																			names.AttrTarget: {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
+																			},
 																		},
 																	},
 																},
 															},
-															"tag_scope_term": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																ForceNew: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"comparator": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																			ForceNew: true,
+														},
+													},
+												},
+											},
+										},
+										"includes": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"and": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"simple_scope_term": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:     schema.TypeString,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																			},
+																			names.AttrValues: {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																			names.AttrKey: {
+																				Type:     schema.TypeString,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																			},
 																		},
-																		"tag_values": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			ForceNew: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					names.AttrValue: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
-																					},
-																					names.AttrKey: {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																						ForceNew: true,
+																	},
+																},
+																"tag_scope_term": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Computed: true,
+																	ForceNew: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"comparator": {
+																				Type:     schema.TypeString,
+																				Optional: true,
+																				Computed: true,
+																				ForceNew: true,
+																			},
+																			"tag_values": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				ForceNew: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						names.AttrValue: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
+																						names.AttrKey: {
+																							Type:     schema.TypeString,
+																							Optional: true,
+																							Computed: true,
+																							ForceNew: true,
+																						},
 																					},
 																				},
 																			},
-																		},
-																		names.AttrKey: {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ForceNew:     true,
-																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
-																		},
-																		names.AttrTarget: {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ForceNew:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
+																			names.AttrKey: {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				Computed:     true,
+																				ForceNew:     true,
+																				ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
+																			},
+																			names.AttrTarget: {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ForceNew:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
+																			},
 																		},
 																	},
 																},
@@ -549,66 +551,66 @@ func resourceClassificationJob() *schema.Resource {
 						},
 					},
 				},
-			},
-			"sampling_percentage": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"schedule_frequency": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"daily_schedule": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
-						},
-						"weekly_schedule": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
-						},
-						"monthly_schedule": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
+				"sampling_percentage": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"schedule_frequency": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"daily_schedule": {
+								Type:          schema.TypeBool,
+								Optional:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
+							},
+							"weekly_schedule": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
+							},
+							"monthly_schedule": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_paused_details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"job_expires_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"job_imminent_expiration_health_event_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"job_paused_at": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_paused_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"job_expires_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"job_imminent_expiration_health_event_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"job_paused_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: resourceClassificationJobCustomizeDiff,

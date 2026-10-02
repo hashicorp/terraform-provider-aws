@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_securityhub_configuration_policy_association: Add support for `SELF_MANAGED_SECURITY_HUB` as a `policy_id` value
-```

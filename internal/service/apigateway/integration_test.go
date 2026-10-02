@@ -1760,7 +1760,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.role.arn
   handler       = "lambdatest.handler"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
   timeout       = 900
 }
 

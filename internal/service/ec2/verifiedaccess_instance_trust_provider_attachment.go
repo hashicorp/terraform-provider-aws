@@ -33,17 +33,19 @@ func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"verifiedaccess_instance_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"verifiedaccess_trust_provider_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"verifiedaccess_instance_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"verifiedaccess_trust_provider_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -58,11 +58,31 @@ type workspaceConfigurationResource struct {
 func (r *workspaceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"out_of_order_time_window_in_seconds": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(0, 600),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
 			"retention_period_in_days": schema.Int32Attribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			"rule_query_offset_in_seconds": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(0, 86400),
 				},
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.UseStateForUnknown(),
@@ -155,7 +175,9 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns after creation is complete.
+	data.OutOfOrderTimeWindowInSeconds = fwflex.Int32ToFramework(ctx, output.OutOfOrderTimeWindowInSeconds)
 	data.RetentionPeriodInDays = fwflex.Int32ToFramework(ctx, output.RetentionPeriodInDays)
+	data.RuleQueryOffsetInSeconds = fwflex.Int32ToFramework(ctx, output.RuleQueryOffsetInSeconds)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -219,9 +241,16 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, request res
 		return
 	}
 
-	if _, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+	output, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts))
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Workspace (%s) Configuration update", workspaceID), err.Error())
 
+		return
+	}
+
+	// Re-read to get updated computed values
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -292,10 +321,12 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 
 type workspaceConfigurationResourceModel struct {
 	framework.WithRegionModel
-	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
-	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
-	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`
-	WorkspaceID           types.String                                            `tfsdk:"workspace_id"`
+	LimitsPerLabelSet             fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
+	OutOfOrderTimeWindowInSeconds types.Int32                                             `tfsdk:"out_of_order_time_window_in_seconds"`
+	RetentionPeriodInDays         types.Int32                                             `tfsdk:"retention_period_in_days"`
+	RuleQueryOffsetInSeconds      types.Int32                                             `tfsdk:"rule_query_offset_in_seconds"`
+	Timeouts                      timeouts.Value                                          `tfsdk:"timeouts"`
+	WorkspaceID                   types.String                                            `tfsdk:"workspace_id"`
 }
 
 type limitsPerLabelSetModel struct {

@@ -52,59 +52,61 @@ func resourceFolder() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"folder_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.NoZeroValues,
-					validation.StringLenBetween(1, 2048),
-				),
-			},
-			"folder_path": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"folder_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.FolderTypeShared,
-				ValidateDiagFunc: enum.Validate[awstypes.FolderType](),
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.NoZeroValues,
-					validation.StringLenBetween(1, 200),
-				),
-			},
-			"parent_folder_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrPermissions: quicksightschema.PermissionsSchema(),
-			names.AttrTags:        tftags.TagsSchema(),
-			names.AttrTagsAll:     tftags.TagsSchemaComputed(),
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"folder_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.NoZeroValues,
+						validation.StringLenBetween(1, 2048),
+					),
+				},
+				"folder_path": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"folder_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.FolderTypeShared,
+					ValidateDiagFunc: enum.Validate[awstypes.FolderType](),
+				},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.NoZeroValues,
+						validation.StringLenBetween(1, 200),
+					),
+				},
+				"parent_folder_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrPermissions: quicksightschema.PermissionsSchema(),
+				names.AttrTags:        tftags.TagsSchema(),
+				names.AttrTagsAll:     tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

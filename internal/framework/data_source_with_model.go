@@ -36,7 +36,7 @@ type DataSourceValidateModel interface {
 	ValidateModel(ctx context.Context, schema *schema.Schema) diag.Diagnostics
 }
 
-// withModel is a structure to be embedded within a DataSource, EphemeralResource, or Resource that has a corresponding model.
+// withModel is a structure to be embedded within an Action, DataSource, EphemeralResource, or Resource that has a corresponding model.
 type withModel[T any] struct{}
 
 // validateModel validates the data source's model against a schema.

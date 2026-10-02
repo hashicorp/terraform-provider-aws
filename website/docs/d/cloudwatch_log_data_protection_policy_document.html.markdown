@@ -93,29 +93,29 @@ The following arguments are optional:
 
 -> Every policy statement must specify exactly one operation.
 
-##### audit Configuration Block
+#### audit Configuration Block
 
 * `findings_destination` - (Required) Configures destinations to send audit findings to.
 
-##### findings_destination Configuration Block
+#### findings_destination Configuration Block
 
 * `cloudwatch_logs` - (Optional) Configures CloudWatch Logs as a findings destination.
 * `firehose` - (Optional) Configures Kinesis Firehose as a findings destination.
 * `s3` - (Optional) Configures S3 as a findings destination.
 
-###### cloudwatch_logs Configuration Block
+#### cloudwatch_logs Configuration Block
 
 * `log_group` - (Required) Name of the CloudWatch Log Group to send findings to.
 
-###### firehose Configuration Block
+#### firehose Configuration Block
 
 * `delivery_stream` - (Required) Name of the Kinesis Firehose Delivery Stream to send findings to.
 
-###### s3 Configuration Block
+#### s3 Configuration Block
 
 * `bucket` - (Required) Name of the S3 Bucket to send findings to.
 
-##### deidentify Configuration Block
+#### deidentify Configuration Block
 
 * `mask_config` - (Required) An empty object that configures masking.
 

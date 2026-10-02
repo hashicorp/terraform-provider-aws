@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route_table: Retry resource Create for EC2 eventual consistency
-```

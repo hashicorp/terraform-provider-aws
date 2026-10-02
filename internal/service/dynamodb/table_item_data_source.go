@@ -26,29 +26,31 @@ func dataSourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableItemRead,
 
-		Schema: map[string]*schema.Schema{
-			"expression_attribute_names": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"item": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateTableItem,
-			},
-			"projection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTableName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"expression_attribute_names": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"item": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKey: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateTableItem,
+				},
+				"projection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTableName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

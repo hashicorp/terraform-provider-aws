@@ -50,159 +50,161 @@ func resourceNATGateway() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allocation_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrAssociationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_provision_zones": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_scaling_ips": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityMode](),
-			},
-			"availability_zone_address": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					o, n := d.GetChange("availability_zone_address")
-					os, ns := o.(*schema.Set), n.(*schema.Set)
-					return EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allocation_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allocation_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				names.AttrAssociationID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_provision_zones": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_scaling_ips": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AvailabilityMode](),
+				},
+				"availability_zone_address": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						o, n := d.GetChange("availability_zone_address")
+						os, ns := o.(*schema.Set), n.(*schema.Set)
+						return EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns)
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"availability_zone_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
 							},
 						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"availability_zone_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+					},
+				},
+				"connectivity_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ConnectivityTypePublic,
+					ValidateDiagFunc: enum.Validate[awstypes.ConnectivityType](),
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ip": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+				"public_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"regional_nat_gateway_address": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"availability_zone_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"public_ip": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"connectivity_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ConnectivityTypePublic,
-				ValidateDiagFunc: enum.Validate[awstypes.ConnectivityType](),
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPv4Address,
-			},
-			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"regional_nat_gateway_address": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allocation_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"availability_zone_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"public_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				// internal attribute to trigger recreation when mode changes between auto and manual
+				"regional_nat_gateway_auto_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			// internal attribute to trigger recreation when mode changes between auto and manual
-			"regional_nat_gateway_auto_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"secondary_allocation_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"secondary_private_ip_address_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"secondary_private_ip_addresses"},
-			},
-			"secondary_private_ip_addresses": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"secondary_private_ip_address_count"},
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secondary_allocation_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"secondary_private_ip_address_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"secondary_private_ip_addresses"},
+				},
+				"secondary_private_ip_addresses": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"secondary_private_ip_address_count"},
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		CustomizeDiff: resourceNATGatewayCustomizeDiff,
@@ -432,7 +434,12 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	case awstypes.AvailabilityModeZonal:
 		switch awstypes.ConnectivityType(d.Get("connectivity_type").(string)) {
 		case awstypes.ConnectivityTypePrivate:
-			if d.HasChanges("secondary_private_ip_addresses") {
+			countRaw := d.GetRawConfig().GetAttr("secondary_private_ip_address_count")
+			countConfigured := countRaw.IsKnown() && !countRaw.IsNull()
+			addressesRaw := d.GetRawConfig().GetAttr("secondary_private_ip_addresses")
+			addressesConfigured := addressesRaw.IsKnown() && !addressesRaw.IsNull()
+
+			if addressesConfigured && d.HasChange("secondary_private_ip_addresses") {
 				o, n := d.GetChange("secondary_private_ip_addresses")
 				os, ns := o.(*schema.Set), n.(*schema.Set)
 
@@ -442,9 +449,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 						PrivateIpAddresses: flex.ExpandStringValueSet(add),
 					}
 
-					_, err := conn.AssignPrivateNatGatewayAddress(ctx, input)
-
-					if err != nil {
+					if _, err := conn.AssignPrivateNatGatewayAddress(ctx, input); err != nil {
 						return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 					}
 
@@ -468,7 +473,53 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					}
 
 					for _, privateIP := range flex.ExpandStringValueSet(del) {
-						if _, err := waitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						if err := waitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
+						}
+					}
+				}
+			}
+
+			if countConfigured && d.HasChange("secondary_private_ip_address_count") {
+				o, n := d.GetChange("secondary_private_ip_address_count")
+				oldCount, newCount := o.(int), n.(int)
+
+				delta := newCount - oldCount
+
+				if delta > 0 {
+					input := &ec2.AssignPrivateNatGatewayAddressInput{
+						NatGatewayId:          aws.String(d.Id()),
+						PrivateIpAddressCount: aws.Int32(int32(delta)),
+					}
+
+					if _, err := conn.AssignPrivateNatGatewayAddress(ctx, input); err != nil {
+						return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP address count: %s", d.Id(), err)
+					}
+
+					if _, err := waitNATGatewaySecondaryPrivateIPAddressCount(ctx, conn, d.Id(), newCount, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) secondary private IP address count (%d): %s", d.Id(), newCount, err)
+					}
+				}
+
+				if delta < 0 {
+					removeCount := -delta
+
+					sIPs, _ := d.GetChange("secondary_private_ip_addresses")
+					secondaryPrivateIPs := sIPs.(*schema.Set).List()
+
+					privateIPsToUnassign := secondaryPrivateIPs[:removeCount]
+
+					input := &ec2.UnassignPrivateNatGatewayAddressInput{
+						NatGatewayId:       aws.String(d.Id()),
+						PrivateIpAddresses: flex.ExpandStringValueList(privateIPsToUnassign),
+					}
+
+					if _, err := conn.UnassignPrivateNatGatewayAddress(ctx, input); err != nil {
+						return sdkdiag.AppendErrorf(diags, "unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+					}
+
+					for _, privateIP := range flex.ExpandStringValueList(privateIPsToUnassign) {
+						if err := waitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
 							return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
 						}
 					}
@@ -654,15 +705,18 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
 		}
 
-		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
-			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
-				if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_address_count to ForceNew: %w", err)
-				}
+		countRaw := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count")
+		countConfigured := countRaw.IsKnown() && !countRaw.IsNull()
+		addressesRaw := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses")
+		addressesConfigured := addressesRaw.IsKnown() && !addressesRaw.IsNull()
+
+		if diff.Id() != "" && countConfigured && diff.HasChange("secondary_private_ip_address_count") {
+			if err := diff.SetNewComputed("secondary_private_ip_addresses"); err != nil {
+				return fmt.Errorf("setting secondary_private_ip_addresses to Computed: %w", err)
 			}
 		}
 
-		if diff.Id() != "" && diff.HasChange("secondary_private_ip_addresses") {
+		if diff.Id() != "" && addressesConfigured && diff.HasChange("secondary_private_ip_addresses") {
 			if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
 				return fmt.Errorf("setting secondary_private_ip_address_count to Computed: %w", err)
 			}

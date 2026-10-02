@@ -26,56 +26,58 @@ func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
-			},
-			"certificate_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_pem": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"certificate_wallet": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"key_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"signing_algorithm": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"valid_from_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"valid_to_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_creation_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+					),
+				},
+				"certificate_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_pem": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"certificate_wallet": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"key_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"signing_algorithm": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"valid_from_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"valid_to_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

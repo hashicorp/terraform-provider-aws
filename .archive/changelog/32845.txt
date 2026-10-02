@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_licensemanager_license_configuration: Surface `InvalidParameterValueException` errors during resource Delete
-```

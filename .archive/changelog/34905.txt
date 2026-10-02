@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudwatch_event_rule: Add `force_destroy` attribute
-```

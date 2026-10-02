@@ -32,135 +32,137 @@ func dataSourceVPCEndpoint() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"dns_entry": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDNSName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrHostedZoneID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"dns_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dns_record_ip_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_dns_only_for_inbound_resolver_endpoint": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"private_dns_preference": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_dns_specified_domains": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"cidr_blocks": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"dns_entry": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDNSName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrHostedZoneID: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"prefix_list_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"requester_managed": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"route_table_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"service_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				"dns_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_record_ip_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_dns_only_for_inbound_resolver_endpoint": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"private_dns_preference": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_dns_specified_domains": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"prefix_list_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"requester_managed": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"route_table_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"service_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vpc_endpoint_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

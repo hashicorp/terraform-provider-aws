@@ -28,6 +28,12 @@ import (
 )
 
 // @SDKResource("aws_iam_user_policy", name="User Policy")
+// @IdentityAttribute("user")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{user}:{name}")
+// @ImportIDHandler("userPolicyImportID")
+// @Testing(existsType="string")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyPut,
@@ -35,41 +41,39 @@ func resourceUserPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceUserPolicyPut,
 		DeleteWithoutTimeout: resourceUserPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := verify.LegacyPolicyNormalize(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
 				},
-			},
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+				},
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          verify.ValidIAMPolicyJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := verify.LegacyPolicyNormalize(v)
+						return json
+					},
+				},
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -132,14 +136,22 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceUserPolicyFlatten(d, userName, policyName, policyDocument); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening IAM User Policy (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceUserPolicyFlatten(d *schema.ResourceData, userName, policyName, policyDocument string) error {
 	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	d.Set(names.AttrName, policyName)
@@ -147,7 +159,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("user", userName)
 
-	return diags
+	return nil
 }
 
 func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -223,4 +235,24 @@ func userPolicyParseResourceID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+type userPolicyImportID struct{}
+
+func (userPolicyImportID) Create(d *schema.ResourceData) string {
+	return userPolicyCreateResourceID(d.Get("user").(string), d.Get(names.AttrName).(string))
+}
+
+func (userPolicyImportID) Parse(id string) (string, map[string]any, error) {
+	userName, policyName, err := userPolicyParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"user":         userName,
+		names.AttrName: policyName,
+	}
+
+	return id, result, nil
 }

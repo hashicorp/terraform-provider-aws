@@ -179,9 +179,9 @@ This resource supports the following arguments:
 * `log_group_name` - (Optional) The name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
 * `log_stream_name_prefix` - (Optional) Prefix for the CloudWatch log stream name.
 * `log_types` - (Optional) The types of logs that you want to publish to CloudWatch. If you don't specify any log types, driver STDOUT and STDERR logs will be published to CloudWatch Logs by default. See [log_types](#log_types-arguments) for more details.
-* `encryption_key_arn` - (Optional) The AWS Key Management Service (KMS) key ARN to encrypt the logs that you store in CloudWatch Logs.
+* `encryption_key_arn` - (Optional) KMS key ARN to encrypt the logs that you store in CloudWatch Logs.
 
-##### log_types Arguments
+#### log_types Arguments
 
 * `name` - (Required) The worker type. Valid values are `SPARK_DRIVER`, `SPARK_EXECUTOR`, `HIVE_DRIVER`, and `TEZ_TASK`.
 * `values` - (Required) The list of log types to publish. Valid values are `STDOUT`, `STDERR`, `HIVE_LOG`, `TEZ_AM`, and `SYSTEM_LOGS`.
@@ -219,7 +219,7 @@ This resource supports the following arguments:
 * `livy_endpoint_enabled` - (Optional) Enables an Apache Livy endpoint that you can connect to and run interactive jobs.
 * `studio_enabled` - (Optional) Enables you to connect an application to Amazon EMR Studio to run interactive workloads in a notebook.
 
-##### worker_configuration Arguments
+#### worker_configuration Arguments
 
 * `cpu` - (Required) The CPU requirements for every worker instance of the worker type.
 * `disk` - (Optional) The disk requirements for every worker instance of the worker type.

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_association: Prevent panic when `wait_for_success_timeout_seconds` is configured
-```

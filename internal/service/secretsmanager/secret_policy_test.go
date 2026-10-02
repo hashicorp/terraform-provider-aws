@@ -117,6 +117,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, t, resourceName, &policy),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -125,7 +126,11 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionCreate),
+						// For backwards compatibility the Read operation does NOT check
+						// for nil/empty policy content and remove the resource from state.
+						// This means that out of band removal will result in a planned
+						// update instead of a creation.
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionUpdate),
 					},
 				},
 			},

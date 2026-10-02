@@ -371,7 +371,7 @@ func waitAccessPointCreated(ctx context.Context, conn *s3files.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateError),
-		Refresh: statusAccessPoint(ctx, conn, id),
+		Refresh: statusAccessPoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -388,7 +388,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *s3files.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusAccessPoint(ctx, conn, id),
+		Refresh: statusAccessPoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -401,7 +401,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *s3files.Client, id string
 	return nil, smarterr.NewError(err)
 }
 
-func statusAccessPoint(_ context.Context, conn *s3files.Client, id string) retry.StateRefreshFunc {
+func statusAccessPoint(conn *s3files.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 

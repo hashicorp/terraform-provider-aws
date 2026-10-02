@@ -696,6 +696,20 @@ func resourceDistribution() *schema.Resource {
 											Default:      5,
 											ValidateFunc: validation.IntAtLeast(1),
 										},
+										"origin_mtls_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"client_certificate_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
 										"origin_read_timeout": {
 											Type:         schema.TypeInt,
 											Optional:     true,
@@ -2594,6 +2608,12 @@ func expandCustomOriginConfig(tfMap map[string]any) *awstypes.CustomOriginConfig
 		apiObject.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
+	if v, ok := tfMap["origin_mtls_config"]; ok {
+		if v := v.([]any); len(v) > 0 {
+			apiObject.OriginMtlsConfig = expandOriginMtlsConfig(v[0].(map[string]any))
+		}
+	}
+
 	return apiObject
 }
 
@@ -2615,6 +2635,10 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 		tfMap[names.AttrIPAddressType] = apiObject.IpAddressType
 	}
 
+	if apiObject.OriginMtlsConfig != nil {
+		tfMap["origin_mtls_config"] = []any{flattenOriginMtlsConfig(apiObject.OriginMtlsConfig)}
+	}
+
 	return tfMap
 }
 
@@ -2631,6 +2655,26 @@ func flattenCustomOriginConfigSSL(apiObject *awstypes.OriginSslProtocols) []any 
 	}
 
 	return flex.FlattenStringyValueList(apiObject.Items)
+}
+
+func expandOriginMtlsConfig(tfMap map[string]any) *awstypes.OriginMtlsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	return &awstypes.OriginMtlsConfig{
+		ClientCertificateArn: aws.String(tfMap["client_certificate_arn"].(string)),
+	}
+}
+
+func flattenOriginMtlsConfig(apiObject *awstypes.OriginMtlsConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]any{
+		"client_certificate_arn": aws.ToString(apiObject.ClientCertificateArn),
+	}
 }
 
 func expandOriginShield(tfMap map[string]any) *awstypes.OriginShield {

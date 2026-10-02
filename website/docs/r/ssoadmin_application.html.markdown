@@ -108,7 +108,11 @@ resource "aws_ssoadmin_application" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the SSO application.
+- `arn` (String) ARN of the SSO application.
+
+#### Optional
+
+- `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Application using the `id`. For example:
 

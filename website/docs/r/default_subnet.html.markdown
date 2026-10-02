@@ -51,6 +51,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `cidr_block` - The IPv4 CIDR block assigned to the subnet
 * `vpc_id` - The ID of the VPC the subnet is in
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:

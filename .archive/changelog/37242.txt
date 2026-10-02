@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_route53_resolver_firewall_rule: Add `firewall_domain_redirection_action` argument
-```

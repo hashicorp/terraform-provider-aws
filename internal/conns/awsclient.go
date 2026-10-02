@@ -147,10 +147,15 @@ func (c *AWSClient) SetCallRecorder(r *apicall.Recorder) {
 //   - the VCR randomness source, when VCR testing is active
 //   - the API-call recorder, when one is attached for the test
 //   - the AutoFlex logger
-//   - HTTP request/response body redaction
 //
 // Each element is a no-op when the corresponding feature is inactive.
 // Safe to call on a nil receiver, in which case ctx is returned unchanged.
+//
+// HTTP request and response body redaction is intentionally NOT included
+// here, because debug-level logs of normal AWS API traffic are useful and
+// should not be globally redacted. Ephemeral resources and actions, whose
+// API responses commonly carry secrets, must use [AWSClient.EphemeralRequestContext]
+// instead.
 func (c *AWSClient) RequestContext(ctx context.Context) context.Context {
 	if c == nil {
 		return ctx
@@ -161,8 +166,23 @@ func (c *AWSClient) RequestContext(ctx context.Context) context.Context {
 		ctx = vcr.NewContext(ctx, s)
 	}
 	ctx = apicall.NewContext(ctx, c.callRecorder)
-	ctx = fwflex.RegisterLogger(ctx)
-	return logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+	return fwflex.RegisterLogger(ctx)
+}
+
+// EphemeralRequestContext is [AWSClient.RequestContext] plus tflog
+// redaction of the http.request.body and http.response.body fields.
+//
+// Use for ephemeral resources and actions whose API responses commonly
+// carry secrets that must not appear in provider logs. Use
+// [AWSClient.RequestContext] for everything else; redacting every HTTP
+// body across the provider would defeat ordinary debug logging.
+//
+// Safe to call on a nil receiver, in which case ctx is returned unchanged.
+func (c *AWSClient) EphemeralRequestContext(ctx context.Context) context.Context {
+	if c == nil {
+		return ctx
+	}
+	return logging.MaskSensitiveValuesByKey(c.RequestContext(ctx), logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
 }
 
 // Region returns the ID of the effective AWS Region.

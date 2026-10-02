@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Correctly validate AWS European Sovereign Cloud Regions in ARNs
-```

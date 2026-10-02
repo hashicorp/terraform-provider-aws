@@ -155,40 +155,64 @@ resource "aws_db_parameter_group" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Optional, Forces new resource) The name of the DB parameter group. If omitted, Terraform will assign a random, unique name.
+* `description` - (Optional, Forces new resource) Description of the DB parameter group. Defaults to "Managed by Terraform".
+* `family` - (Required, Forces new resource) Family of the DB parameter group.
+* `name` - (Optional, Forces new resource) Name of the DB parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `family` - (Required, Forces new resource) The family of the DB parameter group.
-* `description` - (Optional, Forces new resource) The description of the DB parameter group. Defaults to "Managed by Terraform".
-* `parameter` - (Optional) The DB parameters to apply. See [`parameter` Block](#parameter-block) below for more details. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
+* `parameter` - (Optional) DB parameters to apply. See [`parameter` Block](#parameter-block) below for more details. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_destroy` - (Optional) Set to true if you do not wish the parameter group to be deleted at destroy time, and instead just remove the parameter group from the Terraform state.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `parameter` Block
 
 The `parameter` blocks support the following arguments:
 
-* `name` - (Required) The name of the DB parameter.
-* `value` - (Required) The value of the DB parameter.
-* `apply_method` - (Optional) "immediate" (default), or "pending-reboot". Some
-    engines can't apply some parameters without a reboot, and you will need to
-    specify "pending-reboot" here.
+* `apply_method` - (Optional) "immediate" (default), or "pending-reboot". Some engines can't apply some parameters without a reboot, and you will need to specify "pending-reboot" here.
+* `name` - (Required) Name of the DB parameter.
+* `value` - (Required) Value of the DB parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The db parameter group name.
-* `arn` - The ARN of the db parameter group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the db parameter group.
+* `id` - DB parameter group name.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_db_parameter_group.example
+  identity = {
+    name = "rds-pg"
+  }
+}
+
+resource "aws_db_parameter_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `name` (String) Name of the DB parameter group.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Parameter groups using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_db_parameter_group.rds_pg
+  to = aws_db_parameter_group.example
   id = "rds-pg"
 }
 ```
@@ -196,5 +220,5 @@ import {
 Using `terraform import`, import DB Parameter groups using the `name`. For example:
 
 ```console
-% terraform import aws_db_parameter_group.rds_pg rds-pg
+% terraform import aws_db_parameter_group.example rds-pg
 ```

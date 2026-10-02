@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iam_access_key: Ensure `Inactive` `status` is properly configured during resource creation
-```

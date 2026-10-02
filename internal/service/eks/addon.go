@@ -60,104 +60,106 @@ func resourceAddon() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"addon_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"addon_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					// Regular expression taken from: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-					validation.StringMatch(regexache.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`), "must follow semantic version format"),
-				),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			"configuration_values": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrNamespace: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringMatch(rfc1123LabelNameRelaxed, "must be a valid RFC 1123 DNS label"),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"addon_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"addon_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						// Regular expression taken from: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+						validation.StringMatch(regexache.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`), "must follow semantic version format"),
+					),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				"configuration_values": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"modified_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrNamespace: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringMatch(rfc1123LabelNameRelaxed, "must be a valid RFC 1123 DNS label"),
+							},
 						},
 					},
 				},
-			},
-			"pod_identity_association": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"service_account": {
-							Type:     schema.TypeString,
-							Required: true,
+				"pod_identity_association": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"service_account": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"preserve": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"resolve_conflicts_on_create": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(
-					types.ResolveConflictsNone,
-					types.ResolveConflictsOverwrite,
-				), false),
-			},
-			"resolve_conflicts_on_update": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-			},
-			"service_account_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"preserve": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"resolve_conflicts_on_create": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						types.ResolveConflictsNone,
+						types.ResolveConflictsOverwrite,
+					), false),
+				},
+				"resolve_conflicts_on_update": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
+				},
+				"service_account_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -261,28 +263,9 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading EKS Add-On (%s): %s", d.Id(), err)
 	}
 
-	d.Set("addon_name", addon.AddonName)
-	d.Set("addon_version", addon.AddonVersion)
-	d.Set(names.AttrARN, addon.AddonArn)
-	d.Set(names.AttrClusterName, addon.ClusterName)
-	d.Set("configuration_values", addon.ConfigurationValues)
-	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
-	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
-	if addon.NamespaceConfig != nil {
-		if err := d.Set("namespace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting namespace_config: %s", err)
-		}
-	} else {
-		d.Set("namespace_config", nil)
-	}
-	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
+	if err := resourceAddonFlatten(ctx, conn, addon, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	} else if err := d.Set("pod_identity_association", tfList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
 	}
-	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
-
-	setTagsOut(ctx, addon.Tags)
 
 	return diags
 }
@@ -383,6 +366,34 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func resourceAddonFlatten(ctx context.Context, conn *eks.Client, addon *types.Addon, d *schema.ResourceData) error {
+	clusterName := aws.ToString(addon.ClusterName)
+	d.Set("addon_name", addon.AddonName)
+	d.Set("addon_version", addon.AddonVersion)
+	d.Set(names.AttrARN, addon.AddonArn)
+	d.Set(names.AttrClusterName, clusterName)
+	d.Set("configuration_values", addon.ConfigurationValues)
+	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
+	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	if addon.NamespaceConfig != nil {
+		if err := d.Set("namespace_config", []any{flattenAddonNamespaceConfigResponse(addon.NamespaceConfig)}); err != nil {
+			return fmt.Errorf("setting namespace_config: %w", err)
+		}
+	} else {
+		d.Set("namespace_config", nil)
+	}
+	if tfList, err := flattenAddonPodIdentityAssociations(ctx, conn, addon.PodIdentityAssociations, clusterName); err != nil {
+		return err
+	} else if err := d.Set("pod_identity_association", tfList); err != nil {
+		return fmt.Errorf("setting pod_identity_association: %w", err)
+	}
+	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
+
+	setTagsOut(ctx, addon.Tags)
+
+	return nil
 }
 
 func expandAddonNamespaceConfigRequest(tfMap map[string]any) *types.AddonNamespaceConfigRequest {

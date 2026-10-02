@@ -38,17 +38,19 @@ func resourceBudgetResourceAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(BudgetResourceAssociationDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"budget_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"budget_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -47,132 +47,134 @@ func resourceConfigurationPolicy() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			customParameterResource := func() *schema.Resource {
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bool": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeBool,
-									},
-								},
-							},
-						},
-						"double": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeFloat,
-									},
-								},
-							},
-						},
-						"enum": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-								},
-							},
-						},
-						"enum_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							"bool": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeBool,
 										},
 									},
 								},
 							},
-						},
-						"int": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required:     true,
-										Type:         schema.TypeInt,
-										ValidateFunc: validation.IntAtMost(math.MaxInt32),
+							"double": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeFloat,
+										},
 									},
 								},
 							},
-						},
-						"int_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
+							"enum": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeString,
+										},
+									},
+								},
+							},
+							"enum_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"int": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required:     true,
 											Type:         schema.TypeInt,
 											ValidateFunc: validation.IntAtMost(math.MaxInt32),
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"string": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-								},
-							},
-						},
-						"string_list": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValue: {
-										Required: true,
-										Type:     schema.TypeList,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+							"int_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type:         schema.TypeInt,
+												ValidateFunc: validation.IntAtMost(math.MaxInt32),
+											},
 										},
 									},
 								},
 							},
-						},
-						"value_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
-						},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"string": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeString,
+										},
+									},
+								},
+							},
+							"string_list": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValue: {
+											Required: true,
+											Type:     schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+							"value_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
+							},
+						}
 					},
 				}
 			}

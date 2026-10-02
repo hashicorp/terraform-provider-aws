@@ -49,189 +49,157 @@ func resourceWorkgroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"config_parameter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parameter_key": {
-							Type: schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{
-								// https://docs.aws.amazon.com/redshift-serverless/latest/APIReference/API_CreateWorkgroup.html#redshiftserverless-CreateWorkgroup-request-configParameters
-								"auto_mv",
-								"datestyle",
-								"enable_case_sensitive_identifier", // "ValidationException: The parameter key enable_case_sensitivity_identifier isn't supported. Supported values: [[max_query_cpu_usage_percent, max_join_row_count, auto_mv, max_query_execution_time, max_query_queue_time, max_query_blocks_read, max_return_row_count, search_path, datestyle, max_query_cpu_time, max_io_skew, max_scan_row_count, query_group, enable_user_activity_logging, enable_case_sensitive_identifier, max_nested_loop_join_row_count, max_query_temp_blocks_to_disk, max_cpu_skew]]"
-								"enable_user_activity_logging",
-								"query_group",
-								"search_path",
-								// https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless
-								"max_query_cpu_time",
-								"max_query_blocks_read",
-								"max_scan_row_count",
-								"max_query_execution_time",
-								"max_query_queue_time",
-								"max_query_cpu_usage_percent",
-								"max_query_temp_blocks_to_disk",
-								"max_join_row_count",
-								"max_nested_loop_join_row_count",
-								// default SSL parameters automatically added by AWS
-								// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
-								"require_ssl",
-								"use_fips_ssl",
-							}, false),
-							Required: true,
-						},
-						"parameter_value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"vpc_endpoint": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"network_interface": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAvailabilityZone: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrNetworkInterfaceID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"private_ip_address": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrSubnetID: {
-													Type:     schema.TypeString,
-													Computed: true,
+				"base_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"config_parameter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     workgroupConfigParameterSchema(),
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"vpc_endpoint": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"network_interface": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAvailabilityZone: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrNetworkInterfaceID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"private_ip_address": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrSubnetID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									names.AttrVPCEndpointID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrVPCID: {
-										Type:     schema.TypeString,
-										Computed: true,
+										names.AttrVPCEndpointID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrVPCID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"enhanced_vpc_routing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
-			},
-			"price_performance_target": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"level": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+				"enhanced_vpc_routing": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+					Optional: true,
+				},
+				"price_performance_target": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"level": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+							},
 						},
 					},
 				},
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"track_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
-				),
-			},
-			"workgroup_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"track_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
+					),
+				},
+				"workgroup_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -310,6 +278,10 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
+	// When importing, only `id` will be set.
+	// During a read of an existing resource, `workgroup_name` will be set as it is a required attribute.
+	isImport := d.Get("workgroup_name") == ""
+
 	out, err := findWorkgroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -324,7 +296,9 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.Set(names.AttrARN, out.WorkgroupArn)
 	d.Set("base_capacity", out.BaseCapacity)
-	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
+	// On read, keep state aligned with the subset Terraform is actively managing.
+	configParameters := flattenConfigParametersForState(isImport, out.ConfigParameters, d)
+	if err := d.Set("config_parameter", configParameters); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
 	if err := d.Set(names.AttrEndpoint, []any{flattenEndpoint(out.Endpoint)}); err != nil {
@@ -755,6 +729,23 @@ func flattenPerformanceTarget(apiObject *awstypes.PerformanceTarget) []any {
 	return []any{tfMap}
 }
 
+func workgroupConfigParameterSchema() *schema.Resource {
+	return &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"parameter_key": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"parameter_value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
+		},
+	}
+}
+
 func expandConfigParameter(tfMap map[string]any) awstypes.ConfigParameter {
 	apiObject := awstypes.ConfigParameter{}
 
@@ -802,14 +793,61 @@ func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]any {
 	return tfMap
 }
 
-func flattenConfigParameters(apiObjects []awstypes.ConfigParameter) []any {
+func configuredConfigParameterKeysFromSet(tfSet any) map[string]struct{} {
+	configParameters, ok := tfSet.(*schema.Set)
+	if !ok || configParameters == nil {
+		return nil
+	}
+
+	keys := make(map[string]struct{}, configParameters.Len())
+
+	for _, tfMapRaw := range configParameters.List() {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		parameterKey, ok := tfMap["parameter_key"].(string)
+		if !ok || parameterKey == "" {
+			continue
+		}
+
+		keys[parameterKey] = struct{}{}
+	}
+
+	return keys
+}
+
+func flattenConfigParametersForState(isImport bool, apiObjects []awstypes.ConfigParameter, d *schema.ResourceData) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []any
 
+	// TODO: Quick and dirty, needs better logic
+	if isImport {
+		for _, apiObject := range apiObjects {
+			if apiObject.ParameterKey == nil {
+				continue
+			}
+
+			tfList = append(tfList, flattenConfigParameter(apiObject))
+		}
+
+		return tfList
+	}
+
+	configuredKeys := configuredConfigParameterKeysFromSet(d.Get("config_parameter"))
 	for _, apiObject := range apiObjects {
+		if apiObject.ParameterKey == nil {
+			continue
+		}
+
+		if _, ok := configuredKeys[aws.ToString(apiObject.ParameterKey)]; !ok {
+			continue
+		}
+
 		tfList = append(tfList, flattenConfigParameter(apiObject))
 	}
 

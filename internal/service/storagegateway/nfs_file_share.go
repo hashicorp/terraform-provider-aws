@@ -49,173 +49,175 @@ func resourceNFSFileShare() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"audit_destination_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"bucket_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"vpc_endpoint_dns_name"},
-			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(300, 2592000),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"audit_destination_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"bucket_region": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"vpc_endpoint_dns_name"},
+				},
+				"cache_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_stale_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(300, 2592000),
+							},
 						},
 					},
 				},
-			},
-			"client_list": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 100,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidIPv4CIDRNetworkAddress,
-						validation.IsIPv4Address,
+				"client_list": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 100,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidIPv4CIDRNetworkAddress,
+							validation.IsIPv4Address,
+						),
+					},
+				},
+				"default_storage_class": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      defaultStorageClassS3Standard,
+					ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
+				},
+				"file_share_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"fileshare_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"guess_mime_type_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"kms_encrypted": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"location_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"nfs_file_share_defaults": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"directory_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "0777",
+								ValidateFunc: validLinuxFileMode,
+							},
+							"file_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "0666",
+								ValidateFunc: validLinuxFileMode,
+							},
+							"group_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "65534",
+								ValidateFunc: verify.Valid4ByteASN,
+							},
+							names.AttrOwnerID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "65534",
+								ValidateFunc: verify.Valid4ByteASN,
+							},
+						},
+					},
+				},
+				"notification_policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "{}",
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+						validation.StringLenBetween(2, 100),
 					),
 				},
-			},
-			"default_storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      defaultStorageClassS3Standard,
-				ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
-			},
-			"file_share_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"fileshare_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"guess_mime_type_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"kms_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"location_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"nfs_file_share_defaults": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"directory_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "0777",
-							ValidateFunc: validLinuxFileMode,
-						},
-						"file_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "0666",
-							ValidateFunc: validLinuxFileMode,
-						},
-						"group_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "65534",
-							ValidateFunc: verify.Valid4ByteASN,
-						},
-						names.AttrOwnerID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "65534",
-							ValidateFunc: verify.Valid4ByteASN,
-						},
-					},
+				"object_acl": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ObjectACLPrivate,
+					ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
 				},
-			},
-			"notification_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
-					validation.StringLenBetween(2, 100),
-				),
-			},
-			"object_acl": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ObjectACLPrivate,
-				ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"requester_pays": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"squash": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      squashRootSquash,
-				ValidateFunc: validation.StringInSlice(squash_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_dns_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"requester_pays": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"squash": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      squashRootSquash,
+					ValidateFunc: validation.StringInSlice(squash_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_endpoint_dns_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

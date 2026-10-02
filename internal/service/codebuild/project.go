@@ -323,6 +323,12 @@ func resourceProject() *schema.Resource {
 									},
 								},
 							},
+							"host_kernel": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.HostKernel](),
+							},
 							"image": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -949,6 +955,17 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Project (%s): %s", d.Id(), err)
 	}
 
+	diags = append(diags, resourceProjectFlatten(ctx, d, project)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
+}
+
+func resourceProjectFlatten(ctx context.Context, d *schema.ResourceData, project *types.Project) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, project.Arn)
 	if project.Artifacts != nil {
 		if err := d.Set("artifacts", []any{flattenProjectArtifacts(project.Artifacts)}); err != nil {
@@ -1469,6 +1486,10 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 		apiObject.Fleet = projectFleet
 	}
 
+	if v, ok := tfMap["host_kernel"].(string); ok && v != "" {
+		apiObject.HostKernel = types.HostKernel(v)
+	}
+
 	if v, ok := tfMap["image"].(string); ok && v != "" {
 		apiObject.Image = aws.String(v)
 	}
@@ -1951,6 +1972,7 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 	tfMap := map[string]any{
 		"compute_type":                apiObject.ComputeType,
+		"host_kernel":                 apiObject.HostKernel,
 		"image_pull_credentials_type": apiObject.ImagePullCredentialsType,
 		names.AttrType:                apiObject.Type,
 	}

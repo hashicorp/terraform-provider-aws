@@ -34,16 +34,15 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_stream", name="Metric Stream")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.52.0")
 func resourceMetricStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricStreamCreate,
 		ReadWithoutTimeout:   resourceMetricStreamRead,
 		UpdateWithoutTimeout: resourceMetricStreamUpdate,
 		DeleteWithoutTimeout: resourceMetricStreamDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
@@ -209,7 +208,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &cloudwatch.PutMetricStreamInput{
+	input := cloudwatch.PutMetricStreamInput{
 		FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 		IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 		Name:                         aws.String(name),
@@ -230,13 +229,13 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		input.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set).List())
 	}
 
-	output, err := conn.PutMetricStream(ctx, input)
+	output, err := conn.PutMetricStream(ctx, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		output, err = conn.PutMetricStream(ctx, input)
+		output, err = conn.PutMetricStream(ctx, &input)
 	}
 
 	if err != nil {
@@ -316,7 +315,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cloudwatch.PutMetricStreamInput{
+		input := cloudwatch.PutMetricStreamInput{
 			FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 			Name:                         aws.String(d.Id()),
@@ -336,7 +335,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set).List())
 		}
 
-		_, err := conn.PutMetricStream(ctx, input)
+		_, err := conn.PutMetricStream(ctx, &input)
 
 		if err != nil {
 			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
@@ -372,10 +371,14 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name string) (*cloudwatch.GetMetricStreamOutput, error) {
-	input := &cloudwatch.GetMetricStreamInput{
+	input := cloudwatch.GetMetricStreamInput{
 		Name: aws.String(name),
 	}
 
+	return findMetricStream(ctx, conn, &input)
+}
+
+func findMetricStream(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetMetricStreamInput) (*cloudwatch.GetMetricStreamOutput, error) {
 	output, err := conn.GetMetricStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {

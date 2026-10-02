@@ -162,7 +162,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), knownvalue.NotNull()),
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		{{ else if eq (len .IdentityAttributes) 1 -}}
-			{{ if eq .PlannableResourceAction "Replace" -}}
+			{{ if and (eq .PlannableResourceAction "Replace") (eq .Implementation "framework") -}}
 				{{ range .IdentityAttributes -}}
 				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
 				{{ end -}}
@@ -216,7 +216,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 			{{ end -}}
 		{{ else if eq (len .IdentityAttributes) 1 -}}
-			{{ if eq .PlannableResourceAction "Replace" -}}
+			{{ if and (eq .PlannableResourceAction "Replace") (eq .Implementation "framework") -}}
 				{{ range .IdentityAttributes -}}
 				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
 				{{ end -}}
@@ -331,7 +331,7 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 						{{ end -}}
 					{{ else if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
+							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttributeResourceAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
@@ -482,7 +482,7 @@ func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper 
 					{{ end -}}
 					{{ if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
+							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttributeResourceAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),

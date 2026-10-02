@@ -87,7 +87,7 @@ func testAccCheckInvitationAccepterDestroy(ctx context.Context, t *testing.T) re
 }
 
 func testAccInvitationAccepterConfig_basic(email string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
@@ -107,5 +107,5 @@ resource "aws_detective_invitation_accepter" "test" {
 
   depends_on = [aws_detective_member.test]
 }
-`, email)
+`, email))
 }

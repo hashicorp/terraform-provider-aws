@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ses_receipt_filter: Allow period character (`.`) in `name` argument
-```

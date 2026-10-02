@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,14 +38,6 @@ type onlineEvaluationConfigListResource struct {
 func (l *onlineEvaluationConfigListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listOnlineEvaluationConfigModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput
 		for item, err := range listOnlineEvaluationConfigs(ctx, conn, &input) {
@@ -58,11 +51,17 @@ func (l *onlineEvaluationConfigListResource) List(ctx context.Context, request l
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			configID := aws.ToString(item.OnlineEvaluationConfigId)
-			output, err := findOnlineEvaluationConfigByID(ctx, conn, configID)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+			var output *bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findOnlineEvaluationConfigByID(ctx, conn, configID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
 			}
 
 			result := request.NewListResult(ctx)
@@ -70,9 +69,13 @@ func (l *onlineEvaluationConfigListResource) List(ctx context.Context, request l
 			var data onlineEvaluationConfigResourceModel
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
-				if result.Diagnostics.HasError() {
-					return
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				} else {
+					data.OnlineEvaluationConfigID = fwflex.StringValueToFramework(ctx, configID)
 				}
 
 				result.DisplayName = aws.ToString(item.OnlineEvaluationConfigName)
@@ -83,10 +86,6 @@ func (l *onlineEvaluationConfigListResource) List(ctx context.Context, request l
 			}
 		}
 	}
-}
-
-type listOnlineEvaluationConfigModel struct {
-	framework.WithRegionModel
 }
 
 func listOnlineEvaluationConfigs(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput) iter.Seq2[awstypes.OnlineEvaluationConfigSummary, error] {

@@ -96,6 +96,11 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:    true,
 				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
 			},
+			"ec2_placement_group_ids": schema.ListAttribute{
+				Computed:    true,
+				CustomType:  fwtypes.ListOfStringType,
+				Description: "A list of EC2 placement group IDs associated with the ODB network.",
+			},
 			"peered_cidrs": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
@@ -177,6 +182,7 @@ type odbNetworkDataSourceModel struct {
 	OdbNetworkId            types.String                                                                 `tfsdk:"id"`
 	PeeredCidrs             fwtypes.SetValueOf[types.String]                                             `tfsdk:"peered_cidrs"`
 	PercentProgress         types.Float64                                                                `tfsdk:"percent_progress"`
+	Ec2PlacementGroupIds    fwtypes.ListOfString                                                         `tfsdk:"ec2_placement_group_ids"`
 	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                  `tfsdk:"status"`
 	StatusReason            types.String                                                                 `tfsdk:"status_reason"`
 	CreatedAt               timetypes.RFC3339                                                            `tfsdk:"created_at"`

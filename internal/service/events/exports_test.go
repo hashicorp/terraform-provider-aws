@@ -36,4 +36,6 @@ var (
 	ValidCustomEventBusName = validCustomEventBusName
 	ValidBusNameOrARN       = validBusNameOrARN
 	ValidateRuleName        = validateRuleName
+
+	DefaultEventBusName = defaultEventBusName
 )

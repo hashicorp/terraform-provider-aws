@@ -39,33 +39,35 @@ func resourceTagOptionResourceAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(TagOptionResourceAssociationDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"resource_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tag_option_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"resource_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tag_option_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

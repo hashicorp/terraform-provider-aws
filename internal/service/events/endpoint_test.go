@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,18 +23,21 @@ import (
 func TestAccEventsEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
-	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
+		CheckDestroy: testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_basic(rName),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
@@ -53,8 +57,19 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -66,18 +81,21 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 func TestAccEventsEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
-	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
+		CheckDestroy: testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_basic(rName),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceEndpoint(), resourceName),

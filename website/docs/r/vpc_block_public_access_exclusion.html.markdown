@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_vpc_block_public_access_exclusion
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) VPC Block Public Access Exclusion.
+Terraform resource for managing an AWS EC2 VPC Block Public Access Exclusion.
 
 ## Example Usage
 
@@ -61,7 +61,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Block Public Access Exclusion.
-* `resource_arn` - The Amazon Resource Name (ARN) the excluded resource.
+* `resource_arn` - ARN the excluded resource.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -83,7 +83,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 (Elastic Compute Cloud) VPC Block Public Access Exclusion using the `id`. For example:
+Using `terraform import`, import EC2 VPC Block Public Access Exclusion using the `id`. For example:
 
 ```console
 % terraform import aws_vpc_block_public_access_exclusion.example vpcbpa-exclude-1234abcd

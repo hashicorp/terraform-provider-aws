@@ -33,27 +33,29 @@ func resourceADMChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrClientID: {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			names.AttrClientSecret: {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrClientID: {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+				names.AttrClientSecret: {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

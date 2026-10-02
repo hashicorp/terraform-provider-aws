@@ -49,97 +49,99 @@ func resourceEIP() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"allocation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associate_with_private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrAssociationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"carrier_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDomain: {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DomainType](),
-			},
-			"instance": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"network_border_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"network_interface": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"private_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ptr_record": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ipv4_pool": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAddress: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"allocation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associate_with_private_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrAssociationID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"carrier_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_owned_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDomain: {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DomainType](),
+				},
+				"instance": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"network_border_group": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"network_interface": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"private_dns": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ptr_record": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_dns": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_ipv4_pool": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

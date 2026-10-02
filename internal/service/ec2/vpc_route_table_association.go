@@ -51,23 +51,25 @@ func resourceRouteTableAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
-			},
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrSubnetID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
+				},
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrSubnetID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
+				},
+			}
 		},
 	}
 }

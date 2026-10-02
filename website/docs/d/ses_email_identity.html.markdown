@@ -28,5 +28,5 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` -  The ARN of the email identity.
+* `arn` - ARN of the email identity.
 * `email` - Email identity.

@@ -84,3 +84,18 @@ func resourcePreamble() *schema.Resource {
   },
 	}
 }
+
+func resourceMigratorV1() *schema.Resource {
+	x := somevalue()
+
+	return &schema.Resource{
+		// ok: use-schema-func
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+		},
+	}
+}

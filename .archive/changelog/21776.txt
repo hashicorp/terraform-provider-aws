@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_load_balancer_policy: Suppress `policy_attribute` differences
-```

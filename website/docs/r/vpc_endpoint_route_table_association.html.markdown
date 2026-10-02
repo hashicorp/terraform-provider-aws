@@ -35,6 +35,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_endpoint_route_table_association.example
+  identity = {
+    vpc_endpoint_id = "vpce-aaaaaaaa"
+    route_table_id  = "rtb-bbbbbbbb"
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `route_table_id` (String) Route Table ID.
+* `vpc_endpoint_id` (String) VPC Endpoint ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoint Route Table Associations using `vpc_endpoint_id` together with `route_table_id`. For example:
 
 ```terraform

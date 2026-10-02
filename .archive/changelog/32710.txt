@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_ssmcontacts_rotation
-```
-
-```release-note:new-data-source
-aws_ssmcontacts_rotation
-```

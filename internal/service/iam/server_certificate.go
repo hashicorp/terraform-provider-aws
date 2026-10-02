@@ -49,62 +49,64 @@ func resourceServerCertificate() *schema.Resource {
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_body": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressNormalizeCertRemoval,
-				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
-			},
-			names.AttrCertificateChain: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressNormalizeCertRemoval,
-				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-			},
-			names.AttrPrivateKey: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				Sensitive:        true,
-				DiffSuppressFunc: suppressNormalizeCertRemoval,
-				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"upload_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_body": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressNormalizeCertRemoval,
+					StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
+				},
+				names.AttrCertificateChain: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressNormalizeCertRemoval,
+					StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(0, 128),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "/",
+				},
+				names.AttrPrivateKey: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					Sensitive:        true,
+					DiffSuppressFunc: suppressNormalizeCertRemoval,
+					StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"upload_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

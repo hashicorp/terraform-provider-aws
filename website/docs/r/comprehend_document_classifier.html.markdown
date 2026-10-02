@@ -153,7 +153,7 @@ resource "aws_comprehend_document_classifier" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Comprehend document classifier.
+- `arn` (String) ARN of the Comprehend document classifier.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Document Classifier using the ARN. For example:
 

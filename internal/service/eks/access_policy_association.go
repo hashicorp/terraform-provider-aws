@@ -47,57 +47,59 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_scope": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"namespaces": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_scope": {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"namespaces": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
+							names.AttrType: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"associated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"principal_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"associated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				"modified_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"principal_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -151,12 +153,9 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading EKS Access Policy Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("access_scope", flattenAccessScope(output.AccessScope))
-	d.Set("associated_at", aws.ToTime(output.AssociatedAt).String())
-	d.Set(names.AttrClusterName, clusterName)
-	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
-	d.Set("policy_arn", policyARN)
-	d.Set("principal_arn", principalARN)
+	if err := resourceAccessPolicyAssociationFlatten(ctx, clusterName, principalARN, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -187,6 +186,19 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	return diags
+}
+
+func resourceAccessPolicyAssociationFlatten(_ context.Context, clusterName, principalARN string, item *types.AssociatedAccessPolicy, d *schema.ResourceData) error {
+	if err := d.Set("access_scope", flattenAccessScope(item.AccessScope)); err != nil {
+		return fmt.Errorf("setting access_scope: %w", err)
+	}
+	d.Set("associated_at", aws.ToTime(item.AssociatedAt).String())
+	d.Set(names.AttrClusterName, clusterName)
+	d.Set("modified_at", aws.ToTime(item.ModifiedAt).String())
+	d.Set("policy_arn", item.PolicyArn)
+	d.Set("principal_arn", principalARN)
+
+	return nil
 }
 
 const accessPolicyAssociationResourceIDSeparator = "#"

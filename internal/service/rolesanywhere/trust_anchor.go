@@ -42,97 +42,99 @@ func resourceTrustAnchor() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"notification_settings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				ForceNew: true,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:             schema.TypeString,
-							Computed:         true,
-							ForceNew:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.NotificationChannel](),
-						},
-						"configured_by": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-						},
-						"event": {
-							Type:             schema.TypeString,
-							Computed:         true,
-							ForceNew:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
-						},
-						"threshold": {
-							Type:     schema.TypeInt,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"notification_settings": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					ForceNew: true,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"channel": {
+								Type:             schema.TypeString,
+								Computed:         true,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NotificationChannel](),
+							},
+							"configured_by": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
+							"event": {
+								Type:             schema.TypeString,
+								Computed:         true,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+							},
+							"threshold": {
+								Type:     schema.TypeInt,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_data": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"acm_pca_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"x509_certificate_data": {
-										Type:     schema.TypeString,
-										Optional: true,
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_data": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"acm_pca_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"x509_certificate_data": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrSourceType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TrustAnchorType](),
+							names.AttrSourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TrustAnchorType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: customizeDiffNotificationSettings,

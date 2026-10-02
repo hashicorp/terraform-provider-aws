@@ -1,4 +1,0 @@
-
-```release-note:enhancement
-resource/aws_db_instance: Add `replica_mode` argument
-```

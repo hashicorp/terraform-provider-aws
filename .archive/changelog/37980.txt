@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambda_event_source_mapping: Remove the upper limit on `scaling_config.maximum_concurrency`
-```

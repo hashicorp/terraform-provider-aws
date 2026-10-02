@@ -9,26 +9,14 @@ resource "aws_route" "test" {
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = var.rName
-  }
 }
 
 resource "aws_ec2_managed_prefix_list" "test" {
@@ -39,10 +27,6 @@ resource "aws_ec2_managed_prefix_list" "test" {
   entry {
     cidr        = "172.16.0.0/16"
     description = "Test entry"
-  }
-
-  tags = {
-    Name = var.rName
   }
 }
 
