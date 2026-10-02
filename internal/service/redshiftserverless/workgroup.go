@@ -825,8 +825,10 @@ func flattenConfigParametersForState(isImport bool, apiObjects []awstypes.Config
 
 	var tfList []any
 
+	configuredKeys := configuredConfigParameterKeysFromSet(d.Get("config_parameter"))
+
 	// TODO: Quick and dirty, needs better logic
-	if isImport {
+	if isImport || len(configuredKeys) == 0 {
 		for _, apiObject := range apiObjects {
 			if apiObject.ParameterKey == nil {
 				continue
@@ -838,7 +840,6 @@ func flattenConfigParametersForState(isImport bool, apiObjects []awstypes.Config
 		return tfList
 	}
 
-	configuredKeys := configuredConfigParameterKeysFromSet(d.Get("config_parameter"))
 	for _, apiObject := range apiObjects {
 		if apiObject.ParameterKey == nil {
 			continue

@@ -282,6 +282,10 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// On import, the full `config_parameter` set is returned, not just what is tracked
+				ImportStateVerifyIgnore: []string{
+					"config_parameter",
+				},
 			},
 			{
 				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
@@ -598,6 +602,79 @@ func TestAccRedshiftServerlessWorkgroup_trackName(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Version 6.66.0 of the provider incorrectly did not read any `config_parameter` values into state
+//  if none were configured.
+
+func TestAccRedshiftServerlessWorkgroup_Migrate_v6_66_0_defaultConfigParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		CheckDestroy: testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.66.0",
+					},
+				},
+				Config: testAccWorkgroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccWorkgroupConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_Migrate_v6_66_0_configParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		CheckDestroy: testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.66.0",
+					},
+				},
+				Config: testAccWorkgroupConfig_configParameters_partial_initial(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccWorkgroupConfig_configParameters_partial_initial(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
