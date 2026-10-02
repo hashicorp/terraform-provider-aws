@@ -973,6 +973,12 @@ service/emrserverless:
           - any-glob-to-any-file:
               - 'internal/service/emrserverless/**/*'
               - 'website/**/emrserverless_*'
+service/eventbridgev2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/eventbridgev2/**/*'
+              - 'website/**/eventbridgev2_*'
 service/events:
   - any:
       - changed-files:

@@ -138,6 +138,7 @@ variable "service_labels" {
     "emr",
     "emrcontainers",
     "emrserverless",
+    "eventbridgev2",
     "events",
     "evidently",
     "evs",

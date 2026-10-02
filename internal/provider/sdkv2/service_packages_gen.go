@@ -118,6 +118,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/eventbridgev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
@@ -396,6 +397,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		emr.ServicePackage(ctx),
 		emrcontainers.ServicePackage(ctx),
 		emrserverless.ServicePackage(ctx),
+		eventbridgev2.ServicePackage(ctx),
 		events.ServicePackage(ctx),
 		evidently.ServicePackage(ctx),
 		evs.ServicePackage(ctx),
