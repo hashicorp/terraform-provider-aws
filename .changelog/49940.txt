@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_catalog_database: fix `create_table_default_permission` so an explicitly empty block is sent to AWS as an empty list, rather than being treated as unconfigured
+```
