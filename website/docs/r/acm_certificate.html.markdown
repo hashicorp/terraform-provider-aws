@@ -176,7 +176,7 @@ This resource supports the following arguments:
 
 Supported nested arguments for the `options` configuration block:
 
-* `certificate_transparency_logging_preference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+* `certificate_transparency_logging_preference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details. This argument applies to Amazon-issued and private CA certificates. It **conflicts with** `private_key` / `private_key_wo`, so it cannot be set on [imported certificates](#existing-certificate-body-import). Imported certificates are not managed by ACM issuance, so ACM does not control their certificate transparency logging.
 * `export` - (Optional) Whether the certificate can be exported. Valid values are `ENABLED` or `DISABLED` (default). **Note** Issuing an exportable certificate is subject to additional charges. See [AWS Certificate Manager pricing](https://aws.amazon.com/certificate-manager/pricing/) for more details.
 
 ### validation_option Configuration Block
