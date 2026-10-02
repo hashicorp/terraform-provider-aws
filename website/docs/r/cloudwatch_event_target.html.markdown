@@ -245,7 +245,7 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = "${aws_api_gateway_stage.example.execution_arn}/GET"
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   http_target {
     query_string_parameters = {
@@ -331,7 +331,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   input_transformer {
     input_paths = {
@@ -357,7 +357,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   input_transformer {
     input_paths = {
@@ -465,7 +465,7 @@ resource "aws_cloudwatch_event_rule" "invoke_appsync_mutation" {
 
 resource "aws_cloudwatch_event_target" "invoke_appsync_mutation" {
   arn      = replace(aws_appsync_graphql_api.graphql-api.arn, "apis", "endpoints/graphql-api")
-  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.id
+  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.name
   role_arn = aws_iam_role.appsync_mutation_role.arn
 
   input_transformer {
