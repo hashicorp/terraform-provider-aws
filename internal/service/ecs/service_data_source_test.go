@@ -110,6 +110,31 @@ func TestAccECSServiceDataSource_deploymentConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccECSServiceDataSource_earlySuccessCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_service.test"
+	resourceName := "aws_ecs_service.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_earlySuccessCriteria(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "deployment_configuration.0.early_success_criteria.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.0.early_success_criteria.0.enable", dataSourceName, "deployment_configuration.0.early_success_criteria.0.enable"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.0.early_success_criteria.0.healthy_percent", dataSourceName, "deployment_configuration.0.early_success_criteria.0.healthy_percent"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_configuration.0.early_success_criteria.0.source_service_revision_cleanup", dataSourceName, "deployment_configuration.0.early_success_criteria.0.source_service_revision_cleanup"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSServiceDataSource_canaryDeployment(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_service.test"
@@ -325,4 +350,19 @@ data "aws_ecs_service" "test" {
   cluster_arn  = aws_ecs_cluster.test.arn
 }
 `, rName))
+}
+
+func testAccServiceDataSourceConfig_earlySuccessCriteria(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_earlySuccessCriteria(rName, `
+    early_success_criteria {
+      enable                          = true
+      healthy_percent                 = 100
+      source_service_revision_cleanup = "DEFERRED"
+    }
+`), `
+data "aws_ecs_service" "test" {
+  service_name = aws_ecs_service.test.name
+  cluster_arn  = aws_ecs_cluster.test.arn
+}
+`)
 }

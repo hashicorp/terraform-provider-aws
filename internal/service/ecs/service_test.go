@@ -18,6 +18,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -32,6 +35,133 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestDeploymentEarlySuccessCriteria(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input map[string]any
+		want  *awstypes.DeploymentEarlySuccessCriteria
+	}{
+		"nil": {},
+		"disabled": {
+			input: map[string]any{"enable": false},
+			want:  &awstypes.DeploymentEarlySuccessCriteria{Enable: false},
+		},
+		"disabled with empty optional values": {
+			input: map[string]any{"enable": false, "healthy_percent": "", "source_service_revision_cleanup": ""},
+			want:  &awstypes.DeploymentEarlySuccessCriteria{Enable: false},
+		},
+		"deferred": {
+			input: map[string]any{"enable": true, "healthy_percent": "100", "source_service_revision_cleanup": "DEFERRED"},
+			want: &awstypes.DeploymentEarlySuccessCriteria{
+				Enable: true, HealthyPercent: aws.Int32(100), SourceServiceRevisionCleanup: awstypes.ServiceRevisionCleanupDeferred,
+			},
+		},
+		"blocking with zero healthy percent": {
+			input: map[string]any{"enable": true, "healthy_percent": "0", "source_service_revision_cleanup": "BLOCKING"},
+			want: &awstypes.DeploymentEarlySuccessCriteria{
+				Enable: true, HealthyPercent: aws.Int32(0), SourceServiceRevisionCleanup: awstypes.ServiceRevisionCleanupBlocking,
+			},
+		},
+		"disabled with retained values": {
+			input: map[string]any{"enable": false, "healthy_percent": "75", "source_service_revision_cleanup": "DEFERRED"},
+			want: &awstypes.DeploymentEarlySuccessCriteria{
+				Enable: false, HealthyPercent: aws.Int32(75), SourceServiceRevisionCleanup: awstypes.ServiceRevisionCleanupDeferred,
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfecs.ExpandDeploymentEarlySuccessCriteria(tc.input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreUnexported(awstypes.DeploymentEarlySuccessCriteria{})); diff != "" {
+				t.Fatalf("unexpected early success criteria (-want +got):\n%s", diff)
+			}
+
+			config := &awstypes.DeploymentConfiguration{EarlySuccessCriteria: tc.want}
+			for name, tc := range map[string]struct {
+				resource *schema.Resource
+				value    any
+			}{
+				"resource":    {tfecs.ResourceService(), tfecs.FlattenDeploymentConfiguration(config)},
+				"data source": {tfecs.DataSourceService(), tfecs.FlattenDeploymentConfigurationForDataSource(config)},
+			} {
+				t.Run(name, func(t *testing.T) {
+					d := schema.TestResourceDataRaw(t, tc.resource.SchemaMap(), nil)
+					if err := d.Set("deployment_configuration", tc.value); err != nil {
+						t.Fatal(err)
+					}
+					if got == nil {
+						if n := d.Get("deployment_configuration.0.early_success_criteria.#").(int); n != 0 {
+							t.Fatalf("expected no early success criteria, got %d blocks", n)
+						}
+						return
+					}
+					v := d.Get("deployment_configuration.0.early_success_criteria").([]any)
+					if len(v) != 1 {
+						t.Fatalf("expected one early success criteria block, got %#v", v)
+					}
+					roundTrip, err := tfecs.ExpandDeploymentEarlySuccessCriteria(v[0].(map[string]any))
+					if err != nil {
+						t.Fatal(err)
+					}
+					if diff := cmp.Diff(got, roundTrip, cmpopts.IgnoreUnexported(awstypes.DeploymentEarlySuccessCriteria{})); diff != "" {
+						t.Errorf("early success criteria changed in state (-want +got):\n%s", diff)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestDeploymentEarlySuccessCriteria_validation(t *testing.T) {
+	t.Parallel()
+
+	config := tfecs.ResourceService().SchemaMap()["deployment_configuration"].Elem.(*schema.Resource)
+	criteria := config.Schema["early_success_criteria"].Elem.(*schema.Resource)
+	for _, tc := range []struct {
+		value string
+		valid bool
+	}{
+		{"", true}, {"0", true}, {"50", true}, {"100", true},
+		{"-1", false}, {"101", false}, {"1.5", false}, {"invalid", false},
+	} {
+		t.Run("healthy percent "+tc.value, func(t *testing.T) {
+			_, errs := criteria.Schema["healthy_percent"].ValidateFunc(tc.value, "healthy_percent")
+			if (len(errs) == 0) != tc.valid {
+				t.Errorf("healthy_percent %q: expected valid=%t, got errors %v", tc.value, tc.valid, errs)
+			}
+		})
+	}
+	for _, tc := range []struct {
+		value string
+		valid bool
+	}{
+		{"BLOCKING", true}, {"DEFERRED", true}, {"invalid", false},
+	} {
+		t.Run("cleanup "+tc.value, func(t *testing.T) {
+			diags := criteria.Schema["source_service_revision_cleanup"].ValidateDiagFunc(tc.value, nil)
+			if !diags.HasError() != tc.valid {
+				t.Errorf("source_service_revision_cleanup %q: expected valid=%t, got diagnostics %v", tc.value, tc.valid, diags)
+			}
+		})
+	}
+}
+
+func TestDeploymentEarlySuccessCriteria_invalidHealthyPercent(t *testing.T) {
+	t.Parallel()
+
+	_, err := tfecs.ExpandDeploymentEarlySuccessCriteria(map[string]any{"enable": true, "healthy_percent": "invalid"})
+	if err == nil {
+		t.Fatal("expected an error for invalid healthy_percent")
+	}
+}
 
 func TestFlattenServiceVolumeConfigurations(t *testing.T) {
 	t.Parallel()
@@ -1507,6 +1637,78 @@ func TestAccECSService_DeploymentConfiguration_strategy(t *testing.T) {
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "ROLLING"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_DeploymentConfiguration_earlySuccessCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_earlySuccessCriteria(rName, `
+    early_success_criteria {
+      enable                          = true
+      healthy_percent                 = 100
+      source_service_revision_cleanup = "DEFERRED"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.healthy_percent", "100"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.source_service_revision_cleanup", "DEFERRED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccServiceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
+			{
+				Config: testAccServiceConfig_earlySuccessCriteria(rName, `
+    early_success_criteria {
+      enable                          = true
+      healthy_percent                 = 0
+      source_service_revision_cleanup = "BLOCKING"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.healthy_percent", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.source_service_revision_cleanup", "BLOCKING"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_earlySuccessCriteria(rName, `
+    early_success_criteria {
+      enable = false
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.early_success_criteria.0.enable", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccServiceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 		},
 	})
@@ -8878,4 +9080,36 @@ resource "aws_ecs_service" "test" {
 
 data "aws_region" "current" {}
 `, rName, format, includeQueryParams))
+}
+
+func testAccServiceConfig_earlySuccessCriteria(rName, earlySuccessCriteria string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = jsonencode([{
+    cpu       = 128
+    essential = true
+    image     = "mongo:latest"
+    memory    = 128
+    name      = "mongodb"
+  }])
+}
+
+resource "aws_ecs_service" "test" {
+  name                               = %[1]q
+  cluster                            = aws_ecs_cluster.test.id
+  task_definition                    = aws_ecs_task_definition.test.arn
+  desired_count                      = 0
+  deployment_minimum_healthy_percent = 0
+
+  deployment_configuration {
+    strategy = "ROLLING"
+%[2]s
+  }
+}
+`, rName, earlySuccessCriteria)
 }
