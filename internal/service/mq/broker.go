@@ -709,6 +709,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
 		}
 	}
+
 	if d.HasChange("storage_size") {
 		input := mq.UpdateBrokerInput{
 			BrokerId:    aws.String(d.Id()),
