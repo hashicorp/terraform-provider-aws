@@ -31,7 +31,7 @@ import (
 // @IdentityAttribute("transit_gateway_route_table_id")
 // @IdentityAttribute("destination_cidr_block")
 // @ImportIDHandler("transitGatewayRouteImportID")
-// @Testing(preIdentityVersion="v6.66.0")
+// @Testing(preIdentityVersion="v6.67.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayRoute")
 // @Testing(preCheck="testAccPreCheckTransitGateway")
 // @Testing(serialize=true)

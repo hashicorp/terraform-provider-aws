@@ -211,7 +211,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_regionOverride(t *testing
 	})
 }
 
-// Resource Identity was added after v6.66.0
+// Resource Identity was added after v6.67.0
 func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 
@@ -232,7 +232,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_basic(t 
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic_v6.66.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic_v6.67.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
@@ -270,7 +270,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_basic(t 
 	})
 }
 
-// Resource Identity was added after v6.66.0
+// Resource Identity was added after v6.67.0
 func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_noRefreshNoChange(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 
@@ -296,7 +296,7 @@ func testAccTransitGatewayTransitGatewayRoute_Identity_ExistingResource_noRefres
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic_v6.66.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayRoute/basic_v6.67.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, t, resourceName, &v),
