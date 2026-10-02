@@ -134,6 +134,7 @@ The following arguments are optional:
 * `global_configuration` - (Optional) Configuration settings that apply to the event as a whole. See [Global Configuration](#global-configuration) for more details.
 * `motion_graphics_configuration` - (Optional) Settings for motion graphics. See [Motion Graphics Configuration](#motion-graphics-configuration) for more details.
 * `nielsen_configuration` - (Optional) Nielsen configuration settings. See [Nielsen Configuration](#nielsen-configuration) for more details.
+* `thumbnail_configuration` - (Optional) Thumbnail configuration settings. See [Thumbnail Configuration](#thumbnail-configuration) for more details.
 
 ### Input Attachments
 
@@ -671,6 +672,10 @@ The following arguments are optional:
 
 * `distributor_id` - (Optional) Enter the Distributor ID assigned to your organization by Nielsen.
 * `nielsen_pcm_to_id3_tagging` - (Optional) Enables Nielsen PCM to ID3 tagging.
+
+### Thumbnail Configuration
+
+* `state` - (Required) Enables the thumbnail feature, which generates thumbnails of the incoming video in each pipeline in the channel. Valid values are `AUTO` and `DISABLED`.
 
 ### Avail Blanking
 
