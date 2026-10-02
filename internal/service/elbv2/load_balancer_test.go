@@ -507,6 +507,51 @@ func TestAccELBV2LoadBalancer_NLB_allocationID(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancer_NLB_allocationIDAndIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	resourceName := "aws_lb.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbAllocationIDAndIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.0.allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.0.ipv6_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.1.allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.1.ipv6_address"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbAllocationIDAndIPv6(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
@@ -3864,6 +3909,38 @@ resource "aws_eip" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbAllocationIDAndIPv6(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_eip" "test" {
+  count = 2
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  load_balancer_type = "network"
+  ip_address_type    = "dualstack"
+
+  subnet_mapping {
+    subnet_id     = aws_subnet.test[0].id
+    allocation_id = aws_eip.test[0].id
+    ipv6_address  = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0), 5)
+  }
+
+  subnet_mapping {
+    subnet_id     = aws_subnet.test[1].id
+    allocation_id = aws_eip.test[1].id
+    ipv6_address  = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1), 5)
+  }
+
+  depends_on = [aws_internet_gateway.test]
 }
 `, rName))
 }
