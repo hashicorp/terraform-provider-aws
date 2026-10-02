@@ -213,12 +213,189 @@ func TestFlattenViewRepresentations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tfglue.FlattenViewRepresentations(tc.apiObjects, tc.prior)
+			got := tfglue.FlattenViewRepresentations(tc.apiObjects, tc.prior, nil)
 
 			if len(got) != tc.wantLen {
 				t.Fatalf("len(got) = %d, want %d", len(got), tc.wantLen)
 			}
 			tc.checkFn(t, got)
+		})
+	}
+}
+
+func TestFlattenViewRepresentations_ViewValidationText(t *testing.T) {
+	t.Parallel()
+
+	const (
+		prestoViewOriginalText = "/* Presto View: encoded */"
+		priorSQL               = "SELECT old_value"
+		submittedSQL           = "SELECT accountid AS account_id\nFROM accounts"
+	)
+
+	successfulStatus := func(validations ...awstypes.ViewValidation) *awstypes.TableStatus {
+		return &awstypes.TableStatus{
+			State: awstypes.ResourceStateSuccess,
+			Details: &awstypes.StatusDetails{
+				ViewValidations: validations,
+			},
+		}
+	}
+
+	testCases := []struct {
+		name         string
+		apiObject    awstypes.ViewRepresentation
+		status       *awstypes.TableStatus
+		omitPriorSQL bool
+		wantSQL      string
+	}{
+		{
+			name: "successful athena validation restores exact submitted sql",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: successfulStatus(
+				awstypes.ViewValidation{
+					Dialect:            awstypes.ViewDialectSpark,
+					DialectVersion:     aws.String("3"),
+					State:              awstypes.ResourceStateSuccess,
+					ViewValidationText: aws.String("SELECT spark_value"),
+				},
+				awstypes.ViewValidation{
+					Dialect:            awstypes.ViewDialectAthena,
+					DialectVersion:     aws.String("3"),
+					State:              awstypes.ResourceStateSuccess,
+					ViewValidationText: aws.String(submittedSQL),
+				},
+			),
+			wantSQL: submittedSQL,
+		},
+		{
+			name: "failed table status falls back to prior state",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: &awstypes.TableStatus{
+				State: awstypes.ResourceStateFailed,
+				Details: &awstypes.StatusDetails{
+					ViewValidations: []awstypes.ViewValidation{
+						{
+							Dialect:            awstypes.ViewDialectAthena,
+							DialectVersion:     aws.String("3"),
+							State:              awstypes.ResourceStateSuccess,
+							ViewValidationText: aws.String(submittedSQL),
+						},
+					},
+				},
+			},
+			wantSQL: priorSQL,
+		},
+		{
+			name: "failed view validation falls back to prior state",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: successfulStatus(awstypes.ViewValidation{
+				Dialect:            awstypes.ViewDialectAthena,
+				DialectVersion:     aws.String("3"),
+				State:              awstypes.ResourceStateFailed,
+				ViewValidationText: aws.String(submittedSQL),
+			}),
+			wantSQL: priorSQL,
+		},
+		{
+			name: "different dialect version falls back to prior state",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: successfulStatus(awstypes.ViewValidation{
+				Dialect:            awstypes.ViewDialectAthena,
+				DialectVersion:     aws.String("2"),
+				State:              awstypes.ResourceStateSuccess,
+				ViewValidationText: aws.String(submittedSQL),
+			}),
+			wantSQL: priorSQL,
+		},
+		{
+			name: "empty validation text falls back to prior state",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: successfulStatus(awstypes.ViewValidation{
+				Dialect:        awstypes.ViewDialectAthena,
+				DialectVersion: aws.String("3"),
+				State:          awstypes.ResourceStateSuccess,
+			}),
+			wantSQL: priorSQL,
+		},
+		{
+			name: "missing prior sql preserves generated api value",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: &awstypes.TableStatus{
+				State: awstypes.ResourceStateFailed,
+			},
+			omitPriorSQL: true,
+			wantSQL:      prestoViewOriginalText,
+		},
+		{
+			name: "plain athena api value is unchanged",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectAthena,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String("SELECT api_value"),
+			},
+			status: successfulStatus(awstypes.ViewValidation{
+				Dialect:            awstypes.ViewDialectAthena,
+				DialectVersion:     aws.String("3"),
+				State:              awstypes.ResourceStateSuccess,
+				ViewValidationText: aws.String(submittedSQL),
+			}),
+			wantSQL: "SELECT api_value",
+		},
+		{
+			name: "spark representation is unchanged",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:          awstypes.ViewDialectSpark,
+				DialectVersion:   aws.String("3"),
+				ViewOriginalText: aws.String(prestoViewOriginalText),
+			},
+			status: successfulStatus(awstypes.ViewValidation{
+				Dialect:            awstypes.ViewDialectSpark,
+				DialectVersion:     aws.String("3"),
+				State:              awstypes.ResourceStateSuccess,
+				ViewValidationText: aws.String(submittedSQL),
+			}),
+			wantSQL: prestoViewOriginalText,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			prior := map[string]any{"dialect": string(tc.apiObject.Dialect)}
+			if !tc.omitPriorSQL {
+				prior["view_original_text"] = priorSQL
+			}
+
+			got := tfglue.FlattenViewRepresentations([]awstypes.ViewRepresentation{tc.apiObject}, []any{prior}, tc.status)
+
+			if gotSQL := got[0].(map[string]any)["view_original_text"]; gotSQL != tc.wantSQL {
+				t.Errorf("view_original_text = %q, want %q", gotSQL, tc.wantSQL)
+			}
 		})
 	}
 }
@@ -1096,6 +1273,47 @@ func TestAccGlueCatalogTable_viewDefinition_noPerpetualDiff(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogTable_viewDefinitionAthenaNoPerpetualDiff(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+	configuredSQL := fmt.Sprintf(`SELECT accountid AS account_id FROM %q.%q`, rName, "accounts")
+	config := testAccCatalogTableConfig_viewDefinitionAthenaNoPerpetualDiff(rName, configuredSQL)
+
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- Lake Formation data lake settings are an account-wide singleton
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", configuredSQL),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 			},
@@ -2169,4 +2387,278 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 `, rName, viewOriginalText, viewExpandedText)
+}
+
+func testAccCatalogTableConfig_viewDefinitionAthenaNoPerpetualDiff(rName, viewOriginalText string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+
+  parameters = {
+    CROSS_ACCOUNT_VERSION = "4"
+    SET_CONTEXT           = "TRUE"
+  }
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket        = "%[1]s-source"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "athena_results" {
+  bucket        = "%[1]s-results"
+  force_destroy = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name          = "%[1]s-validation"
+  force_destroy = true
+
+  configuration {
+    enforce_workgroup_configuration = true
+
+    engine_version {
+      selected_engine_version = "Athena engine version 3"
+    }
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.athena_results.bucket}/results/"
+    }
+  }
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_glue_catalog_table" "source" {
+  name          = "accounts"
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL       = "TRUE"
+    classification = "parquet"
+  }
+
+  storage_descriptor {
+    location      = "s3://${aws_s3_bucket.source.bucket}/accounts/"
+    input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+
+    ser_de_info {
+      name                  = "parquet"
+      serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+    }
+
+    columns {
+      name = "accountid"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_iam_role" "lakeformation_access" {
+  name = "%[1]s-lf-access"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "lakeformation.amazonaws.com"
+      }
+      Action = [
+        "sts:AssumeRole",
+        "sts:SetContext",
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "lakeformation_access" {
+  name = "source-bucket-access"
+  role = aws_iam_role.lakeformation_access.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+        ]
+        Resource = aws_s3_bucket.source.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:DeleteObject",
+          "s3:GetObject",
+          "s3:PutObject",
+        ]
+        Resource = "${aws_s3_bucket.source.arn}/*"
+      },
+    ]
+  })
+}
+
+resource "aws_lakeformation_resource" "source" {
+  arn      = aws_s3_bucket.source.arn
+  role_arn = aws_iam_role.lakeformation_access.arn
+
+  depends_on = [
+    aws_glue_catalog_table.source,
+    aws_iam_role_policy.lakeformation_access,
+  ]
+}
+
+resource "aws_iam_role" "view_definer" {
+  name = "%[1]s-definer"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lakeformation.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:SetContext",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "view_definer" {
+  name = "view-validation"
+  role = aws_iam_role.view_definer.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "athena:GetWorkGroup",
+          "athena:StartQueryExecution",
+          "athena:StopQueryExecution",
+          "glue:BatchGetPartition",
+          "glue:GetDatabase",
+          "glue:GetDatabases",
+          "glue:GetPartition",
+          "glue:GetPartitions",
+          "glue:GetTable",
+          "glue:GetTables",
+          "glue:GetTableVersion",
+          "glue:GetTableVersions",
+          "glue:PassConnection",
+          "lakeformation:GetDataAccess",
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          aws_s3_bucket.source.arn,
+          aws_s3_bucket.athena_results.arn,
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+        ]
+        Resource = [
+          "${aws_s3_bucket.source.arn}/*",
+          "${aws_s3_bucket.athena_results.arn}/*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_lakeformation_permissions" "create_view" {
+  principal   = aws_iam_role.view_definer.arn
+  permissions = ["CREATE_TABLE"]
+
+  database {
+    catalog_id = data.aws_caller_identity.current.account_id
+    name       = aws_glue_catalog_database.test.name
+  }
+}
+
+resource "aws_lakeformation_permissions" "select_source" {
+  principal                     = aws_iam_role.view_definer.arn
+  permissions                   = ["SELECT"]
+  permissions_with_grant_option = ["SELECT"]
+
+  table {
+    catalog_id    = data.aws_caller_identity.current.account_id
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.source.name
+  }
+
+  depends_on = [aws_lakeformation_resource.source]
+}
+
+resource "aws_glue_connection" "test" {
+  name            = "%[1]s-validation"
+  connection_type = "VIEW_VALIDATION_ATHENA"
+
+  connection_properties = {
+    WORKGROUP_NAME = aws_athena_workgroup.test.name
+  }
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = "accounts_view"
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  depends_on = [
+    aws_iam_role_policy.view_definer,
+    aws_lakeformation_permissions.create_view,
+    aws_lakeformation_permissions.select_source,
+  ]
+
+  view_definition {
+    definer      = aws_iam_role.view_definer.arn
+    is_protected = true
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      validation_connection = aws_glue_connection.test.name
+      view_original_text    = %[2]q
+    }
+  }
+}
+`, rName, viewOriginalText)
 }
