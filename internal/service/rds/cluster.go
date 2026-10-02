@@ -1954,6 +1954,17 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
+// clusterLocalWriteForwardingRequested returns true if local write forwarding is
+// on, or if a request to turn it on is in progress.
+func clusterLocalWriteForwardingRequested(status types.LocalWriteForwardingStatus) bool {
+	switch status {
+	case types.LocalWriteForwardingStatusEnabled, types.LocalWriteForwardingStatusEnabling, types.LocalWriteForwardingStatusRequested:
+		return true
+	default:
+		return false
+	}
+}
+
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
@@ -2402,7 +2413,9 @@ func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DB
 		d.Set("domain_iam_role_name", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
+	d.Set("enable_global_write_forwarding", aws.ToBool(dbc.GlobalWriteForwardingRequested))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
+	d.Set("enable_local_write_forwarding", clusterLocalWriteForwardingRequested(dbc.LocalWriteForwardingStatus))
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngine, dbc.Engine)
 	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
