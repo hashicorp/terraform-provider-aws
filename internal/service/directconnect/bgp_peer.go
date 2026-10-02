@@ -53,10 +53,11 @@ func resourceBGPPeer() *schema.Resource {
 				"bgp_asn":      bgpASNAttributeSchema(false),
 				"bgp_asn_long": bgpASNAttributeSchema(true),
 				"bgp_auth_key": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-					ForceNew: true,
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					ForceNew:  true,
+					Sensitive: true,
 				},
 				"bgp_peer_id": {
 					Type:     schema.TypeString,
