@@ -175,6 +175,7 @@ val services = mapOf(
     "networkflowmonitor" to ServiceSpec("CloudWatch NetworkFlow Monitor"),
     "networkmanager" to ServiceSpec("Network Manager", vpcLock = true),
     "networkmonitor" to ServiceSpec("CloudWatch Network Monitor"),
+    "networksecuritymanager" to ServiceSpec("Network Security Manager"),
     "notifications" to ServiceSpec("User Notifications"),
     "notificationscontacts" to ServiceSpec("User Notifications Contacts"),
     "oam" to ServiceSpec("CloudWatch Observability Access Manager"),

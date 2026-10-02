@@ -6281,6 +6281,35 @@ service "networkmanager" {
   is_global = true
 }
 
+service "networksecuritymanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "network-security-manager"
+    aws_cli_v2_command_no_dashes = "networksecuritymanager"
+  }
+
+  sdk {
+    id            = "Network Security Manager"
+    arn_namespace = "network-security-manager"
+  }
+
+  names {
+    provider_name_upper = "NetworkSecurityManager"
+    human_friendly      = "Network Security Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListScopes"
+  }
+
+  resource_prefix {
+    correct = "aws_networksecuritymanager_"
+  }
+
+  provider_package_correct = "networksecuritymanager"
+  doc_prefix               = ["networksecuritymanager_"]
+  brand                    = "AWS"
+}
+
 service "nimble" {
   go_packages {
     v1_package = "nimblestudio"
