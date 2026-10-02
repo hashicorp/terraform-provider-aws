@@ -389,7 +389,7 @@ func TestServiceQuotaValueDiff(t *testing.T) {
 				"service_code": "service", "quota_code": "quota", names.AttrValue: 100.0,
 				"wait_for_fulfillment": tc.wait,
 			})
-			if got := r.SchemaMap()[names.AttrValue].DiffSuppressFunc("value", tc.old, tc.new, d); got != tc.want {
+			if got := r.SchemaMap()[names.AttrValue].DiffSuppressFunc(names.AttrValue, tc.old, tc.new, d); got != tc.want {
 				t.Fatalf("expected suppression %v, got %v", tc.want, got)
 			}
 		})
