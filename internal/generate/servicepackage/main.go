@@ -308,6 +308,11 @@ type visitor struct {
 	sdkListResources       map[string]ResourceDatum
 }
 
+type parsedAnnotation struct {
+	name string
+	args common.Args
+}
+
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
 	for funcDecl := range common.TopLevelFuncDecls(file) {
@@ -329,21 +334,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:                        tests.InitCommonArgs(),
 	}
 
-	annotations := make(map[string]bool)
-	for _, line := range funcDecl.Doc.List {
-		line := line.Text
-
-		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			annotationName := m[1]
-			annotations[annotationName] = true
-		}
-	}
-	keys := slices.Collect(maps.Keys(annotations))
-	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
-		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-	}
-
-	// Look first for per-resource annotations such as tagging and Region.
+	annotationNames := make(map[string]bool)
+	var annotations []parsedAnnotation
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -353,131 +345,147 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
 				continue
 			}
-			switch annotationName := m[1]; annotationName {
-			case "FrameworkResource":
-				d.Implementation = common.ImplementationFramework
 
-			case "SDKResource":
-				d.Implementation = common.ImplementationSDK
+			annotations = append(annotations, parsedAnnotation{
+				name: m[1],
+				args: args,
+			})
+		}
+	}
+	for _, annotation := range annotations {
+		annotationNames[annotation.name] = true
+	}
+	keys := slices.Collect(maps.Keys(annotationNames))
+	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
+		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+	}
 
-			case "Region":
-				if attr, ok := args.Keyword["global"]; ok {
-					if global, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.IsGlobal = global
-						if global {
-							d.regionOverrideEnabled = false
-							d.ValidateRegionOverrideInPartition = false
-						}
-					}
-				}
-				if attr, ok := args.Keyword["overrideEnabled"]; ok {
-					if enabled, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.regionOverrideEnabled = enabled
-					}
-				}
-				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
-					if deprecated, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.RegionOverrideDeprecated = deprecated
-					}
-				}
-				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
-					if validate, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid Region/validateOverrideInPartition value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					} else {
-						d.ValidateRegionOverrideInPartition = validate
-					}
-				}
+	// Look first for per-resource annotations such as tagging and Region.
+	for _, annotation := range annotations {
+		switch annotationName, args := annotation.name, annotation.args; annotationName {
+		case "FrameworkResource":
+			d.Implementation = common.ImplementationFramework
 
-			case "Tags":
-				d.TransparentTagging = true
+		case "SDKResource":
+			d.Implementation = common.ImplementationSDK
 
-				if attr, ok := args.Keyword["identifierAttribute"]; ok {
-					if d.TagsIdentifierAttribute != "" {
-						v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					}
-
-					d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
-				}
-
-				if attr, ok := args.Keyword["resourceType"]; ok {
-					d.TagsResourceType = attr
-				}
-
-			case "WrappedImport":
-				if len(args.Positional) != 1 {
-					v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		case "Region":
+			if attr, ok := args.Keyword["global"]; ok {
+				if global, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				} else {
-					attr := args.Positional[0]
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.wrappedImport = common.TriBool(b)
+					d.IsGlobal = global
+					if global {
+						d.regionOverrideEnabled = false
+						d.ValidateRegionOverrideInPartition = false
 					}
 				}
+			}
+			if attr, ok := args.Keyword["overrideEnabled"]; ok {
+				if enabled, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.regionOverrideEnabled = enabled
+				}
+			}
+			if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+				if deprecated, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.RegionOverrideDeprecated = deprecated
+				}
+			}
+			if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
+				if validate, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid Region/validateOverrideInPartition value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				} else {
+					d.ValidateRegionOverrideInPartition = validate
+				}
+			}
 
-			case "CustomImport":
-				d.CustomImport = true
+		case "Tags":
+			d.TransparentTagging = true
 
-			case "ArnFormat":
-				if attr, ok := args.Keyword["global"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						if b {
-							d.isARNFormatGlobal = arnFormatStateGlobal
-						} else {
-							d.isARNFormatGlobal = arnFormatStateRegional
-						}
-					}
+			if attr, ok := args.Keyword["identifierAttribute"]; ok {
+				if d.TagsIdentifierAttribute != "" {
+					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
-			case "NoImport":
-				d.wrappedImport = common.TriBooleanFalse
+				d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
+			}
 
-			case "IdentityFix":
-				d.HasIdentityFix = true
+			if attr, ok := args.Keyword["resourceType"]; ok {
+				d.TagsResourceType = attr
+			}
 
-			// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
-			// TODO: These fields should be moved out of `@Testing`
-			case "Testing":
-				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+		case "WrappedImport":
+			if len(args.Positional) != 1 {
+				v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				attr := args.Positional[0]
+				if b, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
+				} else {
+					d.wrappedImport = common.TriBool(b)
 				}
-				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
-					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasV6_0NullValuesError = b
-						if b {
-							d.PreIdentityVersion = v5_100_0
-						}
-					}
-				}
-				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasV6_0RefreshError = b
-						if b {
-							d.PreIdentityVersion = v5_100_0
-						}
-					}
-				}
+			}
 
-			default:
-				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.goImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+		case "CustomImport":
+			d.CustomImport = true
+
+		case "ArnFormat":
+			if attr, ok := args.Keyword["global"]; ok {
+				if b, err := strconv.ParseBool(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
+				} else {
+					if b {
+						d.isARNFormatGlobal = arnFormatStateGlobal
+					} else {
+						d.isARNFormatGlobal = arnFormatStateRegional
+					}
 				}
+			}
+
+		case "NoImport":
+			d.wrappedImport = common.TriBooleanFalse
+
+		case "IdentityFix":
+			d.HasIdentityFix = true
+
+		// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
+		// TODO: These fields should be moved out of `@Testing`
+		case "Testing":
+			if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				continue
+			}
+			if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+				if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+					v.errs = append(v.errs, err)
+				} else {
+					d.HasV6_0NullValuesError = b
+					if b {
+						d.PreIdentityVersion = v5_100_0
+					}
+				}
+			}
+			if attr, ok := args.Keyword["v60RefreshError"]; ok {
+				if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
+					v.errs = append(v.errs, err)
+				} else {
+					d.HasV6_0RefreshError = b
+					if b {
+						d.PreIdentityVersion = v5_100_0
+					}
+				}
+			}
+
+		default:
+			if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+				continue
 			}
 		}
 	}
@@ -517,240 +525,230 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	// Then build the resource maps, looking for duplicates.
-	for _, line := range funcDecl.Doc.List {
-		line := line.Text
+	for _, annotation := range annotations {
+		d.FactoryName = v.functionName
 
-		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			d.FactoryName = v.functionName
+		if attr, ok := annotation.args.Keyword["name"]; ok {
+			d.Name = attr
+		}
 
-			args, err := common.ParseArgs(m[3])
-			if err != nil {
-				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+		switch annotationName, args := annotation.name, annotation.args; annotationName {
+		case "Action":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				continue
 			}
 
-			if attr, ok := args.Keyword["name"]; ok {
-				d.Name = attr
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
 			}
 
-			switch annotationName := m[1]; annotationName {
-			case "Action":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.actions[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Action (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.actions[typeName] = d
-				}
-
-			case "EphemeralResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.ephemeralResources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.ephemeralResources[typeName] = d
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Ephemeral Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "FrameworkDataSource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.frameworkDataSources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.frameworkDataSources[typeName] = d
-				}
-
-				if d.HasResourceIdentity() {
-					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "FrameworkResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.frameworkResources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.frameworkResources[typeName] = d
-				}
-
-				if d.IdentityVersion > 0 {
-					v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "SDKDataSource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.sdkDataSources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.sdkDataSources[typeName] = d
-				}
-
-				if d.HasResourceIdentity() {
-					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
-			case "SDKResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if d.Name == "" {
-					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				if _, ok := v.sdkResources[typeName]; ok {
-					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.sdkResources[typeName] = d
-				}
-
-			case "FrameworkListResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				_, fOK := v.frameworkListResources[typeName]
-				_, sdkOK := v.sdkListResources[typeName]
-				if fOK || sdkOK {
-					v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.frameworkListResources[typeName] = d
-				}
-
-			case "SDKListResource":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				typeName := args.Positional[0]
-
-				if !validTypeName.MatchString(typeName) {
-					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				_, fOK := v.frameworkListResources[typeName]
-				_, sdkOK := v.sdkListResources[typeName]
-				if fOK || sdkOK {
-					v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				} else {
-					v.sdkListResources[typeName] = d
-				}
-
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
-				// Handled above.
-			case "ArnFormat", "IdAttrFormat", "Testing":
-				// Ignored.
-			default:
-				v.g.Warnf("unknown annotation: %s", annotationName)
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
 			}
+
+			if _, ok := v.actions[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Action (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.actions[typeName] = d
+			}
+
+		case "EphemeralResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.ephemeralResources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.ephemeralResources[typeName] = d
+			}
+
+			if d.HasV6_0NullValuesError {
+				v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Ephemeral Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "FrameworkDataSource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.frameworkDataSources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkDataSources[typeName] = d
+			}
+
+			if d.HasResourceIdentity() {
+				v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+			if d.HasV6_0NullValuesError {
+				v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "FrameworkResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.frameworkResources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkResources[typeName] = d
+			}
+
+			if d.IdentityVersion > 0 {
+				v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "SDKDataSource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.sdkDataSources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.sdkDataSources[typeName] = d
+			}
+
+			if d.HasResourceIdentity() {
+				v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+			if d.HasV6_0NullValuesError {
+				v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			}
+
+		case "SDKResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			if _, ok := v.sdkResources[typeName]; ok {
+				v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.sdkResources[typeName] = d
+			}
+
+		case "FrameworkListResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			_, fOK := v.frameworkListResources[typeName]
+			_, sdkOK := v.sdkListResources[typeName]
+			if fOK || sdkOK {
+				v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkListResources[typeName] = d
+			}
+
+		case "SDKListResource":
+			if len(args.Positional) == 0 {
+				v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			typeName := args.Positional[0]
+
+			if !validTypeName.MatchString(typeName) {
+				v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
+			_, fOK := v.frameworkListResources[typeName]
+			_, sdkOK := v.sdkListResources[typeName]
+			if fOK || sdkOK {
+				v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.sdkListResources[typeName] = d
+			}
+
+		case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
+			// Handled above.
+		case "ArnFormat", "IdAttrFormat", "Testing":
+			// Ignored.
+		default:
+			v.g.Warnf("unknown annotation: %s", annotationName)
 		}
 	}
 
