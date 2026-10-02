@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `10m`)
 - `update` - (Default `10m`)
-- `delete` - (Default `10m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
