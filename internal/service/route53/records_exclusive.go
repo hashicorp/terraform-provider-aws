@@ -67,8 +67,8 @@ func (r *recordsExclusiveResource) Schema(ctx context.Context, req resource.Sche
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"resource_record_set": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[resourceRecordSetModel](ctx),
+			"resource_record_set": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceRecordSetModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"failover": schema.StringAttribute{
@@ -441,9 +441,9 @@ func findResourceRecordSetsForHostedZone(ctx context.Context, conn *route53.Clie
 }
 
 type recordsExclusiveResourceModel struct {
-	ResourceRecordSet fwtypes.SetNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_set"`
-	Timeouts          timeouts.Value                                         `tfsdk:"timeouts"`
-	ZoneID            types.String                                           `tfsdk:"zone_id"`
+	ResourceRecordSet fwtypes.ListNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_set"`
+	Timeouts          timeouts.Value                                          `tfsdk:"timeouts"`
+	ZoneID            types.String                                            `tfsdk:"zone_id"`
 }
 
 type resourceRecordSetModel struct {
