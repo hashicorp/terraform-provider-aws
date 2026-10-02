@@ -437,6 +437,13 @@ func resourceFunction() *schema.Resource {
 					Optional:      true,
 					ConflictsWith: []string{"filename", "image_uri"},
 				},
+				"s3_object_storage_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.S3ObjectStorageMode](),
+					ConflictsWith:    []string{"filename", "image_uri"},
+					RequiredWith:     []string{names.AttrS3Bucket},
+				},
 				"signing_job_arn": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -636,6 +643,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.Code.S3Key = aws.String(d.Get("s3_key").(string))
 		if v, ok := d.GetOk("s3_object_version"); ok {
 			input.Code.S3ObjectVersion = aws.String(v.(string))
+		}
+		if v, ok := d.GetOk("s3_object_storage_mode"); ok {
+			input.Code.S3ObjectStorageMode = awstypes.S3ObjectStorageMode(v.(string))
 		}
 	}
 
@@ -1037,6 +1047,11 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			if v, ok := d.GetOk("s3_object_version"); ok {
 				input.S3ObjectVersion = aws.String(v.(string))
 			}
+			// If s3_object_storage_mode is set, always include it in the
+			// update; omitting it reverts the function to COPY mode.
+			if v, ok := d.GetOk("s3_object_storage_mode"); ok {
+				input.S3ObjectStorageMode = awstypes.S3ObjectStorageMode(v.(string))
+			}
 		}
 
 		// If source_kms_key_arn is set, it should be always included in the update
@@ -1044,7 +1059,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SourceKMSKeyArn = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateFunctionCode(ctx, &input)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterValueException](
+			ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+				return conn.UpdateFunctionCode(ctx, &input)
+			}, "versioning enabled for REFERENCE storage mode")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: %s", d.Id(), err)
@@ -1581,6 +1599,9 @@ func retryFunctionOp[T functionCU](ctx context.Context, timeout time.Duration, f
 			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
 				return true, err
 			}
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "versioning enabled for REFERENCE storage mode") {
+				return true, err
+			}
 
 			if errs.IsA[*awstypes.ResourceConflictException](err) {
 				return true, err
@@ -1601,6 +1622,25 @@ func retryFunctionOp[T functionCU](ctx context.Context, timeout time.Duration, f
 			},
 			func(err error) (bool, error) {
 				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "throttled by EC2") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+	}
+
+	// Enabling versioning can take up to 15 minutes to become effective.
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "versioning enabled for REFERENCE storage mode") {
+		const (
+			functionExtraVersioningTimeout = 15 * time.Minute
+		)
+		output, err = tfresource.RetryWhen(ctx, functionExtraVersioningTimeout,
+			func(ctx context.Context) (any, error) {
+				return f()
+			},
+			func(err error) (bool, error) {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "versioning enabled for REFERENCE storage mode") {
 					return true, err
 				}
 
@@ -1651,6 +1691,7 @@ func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
+		d.HasChange("s3_object_storage_mode") ||
 		d.HasChange("source_kms_key_arn") ||
 		d.HasChange("image_uri") ||
 		d.HasChange("architectures")
@@ -2002,7 +2043,12 @@ func flattenSnapStart(apiObject *awstypes.SnapStartResponse) []any {
 // Therefore, reset them to the previous value when the update fails.
 // https://developer.hashicorp.com/terraform/plugin/framework/diagnostics#how-errors-affect-state
 func resetNonRefreshableAttributes(d *schema.ResourceData) {
-	for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version", "source_code_hash", "filename"} {
+	storageMode, _ := d.GetOk("s3_object_storage_mode")
+	isReference := storageMode.(string) == string(awstypes.S3ObjectStorageModeReference)
+	for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version", "s3_object_storage_mode", "source_code_hash", "filename"} {
+		if isReference && (key == names.AttrS3Bucket || key == "s3_key" || key == "s3_object_version") {
+			continue
+		}
 		if d.HasChange(key) {
 			old, _ := d.GetChange(key)
 			d.Set(key, old)
@@ -2070,6 +2116,11 @@ func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d 
 	}
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
+		if output.Code.ResolvedS3Object != nil {
+			d.Set(names.AttrS3Bucket, output.Code.ResolvedS3Object.S3Bucket)
+			d.Set("s3_key", output.Code.ResolvedS3Object.S3Key)
+			d.Set("s3_object_version", output.Code.ResolvedS3Object.S3ObjectVersion)
+		}
 	}
 	d.Set("invoke_arn", invokeARN(ctx, awsClient, functionARN))
 	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
