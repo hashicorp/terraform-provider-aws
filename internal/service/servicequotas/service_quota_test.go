@@ -6,10 +6,12 @@ package servicequotas_test
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -262,13 +264,17 @@ func TestAccServiceQuotasServiceQuota_Value_updateToSameValue(t *testing.T) {
 				),
 			},
 			{
-				// Update to the same value - should not open a case
-				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Config: testAccServiceQuotaConfig_sameValueWithWait(setQuotaServiceCode, setQuotaQuotaCode, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
-					// Most importantly: no request_id should be created
+					resource.TestCheckResourceAttr(resourceName, "wait_for_fulfillment", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},
@@ -345,6 +351,10 @@ func TestAccServiceQuotasServiceQuota_valueLessThanCurrentOnUpdate(t *testing.T)
 
 // nosemgrep:ci.servicequotas-in-func-name
 func testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode string) string {
+	return testAccServiceQuotaConfig_sameValueWithWait(serviceCode, quotaCode, false)
+}
+
+func testAccServiceQuotaConfig_sameValueWithWait(serviceCode, quotaCode string, wait bool) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -352,11 +362,12 @@ data "aws_servicequotas_service_quota" "test" {
 }
 
 resource "aws_servicequotas_service_quota" "test" {
-  quota_code   = data.aws_servicequotas_service_quota.test.quota_code
-  service_code = data.aws_servicequotas_service_quota.test.service_code
-  value        = data.aws_servicequotas_service_quota.test.value
+  quota_code           = data.aws_servicequotas_service_quota.test.quota_code
+  service_code         = data.aws_servicequotas_service_quota.test.service_code
+  value                = data.aws_servicequotas_service_quota.test.value
+  wait_for_fulfillment = %[3]t
 }
-`, quotaCode, serviceCode)
+`, quotaCode, serviceCode, wait)
 }
 
 func testAccServiceQuotaConfig_value(serviceCode, quotaCode, value string) string {
@@ -428,6 +439,10 @@ func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {
 	}
 
 	value := os.Getenv("SERVICEQUOTAS_QUOTA_INCREASE_VALUE")
+	target, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		t.Fatalf("parsing SERVICEQUOTAS_QUOTA_INCREASE_VALUE: %s", err)
+	}
 
 	resourceName := "aws_servicequotas_service_quota.test"
 
@@ -442,7 +457,16 @@ func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrValue, func(value string) error {
+						applied, err := strconv.ParseFloat(value, 64)
+						if err != nil {
+							return err
+						}
+						if applied < target {
+							return fmt.Errorf("applied quota (%f) is below configured value (%f)", applied, target)
+						}
+						return nil
+					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_fulfillment", acctest.CtTrue),
 					// If wait_for_fulfillment works, there should not be a pending request_id.
 					resource.TestCheckResourceAttr(resourceName, "request_id", ""),
