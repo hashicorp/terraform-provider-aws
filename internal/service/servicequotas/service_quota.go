@@ -460,7 +460,7 @@ func increaseServiceQuota(ctx context.Context, conn serviceQuotaIncreaseClient, 
 	}
 
 	d.SetId(serviceQuotaCreateResourceID(serviceCode, quotaCode))
-	d.Set("request_id", aws.ToString(request.Id))
+	d.Set("request_id", request.Id)
 	d.Set("request_status", request.Status)
 	if !wait {
 		return nil
