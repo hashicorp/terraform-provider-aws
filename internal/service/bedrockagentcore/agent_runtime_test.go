@@ -162,8 +162,8 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -176,7 +176,7 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
+				Config: testAccAgentRuntimeConfig_basic(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -209,8 +209,8 @@ func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -223,7 +223,7 @@ func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
+				Config: testAccAgentRuntimeConfig_basic(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAgentRuntime, resourceName),
@@ -861,7 +861,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
+				Config: testAccAgentRuntimeConfig_container(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
@@ -892,7 +892,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
-				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV2),
+				Config: testAccAgentRuntimeConfig_container(rName, rImageUriV2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -1047,7 +1047,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
+				Config: testAccAgentRuntimeConfig_container(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
@@ -1110,7 +1110,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 			},
 			{
 				// Switch back to container artifact, expect destroy/create
-				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
+				Config: testAccAgentRuntimeConfig_container(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
@@ -1359,7 +1359,59 @@ resource "aws_iam_role_policy" "test2" {
 `, rName)
 }
 
-func testAccAgentRuntimeConfig_basic(rName, rImageUri string) string {
+func testAccAgentRuntimeConfig_basic(rName, rBucketName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  depends_on = [aws_iam_role_policy.bucket]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "runtime_example.zip"
+  source = "${path.module}/test-fixtures/runtime_example.zip"
+}
+
+resource "aws_iam_role_policy" "bucket" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+`, rName, rBucketName))
+}
+
+func testAccAgentRuntimeConfig_container(rName, rImageURI string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
@@ -1375,7 +1427,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     network_mode = "PUBLIC"
   }
 }
-`, rName, rImageUri))
+`, rName, rImageURI))
 }
 
 func testAccAgentRuntimeConfig_description(rName, rImageUri, description string) string {
