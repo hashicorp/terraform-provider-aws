@@ -31,6 +31,7 @@ import (
 type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
+	AssumeNoPropagationDelay       bool
 	AssumeRole                     []awsbase.AssumeRole
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
@@ -241,6 +242,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
+	client.assumeNoPropagationDelay = c.AssumeNoPropagationDelay
 	client.clients = make(map[string]map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
