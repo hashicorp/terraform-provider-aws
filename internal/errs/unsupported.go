@@ -10,7 +10,9 @@ import (
 
 const (
 	errCodeAccessDenied                = "AccessDenied"
+	errCodeAccessDeniedException       = "AccessDeniedException"
 	errCodeAuthorizationError          = "AuthorizationError"
+	errCodeAuthorizationErrorException = "AuthorizationErrorException"
 	errCodeInternalException           = "InternalException"
 	errCodeInternalServiceError        = "InternalServiceError"
 	errCodeInvalidAction               = "InvalidAction"
@@ -42,11 +44,18 @@ func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, errCodeAccessDenied) {
-		return true
+		// A genuine authorization failure ("is not authorized to perform ...") is
+		// not an unsupported-API signal, so it must not be classified as
+		// "unsupported in this partition". Doing so makes transparent tagging
+		// swallow the error and report success while tags are silently dropped.
+		// Only treat an AccessDenied as unsupported-in-partition when it is not an
+		// authorization failure (e.g. a partition that denies tagging because it
+		// does not support it).
+		return !isAuthorizationFailure(err)
 	}
 
 	if tfawserr.ErrCodeContains(err, errCodeAuthorizationError) {
-		return true
+		return !isAuthorizationFailure(err)
 	}
 
 	if tfawserr.ErrCodeContains(err, errCodeInternalException) {
@@ -102,4 +111,16 @@ func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 	}
 
 	return false
+}
+
+// isAuthorizationFailure reports whether err is a genuine authorization failure
+// ("is not authorized to perform ..."), as opposed to an "unsupported in this
+// partition" signal that happens to surface as an AccessDenied or
+// AuthorizationError. The error code is matched against both the bare code and its
+// "-Exception" spelling because AWS services use either form for the same denial.
+func isAuthorizationFailure(err error) bool {
+	return tfawserr.ErrMessageContainsAny(err, errCodeAccessDenied, "is not authorized to perform") ||
+		tfawserr.ErrMessageContainsAny(err, errCodeAccessDeniedException, "is not authorized to perform") ||
+		tfawserr.ErrMessageContainsAny(err, errCodeAuthorizationError, "is not authorized to perform") ||
+		tfawserr.ErrMessageContainsAny(err, errCodeAuthorizationErrorException, "is not authorized to perform")
 }
