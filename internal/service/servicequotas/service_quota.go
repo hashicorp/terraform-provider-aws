@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
@@ -21,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -587,59 +587,52 @@ func flattenMetricInfo(apiObject *awstypes.MetricInfo) []any {
 	return tfList
 }
 
-func waitServiceQuotaRequestFulfilled(ctx context.Context, conn serviceQuotaRequestReader, requestID string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending),
-		Target:     enum.Slice(awstypes.RequestStatusApproved),
-		Refresh:    statusServiceQuotaRequest(conn, requestID),
-		Timeout:    timeout,
-		Delay:      30 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
-}
-
-func statusServiceQuotaRequest(conn serviceQuotaRequestReader, requestID string) retry.StateRefreshFunc {
+func statusServiceQuotaFulfillment(conn serviceQuotaWaitClient, serviceCode, quotaCode, requestID string, value float64) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
+		quota, state, err := statusServiceQuotaValue(conn, serviceCode, quotaCode, value)(ctx)
+		if err != nil || state == "updated" {
+			return quota, state, smarterr.NewError(err)
+		}
 		output, err := findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
 
 		if retry.NotFound(err) {
-			return nil, "", nil
+			return quota, "pending", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		switch output.Status {
 		case awstypes.RequestStatusDenied:
-			return output, string(output.Status), fmt.Errorf("service quota increase request was denied")
+			return output, "", smarterr.Errorf("service quota increase request was denied")
 		case awstypes.RequestStatusNotApproved:
-			return output, string(output.Status), fmt.Errorf("service quota increase request was not approved")
+			return output, "", smarterr.Errorf("service quota increase request was not approved")
 		case awstypes.RequestStatusInvalidRequest:
-			return output, string(output.Status), fmt.Errorf("service quota increase request was invalid")
-		case awstypes.RequestStatusCaseClosed:
-			return output, string(output.Status), fmt.Errorf("service quota increase request was closed without approval")
+			return output, "", smarterr.Errorf("service quota increase request was invalid")
+		case awstypes.RequestStatusPending, awstypes.RequestStatusCaseOpened, awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed:
+		default:
+			return output, "", smarterr.Errorf("unexpected quota request status (%s)", output.Status)
 		}
 
-		return output, string(output.Status), nil
+		return output, "pending", nil
 	}
 }
 
-func waitServiceQuotaValueUpdated(ctx context.Context, conn serviceQuotaReader, serviceCode, quotaCode string, targetValue float64, timeout time.Duration) error {
+func waitServiceQuotaFulfilled(ctx context.Context, conn serviceQuotaWaitClient, serviceCode, quotaCode, requestID string, requestedValue float64, timeout time.Duration) error {
+	waitCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"updated"},
-		Refresh:    statusServiceQuotaValue(conn, serviceCode, quotaCode, targetValue),
+		Refresh:    statusServiceQuotaFulfillment(conn, serviceCode, quotaCode, requestID, requestedValue),
 		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
+		MinTimeout: 10 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
+	_, err := stateConf.WaitForStateContext(waitCtx)
+	return smarterr.NewError(err)
 }
 
 func statusServiceQuotaValue(conn serviceQuotaReader, serviceCode, quotaCode string, targetValue float64) retry.StateRefreshFunc {
@@ -672,46 +665,4 @@ func statusServiceQuotaValue(conn serviceQuotaReader, serviceCode, quotaCode str
 
 		return serviceQuota, "pending", nil
 	}
-}
-
-func validateApprovedServiceQuotaValue(requestedValue, approvedValue float64) error {
-	if approvedValue < requestedValue {
-		return fmt.Errorf("service quota request was approved for value (%f), less than requested value (%f)", approvedValue, requestedValue)
-	}
-
-	return nil
-}
-
-func waitServiceQuotaFulfilled(ctx context.Context, conn serviceQuotaWaitClient, serviceCode, quotaCode, requestID string, requestedValue float64, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	if parentDeadline, ok := ctx.Deadline(); ok && parentDeadline.Before(deadline) {
-		deadline = parentDeadline
-	}
-
-	waitCtx, cancel := context.WithDeadline(ctx, deadline)
-	defer cancel()
-
-	if err := waitServiceQuotaRequestFulfilled(waitCtx, conn, requestID, timeout); err != nil {
-		return err
-	}
-
-	approvedRequest, err := findRequestedServiceQuotaChangeByID(waitCtx, conn, requestID)
-	if err != nil {
-		return err
-	}
-	if approvedRequest.DesiredValue == nil {
-		return fmt.Errorf("service quota request (%s) has no approved value", requestID)
-	}
-
-	approvedValue := aws.ToFloat64(approvedRequest.DesiredValue)
-	if err := validateApprovedServiceQuotaValue(requestedValue, approvedValue); err != nil {
-		return err
-	}
-
-	remaining := time.Until(deadline)
-	if remaining <= 0 {
-		return context.DeadlineExceeded
-	}
-
-	return waitServiceQuotaValueUpdated(waitCtx, conn, serviceCode, quotaCode, approvedValue, remaining)
 }
