@@ -263,6 +263,7 @@ provider "aws" {
 |CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|Network Security Manager|`networksecuritymanager`|`AWS_ENDPOINT_URL_NETWORK_SECURITY_MANAGER`|`network_security_manager`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
