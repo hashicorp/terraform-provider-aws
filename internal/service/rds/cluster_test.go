@@ -48,8 +48,6 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			names.AttrApplyImmediately,
 			"cluster_members",
 			"db_instance_parameter_group_name",
-			"enable_global_write_forwarding",
-			"enable_local_write_forwarding",
 			"manage_master_user_password",
 			"master_password",
 			"master_password_wo",
@@ -480,8 +478,6 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 					"cluster_identifier_prefix",
 					"cluster_members",
 					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"enable_local_write_forwarding",
 					names.AttrEngineVersion,
 					"master_password",
 					"skip_final_snapshot",
@@ -3379,8 +3375,6 @@ func TestAccRDSCluster_GlobalClusterIdentifier_performanceInsightsEnabled(t *tes
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"master_password",
-					"enable_global_write_forwarding",
-					"enable_local_write_forwarding",
 				},
 			},
 			{
