@@ -570,11 +570,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	notifications, err := findNotificationsByTwoPartKey(ctx, conn, accountID, budgetName)
 
-	if retry.NotFound(err) {
-		return diags
-	}
-
-	if err != nil {
+	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Budget (%s) notifications: %s", d.Id(), err)
 	}
 
