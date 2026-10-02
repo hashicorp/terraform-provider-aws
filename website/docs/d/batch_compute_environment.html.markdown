@@ -32,6 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the compute environment.
 * `ecs_cluster_arn` - ARN of the underlying Amazon ECS cluster used by the compute environment.
+* `ecs_settings` - Amazon ECS settings for the compute environment. See below.
 * `service_role` - ARN of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
 * `state` - State of the compute environment (for example, `ENABLED` or `DISABLED`). If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
 * `status` - Current status of the compute environment (for example, `CREATING` or `VALID`).
@@ -39,6 +40,10 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags
 * `type` - Type of the compute environment (for example, `MANAGED` or `UNMANAGED`).
 * `update_policy` - Infrastructure update policy for the compute environment.
+
+### `ecs_settings` Block
+
+* `container_insights` - CloudWatch Container Insights mode for the compute environment (`ENABLED`, `ENHANCED`, or `DISABLED`). Not present if Container Insights has never been set on the compute environment.
 
 ### `update_policy` Block
 
