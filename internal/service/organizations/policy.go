@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -47,6 +48,46 @@ func resourcePolicy() *schema.Resource {
 			StateContext: resourcePolicyImport,
 		},
 
+		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrContent: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v any) string {
+					json, err := structure.NormalizeJsonString(v)
+					if err != nil {
+						return v.(string)
+					}
+					return json
+				},
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.PolicyTypeServiceControlPolicy,
+				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+			},
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -91,8 +132,14 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrContent).(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &organizations.CreatePolicyInput{
-		Content:     aws.String(d.Get(names.AttrContent).(string)),
+		Content:     aws.String(policy),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Name:        aws.String(name),
 		Type:        awstypes.PolicyType(d.Get(names.AttrType).(string)),
@@ -130,7 +177,11 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	policySummary := policy.PolicySummary
 	d.Set(names.AttrARN, policySummary.Arn)
-	d.Set(names.AttrContent, policy.Content)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrContent).(string), aws.ToString(policy.Content))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set(names.AttrContent, policyToSet)
 	d.Set(names.AttrDescription, policySummary.Description)
 	d.Set(names.AttrName, policySummary.Name)
 	d.Set(names.AttrType, policySummary.Type)
@@ -156,7 +207,12 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		if d.HasChange(names.AttrContent) {
-			input.Content = aws.String(d.Get(names.AttrContent).(string))
+			p, err := structure.NormalizeJsonString(d.Get(names.AttrContent).(string))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			input.Content = aws.String(p)
 		}
 
 		if d.HasChange(names.AttrDescription) {
