@@ -32,8 +32,13 @@ func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 			{
 				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccVPNConnectionRouteExists(ctx, t, resourceName),
+					testAccCheckVPNConnectionRouteExists(ctx, t, resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -54,7 +59,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 			{
 				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccVPNConnectionRouteExists(ctx, t, resourceName),
+					testAccCheckVPNConnectionRouteExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNConnectionRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,7 +102,7 @@ func testAccCheckVPNConnectionRouteDestroy(ctx context.Context, t *testing.T) re
 	}
 }
 
-func testAccVPNConnectionRouteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckVPNConnectionRouteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
