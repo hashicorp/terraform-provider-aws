@@ -97,6 +97,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
+				Computed:   true,
 			},
 			"lifecycle_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[lifecycleConfigurationModel](ctx),
 			names.AttrRoleARN: schema.StringAttribute{
@@ -700,9 +701,10 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
-	// private_endpoint_overrides can be restored after Flatten.
+	// Set values for unknowns. Capture the configured authorizer and environment variables
+	// first so API-omitted values can be restored after Flatten.
 	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
+	plannedEnvironmentVariables := data.EnvironmentVariables
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
@@ -714,6 +716,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 	data.AuthorizerConfiguration = authorizerConfiguration
+	data.EnvironmentVariables = preserveEnvironmentVariables(data.EnvironmentVariables, plannedEnvironmentVariables)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -740,6 +743,7 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 	}
 
 	priorAuthorizerConfiguration := data.AuthorizerConfiguration
+	priorEnvironmentVariables := data.EnvironmentVariables
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
@@ -751,6 +755,7 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 	data.AuthorizerConfiguration = authorizerConfiguration
+	data.EnvironmentVariables = preserveEnvironmentVariables(data.EnvironmentVariables, priorEnvironmentVariables)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -795,6 +800,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 
 		plannedAuthorizerConfiguration := new.AuthorizerConfiguration
+		plannedEnvironmentVariables := new.EnvironmentVariables
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
@@ -806,6 +812,11 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 		new.AuthorizerConfiguration = authorizerConfiguration
+		// https://github.com/hashicorp/terraform-provider-aws/issues/45885: UpdateAgentRuntime's
+		// response does not reliably echo environment_variables even when the update request
+		// included it, which otherwise clobbers a known planned value with null and produces
+		// "Provider produced inconsistent result after apply".
+		new.EnvironmentVariables = preserveEnvironmentVariables(new.EnvironmentVariables, plannedEnvironmentVariables)
 
 		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
@@ -813,6 +824,14 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
+		// Tags/TagsAll are excluded from fwflex.Diff above, so a tags-only change still
+		// reaches this branch without calling UpdateAgentRuntime (Flatten never runs).
+		// If environment_variables is omitted from config, Terraform marks it Unknown
+		// here since some other field's value did change; retain the prior value
+		// instead. Distinct from the preserveEnvironmentVariables call above, which
+		// guards the case #45885 actually reported: environment_variables explicitly
+		// configured, cleared by an unreliable UpdateAgentRuntime response.
+		new.EnvironmentVariables = old.EnvironmentVariables
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
@@ -1316,6 +1335,20 @@ func preserveAuthorizerPrivateEndpoints(ctx context.Context, dst, src fwtypes.Li
 	dstAuth.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstJWT)
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstAuth), diags
+}
+
+// preserveEnvironmentVariables copies environment_variables from src (the prior plan or state,
+// captured before Flatten) into dst (the value just flattened from the API response) when the
+// API omitted it despite dst's prior value being known -- same class of issue as
+// preserveAuthorizerPrivateEndpoints above, but here specifically the shape reported in
+// https://github.com/hashicorp/terraform-provider-aws/issues/45885, where environment_variables
+// was explicitly configured (not omitted) and CreateAgentRuntime/UpdateAgentRuntime's response
+// still didn't echo it back, producing "Provider produced inconsistent result after apply".
+func preserveEnvironmentVariables(dst, src fwtypes.MapOfString) fwtypes.MapOfString {
+	if dst.IsNull() && !src.IsNull() {
+		return src
+	}
+	return dst
 }
 
 type customJWTAuthorizerConfigurationModel struct {
