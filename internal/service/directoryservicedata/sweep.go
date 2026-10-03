@@ -18,6 +18,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_directoryservicedata_user", sweepUsers)
+	awsv2.Register("aws_directoryservicedata_group", sweepGroups)
 }
 
 func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -55,6 +56,47 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 					sweepResources = append(sweepResources, framework.NewSweepResource(newUserResource, client,
 						framework.NewAttribute("directory_id", directoryID), framework.NewAttribute("sam_account_name", samAccountName)),
 					)
+				}
+			}
+		}
+	}
+	return sweepResources, nil
+}
+
+func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	dsConn := client.DSClient(ctx)
+	directoryServiceDataConn := client.DirectoryServiceDataClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	directoryPages := directoryservice.NewDescribeDirectoriesPaginator(dsConn, &directoryservice.DescribeDirectoriesInput{})
+	for directoryPages.HasMorePages() {
+		page, err := directoryPages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, directory := range page.DirectoryDescriptions {
+			directoryID := aws.ToString(directory.DirectoryId)
+
+			input := directoryservicedata.ListGroupsInput{
+				DirectoryId: aws.String(directoryID),
+			}
+
+			groupPages := directoryservicedata.NewListGroupsPaginator(directoryServiceDataConn, &input)
+
+			for groupPages.HasMorePages() {
+				page, err := groupPages.NextPage(ctx)
+				if awsv2.SkipSweepError(err) {
+					break
+				}
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, group := range page.Groups {
+					samAccountName := aws.ToString(group.SAMAccountName)
+					sweepResources = append(sweepResources, framework.NewSweepResource(newGroupResource, client, 
+						framework.NewAttribute("directory_id", directoryID), framework.NewAttribute("sam_account_name", samAccountName)))
 				}
 			}
 		}
