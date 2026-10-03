@@ -157,3 +157,120 @@ resource "aws_neptune_cluster_snapshot" "test" {
 }
 `, rName)
 }
+
+func TestAccNeptuneClusterSnapshot_sharedAccounts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster_snapshot.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNeptuneClusterSnapshot_sharedAccountsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster_snapshot.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccountsRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNeptuneClusterSnapshot_sharedAccountsImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster_snapshot.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccClusterSnapshotConfig_sharedAccounts(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  skip_final_snapshot = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.4"
+}
+
+resource "aws_neptune_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_neptune_cluster.test.id
+  db_cluster_snapshot_identifier = %[1]q
+  shared_accounts                = ["all"]
+}
+`, rName)
+}
+
+func testAccClusterSnapshotConfig_sharedAccountsRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  skip_final_snapshot = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.4"
+}
+
+resource "aws_neptune_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_neptune_cluster.test.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+`, rName)
+}
