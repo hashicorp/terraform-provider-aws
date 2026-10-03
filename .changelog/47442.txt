@@ -1,0 +1,3 @@
+```release-note:bug
+resource/ec2_instance: Fix validation of LaunchTemplate when using $Latest
+```
