@@ -137,7 +137,7 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_changed(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -171,7 +171,7 @@ func TestAccECRLifecyclePolicy_detectTagPatternListDiff(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_tagPatternListChanged(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
