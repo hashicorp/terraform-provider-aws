@@ -824,8 +824,12 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 
 		// UpdateAgentRuntime doesn't return the platform version, so take it from the
-		// runtime the waiter read back rather than trusting the planned value.
-		new.PlatformVersion = fwflex.StringToFramework(ctx, updated.PlatformVersion)
+		// runtime the waiter read back rather than trusting the planned value. Leave a
+		// null plan alone: it only comes from state saved before this argument existed,
+		// and Terraform rejects any change to a known planned value.
+		if updated != nil && !new.PlatformVersion.IsNull() {
+			new.PlatformVersion = fwflex.StringToFramework(ctx, updated.PlatformVersion)
+		}
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
 	}

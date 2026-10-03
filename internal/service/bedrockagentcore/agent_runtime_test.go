@@ -302,6 +302,8 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 	ctx := acctest.Context(t)
+	// Each V2 step takes several minutes, and the image must answer GET /ping
+	// healthy within 120 seconds for AgentCore to snapshot it.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -324,7 +326,8 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_platformVersion(rName, rImageUri, "V1"),
+				// The service default when the argument is omitted.
+				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -366,6 +369,34 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				// Removing the argument must not revert an existing runtime to V1.
+				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
+				},
+			},
+			{
+				// Nor may an unrelated update while the argument is omitted.
+				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Platform version omitted"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
+				},
 			},
 		},
 	})
