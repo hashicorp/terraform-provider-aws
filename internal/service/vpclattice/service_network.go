@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -182,6 +183,40 @@ func findServiceNetwork(ctx context.Context, conn *vpclattice.Client, input *vpc
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findServiceNetworkSummary(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.ServiceNetworkSummary]) (*types.ServiceNetworkSummary, error) {
+	output, err := findServiceNetworkSummaries(ctx, conn, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceNetworkSummaries(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.ServiceNetworkSummary]) ([]types.ServiceNetworkSummary, error) {
+	input := &vpclattice.ListServiceNetworksInput{}
+	var output []types.ServiceNetworkSummary
+	paginator := vpclattice.NewListServiceNetworksPaginator(conn, input, func(options *vpclattice.ListServiceNetworksPaginatorOptions) {
+		options.Limit = 100
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
