@@ -34,6 +34,7 @@ This data source supports the following arguments:
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is `false`.
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned by AWS. This allows more advanced filtering not supported from the AWS API. This filtering is done locally on what AWS returns, and could have a performance impact if the result is large. Combine this with other options to narrow down the list AWS returns.
 * `sort_ascending` - (Optional) Used to sort AMIs by creation time. If no value is specified, the default value is `false`.
+* `watermark_keys` - (Optional) List of watermark keys (`accountId:watermarkName` format) to filter AMIs. Only AMIs that have a watermark matching one of the provided keys are returned. Filtering is performed locally.
 
 ## Attribute Reference
 
