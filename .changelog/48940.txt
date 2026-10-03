@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshift_idc_application: Allow multiple `authorized_token_issuer` blocks
+```
