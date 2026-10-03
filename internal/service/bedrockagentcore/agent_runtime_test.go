@@ -187,11 +187,60 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"code": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"s3": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectPartial(map[string]knownvalue.Check{
+													names.AttrBucket: knownvalue.StringExact(rBucketName),
+													"prefix":         knownvalue.StringExact("runtime_example.zip"),
+													"version_id":     knownvalue.Null(),
+												}),
+											}),
+										}),
+									}),
+									"entry_point": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.StringExact("runtime_example.py"),
+									}),
+									"runtime": knownvalue.StringExact(string(awstypes.AgentManagedRuntimeTypePython313)),
+								}),
+							}),
+							"container_configuration": knownvalue.ListSizeExact(0),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("filesystem_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lifecycle_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"idle_runtime_session_timeout": knownvalue.Int32Exact(900),
+							"max_lifetime":                 knownvalue.Int32Exact(28800),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"network_mode":        knownvalue.StringExact("PUBLIC"),
+							"network_mode_config": knownvalue.ListSizeExact(0),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("request_header_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRoleARN), tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(`role/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("workload_identity_details"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeouts), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("workload_identity_details"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"workload_identity_arn": tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`.+/workload-identity/.+`)),
+						}),
+					})),
 				},
 			},
 			{
