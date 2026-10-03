@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -47,6 +48,31 @@ func resourceProfile() *schema.Resource {
 				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"attribute_mappings": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"certificate_field": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CertificateField](),
+							},
+							"mapping_rules": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"specifier": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				"duration_seconds": {
 					Type:     schema.TypeInt,
@@ -135,6 +161,12 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(output.Profile.ProfileId))
 
+	if v, ok := d.GetOk("attribute_mappings"); ok {
+		if err := putProfileAttributeMappings(ctx, conn, d.Id(), v.(*schema.Set).List()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting RolesAnywhere Profile (%s) attribute mappings: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
@@ -156,6 +188,9 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set("accept_role_session_name", profile.AcceptRoleSessionName)
 	d.Set(names.AttrARN, profile.ProfileArn)
+	if err := d.Set("attribute_mappings", flattenAttributeMappings(profile.AttributeMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting attribute_mappings: %s", err)
+	}
 	d.Set("duration_seconds", profile.DurationSeconds)
 	d.Set(names.AttrEnabled, profile.Enabled)
 	d.Set("managed_policy_arns", profile.ManagedPolicyArns)
@@ -171,7 +206,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "attribute_mappings") {
 		input := rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
@@ -204,6 +239,27 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Profile (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("attribute_mappings") {
+		o, n := d.GetChange("attribute_mappings")
+		oldCertificateFields := attributeMappingCertificateFields(o.(*schema.Set).List())
+		newMappings := n.(*schema.Set).List()
+		newCertificateFields := attributeMappingCertificateFields(newMappings)
+
+		// Delete mappings for certificate fields that are no longer configured;
+		// PutAttributeMapping only replaces a field, it does not remove one.
+		for certificateField := range oldCertificateFields {
+			if _, ok := newCertificateFields[certificateField]; !ok {
+				if err := deleteProfileAttributeMapping(ctx, conn, d.Id(), awstypes.CertificateField(certificateField)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "deleting RolesAnywhere Profile (%s) attribute mapping (%s): %s", d.Id(), certificateField, err)
+				}
+			}
+		}
+
+		if err := putProfileAttributeMappings(ctx, conn, d.Id(), newMappings); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Profile (%s) attribute mappings: %s", d.Id(), err)
 		}
 	}
 
@@ -289,4 +345,99 @@ func enableProfile(ctx context.Context, conn *rolesanywhere.Client, id string) e
 
 	_, err := conn.EnableProfile(ctx, &input)
 	return err
+}
+
+func putProfileAttributeMappings(ctx context.Context, conn *rolesanywhere.Client, profileID string, tfList []any) error {
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		input := rolesanywhere.PutAttributeMappingInput{
+			CertificateField: awstypes.CertificateField(tfMap["certificate_field"].(string)),
+			MappingRules:     expandMappingRules(tfMap["mapping_rules"].(*schema.Set).List()),
+			ProfileId:        aws.String(profileID),
+		}
+
+		if _, err := conn.PutAttributeMapping(ctx, &input); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteProfileAttributeMapping(ctx context.Context, conn *rolesanywhere.Client, profileID string, certificateField awstypes.CertificateField) error {
+	input := rolesanywhere.DeleteAttributeMappingInput{
+		CertificateField: certificateField,
+		ProfileId:        aws.String(profileID),
+	}
+
+	_, err := conn.DeleteAttributeMapping(ctx, &input)
+	return err
+}
+
+func attributeMappingCertificateFields(tfList []any) map[string]struct{} {
+	fields := make(map[string]struct{}, len(tfList))
+	for _, tfMapRaw := range tfList {
+		if tfMap, ok := tfMapRaw.(map[string]any); ok {
+			fields[tfMap["certificate_field"].(string)] = struct{}{}
+		}
+	}
+
+	return fields
+}
+
+func expandMappingRules(tfList []any) []awstypes.MappingRule {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.MappingRule
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, awstypes.MappingRule{
+			Specifier: aws.String(tfMap["specifier"].(string)),
+		})
+	}
+
+	return apiObjects
+}
+
+func flattenAttributeMappings(apiObjects []awstypes.AttributeMapping) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"certificate_field": string(apiObject.CertificateField),
+			"mapping_rules":     flattenMappingRules(apiObject.MappingRules),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenMappingRules(apiObjects []awstypes.MappingRule) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"specifier": aws.ToString(apiObject.Specifier),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
