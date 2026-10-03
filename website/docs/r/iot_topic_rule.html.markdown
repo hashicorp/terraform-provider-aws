@@ -195,6 +195,18 @@ The `republish` object takes the following arguments:
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `topic` - (Required) The name of the MQTT topic the message should be republished to.
 * `qos` - (Optional) The Quality of Service (QoS) level to use when republishing messages. Valid values are 0 or 1. The default value is 0.
+* `headers` - (Optional) Configuration block with MQTT Version 5.0 headers information. See below.
+
+The `headers` object takes the following arguments. All arguments support [substitution templates](https://docs.aws.amazon.com/iot/latest/developerguide/iot-substitution-templates.html).
+
+* `content_type` - (Optional) A UTF-8 encoded string that describes the content of the publishing message.
+* `correlation_data` - (Optional) The base64-encoded binary data used by the sender of the request message to identify which request the response message is for when it's received.
+* `message_expiry` - (Optional) The number of seconds before the message expires at the message broker.
+* `payload_format_indicator` - (Optional) Whether the payload is formatted as UTF-8. Valid values are `UNSPECIFIED_BYTES` and `UTF8_DATA`.
+* `response_topic` - (Optional) The topic name of the response message.
+* `user_properties` - (Optional) List of key-value pairs that you define in the MQTT5 header. Each block supports the following:
+    * `key` - (Required) The property key.
+    * `value` - (Required) The property value.
 
 The `s3` object takes the following arguments:
 
