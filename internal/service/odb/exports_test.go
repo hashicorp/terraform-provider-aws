@@ -7,9 +7,10 @@ package odb
 var (
 	ListTags = listTags
 
-	ResourceCloudAutonomousVMCluster   = newResourceCloudAutonomousVmCluster
-	ResourceAutonomousDatabase         = newResourceAutonomousDatabase
-	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
+	ResourceCloudAutonomousVMCluster                    = newResourceCloudAutonomousVmCluster
+	ResourceAutonomousDatabase                          = newResourceAutonomousDatabase
+	ResourceAutonomousDatabaseSecretsManagerIntegration = newResourceAutonomousDatabaseSecretsManagerIntegration
+	ResourceCloudExadataInfrastructure                  = newResourceCloudExadataInfrastructure
 
 	FindCloudAutonomousVmClusterByID                = findCloudAutonomousVmClusterByID
 	FindAutonomousDatabaseByID                      = findAutonomousDatabaseByID

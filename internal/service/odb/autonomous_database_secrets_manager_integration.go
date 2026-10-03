@@ -87,6 +87,8 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Create(ctx context
 		return
 	}
 
+	// Omit OciIdentityDomain to preserve an existing domain. For accounts with a
+	// resource anchor, InitializeService creates a domain if one does not exist.
 	input := odb.InitializeServiceInput{
 		AutonomousDatabaseOciAwsSecretsManagerIntegration: odbtypes.AccessEnabled,
 	}
@@ -168,6 +170,8 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Delete(ctx context
 		return
 	}
 
+	// Omit OciIdentityDomain here too: false would delete the shared domain.
+	// InitializeService can create a missing domain even when disabling integration.
 	input := odb.InitializeServiceInput{
 		AutonomousDatabaseOciAwsSecretsManagerIntegration: odbtypes.AccessDisabled,
 	}

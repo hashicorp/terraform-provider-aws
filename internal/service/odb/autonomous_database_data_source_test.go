@@ -72,7 +72,7 @@ func TestAccODBAutonomousDatabaseDataSource_notFound(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      fmt.Sprintf(`data "aws_odb_autonomous_database" "test" { id = %q }`, "adb-does-not-exist"),
-				ExpectError: regexache.MustCompile("reading Autonomous Database Data Source"),
+				ExpectError: regexache.MustCompile("couldn't find resource"),
 			},
 		},
 	})

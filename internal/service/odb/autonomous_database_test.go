@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -38,44 +40,93 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var database1, databaseAfterTagUpdate, databaseAfterMutableUpdate odbtypes.AutonomousDatabase
+	var database1, databaseAfterImport, databaseAfterTagUpdate, databaseAfterPasswordUpdate, databaseAfterMutableUpdate odbtypes.AutonomousDatabase
+	bootstrapResourceName := "aws_odb_autonomous_database.bootstrap"
 	resourceName := "aws_odb_autonomous_database.test"
 	displayName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-	config := testAccAutonomousDatabaseConfigBasic(displayName, dbName, 2, "AL32UTF8", "test")
+	// Import cannot recover the password, so reconciliation must use a fresh value
+	// to avoid the database password history policy. Keep each value stable between rotations.
+	bootstrapVariables := config.Variables{
+		"odb_test_admin_password": config.StringVariable("Create1#" + acctest.RandStringFromCharSet(t, 20, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")),
+	}
+	basicVariables := config.Variables{
+		"odb_test_admin_password": config.StringVariable("Import2#" + acctest.RandStringFromCharSet(t, 20, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")),
+	}
+	updatedVariables := config.Variables{
+		"odb_test_admin_password": config.StringVariable("Update3#" + acctest.RandStringFromCharSet(t, 20, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")),
+	}
+	basicConfig := testAccAutonomousDatabaseConfigBasic(displayName, dbName, 2, "AL32UTF8", "test")
+	importVariables := config.Variables{
+		"odb_test_admin_password": basicVariables["odb_test_admin_password"],
+	}
 	tagUpdatedConfig := testAccAutonomousDatabaseConfigBasic(displayName, dbName, 2, "AL32UTF8", "updated")
 	updatedConfig := testAccAutonomousDatabaseConfigBasic(displayName+"updated", dbName, 4, "AL32UTF8", "updated")
 	replacementConfig := testAccAutonomousDatabaseConfigBasic(displayName+"updated", dbName, 4, "UTF8", "updated")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_7_0),
+		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccAutonomousDatabasePreCheck(ctx, t)
+			acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseNetworkIDEnv)
+			testAccAutonomousDatabaseServicePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutonomousDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config:          testAccAutonomousDatabaseConfigBasicNamed("bootstrap", displayName, dbName, 2, "AL32UTF8", "test"),
+				ConfigVariables: bootstrapVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutonomousDatabaseExists(ctx, t, resourceName, &database1),
-					resource.TestCheckResourceAttr(resourceName, "compute_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "data_storage_size_in_tbs", "1"),
-					resource.TestCheckResourceAttr(resourceName, "db_name", dbName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrStatus, regexache.MustCompile(`^(AVAILABLE|AVAILABLE_NEEDS_ATTENTION|STOPPED|STANDBY)$`)),
+					testAccCheckAutonomousDatabaseExists(ctx, t, bootstrapResourceName, &database1),
+					resource.TestCheckResourceAttr(bootstrapResourceName, "compute_count", "2"),
+					resource.TestCheckResourceAttr(bootstrapResourceName, "data_storage_size_in_tbs", "1"),
+					resource.TestCheckResourceAttr(bootstrapResourceName, "db_name", dbName),
+					resource.TestCheckResourceAttr(bootstrapResourceName, "tags.Environment", "test"),
+					resource.TestMatchResourceAttr(bootstrapResourceName, names.AttrStatus, regexache.MustCompile(`^(AVAILABLE|AVAILABLE_NEEDS_ATTENTION|STOPPED|STANDBY)$`)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
+				ResourceName:            bootstrapResourceName,
+				ConfigVariables:         bootstrapVariables,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"admin_password", "admin_password_wo", "admin_password_wo_version", names.AttrSource, "source_configuration", "transportable_tablespace"},
 			},
 			{
-				Config: config,
+				// The CLI import harness cannot persist a same-address re-import. Apply an import
+				// into a new address while forgetting the bootstrap address without deleting the database.
+				PreConfig: func() {
+					t.Log("reconciling imported autonomous database with a fresh generated password")
+					importVariables["import_id"] = config.StringVariable(aws.ToString(database1.AutonomousDatabaseId))
+				},
+				Config:          testAccAutonomousDatabaseConfigImport(basicConfig),
+				ConfigVariables: importVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAutonomousDatabaseExists(ctx, t, resourceName, &databaseAfterImport),
+					func(s *terraform.State) error {
+						if aws.ToString(database1.AutonomousDatabaseId) != aws.ToString(databaseAfterImport.AutonomousDatabaseId) {
+							return errors.New("autonomous database was replaced during import reconciliation")
+						}
+						if _, ok := s.RootModule().Resources[bootstrapResourceName]; ok {
+							return errors.New("bootstrap resource remains in state after import")
+						}
+						return nil
+					},
+				),
+			},
+			{
+				Config:          basicConfig,
+				ConfigVariables: basicVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -83,7 +134,8 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: tagUpdatedConfig,
+				Config:          tagUpdatedConfig,
+				ConfigVariables: basicVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutonomousDatabaseExists(ctx, t, resourceName, &databaseAfterTagUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
@@ -98,7 +150,31 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: updatedConfig,
+				PreConfig: func() {
+					t.Log("rotating autonomous database password to a fresh generated value")
+				},
+				Config:          tagUpdatedConfig,
+				ConfigVariables: updatedVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAutonomousDatabaseExists(ctx, t, resourceName, &databaseAfterPasswordUpdate),
+					resource.TestCheckResourceAttr(resourceName, "compute_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
+					func(*terraform.State) error {
+						if aws.ToString(database1.AutonomousDatabaseId) != aws.ToString(databaseAfterPasswordUpdate.AutonomousDatabaseId) {
+							return errors.New("autonomous database was replaced during a password update")
+						}
+						return nil
+					},
+				),
+			},
+			{
+				Config:          updatedConfig,
+				ConfigVariables: updatedVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAutonomousDatabaseExists(ctx, t, resourceName, &databaseAfterMutableUpdate),
 					resource.TestCheckResourceAttr(resourceName, "compute_count", "4"),
@@ -113,7 +189,17 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: replacementConfig,
+				Config:          updatedConfig,
+				ConfigVariables: updatedVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config:          replacementConfig,
+				ConfigVariables: updatedVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
@@ -136,6 +222,9 @@ func TestAccODBAutonomousDatabase_allArguments(t *testing.T) {
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccAutonomousDatabasePreCheck(ctx, t)
@@ -485,10 +574,14 @@ variable "odb_test_network_id" {
 }
 
 func testAccAutonomousDatabaseConfigBasic(displayName, dbName string, computeCount float64, characterSet, environment string) string {
+	return testAccAutonomousDatabaseConfigBasicNamed("test", displayName, dbName, computeCount, characterSet, environment)
+}
+
+func testAccAutonomousDatabaseConfigBasicNamed(resourceName, displayName, dbName string, computeCount float64, characterSet, environment string) string {
 	return acctest.ConfigCompose(
 		testAccAutonomousDatabaseConfigPrerequisites(),
 		fmt.Sprintf(`
-resource "aws_odb_autonomous_database" "test" {
+resource "aws_odb_autonomous_database" %[6]q {
   admin_password           = var.odb_test_admin_password
   character_set            = %[1]q
   compute_count            = %[2]g
@@ -504,8 +597,29 @@ resource "aws_odb_autonomous_database" "test" {
     Environment = %[5]q
   }
 }
-`, characterSet, computeCount, dbName, displayName, environment),
+`, characterSet, computeCount, dbName, displayName, environment, resourceName),
 	)
+}
+
+func testAccAutonomousDatabaseConfigImport(basicConfig string) string {
+	return acctest.ConfigCompose(basicConfig, `
+variable "import_id" {
+  type = string
+}
+
+removed {
+  from = aws_odb_autonomous_database.bootstrap
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+import {
+  to = aws_odb_autonomous_database.test
+  id = var.import_id
+}
+`)
 }
 
 func testAccAutonomousDatabaseConfigAdminPasswordSource(displayName, dbName string) string {

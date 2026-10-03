@@ -5,6 +5,7 @@ package odb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -167,6 +168,90 @@ type autonomousDatabaseIntegrationTransport func(*http.Request) (*http.Response,
 
 func (f autonomousDatabaseIntegrationTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
+}
+
+func TestAutonomousDatabaseSecretsManagerIntegrationInitializeServiceRequests(t *testing.T) {
+	t.Parallel()
+
+	for _, integration := range []odbtypes.Access{odbtypes.AccessEnabled, odbtypes.AccessDisabled} {
+		t.Run(string(integration), func(t *testing.T) {
+			t.Parallel()
+			synctest.Test(t, func(t *testing.T) {
+				ctx := t.Context()
+				initializations := 0
+				client := new(conns.AWSClient)
+				client.SetHTTPClient(ctx, &http.Client{Transport: autonomousDatabaseIntegrationTransport(func(req *http.Request) (*http.Response, error) {
+					body := `{}`
+					switch req.Header.Get("X-Amz-Target") {
+					case "Odb.InitializeService":
+						initializations++
+						var input map[string]json.RawMessage
+						if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
+							t.Fatal(err)
+						}
+						if _, ok := input["ociIdentityDomain"]; ok {
+							t.Fatal("InitializeService must omit ociIdentityDomain to preserve an existing domain")
+						}
+						var got string
+						if err := json.Unmarshal(input["autonomousDatabaseOciAwsSecretsManagerIntegration"], &got); err != nil {
+							t.Fatal(err)
+						}
+						if got != string(integration) || len(input) != 1 {
+							t.Errorf("InitializeService input = %s, want only integration %s", input, integration)
+						}
+					case "Odb.GetOciOnboardingStatus":
+						if integration == odbtypes.AccessEnabled {
+							body = fmt.Sprintf(`{"autonomousDatabaseOciIntegrationIamRoles":[{"awsIntegration":"SecretsManager","iamRoleArn":%q,"status":"AVAILABLE"}]}`, testAutonomousDatabaseServiceRoleARN)
+						}
+					default:
+						t.Fatalf("unexpected operation %q", req.Header.Get("X-Amz-Target"))
+					}
+					return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: req}, nil
+				})})
+				client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
+				config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+				client, diags := config.ConfigureProvider(ctx, client)
+				if diags.HasError() {
+					t.Fatal(diags)
+				}
+				rawResource, err := newResourceAutonomousDatabaseSecretsManagerIntegration(ctx)
+				if err != nil {
+					t.Fatal(err)
+				}
+				r := rawResource.(*resourceAutonomousDatabaseSecretsManagerIntegration)
+				r.Configure(ctx, resource.ConfigureRequest{ProviderData: client}, &resource.ConfigureResponse{})
+				var schemaResponse resource.SchemaResponse
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+				schemaResponse.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+				terraformType := schemaResponse.Schema.Type().TerraformType(ctx)
+				values := map[string]tftypes.Value{}
+				for name, attributeType := range terraformType.(tftypes.Object).AttributeTypes {
+					values[name] = tftypes.NewValue(attributeType, nil)
+				}
+				values[names.AttrRegion] = tftypes.NewValue(tftypes.String, endpoints.UsEast1RegionID)
+				state := tfsdk.State{Raw: tftypes.NewValue(terraformType, values), Schema: schemaResponse.Schema}
+				if integration == odbtypes.AccessEnabled {
+					response := resource.CreateResponse{State: state}
+					r.Create(ctx, resource.CreateRequest{Plan: tfsdk.Plan(state)}, &response)
+					if response.Diagnostics.HasError() {
+						t.Fatal(response.Diagnostics)
+					}
+				} else {
+					if diags := state.SetAttribute(ctx, path.Root(names.AttrID), endpoints.UsEast1RegionID); diags.HasError() {
+						t.Fatal(diags)
+					}
+					response := resource.DeleteResponse{State: state}
+					r.Delete(ctx, resource.DeleteRequest{State: state}, &response)
+					if response.Diagnostics.HasError() {
+						t.Fatal(response.Diagnostics)
+					}
+				}
+				if initializations != 1 {
+					t.Errorf("initialization calls = %d, want 1", initializations)
+				}
+			})
+		})
+	}
 }
 
 func TestAutonomousDatabaseSecretsManagerIntegrationRead(t *testing.T) {

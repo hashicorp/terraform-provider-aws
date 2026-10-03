@@ -10,6 +10,7 @@ import (
 
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -26,8 +27,9 @@ func TestAccODBAutonomousDatabaseSecretsManagerIntegration_serial(t *testing.T) 
 	}
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccODBAutonomousDatabaseSecretsManagerIntegration_basic,
-		"Identity":      testAccODBAutonomousDatabaseSecretsManagerIntegration_identitySerial,
+		acctest.CtBasic:      testAccODBAutonomousDatabaseSecretsManagerIntegration_basic,
+		acctest.CtDisappears: testAccODBAutonomousDatabaseSecretsManagerIntegration_disappears,
+		"Identity":           testAccODBAutonomousDatabaseSecretsManagerIntegration_identitySerial,
 	}
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
@@ -59,6 +61,37 @@ func testAccODBAutonomousDatabaseSecretsManagerIntegration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccODBAutonomousDatabaseSecretsManagerIntegration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role odbtypes.OciIamRole
+	resourceName := "aws_odb_autonomous_database_secrets_manager_integration.test"
+
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- regional singleton integration tests must remain serialized
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccAutonomousDatabaseSecretsManagerIntegrationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutonomousDatabaseSecretsManagerIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutonomousDatabaseSecretsManagerIntegrationConfigBasic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAutonomousDatabaseSecretsManagerIntegrationExists(ctx, t, resourceName, &role),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceAutonomousDatabaseSecretsManagerIntegration, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
