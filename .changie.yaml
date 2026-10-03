@@ -28,6 +28,7 @@ changeFormat: |-
 
 kinds:
   - key: breaking-change
+    format: "BREAKING CHANGES:"
     label: Breaking Change
     skipBody: true
     additionalChoices:
@@ -57,6 +58,7 @@ kinds:
         minInt: 9999
 
   - key: note
+    format: "NOTES:"
     label: Note
     skipBody: true
     additionalChoices:
@@ -94,6 +96,7 @@ kinds:
       - *PullRequest
 
   - key: enhancement
+    format: "ENHANCEMENTS:"
     label: Enhancement
     skipBody: true
     additionalChoices:
