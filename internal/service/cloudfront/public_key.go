@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -52,6 +53,9 @@ func resourcePublicKey() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.TrimSpace(old) == strings.TrimSpace(new)
+					},
 				},
 				"etag": {
 					Type:     schema.TypeString,
