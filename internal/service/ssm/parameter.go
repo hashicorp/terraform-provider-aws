@@ -285,13 +285,26 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
+	hasWriteOnly := d.Get("has_value_wo").(bool)
+	if rawConfig := d.GetRawConfig(); !rawConfig.IsNull() {
+		valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		hasWriteOnly = valueWO != ""
+	}
+
+	withDecryption := !hasWriteOnly
+
 	const (
 		// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
 		timeout = 2 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
-			return findParameterByName(ctx, conn, d.Id(), true)
+			return findParameterByName(ctx, conn, d.Id(), withDecryption)
 		},
 		func(err error) (bool, error) {
 			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
@@ -327,22 +340,6 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	resourceParameterFlatten(d, param, paramMetadata)
-
-	hasWriteOnly := d.Get("has_value_wo").(bool)
-	rawConfig := d.GetRawConfig()
-	if !rawConfig.IsNull() {
-		valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
-		diags = append(diags, di...)
-		if diags.HasError() {
-			return diags
-		}
-
-		if valueWO != "" {
-			hasWriteOnly = true
-		} else {
-			hasWriteOnly = false
-		}
-	}
 
 	if hasWriteOnly {
 		d.Set("has_value_wo", true)
