@@ -535,6 +535,50 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 	})
 }
 
+func TestAccGlueTrigger_eventDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_trigger.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_eventEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
+				),
+			},
+			{
+				// AWS refuses StopTrigger for a trigger in CREATED state, which is the only
+				// state an EVENT trigger ever reaches.
+				Config: testAccTriggerConfig_eventEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
+				),
+			},
+			{
+				// AWS rejects StartTrigger for EVENT triggers outright.
+				Config: testAccTriggerConfig_eventEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trigger awstypes.Trigger
@@ -970,6 +1014,30 @@ resource "aws_glue_trigger" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTriggerConfig_eventEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
+resource "aws_glue_workflow" test {
+  name = %[1]q
+}
+
+resource "aws_glue_trigger" "test" {
+  name              = %[1]q
+  type              = "EVENT"
+  workflow_name     = aws_glue_workflow.test.name
+  start_on_creation = false
+  enabled           = %[2]t
+
+  actions {
+    job_name = aws_glue_job.test.name
+  }
+
+  event_batching_condition {
+    batch_size = 1
+  }
+}
+`, rName, enabled))
 }
 
 func testAccTriggerConfig_actionsNull(rName string) string {
