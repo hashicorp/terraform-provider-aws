@@ -168,6 +168,10 @@ func modifyVPCEndpointExclusive(ctx context.Context, conn *ec2.Client, input *ec
 		Refresh: func(ctx context.Context) (any, string, error) {
 			output, err := conn.ModifyVpcEndpoint(ctx, input)
 
+			if tfawserr.ErrCodeEquals(err, errCodeOperationInProgress) {
+				return nil, "", nil
+			}
+
 			if err != nil {
 				return nil, "", err
 			}
