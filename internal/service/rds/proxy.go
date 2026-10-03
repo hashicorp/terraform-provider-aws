@@ -38,6 +38,7 @@ func resourceProxy() *schema.Resource {
 		ReadWithoutTimeout:   resourceProxyRead,
 		UpdateWithoutTimeout: resourceProxyUpdate,
 		DeleteWithoutTimeout: resourceProxyDelete,
+		CustomizeDiff:        resourceProxyCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -58,6 +59,7 @@ func resourceProxy() *schema.Resource {
 				"auth": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"auth_scheme": {
@@ -91,7 +93,7 @@ func resourceProxy() *schema.Resource {
 							},
 						},
 					},
-					Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
+					Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", "client_password_auth_type", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
 				},
 				"debug_logging": {
 					Type:     schema.TypeBool,
@@ -163,6 +165,56 @@ func resourceProxy() *schema.Resource {
 			}
 		},
 	}
+}
+
+func resourceProxyCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	oldAuthRaw, newAuthRaw := diff.GetChange("auth")
+	oldAuth, ok := oldAuthRaw.(*schema.Set)
+	if !ok || oldAuth.Len() == 0 {
+		return nil
+	}
+
+	newAuth, ok := newAuthRaw.(*schema.Set)
+	if !ok || newAuth.Len() == 0 {
+		return nil
+	}
+
+	clientPasswordAuthType := ""
+	for _, authRaw := range oldAuth.List() {
+		auth, ok := authRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		if v, ok := auth["client_password_auth_type"].(string); ok && v != "" {
+			clientPasswordAuthType = v
+			break
+		}
+	}
+
+	if clientPasswordAuthType == "" {
+		return nil
+	}
+
+	authConfigs := newAuth.List()
+	setNew := false
+	for _, authRaw := range authConfigs {
+		auth, ok := authRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		if v, ok := auth["client_password_auth_type"].(string); !ok || v == "" {
+			auth["client_password_auth_type"] = clientPasswordAuthType
+			setNew = true
+		}
+	}
+
+	if !setNew {
+		return nil
+	}
+
+	return diff.SetNew("auth", authConfigs)
 }
 
 func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
