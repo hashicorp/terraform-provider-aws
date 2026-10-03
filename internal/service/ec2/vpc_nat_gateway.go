@@ -399,6 +399,11 @@ func resourceNATGatewayFlatten(d *schema.ResourceData, natGateway *awstypes.NatG
 		d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 		d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
 		d.Set(names.AttrSubnetID, natGateway.SubnetId)
+		d.Set("regional_nat_gateway_address", nil)
+		d.Set("regional_nat_gateway_auto_mode", nil)
+		d.Set("route_table_id", nil)
+		d.Set("auto_provision_zones", nil)
+		d.Set("auto_scaling_ips", nil)
 
 	case awstypes.AvailabilityModeRegional:
 		d.Set("auto_provision_zones", natGateway.AutoProvisionZones)
