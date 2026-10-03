@@ -64,6 +64,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -263,6 +264,7 @@ func registerSweepers() {
 	dax.RegisterSweepers()
 	deploy.RegisterSweepers()
 	devicefarm.RegisterSweepers()
+	devopsagent.RegisterSweepers()
 	directconnect.RegisterSweepers()
 	directoryservicedata.RegisterSweepers()
 	dlm.RegisterSweepers()
