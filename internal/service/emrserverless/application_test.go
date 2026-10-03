@@ -264,6 +264,46 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccEMRServerlessApplication_imageConfigurationApplicationLevelDigestResolution(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_imageConfigurationDigestResolution(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.application_level_digest_resolution", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_imageConfigurationDigestResolution(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.application_level_digest_resolution", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
@@ -853,6 +893,158 @@ resource "aws_emrserverless_application" "test" {
   architecture  = %[2]q
 }
 `, rName, arch)
+}
+
+func testAccApplicationConfig_imageConfigurationDigestResolution(rName string, digestResolution bool) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_ecr_repository" "test" {
+  name         = %[1]q
+  force_delete = true
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  map_public_ip_on_launch = true
+  vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+
+  ingress {
+    from_port = 0
+    protocol  = -1
+    self      = true
+    to_port   = 0
+  }
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+      Sid = ""
+    }]
+  })
+  name = %[1]q
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonSSMManagedInstanceCore" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy_attachment" "EC2InstanceProfileForImageBuilder" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/EC2InstanceProfileForImageBuilder"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy_attachment" "EC2InstanceProfileForImageBuilderECRContainerBuilds" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/EC2InstanceProfileForImageBuilderECRContainerBuilds"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = aws_iam_role.test.name
+  role = aws_iam_role.test.name
+
+  depends_on = [
+    aws_iam_role_policy_attachment.AmazonSSMManagedInstanceCore,
+    aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds
+  ]
+}
+
+resource "aws_imagebuilder_container_recipe" "test" {
+  name              = %[1]q
+  container_type    = "DOCKER"
+  parent_image      = "public.ecr.aws/emr-serverless/hive/emr-6.9.0"
+  version           = "1.0.0"
+  platform_override = "Linux"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/hello-world-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+  security_group_ids    = [aws_default_security_group.test.id]
+  subnet_id             = aws_subnet.test.id
+
+  depends_on = [aws_default_route_table.test]
+}
+
+resource "aws_imagebuilder_image" "test" {
+  container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.9.0"
+  type          = "hive"
+
+  image_configuration {
+    image_uri                           = "${aws_ecr_repository.test.repository_url}:${replace(aws_imagebuilder_image.test.version, "/", "-")}"
+    application_level_digest_resolution = %[2]t
+  }
+}
+`, rName, digestResolution)
 }
 
 // At the time of writing, the AWS EMR Serverless API returns a 500 error if you try to create an EMR Serverless
