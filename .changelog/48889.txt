@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_bedrockagentcore_agent_runtime: Enforce that exactly one of `match_value_string` or `match_value_string_list` is set in the `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` block at plan time
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_gateway: Enforce that exactly one of `match_value_string` or `match_value_string_list` is set in the `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` block at plan time
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Enforce that exactly one of `match_value_string` or `match_value_string_list` is set in the `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` block at plan time
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_registry: Enforce that exactly one of `match_value_string` or `match_value_string_list` is set in the `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` block at plan time
+```
