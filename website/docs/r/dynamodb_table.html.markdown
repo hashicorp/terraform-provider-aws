@@ -74,7 +74,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
 The following dynamodb table description models the table and GSIs shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
 
-~> **Note:** Multi-attribute keys for GSIs use the `key_schema` block instead of `hash_key`/`range_key`. The `hash_key` and `range_key` arguments are deprecated in favor of `key_schema`.
+~> **Note:** Multi-attribute keys for GSIs require the standalone [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index) resource, which supports the `key_schema` block. The inline `global_secondary_index` block in this resource only supports single `hash_key` and optional `range_key` arguments.
 
 ```terraform
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
