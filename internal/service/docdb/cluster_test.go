@@ -1363,22 +1363,17 @@ resource "aws_docdb_cluster" "test" {
 }
 
 func testAccClusterConfig_availabilityZonesExceedMax(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q
 
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2],
-    data.aws_availability_zones.available.names[3]
-  ]
+  availability_zones = ["test-az-1", "test-az-2", "test-az-3", "test-az-4"]
 
   master_password     = "avoid-plaintext-passwords"
   master_username     = "tfacctest"
   skip_final_snapshot = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterConfig_identifierGenerated() string {
