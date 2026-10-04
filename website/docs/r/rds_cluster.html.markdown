@@ -238,6 +238,7 @@ This resource supports the following arguments:
   We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
   A maximum of 3 AZs can be configured.
   **Note:** [Multi-AZ DB clusters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/multi-az-db-clusters-concepts.html) require exactly 3 Availability Zones in the DB subnet group. Aurora DB clusters can operate with fewer AZs, but RDS will still automatically assign 3 AZs as described above.
+  **Note:** Do not set `availability_zones` to the output of a data source such as [`aws_availability_zones`](../d/availability_zones.html.markdown). Data source values are controlled by AWS and can change at any time (for example, when a new AZ is added to a Region). Because `availability_zones` is a ForceNew attribute, any change to the set of values will plan a destroy and recreate of the cluster. Always use an explicit, static list of AZs.
 * `backtrack_window` - (Optional) Target backtrack window, in seconds. Only available for `aurora` and `aurora-mysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backup_retention_period` - (Optional) Days to retain backups for. Default `1`
 * `ca_certificate_identifier` - (Optional) The CA certificate identifier to use for the DB cluster's server certificate.
