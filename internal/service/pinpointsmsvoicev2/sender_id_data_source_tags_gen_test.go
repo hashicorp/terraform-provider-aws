@@ -22,13 +22,16 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_pinpointsmsvoicev2_sender_id.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomSenderID(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -54,13 +57,16 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_pinpointsmsvoicev2_sender_id.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomSenderID(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -82,13 +88,16 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_pinpointsmsvoicev2_sender_id.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomSenderID(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -110,13 +119,16 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_Tags_DefaultTags_nonOverlapping
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_pinpointsmsvoicev2_sender_id.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomSenderID(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		Steps: []resource.TestStep{
 			{
@@ -146,13 +158,16 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_Tags_IgnoreTags_Overlap_default
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_pinpointsmsvoicev2_sender_id.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomSenderID(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		Steps: []resource.TestStep{
 			{
@@ -188,13 +203,16 @@ func TestAccPinpointSMSVoiceV2SenderIDDataSource_Tags_IgnoreTags_Overlap_resourc
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_pinpointsmsvoicev2_sender_id.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := testAccRandomSenderID(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		Steps: []resource.TestStep{
 			{

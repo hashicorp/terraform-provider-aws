@@ -23,6 +23,8 @@ import (
 
 // @FrameworkDataSource("aws_pinpointsmsvoicev2_sender_id", name="Sender ID")
 // @Tags(identifierAttribute="arn")
+// @Testing(preCheck="testAccPreCheckSenderID")
+// @Testing(generator="testAccRandomSenderID(t)")
 func newSenderIDDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &senderIDDataSource{}, nil
 }
