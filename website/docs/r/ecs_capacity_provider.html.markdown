@@ -150,7 +150,7 @@ This resource supports the following arguments:
 
 ### `storage_configuration` Block
 
-* `storage_size_gib` - (Required) Size of the tasks volume in GiB. Must be at least 1.
+* `storage_size_gib` - (Required) Size of the tasks volume in GiB. Must be at least 30.
 
 ### `local_storage_configuration` Block
 
