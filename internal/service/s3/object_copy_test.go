@@ -619,7 +619,11 @@ func TestAccS3ObjectCopy_objectLockEventHoldRetainUntilDrift(t *testing.T) {
 			{
 				PreConfig: func() { time.Sleep(240 * time.Second) },
 				Config:    testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
-				PlanOnly:  true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

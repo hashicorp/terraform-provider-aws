@@ -1453,7 +1453,11 @@ func TestAccS3Object_objectLockEventHoldRetainUntilDrift(t *testing.T) {
 			{
 				PreConfig: func() { time.Sleep(240 * time.Second) },
 				Config:    testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
-				PlanOnly:  true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			// Changing the duration must not resend the older configured date.
 			{
