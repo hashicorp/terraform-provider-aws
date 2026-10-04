@@ -4714,17 +4714,17 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_availabilityZonesExceedMax(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2], data.aws_availability_zones.available.names[3]]
+  availability_zones  = ["test-az-1", "test-az-2", "test-az-3", "test-az-4"]
   cluster_identifier  = %[1]q
   engine              = %[2]q
   master_password     = "avoid-plaintext-passwords"
   master_username     = "tfacctest"
   skip_final_snapshot = true
 }
-`, rName, tfrds.ClusterEngineAuroraMySQL))
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
 func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
