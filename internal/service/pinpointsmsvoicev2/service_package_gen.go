@@ -27,10 +27,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newSenderIDDataSource,
 			TypeName: "aws_pinpointsmsvoicev2_sender_id",
 			Name:     "Sender ID",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
