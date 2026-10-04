@@ -29,13 +29,13 @@ resource "aws_fis_safety_lever_state" "example" {
 
 The following arguments are required:
 
-* `state` - (Required) State of the safety lever. [See below](#state).
+* `state` - (Required) State of the safety lever. [See below](#state-block).
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `state`
+### `state` Block
 
 * `reason` - (Required) Reason for the current status of the safety lever.
 * `status` - (Required) Status of the safety lever. Valid values: `engaged`, `disengaged`. Engaging the lever immediately stops all running experiments in the account and Region, and prevents new ones from starting.

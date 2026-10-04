@@ -43,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockruntime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
@@ -320,6 +321,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		bedrockagentcore.ServicePackage(ctx),
+		bedrockruntime.ServicePackage(ctx),
 		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),

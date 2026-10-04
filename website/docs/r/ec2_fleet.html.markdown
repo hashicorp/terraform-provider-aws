@@ -96,7 +96,7 @@ resource "aws_ec2_fleet" "example" {
 * `subnet_id` - (Optional) ID of the subnet in which to launch the instances.
 * `weighted_capacity` - (Optional) Number of units provided by the specified instance type.
 
-##### instance_requirements
+#### instance_requirements
 
 The attributes for the instance types. For a list of currently supported values, please see ['InstanceRequirementsRequest'](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_InstanceRequirementsRequest.html).
 

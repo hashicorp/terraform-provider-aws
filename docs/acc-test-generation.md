@@ -20,6 +20,14 @@ To disable resource tagging tests for a specific resource or data source type, a
 @Testing(tagsTest=false)
 ```
 
+In some very rare cases, a resource or data source type supports tagging but cannot use transparent tagging.
+For example, the data source `aws_cognito_user_pool` has to manage both the standard `tags` and `tags_all` attributes as well as the deprecated `user_pool_tags`.
+Opt in to generated tagging tests by adding the following annotation to its source file:
+
+```
+@Testing(tagsTest=true)
+```
+
 To enable Resource Identity tests, add the following line:
 
 ```go

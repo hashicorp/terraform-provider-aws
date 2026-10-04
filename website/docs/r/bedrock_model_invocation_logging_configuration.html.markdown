@@ -83,8 +83,8 @@ resource "aws_bedrock_model_invocation_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `logging_config` - (Required) Logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `logging_config` - (Required) The logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
 
 ### `logging_config` Block
 
@@ -103,7 +103,7 @@ The `cloudwatch_config` configuration block supports the following arguments:
 
 * `large_data_delivery_s3_config` - (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
 * `log_group_name` - (Required) Log group name.
-* `role_arn` - (Required) The role ARN.
+* `role_arn` - (Required) Role ARN.
 
 ### `large_data_delivery_s3_config` Block
 
@@ -123,7 +123,7 @@ The `s3_config` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - AWS Region in which logging is configured.
+* `id` - (**Deprecated**) AWS Region in which logging is configured.
 
 ## Import
 

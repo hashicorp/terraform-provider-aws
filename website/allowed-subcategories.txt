@@ -32,6 +32,7 @@ Batch
 Bedrock
 Bedrock AgentCore
 Bedrock Agents
+Bedrock Runtime
 Billing
 CE (Cost Explorer)
 Chatbot

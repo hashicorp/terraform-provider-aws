@@ -179,28 +179,7 @@ func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.Block {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: attrs,
 			Blocks: map[string]schema.Block{
-				"client_secret_config": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[secretReferenceModel](ctx),
-					Validators: []validator.List{
-						listvalidator.SizeAtMost(1),
-					},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"json_key": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.LengthBetween(1, 128),
-								},
-							},
-							"secret_id": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.LengthBetween(1, 2048),
-								},
-							},
-						},
-					},
-				},
+				"client_secret_config": secretReferenceBlock(ctx),
 			},
 		},
 	}
@@ -450,6 +429,31 @@ func microsoftOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 	return block
 }
 
+func secretReferenceBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[secretReferenceModel](ctx),
+		Validators: append([]validator.List{
+			listvalidator.SizeAtMost(1),
+		}, extraValidators...),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"json_key": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+					},
+				},
+				"secret_id": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -483,7 +487,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`), "Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters."),
+					validOutboundAuthProviderResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

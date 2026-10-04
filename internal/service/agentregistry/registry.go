@@ -278,6 +278,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 												tfobjectvalidator.AtLeastOneOfChildren(
 													path.MatchRelative().AtName("allowed_audience"),
 													path.MatchRelative().AtName("allowed_clients"),
+													path.MatchRelative().AtName("allowed_scopes"),
 												),
 											},
 											Attributes: map[string]schema.Attribute{

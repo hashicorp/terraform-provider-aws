@@ -39,13 +39,17 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end -}}
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else if .HasImportStateIDAttributes -}}
 	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ end -}}
 	ImportStateVerify: true,
-{{ if .HasImportStateIDAttribute -}}
+{{ if .HasImportStateIDAttributes -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttributesFirst }},
+{{ else if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
 {{ else if .HasImportStateIDAttributes -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttributesFirst }},
@@ -98,7 +102,6 @@ package {{ .ProviderPackage }}_test
 import (
 	{{ if .OverrideIdentifier }}
 	"context"
-	"unique"
 	{{- end }}
 	"testing"
 
@@ -3279,11 +3282,12 @@ func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(
 
 {{ if .OverrideIdentifier }}
 func {{ template "expectFullResourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
-		{{ if ne .OverrideResourceType "" -}}
-		ResourceType:        "{{ .OverrideResourceType }}",
-		{{- end }}
-	}), knownValue)
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress,
+		{{- if .OverrideResourceType -}}
+			inttypes.ResourceTagsTypeAndAttribute("{{ .OverrideResourceType }}", {{ .OverrideIdentifierAttribute }}),
+		{{- else -}}
+			inttypes.ResourceTagsAttribute({{ .OverrideIdentifierAttribute }}),
+		{{- end -}}
+	knownValue)
 }
 {{ end }}

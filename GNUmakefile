@@ -3,6 +3,7 @@ SHELL := /bin/bash
 ACCTEST_PARALLELISM          ?= 20
 ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
+GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
 P                            ?= 20
 PKG_NAME                     ?= internal
@@ -381,19 +382,19 @@ fix-imports-core: ## Fixing core directory imports with goimports
 		fi; \
 	done
 
-fmt: ## Fix Go source formatting
+fmt: prereq-go ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+	"$(GOFMT)" -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-fmt-core: ## Fix Go source formatting in core directories
+fmt-core: prereq-go ## Fix Go source formatting in core directories
 	@echo "make: Fixing core directory source code with gofmt..."
 	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
-	gofmt -s -w $$core_pkgs
+	"$(GOFMT)" -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
-fmt-check: ## Verify Go source is formatted
+fmt-check: prereq-go ## Verify Go source is formatted
 	@echo "make: Verifying source code with gofmt..."
-	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
+	@GOFMT="$(GOFMT)" sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
@@ -989,11 +990,10 @@ test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	fi
 
 test-single-service: ## [internal] test single service
-	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@# macOS: use a temporary work directory to avoid CrowdStrike scanning.
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
-		mkdir -p "$$build_dir/cache"; \
-		export GOCACHE="$$build_dir/cache"; \
+		build_dir="$${TMPDIR:-/tmp}/terraform-$(or $(PKG),$(K))-$$$$"; \
+		mkdir -p "$$build_dir"; \
 		export GOTMPDIR="$$build_dir"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 8); \
@@ -1010,12 +1010,11 @@ test-single-service: ## [internal] test single service
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
 test-full: ## [internal] test full codebase
-	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@# macOS: use a temporary work directory to avoid CrowdStrike scanning.
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		build_dir="/tmp/terraform-aws-build-$$$$"; \
-		mkdir -p "$$build_dir/cache" "$$build_dir/tmp"; \
-		export GOCACHE="$$build_dir/cache"; \
-		export GOTMPDIR="$$build_dir/tmp"; \
+		build_dir="$${TMPDIR:-/tmp}/terraform-aws-build-$$$$"; \
+		mkdir -p "$$build_dir"; \
+		export GOTMPDIR="$$build_dir"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
 	test_p=$${TEST_P:-$$cores}; \

@@ -468,7 +468,7 @@ The processing guidance for a Rule, used by AWS WAF to determine whether a web r
 The `statement` block supports the following arguments:
 
 * `and_statement` - (Optional) A logical rule statement used to combine other rule statements with AND logic. See [AND Statement](#and-statement) below for details.
-* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [`asn_match_statement`](#asn_match_statement-block) below for details.
+* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [ASN Match Statement](#asn-match-statement) below for details.
 * `byte_match_statement` - (Optional) A rule statement that defines a string match search for AWS WAF to apply to web requests. See [Byte Match Statement](#byte-match-statement) below for details.
 * `geo_match_statement` - (Optional) A rule statement used to identify web requests based on country of origin. See [GEO Match Statement](#geo-match-statement) below for details.
 * `label_match_statement` - (Optional) A rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.
