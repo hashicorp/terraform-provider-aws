@@ -9,3 +9,7 @@ aws_odb_autonomous_database
 ```release-note:new-resource
 aws_odb_autonomous_database_secrets_manager_integration
 ```
+
+```release-note:bug
+resource/aws_odb_autonomous_database_secrets_manager_integration: Avoid redundant disable requests when the integration is already absent or terminating
+```

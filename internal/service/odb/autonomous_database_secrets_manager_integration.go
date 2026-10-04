@@ -170,16 +170,27 @@ func (r *resourceAutonomousDatabaseSecretsManagerIntegration) Delete(ctx context
 		return
 	}
 
-	// Omit OciIdentityDomain here too: false would delete the shared domain.
-	// InitializeService can create a missing domain even when disabling integration.
-	input := odb.InitializeServiceInput{
-		AutonomousDatabaseOciAwsSecretsManagerIntegration: odbtypes.AccessDisabled,
+	role, err := findAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
+	if retry.NotFound(err) {
+		return
 	}
-	tflog.Debug(ctx, "Disabling ODB Autonomous Database Secrets Manager integration", map[string]any{names.AttrRegion: r.Meta().Region(ctx)})
-	_, err := conn.InitializeService(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
+	}
+
+	// Disabling an absent or already terminating integration can be rejected.
+	if role.Status != odbtypes.OciIamRoleStatusTerminating {
+		// Omit OciIdentityDomain here too: false would delete the shared domain.
+		// InitializeService can create a missing domain even when disabling integration.
+		input := odb.InitializeServiceInput{
+			AutonomousDatabaseOciAwsSecretsManagerIntegration: odbtypes.AccessDisabled,
+		}
+		tflog.Debug(ctx, "Disabling ODB Autonomous Database Secrets Manager integration", map[string]any{names.AttrRegion: r.Meta().Region(ctx)})
+		if _, err := conn.InitializeService(ctx, &input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+			return
+		}
 	}
 
 	if err := waitAutonomousDatabaseSecretsManagerIntegrationDeleted(ctx, conn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {

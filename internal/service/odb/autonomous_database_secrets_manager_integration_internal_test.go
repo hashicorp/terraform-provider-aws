@@ -200,7 +200,7 @@ func TestAutonomousDatabaseSecretsManagerIntegrationInitializeServiceRequests(t 
 							t.Errorf("InitializeService input = %s, want only integration %s", input, integration)
 						}
 					case "Odb.GetOciOnboardingStatus":
-						if integration == odbtypes.AccessEnabled {
+						if integration == odbtypes.AccessEnabled || initializations == 0 {
 							body = fmt.Sprintf(`{"autonomousDatabaseOciIntegrationIamRoles":[{"awsIntegration":"SecretsManager","iamRoleArn":%q,"status":"AVAILABLE"}]}`, testAutonomousDatabaseServiceRoleARN)
 						}
 					default:
@@ -248,6 +248,154 @@ func TestAutonomousDatabaseSecretsManagerIntegrationInitializeServiceRequests(t 
 				}
 				if initializations != 1 {
 					t.Errorf("initialization calls = %d, want 1", initializations)
+				}
+			})
+		})
+	}
+}
+
+func TestAutonomousDatabaseSecretsManagerIntegrationDelete(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		statuses            []odbtypes.OciIamRoleStatus
+		readErrorAt         int
+		initializeError     bool
+		deleteTwice         bool
+		regionOverride      string
+		wantInitializations int
+		wantError           string
+	}{
+		"already absent": {
+			statuses: []odbtypes.OciIamRoleStatus{""},
+		},
+		"already absent with region override": {
+			statuses:       []odbtypes.OciIamRoleStatus{""},
+			regionOverride: endpoints.UsWest2RegionID,
+		},
+		"repeated delete": {
+			statuses:            []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusAvailable, odbtypes.OciIamRoleStatusTerminating, ""},
+			deleteTwice:         true,
+			wantInitializations: 1,
+		},
+		"already terminating": {
+			statuses: []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusTerminating, odbtypes.OciIamRoleStatusTerminating, ""},
+		},
+		"status lookup failed": {
+			statuses:    []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusAvailable},
+			readErrorAt: 1,
+			wantError:   "status lookup failed",
+		},
+		"initialization failed": {
+			statuses:            []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusAvailable},
+			initializeError:     true,
+			wantInitializations: 1,
+			wantError:           "disable request rejected",
+		},
+		"waiter lookup failed": {
+			statuses:            []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusAvailable},
+			readErrorAt:         2,
+			wantInitializations: 1,
+			wantError:           "status lookup failed",
+		},
+		"termination failed": {
+			statuses:            []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusAvailable, odbtypes.OciIamRoleStatusTerminateFailed},
+			wantInitializations: 1,
+			wantError:           "termination failed",
+		},
+		"pending termination failed": {
+			statuses:  []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusTerminating, odbtypes.OciIamRoleStatusTerminateFailed},
+			wantError: "termination failed",
+		},
+		"pending termination timed out": {
+			statuses:  []odbtypes.OciIamRoleStatus{odbtypes.OciIamRoleStatusTerminating},
+			wantError: names.AttrTimeout,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			synctest.Test(t, func(t *testing.T) {
+				ctx := t.Context()
+				wantRegion := endpoints.UsEast1RegionID
+				if tc.regionOverride != "" {
+					wantRegion = tc.regionOverride
+					ctx = conns.NewResourceContext(ctx, "", "", "aws_odb_autonomous_database_secrets_manager_integration", wantRegion)
+				}
+				initializations, reads := 0, 0
+				client := new(conns.AWSClient)
+				client.SetHTTPClient(ctx, &http.Client{Transport: autonomousDatabaseIntegrationTransport(func(req *http.Request) (*http.Response, error) {
+					if !strings.Contains(req.URL.Host, wantRegion) {
+						t.Errorf("request endpoint %s does not use region %s", req.URL.Host, wantRegion)
+					}
+					code, body := http.StatusOK, "{}"
+					switch req.Header.Get("X-Amz-Target") {
+					case "Odb.GetOciOnboardingStatus":
+						status := tc.statuses[min(reads, len(tc.statuses)-1)]
+						reads++
+						if reads == tc.readErrorAt {
+							code, body = http.StatusBadRequest, `{"__type":"ValidationException","message":"status lookup failed"}`
+						} else if status != "" {
+							body = fmt.Sprintf(`{"autonomousDatabaseOciIntegrationIamRoles":[{"awsIntegration":"SecretsManager","iamRoleArn":%q,"status":%q}]}`, testAutonomousDatabaseServiceRoleARN, status)
+						}
+					case "Odb.InitializeService":
+						initializations++
+						if tc.initializeError || tc.wantInitializations == 0 || initializations > tc.wantInitializations {
+							code, body = http.StatusBadRequest, `{"__type":"ValidationException","message":"disable request rejected"}`
+						}
+					default:
+						t.Fatalf("unexpected operation %q", req.Header.Get("X-Amz-Target"))
+					}
+					return &http.Response{StatusCode: code, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: req}, nil
+				})})
+				client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
+				config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+				client, diags := config.ConfigureProvider(ctx, client)
+				if diags.HasError() {
+					t.Fatal(diags)
+				}
+				rawResource, err := newResourceAutonomousDatabaseSecretsManagerIntegration(ctx)
+				if err != nil {
+					t.Fatal(err)
+				}
+				r := rawResource.(*resourceAutonomousDatabaseSecretsManagerIntegration)
+				r.SetDefaultDeleteTimeout(time.Second)
+				r.Configure(ctx, resource.ConfigureRequest{ProviderData: client}, &resource.ConfigureResponse{})
+				var schemaResponse resource.SchemaResponse
+				r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+				schemaResponse.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+				terraformType := schemaResponse.Schema.Type().TerraformType(ctx)
+				values := map[string]tftypes.Value{}
+				for name, attributeType := range terraformType.(tftypes.Object).AttributeTypes {
+					values[name] = tftypes.NewValue(attributeType, nil)
+				}
+				values[names.AttrID] = tftypes.NewValue(tftypes.String, wantRegion)
+				values[names.AttrRegion] = tftypes.NewValue(tftypes.String, wantRegion)
+				state := tfsdk.State{Raw: tftypes.NewValue(terraformType, values), Schema: schemaResponse.Schema}
+				deletions := 1
+				if tc.deleteTwice {
+					deletions = 2
+				}
+				for range deletions {
+					response := resource.DeleteResponse{State: state}
+					r.Delete(ctx, resource.DeleteRequest{State: state}, &response)
+					if got, want := response.Diagnostics.HasError(), tc.wantError != ""; got != want {
+						t.Fatalf("diagnostics.HasError() = %t, want %t: %v", got, want, response.Diagnostics)
+					}
+					if tc.wantError != "" {
+						if message := fmt.Sprint(response.Diagnostics); !strings.Contains(message, tc.wantError) {
+							t.Errorf("diagnostics = %s, want %q", message, tc.wantError)
+						}
+						if !response.State.Raw.Equal(state.Raw) {
+							t.Error("failed Delete must retain the prior state")
+						}
+					}
+				}
+				if initializations != tc.wantInitializations {
+					t.Errorf("initialization calls = %d, want %d", initializations, tc.wantInitializations)
+				}
+				if reads < len(tc.statuses) {
+					t.Errorf("status calls = %d, want at least %d", reads, len(tc.statuses))
 				}
 			})
 		})
