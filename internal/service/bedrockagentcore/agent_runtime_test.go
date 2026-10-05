@@ -1402,8 +1402,39 @@ resource "aws_iam_role_policy" "test2" {
 `, rName)
 }
 
+func testAccAgentRuntimeConfig_baseS3Bucket(rBucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "runtime_example.zip"
+  source = "${path.module}/test-fixtures/runtime_example.zip"
+}
+
+resource "aws_iam_role_policy" "bucket" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+`, rBucketName)
+}
+
 func testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
@@ -1427,31 +1458,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   depends_on = [aws_iam_role_policy.bucket]
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "runtime_example.zip"
-  source = "${path.module}/test-fixtures/runtime_example.zip"
-}
-
-resource "aws_iam_role_policy" "bucket" {
-  role = aws_iam_role.test.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
-      Resource = "${aws_s3_bucket.test.arn}/*"
-    }]
-  })
-}
-`, rName, rBucketName))
+`, rName))
 }
 
 func testAccAgentRuntimeConfig_container(rName, rImageURI string) string {
@@ -1474,11 +1481,14 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 
 func testAccAgentRuntimeConfig_description(rName, rBucketName, description string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
-  description        = %[3]q
+  description        = %[2]q
 
   agent_runtime_artifact {
     code_configuration {
@@ -1499,31 +1509,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   depends_on = [aws_iam_role_policy.bucket]
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "runtime_example.zip"
-  source = "${path.module}/test-fixtures/runtime_example.zip"
-}
-
-resource "aws_iam_role_policy" "bucket" {
-  role = aws_iam_role.test.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
-      Resource = "${aws_s3_bucket.test.arn}/*"
-    }]
-  })
-}
-`, rName, rBucketName, description))
+`, rName, description))
 }
 
 func testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, envKey, envValue string) string {
