@@ -953,7 +953,7 @@ The `field_to_match` block supports the following arguments:
 * `header_order` - (Optional) Inspect a string containing the list of the request's header names, ordered as they appear in the web request that AWS WAF receives for inspection. See [`header_order`](#header_order-block) below for details.
 * `headers` - (Optional) Inspect the request headers. See [`headers`](#headers-block) below for details.
 * `ja3_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja3_fingerprint`](#ja3_fingerprint-block) below for details.
-* `ja4_fingerprint` - (Optional) Inspect the JA3 fingerprint. See [`ja4_fingerprint`](#ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Inspect the JA4 fingerprint. See [`ja4_fingerprint`](#ja4_fingerprint-block) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [`json_body`](#json_body-block) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -1162,8 +1162,8 @@ The `custom_key` block supports the following arguments:
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
 * `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
 * `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
-* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
-* `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
+* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ja3_fingerprint`](#ratelimit-ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Use the JA4 fingerprint in the request as an aggregate key. See [`RateLimit ja4_fingerprint`](#ratelimit-ja4_fingerprint-block) below for details.
 * `label_namespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `label_namespace`](#ratelimit-label_namespace-block) below for details.
 * `query_argument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `query_argument`](#ratelimit-query_argument-block) below for details.
 * `query_string` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `query_string`](#ratelimit-query_string-block) below for details.
@@ -1217,15 +1217,15 @@ Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fi
 
 The `ja3_fingerprint` block supports the following arguments:
 
-* `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+* `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TLS Client Hello information to compute the JA3 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### RateLimit `ja4_fingerprint` Block
 
-Use the JA3 fingerprint in the request as an aggregate key. Each distinct JA3 fingerprint contributes to the aggregation instance. You can use this key type once.
+Use the JA4 fingerprint in the request as an aggregate key. Each distinct JA4 fingerprint contributes to the aggregation instance. You can use this key type once.
 
 The `ja4_fingerprint` block supports the following arguments:
 
-* `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TSL Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
+* `fallback_behavior` - (Required) - Match status to assign to the web request if there is insufficient TLS Client Hello information to compute the JA4 fingerprint. Valid values include: `MATCH` or `NO_MATCH`.
 
 ### RateLimit `label_namespace` Block
 
