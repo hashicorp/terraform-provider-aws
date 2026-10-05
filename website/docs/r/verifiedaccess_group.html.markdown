@@ -40,7 +40,7 @@ resource "aws_verifiedaccess_group" "test" {
 
 The following arguments are required:
 
-* `verifiedaccess_instance_id` - (Required) Id of the verified access instance this group is associated with.
+* `verifiedaccess_instance_id` - (Required) ID of the verified access instance this group is associated with.
 
 The following arguments are optional:
 
