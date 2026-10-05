@@ -481,8 +481,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -495,7 +495,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports", "client-999", "client-888", "openid", names.AttrEmail),
+				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rBucketName, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports", "client-999", "client-888", "openid", names.AttrEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -540,7 +540,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
-				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology", "client-111", "client-222", "openid", names.AttrProfile),
+				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rBucketName, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology", "client-111", "client-222", "openid", names.AttrProfile),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -1545,24 +1545,34 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, envKey, envValue))
 }
 
-func testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+func testAccAgentRuntimeConfig_authorizerConfiguration(rName, rBucketName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[2]q
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
   authorizer_configuration {
     custom_jwt_authorizer {
-      discovery_url    = %[3]q
-      allowed_audience = [%[4]q, %[5]q]
-      allowed_clients  = [%[6]q, %[7]q]
-      allowed_scopes   = [%[8]q, %[9]q]
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
     }
   }
 
@@ -1570,7 +1580,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     network_mode = "PUBLIC"
   }
 }
-`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
 func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string, inboundTokenClaimValueType awstypes.InboundTokenClaimValueType, claimMatchOperator awstypes.ClaimMatchOperatorType) string {
