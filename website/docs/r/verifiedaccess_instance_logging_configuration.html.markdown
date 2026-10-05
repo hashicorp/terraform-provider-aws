@@ -114,7 +114,7 @@ This resource supports the following arguments:
 A `access_logs` block supports the following arguments:
 
 * `cloudwatch_logs` - (Optional) Block that specifies configures sending Verified Access logs to CloudWatch Logs. [Detailed below](#cloudwatch_logs-block).
-* `include_trust_context` - (Optional) Include trust data sent by trust providers into the logs.
+* `include_trust_context` - (Optional) Whether to include trust data sent by trust providers in the logs.
 * `kinesis_data_firehose` - (Optional) Block that specifies configures sending Verified Access logs to Kinesis. [Detailed below](#kinesis_data_firehose-block).
 * `log_version` - (Optional) Logging version to use. Refer to [VerifiedAccessLogOptions](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VerifiedAccessLogOptions.html) for the allowed values.
 * `s3` - (Optional) Block that specifies configures sending Verified Access logs to S3. [Detailed below](#s3-block).
