@@ -27,17 +27,18 @@ import (
 )
 
 // testAccPreCheck skips acceptance tests in regions where the Lambda Web API
-// is not yet available (the service is rolling out region by region pre-GA).
+// is not available.
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
 
 	input := lambdaweb.ListWebFunctionsInput{}
 	_, err := conn.ListWebFunctions(ctx, &input)
 
-	// Regions where the Lambda Web API has not been rolled out yet respond
-	// with an AccessDeniedException that the pre-GA SDK surfaces without an
-	// error code, so match on the message as well.
-	if err != nil && strings.Contains(err.Error(), "Unable to determine service/operation name to be authorized") {
+	// Regions where the Lambda Web API is not available respond with an
+	// AccessDeniedException ("Unable to determine service/operation name to
+	// be authorized"). The generated SDK surfaces it as a typed error.
+	var ade *awstypes.AccessDeniedException
+	if errors.As(err, &ade) && strings.Contains(aws.ToString(ade.Message), "Unable to determine service/operation name") {
 		t.Skipf("skipping acceptance testing: Lambda Web API not available in this region: %s", err)
 	}
 
@@ -311,7 +312,7 @@ func testAccCheckFunctionEndpointServesLatestRevision(ctx context.Context, t *te
 				return false, err
 			}
 			got = out.RevisionWeights
-			return len(got) == 1 && aws.ToString(got[0].RevisionId) == want && got[0].Weight == 100, nil
+			return len(got) == 1 && aws.ToString(got[0].RevisionId) == want && aws.ToInt32(got[0].Weight) == 100, nil
 		}, tfresource.WaitOpts{PollInterval: 10 * time.Second})
 		if err != nil {
 			return fmt.Errorf("endpoint %s of Lambda Web Function %s does not serve latest revision %s (revision weights: %+v): %w", endpointName, functionName, want, got, err)

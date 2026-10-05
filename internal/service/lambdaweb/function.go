@@ -1,10 +1,10 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// Pre-GA: this resource targets the not-yet-public aws-sdk-go-v2
-// "lambdaweb" service client, currently satisfied by the hand-written
-// shim in .pre-ga-sdk/ (see the replace directive in go.mod). Swap to the
-// real SDK module when it ships at GA.
+// Pre-GA: this resource targets the aws-sdk-go-v2 "lambdaweb" service
+// client, currently vendored from the GA build in .pre-ga-sdk/ (see the
+// replace directive in go.mod). Point go.mod at the published tag once the
+// module is on the proxy.
 
 package lambdaweb
 

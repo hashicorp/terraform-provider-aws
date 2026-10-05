@@ -38,18 +38,28 @@ Tagging is managed through the native Lambda Web tagging API
   names on purpose. They get renamed to `{PR_NUMBER}.txt` when the public PR
   opens at GA.
 
-## 3. Pre-GA SDK shim (important)
+## 3. Vendored generated SDK module (important)
 
-The official `aws-sdk-go-v2/service/lambdaweb` module is not public yet. Until
-it ships, the provider builds against a hand-written stand-in that mirrors the
-exact public surface the generated client will expose.
+The official `aws-sdk-go-v2/service/lambdaweb` module is not on the public
+proxy yet. The provider builds against the **generated** module from the
+Trebuchet drop `awsSdkGoV2.zip` (`service/lambdaweb`, version
+`1.0.0-zeta.1587f42719a3`, confirmed identical to the GA build), vendored
+locally. The earlier hand-written shim is gone.
 
 - go.mod (root):
   - require: `github.com/aws/aws-sdk-go-v2/service/lambdaweb v0.0.0-preview`
   - replace: `github.com/aws/aws-sdk-go-v2/service/lambdaweb => ./.pre-ga-sdk/lambdaweb`
-- The shim lives in `.pre-ga-sdk/lambdaweb/`.
+  - core bumped to what the generated module requires:
+    `aws-sdk-go-v2 v1.45.1`, `smithy-go v1.28.1`,
+    `internal/configsources v1.5.1`, `internal/endpoints/v2 v2.8.1`
+- `.pre-ga-sdk/lambdaweb/` is the unzipped `service/lambdaweb/` minus
+  `snapshot/`, `request_snapshot/`, `response_snapshot/` and `*_test.go`, with
+  the three local `replace` lines removed from its own `go.mod`.
+- Generated types use `*int32` for `Weight`, `MaxEnvironments`,
+  `MaxConcurrencyPerEnvironment`, `TimeoutSeconds` and `RateLimit`; the
+  resource code and tests already match.
 
-Client operations the shim exposes (same names the generated client will have):
+Client operations the module exposes:
 - Functions: `CreateWebFunction`, `GetWebFunction`, `DeleteWebFunction`, `ListWebFunctions`
 - Revisions: `CreateWebFunctionRevision`, `GetWebFunctionRevision`, `DeleteWebFunctionRevision`, `ListWebFunctionRevisions`
 - Endpoints: `CreateWebFunctionEndpoint`, `GetWebFunctionEndpoint`, `UpdateWebFunctionEndpoint`, `DeleteWebFunctionEndpoint`, `ListWebFunctionEndpoints`
@@ -58,15 +68,15 @@ Client operations the shim exposes (same names the generated client will have):
 
 ### GA swap (single dependency-only change)
 
-When the official module ships (Trebuchet build `awsSdkGoV2.zip`):
-1. `go mod edit -dropreplace` to drop the local replace, then pin the real module version.
+When the module is published on the proxy (post-GA):
+1. `go mod edit -dropreplace` to drop the local replace, then pin the published tag.
 2. Delete `.pre-ga-sdk/lambdaweb/`.
-3. `go mod tidy`.
+3. `go mod tidy`. No code changes expected: the vendored copy is the same generated code.
 
 The exact commands are in section 7.
 
 Per the contributor guide, this dependency swap is a separate change from the
-resource logic. The shim is isolated in its own commit for exactly this reason.
+resource logic, so it stays in its own commit.
 
 ## 4. Build and test before GA
 
@@ -170,15 +180,17 @@ HashiCorp's test accounts (primary 187416307283, alternate 067819342479) are
 allowlisted for the pre-release API in us-east-1 and eu-west-1, so acceptance
 tests run there directly. Re-confirm after GA.
 
-The provider-side changes that do not depend on the SDK are done and verified
-against the shim with build, vet and unit tests. What remains is the SDK swap
-and an acceptance re-run (section 7).
+The provider-side changes are done and verified against the generated SDK
+module (vendored copy of the GA build) with full build, vet and unit tests.
+What remains is pointing go.mod at the published tag and an acceptance re-run
+(section 7).
 
-## 7. Remaining: SDK swap and acceptance re-run
+## 7. Remaining: pin the published SDK tag and acceptance re-run
 
-1. Swap the SDK, in its own commit (replace `vX.Y.Z` with the published
-   version; if the module path is not `service/lambdaweb`, stop: the package,
-   `names/data/names_data.hcl`, resource names and docs need a rename first):
+1. Pin the published module, in its own commit (replace `vX.Y.Z` with the
+   version on the proxy; if the module path is not `service/lambdaweb`, stop:
+   the package, `names/data/names_data.hcl`, resource names and docs need a
+   rename first):
 
    ```
    go mod edit -dropreplace=github.com/aws/aws-sdk-go-v2/service/lambdaweb
@@ -187,14 +199,12 @@ and an acceptance re-run (section 7).
    GOPROXY=direct go mod tidy
    ```
 
-2. Fix type drift the shim hid (it declares `TimeoutSeconds`,
-   `MaxConcurrencyPerEnvironment`, `MaxEnvironments`, `RateLimit` and
-   `RevisionWeight.Weight` as `int64`; generated code usually uses `int32`) and
-   replace the message match in `testAccPreCheck` (`function_test.go`) with the
-   typed error the real SDK returns:
+2. Confirm nothing drifted between the vendored zeta build and the published
+   tag (`int32` fields, `AccessDeniedException` in `testAccPreCheck` are
+   already aligned):
 
    ```
-   GOPROXY=direct go build ./internal/service/lambdaweb/...
+   GOPROXY=direct go build ./...
    GOPROXY=direct go vet ./internal/service/lambdaweb/...
    go test ./internal/service/lambdaweb/... -run 'Test[^A]'
    make gen
