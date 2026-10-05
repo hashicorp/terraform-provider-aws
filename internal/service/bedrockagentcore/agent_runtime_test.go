@@ -161,7 +161,7 @@ func testAccRandomAgentRuntimeName(t *testing.T) string {
 func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 
@@ -257,7 +257,7 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 
@@ -294,7 +294,7 @@ func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 
@@ -351,7 +351,7 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
@@ -411,7 +411,7 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
@@ -480,7 +480,7 @@ func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) 
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
@@ -584,7 +584,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
@@ -811,7 +811,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
@@ -894,7 +894,7 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	rImageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
@@ -970,7 +970,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	rBucketNameV1 := strings.ReplaceAll(rName+"_v1", "_", "-")
 	rBucketNameV2 := strings.ReplaceAll(rName+"_v2", "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
@@ -1074,7 +1074,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	rBucketName := strings.ReplaceAll(rName, "_", "-")
@@ -1243,7 +1243,7 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
