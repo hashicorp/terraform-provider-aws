@@ -59,32 +59,31 @@ locals {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
-* `description` - (Optional) A description for the IPAM.
+* `description` - (Optional) Description for the IPAM.
 * `enable_private_gua` - (Optional) Enable this option to use your own GUA ranges as private IPv6 addresses. Default: `false`.
 * `metered_account` - (Optional) AWS account that is charged for active IP addresses managed in IPAM. Valid values are `ipam-owner` (default) and `resource-owner`.
-* `operating_regions` - (Required) Determines which locales can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. You **must** set your provider block region as an operating_region.
+* `operating_regions` - (Required) Locales that can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions-block) parameter. You **must** set your provider block region as an operating_region.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tier` - (Optional) specifies the IPAM tier. Valid options include `free` and `advanced`. Default is `advanced`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### operating_regions
+### `operating_regions` Block
 
-* `region_name` - (Required) The name of the Region you want to add to the IPAM.
+* `region_name` - (Required) Name of the Region you want to add to the IPAM.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of IPAM
-* `id` - The ID of the IPAM
-* `default_resource_discovery_id` - The IPAM's default resource discovery ID.
-* `default_resource_discovery_association_id` - The IPAM's default resource discovery association ID.
-* `private_default_scope_id` - The ID of the IPAM's private scope. A scope is a top-level container in IPAM. Each scope represents an IP-independent network. Scopes enable you to represent networks where you have overlapping IP space. When you create an IPAM, IPAM automatically creates two scopes: public and private. The private scope is intended for private IP space. The public scope is intended for all internet-routable IP space.
-* `public_default_scope_id` - The ID of the IPAM's public scope. A scope is a top-level container in IPAM. Each scope represents an IP-independent network. Scopes enable you to represent networks where you have overlapping IP space. When you create an IPAM, IPAM automatically creates two scopes: public and private. The private scope is intended for private
-IP space. The public scope is intended for all internet-routable IP space.
-* `scope_count` - The number of scopes in the IPAM.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `default_resource_discovery_association_id` - IPAM's default resource discovery association ID.
+* `default_resource_discovery_id` - IPAM's default resource discovery ID.
+* `id` - ID of the IPAM
+* `private_default_scope_id` - ID of the IPAM's private scope. A scope is a top-level container in IPAM. Each scope represents an IP-independent network. Scopes enable you to represent networks where you have overlapping IP space. When you create an IPAM, IPAM automatically creates two scopes: public and private. The private scope is intended for private IP space. The public scope is intended for all internet-routable IP space.
+* `public_default_scope_id` - ID of the IPAM's public scope. A scope is a top-level container in IPAM. Each scope represents an IP-independent network. Scopes enable you to represent networks where you have overlapping IP space. When you create an IPAM, IPAM automatically creates two scopes: public and private. The private scope is intended for private IP space. The public scope is intended for all internet-routable IP space.
+* `scope_count` - Number of scopes in the IPAM.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
