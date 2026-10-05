@@ -8,6 +8,10 @@ ENHANCEMENTS:
 
 * resource/aws_ec2_transit_gateway_route: Add resource identity support ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
 
+BUG FIXES:
+
+* resource/aws_redshiftserverless_workgroup: Restores fully reading `config_parameter` when not specified ([#50255](https://github.com/hashicorp/terraform-provider-aws/issues/50255))
+
 ## 6.67.0 (September 30, 2026)
 
 NOTES:
