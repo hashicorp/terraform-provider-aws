@@ -295,8 +295,8 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -309,7 +309,7 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Initial description"),
+				Config: testAccAgentRuntimeConfig_description(rName, rBucketName, "Initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
@@ -331,7 +331,7 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
-				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Updated description"),
+				Config: testAccAgentRuntimeConfig_description(rName, rBucketName, "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -1473,24 +1473,57 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, rImageURI))
 }
 
-func testAccAgentRuntimeConfig_description(rName, rImageUri, description string) string {
+func testAccAgentRuntimeConfig_description(rName, rBucketName, description string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
-  description        = %[2]q
+  description        = %[3]q
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[3]q
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
   network_configuration {
     network_mode = "PUBLIC"
   }
+
+  depends_on = [aws_iam_role_policy.bucket]
 }
-`, rName, description, rImageUri))
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "runtime_example.zip"
+  source = "${path.module}/test-fixtures/runtime_example.zip"
+}
+
+resource "aws_iam_role_policy" "bucket" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+`, rName, rBucketName, description))
 }
 
 func testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, envKey, envValue string) string {
