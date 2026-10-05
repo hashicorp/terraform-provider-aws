@@ -7,7 +7,6 @@ package appmesh
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
@@ -34,49 +33,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
 			Name:     "Gateway Route",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceMesh,
 			TypeName: "aws_appmesh_mesh",
 			Name:     "Service Mesh",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceRoute,
 			TypeName: "aws_appmesh_route",
 			Name:     "Route",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
 			Name:     "Virtual Gateway",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
 			Name:     "Virtual Node",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
 			Name:     "Virtual Router",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
 			Name:     "Virtual Service",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -88,64 +87,50 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
 			Name:     "Gateway Route",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceMesh,
 			TypeName: "aws_appmesh_mesh",
 			Name:     "Service Mesh",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRoute,
 			TypeName: "aws_appmesh_route",
 			Name:     "Route",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
 			Name:     "Virtual Gateway",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
 			Name:     "Virtual Node",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
 			Name:     "Virtual Router",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
 			Name:     "Virtual Service",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

@@ -7,7 +7,8 @@ package ds
 
 import (
 	"context"
-	"unique"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -27,12 +28,53 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newIPRouteResource,
+			TypeName: "aws_directory_service_ip_route",
+			Name:     "IP Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("cidr_ip", false),
+				inttypes.StringIdentityAttribute("cidr_ipv6", false),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      ipRouteImportID{},
+			},
+		},
+		{
+			Factory:  newIPRoutesExclusiveResource,
+			TypeName: "aws_directory_service_ip_routes_exclusive",
+			Name:     "IP Routes Exclusive",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTrustResource,
 			TypeName: "aws_directory_service_trust",
 			Name:     "Trust",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newIPRouteResourceAsListResource,
+			TypeName: "aws_directory_service_ip_route",
+			Name:     "IP Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("cidr_ip", false),
+				inttypes.StringIdentityAttribute("cidr_ipv6", false),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -58,10 +100,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDirectory,
 			TypeName: "aws_directory_service_directory",
 			Name:     "Directory",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceLogSubscription,
@@ -79,7 +119,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRegion,
 			TypeName: "aws_directory_service_region",
 			Name:     "Region",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

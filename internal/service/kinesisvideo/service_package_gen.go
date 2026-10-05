@@ -7,7 +7,6 @@ package kinesisvideo
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
@@ -38,10 +37,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceStream,
 			TypeName: "aws_kinesis_video_stream",
 			Name:     "Stream",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

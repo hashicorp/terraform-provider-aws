@@ -518,7 +518,7 @@ The `oauth` block supports the following:
 * `default_return_url` - (Optional) URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
 * `grant_type` - (Optional) OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
 * `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
-* `scopes` - (Optional) Set of OAuth scopes to request.
+* `scopes` - (Required) Set of OAuth scopes to request.
 
 ### `gateway_iam_role` Block
 
@@ -563,7 +563,7 @@ The `managed_vpc_resource` block supports the following:
 
 The `self_managed_lattice_resource` block supports the following:
 
-* `resource_configuration_identifier` - (Required) ARN or ID of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) ARN or ID of the VPC Lattice resource configuration.
 
 ### `target_configuration` Block
 
@@ -708,7 +708,7 @@ The `tool_override` block supports the following:
 
 * `description` - (Optional) Description of the tool. Provides information about the purpose and usage of the tool. If not provided, uses the description from the API's OpenAPI specification.
 * `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
-* `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
+* `name` - (Required) Name of tool. Identifies the tool in the Model Context Protocol.
 * `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
 ### `target_configuration.mcp.connector` Block

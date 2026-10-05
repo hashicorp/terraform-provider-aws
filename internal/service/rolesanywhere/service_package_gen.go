@@ -7,7 +7,6 @@ package rolesanywhere
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -38,19 +37,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProfile,
 			TypeName: "aws_rolesanywhere_profile",
 			Name:     "Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceTrustAnchor,
 			TypeName: "aws_rolesanywhere_trust_anchor",
 			Name:     "Trust Anchor",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

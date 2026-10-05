@@ -19,6 +19,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource{
+		{
+			Factory:  newApplyGuardrailEphemeralResource,
+			TypeName: "aws_bedrockruntime_apply_guardrail",
+			Name:     "Apply Guardrail",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{}
 }

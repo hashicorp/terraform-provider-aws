@@ -189,7 +189,7 @@ The `egress_configuration` block supports the following arguments:
 
 The `ingress_configuration` block supports the following argument:
 
-* `is_publicly_accessible` - (Required) Whether your App Runner service is publicly accessible. To make the service publicly accessible set it to `true`. To make the service privately accessible, from only within an Amazon VPC, set it to `false`.
+* `is_publicly_accessible` - (Optional) Whether your App Runner service is publicly accessible. To make the service publicly accessible set it to `true`. To make the service privately accessible, from only within an Amazon VPC, set it to `false`.
 
 ### `observability_configuration` Block
 

@@ -303,7 +303,7 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 
 For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-mounting-ecs.html).
 
-* `access_point_arn` - (Required) Full ARN of the S3 Files access point to use. If configured, `root_directory` must either be omitted or set to `"/"`.
+* `access_point_arn` - (Optional) Full ARN of the S3 Files access point to use. If configured, `root_directory` must either be omitted or set to `"/"`.
 * `file_system_arn` - (Required) Full ARN of the S3 Files file system to mount.
 * `root_directory` - (Optional) Directory within the Amazon S3 Files file system to mount as the root directory.
 * `transit_encryption_port` - (Optional) Port to use for sending encrypted data between the ECS host and the S3 Files file system.
@@ -316,7 +316,7 @@ For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.
 ### `proxy_configuration` Block
 
 * `container_name` - (Required) Name of the container that will serve as the App Mesh proxy.
-* `properties` - (Required) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
+* `properties` - (Optional) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 * `type` - (Optional) Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
 
 ### `ephemeral_storage` Block

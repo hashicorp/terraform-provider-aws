@@ -41,7 +41,7 @@ This list resource supports the following arguments:
 
 * `region` - (Optional) Region to query. Defaults to provider region.
 
-### filter Configuration Block
+### `filter` Block
 
 The `filter` block supports the following:
 

@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
@@ -58,10 +57,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceFleet,
 			TypeName: "aws_codebuild_fleet",
 			Name:     "Fleet",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -74,7 +71,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProject,
 			TypeName: "aws_codebuild_project",
 			Name:     "Project",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -88,7 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReportGroup,
 			TypeName: "aws_codebuild_report_group",
 			Name:     "Report Group",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -140,7 +137,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_codebuild_project",
 			Name:     "Project",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 	})

@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
@@ -32,9 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newContainerAssociationResource,
 			TypeName: "aws_networkfirewall_container_association",
 			Name:     "Container Association",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "container_association_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("container_association_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("container_association_arn"),
 			Import: inttypes.FrameworkImport{
@@ -51,9 +48,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTLSInspectionConfigurationResource,
 			TypeName: "aws_networkfirewall_tls_inspection_configuration",
 			Name:     "TLS Inspection Configuration",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
@@ -64,10 +59,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newVPCEndpointAssociationResource,
 			TypeName: "aws_networkfirewall_vpc_endpoint_association",
 			Name:     "VPC Endpoint Association",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "vpc_endpoint_association_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("vpc_endpoint_association_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -78,9 +71,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newContainerAssociationResourceAsListResource,
 			TypeName: "aws_networkfirewall_container_association",
 			Name:     "Container Association",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "container_association_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("container_association_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("container_association_arn"),
 		},
@@ -93,14 +84,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceFirewall,
 			TypeName: "aws_networkfirewall_firewall",
 			Name:     "Firewall",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceFirewallPolicy,
 			TypeName: "aws_networkfirewall_firewall_policy",
 			Name:     "Firewall Policy",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -118,19 +109,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceFirewall,
 			TypeName: "aws_networkfirewall_firewall",
 			Name:     "Firewall",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceFirewallPolicy,
 			TypeName: "aws_networkfirewall_firewall_policy",
 			Name:     "Firewall Policy",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceLoggingConfiguration,
@@ -148,10 +135,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRuleGroup,
 			TypeName: "aws_networkfirewall_rule_group",
 			Name:     "Rule Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

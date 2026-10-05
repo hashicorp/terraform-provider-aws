@@ -109,7 +109,7 @@ Exactly one of `fixed_response` or `forward` is required.
 
 The `fixed_response` block supports the following:
 
-* `status_code` - (Optional) HTTP response code.
+* `status_code` - (Required) HTTP response code.
 
 ### `forward` Block
 

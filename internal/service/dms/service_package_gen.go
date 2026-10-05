@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
@@ -43,9 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDataProviderResource,
 			TypeName: "aws_dms_data_provider",
 			Name:     "Data Provider",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -56,9 +53,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newInstanceProfileResource,
 			TypeName: "aws_dms_instance_profile",
 			Name:     "Instance Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -69,9 +64,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMigrationProjectResource,
 			TypeName: "aws_dms_migration_project",
 			Name:     "Migration Project",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -87,9 +80,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newDataProviderResourceAsListResource,
 			TypeName: "aws_dms_data_provider",
 			Name:     "Data Provider",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
@@ -97,9 +88,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newInstanceProfileResourceAsListResource,
 			TypeName: "aws_dms_instance_profile",
 			Name:     "Instance Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
@@ -107,9 +96,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newMigrationProjectResourceAsListResource,
 			TypeName: "aws_dms_migration_project",
 			Name:     "Migration Project",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
@@ -122,46 +109,36 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCertificate,
 			TypeName: "aws_dms_certificate",
 			Name:     "Certificate",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrCertificateARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrCertificateARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceEndpoint,
 			TypeName: "aws_dms_endpoint",
 			Name:     "Endpoint",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "endpoint_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("endpoint_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceReplicationInstance,
 			TypeName: "aws_dms_replication_instance",
 			Name:     "Replication Instance",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_instance_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("replication_instance_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceReplicationSubnetGroup,
 			TypeName: "aws_dms_replication_subnet_group",
 			Name:     "Replication Subnet Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_subnet_group_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("replication_subnet_group_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceReplicationTask,
 			TypeName: "aws_dms_replication_task",
 			Name:     "Replication Task",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_task_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("replication_task_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -172,37 +149,29 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCertificate,
 			TypeName: "aws_dms_certificate",
 			Name:     "Certificate",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrCertificateARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrCertificateARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceEndpoint,
 			TypeName: "aws_dms_endpoint",
 			Name:     "Endpoint",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "endpoint_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("endpoint_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceEventSubscription,
 			TypeName: "aws_dms_event_subscription",
 			Name:     "Event Subscription",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceReplicationConfig,
 			TypeName: "aws_dms_replication_config",
 			Name:     "Replication Config",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -215,37 +184,29 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReplicationInstance,
 			TypeName: "aws_dms_replication_instance",
 			Name:     "Replication Instance",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_instance_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("replication_instance_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceReplicationSubnetGroup,
 			TypeName: "aws_dms_replication_subnet_group",
 			Name:     "Replication Subnet Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_subnet_group_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("replication_subnet_group_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceReplicationTask,
 			TypeName: "aws_dms_replication_task",
 			Name:     "Replication Task",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_task_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("replication_task_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceS3Endpoint,
 			TypeName: "aws_dms_s3_endpoint",
 			Name:     "S3 Endpoint",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "endpoint_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("endpoint_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

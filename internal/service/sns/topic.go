@@ -134,6 +134,12 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
+		"maximum_message_size": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1024, 1048576),
+		},
 		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -206,6 +212,7 @@ var (
 		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
+		"maximum_message_size":                     topicAttributeNameMaximumMessageSize,
 		names.AttrOwner:                            topicAttributeNameOwner,
 		names.AttrPolicy:                           topicAttributeNamePolicy,
 		"signature_version":                        topicAttributeNameSignatureVersion,

@@ -238,7 +238,7 @@ The following arguments are optional:
 
 ### `kinesis_video_stream` Block
 
-* `arn` - (Optional) ARN of the Kinesis video stream stream that streams the source video.
+* `arn` - (Required) ARN of the Kinesis video stream stream that streams the source video.
 
 ### `output` Block
 
@@ -256,7 +256,7 @@ The following arguments are optional:
 
 ### `data_sharing_preference` Block
 
-* `opt_in` - (Optional) Whether you are sharing data with Rekognition to improve model performance.
+* `opt_in` - (Required) Whether you are sharing data with Rekognition to improve model performance.
 
 ### `regions_of_interest` Block
 
@@ -267,21 +267,21 @@ The following arguments are optional:
 
 A region can only have a single `bounding_box`
 
-* `height` - (Required) Height of the bounding box as a ratio of the overall image height.
-* `left` - (Required) Left coordinate of the bounding box as a ratio of overall image width.
-* `top` - (Required) Top coordinate of the bounding box as a ratio of overall image height.
-* `width` - (Required) Width of the bounding box as a ratio of the overall image width.
+* `height` - (Optional) Height of the bounding box as a ratio of the overall image height.
+* `left` - (Optional) Left coordinate of the bounding box as a ratio of overall image width.
+* `top` - (Optional) Top coordinate of the bounding box as a ratio of overall image height.
+* `width` - (Optional) Width of the bounding box as a ratio of the overall image width.
 
 ### `polygon` Block
 
 If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
-* `x` - (Required) Value of the X coordinate for a point on a Polygon.
-* `y` - (Required) Value of the Y coordinate for a point on a Polygon.
+* `x` - (Optional) Value of the X coordinate for a point on a Polygon.
+* `y` - (Optional) Value of the Y coordinate for a point on a Polygon.
 
 ### `notification_channel` Block
 
-* `sns_topic_arn` - (Required) Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.
+* `sns_topic_arn` - (Optional) Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.
 
 ### `settings` Block
 
@@ -290,12 +290,12 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
 ### `connected_home` Block
 
-* `labels` - (Required) What you want to detect in the video, such as people, packages, or pets. The current valid labels you can include in this list are: `PERSON`, `PET`, `PACKAGE`, and `ALL`.
+* `labels` - (Optional) What you want to detect in the video, such as people, packages, or pets. The current valid labels you can include in this list are: `PERSON`, `PET`, `PACKAGE`, and `ALL`.
 * `min_confidence` - (Optional) Minimum confidence required to label an object in the video.
 
 ### `face_search` Block
 
-* `collection_id` - (Optional) ID of a collection that contains faces that you want to search for.
+* `collection_id` - (Required) ID of a collection that contains faces that you want to search for.
 * `face_match_threshold` - (Optional) Minimum face match confidence score that must be met to return a result for a recognized face.
 
 ## Attribute Reference

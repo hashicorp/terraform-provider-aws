@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -39,9 +38,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAlarmMuteRuleResource,
 			TypeName: "aws_cloudwatch_alarm_mute_rule",
 			Name:     "Alarm Mute Rule",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.FrameworkImport{
@@ -52,9 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newContributorInsightRuleResource,
 			TypeName: "aws_cloudwatch_contributor_insight_rule",
 			Name:     "Contributor Insight Rule",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrResourceARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrResourceARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
 			Import: inttypes.FrameworkImport{
@@ -65,10 +60,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newContributorManagedInsightRuleResource,
 			TypeName: "aws_cloudwatch_contributor_managed_insight_rule",
 			Name:     "Contributor Managed Insight Rule",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrResourceARN, true),
 				inttypes.StringIdentityAttribute("template_name", true),
@@ -97,9 +90,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newAlarmMuteRuleResourceAsListResource,
 			TypeName: "aws_cloudwatch_alarm_mute_rule",
 			Name:     "Alarm Mute Rule",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
@@ -116,9 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCompositeAlarm,
 			TypeName: "aws_cloudwatch_composite_alarm",
 			Name:     "Composite Alarm",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("alarm_name", true)),
 			Import: inttypes.SDKv2Import{
@@ -139,9 +128,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMetricAlarm,
 			TypeName: "aws_cloudwatch_metric_alarm",
 			Name:     "Metric Alarm",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("alarm_name", true)),
 			Import: inttypes.SDKv2Import{
@@ -152,9 +139,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMetricStream,
 			TypeName: "aws_cloudwatch_metric_stream",
 			Name:     "Metric Stream",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -171,9 +156,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_cloudwatch_metric_alarm",
 			Name:     "Metric Alarm",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("alarm_name", true)),
 		},
 	})
