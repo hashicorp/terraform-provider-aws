@@ -831,10 +831,10 @@ The `managed_rule_group_configs` block support the following arguments:
 * `aws_managed_rules_anti_ddos_rule_set` - (Optional) Configuration for using the anti-DDoS managed rule group. See [`aws_managed_rules_anti_ddos_rule_set`](#aws_managed_rules_anti_ddos_rule_set-block) for more details.
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set-block) for more details
-* `login_path` - (Optional) Path of the login endpoint for your application.
-* `password_field` - (Optional, **Deprecated**) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
-* `payload_type`- (Optional) Payload type for your login endpoint, either JSON or form encoded.
-* `username_field` - (Optional, **Deprecated**) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
+* `login_path` - (Optional) Path of the login endpoint for your application. Instead of this argument, use `login_path` in the [`aws_managed_rules_atp_rule_set` block](#aws_managed_rules_atp_rule_set-block).
+* `password_field` - (Optional) Details about your login page password field. Instead of this argument, use `password_field` in the [`request_inspection` block](#request_inspection-block). See [`password_field`](#password_field-block) for more details.
+* `payload_type` - (Optional) Payload type for your login endpoint, either JSON or form encoded. Instead of this argument, use `payload_type` in the [`request_inspection` block](#request_inspection-block).
+* `username_field` - (Optional) Details about your login page username field. Instead of this argument, use `username_field` in the [`request_inspection` block](#request_inspection-block). See [`username_field`](#username_field-block) for more details.
 
 ### `aws_managed_rules_bot_control_rule_set` Block
 
