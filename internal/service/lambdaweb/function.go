@@ -308,15 +308,12 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
+						// Editable in place: UpdateWebFunctionEndpoint accepts
+						// authType and the domain name survives the change
+						// (verified live 2026-10-05).
 						"auth_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
 							Required:   true,
-							// GA: re-verify. The launch contract says the auth
-							// type is chosen at creation and cannot be edited
-							// afterward, so a change replaces the function.
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
 						},
 						// Defaults to LatestRevision for HomeRegion endpoints (set
 						// explicitly in Create; the API default would be Disabled).
@@ -419,14 +416,15 @@ func (r *functionResource) ValidateConfig(ctx context.Context, req resource.Vali
 			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"`.", endpointType))
 	}
 
-	// GA: re-verify. The home region is added to a PerRegion endpoint
-	// automatically and at least two distinct regions are then required, so a
-	// single configured region is always rejected. No minimum is confirmed for
-	// MultiRegion, so it is left to the API.
-	if endpointType == string(awstypes.EndpointTypePerRegion) && !ep.Regions.IsNull() && !ep.Regions.IsUnknown() && len(ep.Regions.Elements()) == 1 {
+	// A PerRegion endpoint needs at least 2 distinct regions after the service
+	// adds the home region, so omitting regions is rejected by the API
+	// (verified live 2026-10-05). A single region is valid when it is not the
+	// home region; the provider cannot tell at validation time, so that case
+	// is left to the API, whose error message names the resulting region set.
+	if endpointType == string(awstypes.EndpointTypePerRegion) && ep.Regions.IsNull() {
 		resp.Diagnostics.AddAttributeError(path.Root("endpoint_config"),
-			"Invalid regions",
-			fmt.Sprintf("%s endpoints require at least 2 distinct regions, or no `regions` at all: the home region is added automatically.", endpointType))
+			"Missing regions",
+			fmt.Sprintf("%s endpoints require `regions` with at least one Region other than the home Region, which is added automatically.", endpointType))
 	}
 }
 
@@ -800,8 +798,7 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 
 		// UpdateWebFunctionEndpoint takes description/authType/
 		// autoDeploymentMode at the top level; expand the endpoint_config
-		// block, not the resource model. auth_type forces replacement, so the
-		// authType sent here always equals the current one.
+		// block, not the resource model.
 		endpointConfig, diags := plan.EndpointConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		if resp.Diagnostics.HasError() {

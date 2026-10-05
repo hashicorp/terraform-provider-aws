@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -24,7 +25,7 @@ import (
 
 func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint lambdaweb.GetWebFunctionEndpointOutput
+	var endpoint, updated lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdaweb_endpoint.test"
 
@@ -59,16 +60,16 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
 			},
 			{
-				// GA: re-verify. auth_type is immutable per the launch
-				// contract, so changing it replaces the endpoint.
+				// auth_type is updated in place and the domain name is kept.
 				Config: testAccEndpointConfig_authType(rName, string(awstypes.AuthTypeIamAuth)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckEndpointExists(ctx, t, resourceName, &updated),
+					testAccCheckEndpointNotRecreated(&endpoint, &updated),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),
 				),
 			},
@@ -221,6 +222,15 @@ func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckEndpointNotRecreated(before, after *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if b, a := aws.ToString(before.DomainName), aws.ToString(after.DomainName); b != a {
+			return fmt.Errorf("Lambda Web Endpoint was recreated: domain name %s became %s", b, a)
+		}
+		return nil
+	}
 }
 
 func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

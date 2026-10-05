@@ -134,7 +134,7 @@ primary and failover members.
 
 The following arguments are required:
 
-* `auth_type` - (Required) Authentication mode. Valid values are `ApplicationManaged` and `IamAuth`. The authentication type is chosen at creation and cannot be edited afterward, so changing it forces a new resource.
+* `auth_type` - (Required) Authentication mode. Valid values are `ApplicationManaged` and `IamAuth`. Can be changed in place; the endpoint keeps its domain name.
 * `endpoint_name` - (Required) Name of the endpoint, up to 64 characters. Changing this forces a new resource.
 * `endpoint_type` - (Required) Endpoint type. Valid values are `HomeRegion`, `MultiRegion`, and `PerRegion`. Changing this forces a new resource.
 * `function_name` - (Required) Name of the function this endpoint belongs to, up to 64 characters. Changing this forces a new resource.
@@ -144,7 +144,7 @@ The following arguments are optional:
 * `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weights`. `MultiRegion` and `PerRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
 * `description` - (Optional) Description of the endpoint.
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
-* `regions` - (Optional) Regions the endpoint spans. The maximum number of Regions per endpoint is a service quota, enforced by the API. `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically. Changing this forces a new resource.
+* `regions` - (Optional) Regions the endpoint spans. The maximum number of Regions per endpoint is a service quota, enforced by the API. Required for `PerRegion` endpoints, which need at least 2 distinct Regions: the home Region is added automatically, so list at least one other Region. Changing this forces a new resource.
 * `revision_weights` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weights-block). When a new revision is rolled on the function, update these weights to shift traffic to it — with `auto_deployment_mode = "Disabled"` traffic never moves automatically.
 * `scaling_config` - (Optional) Scaling limits for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#scaling_config-attribute).
 * `throttle_config` - (Optional) Request throttling for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#throttle_config-attribute).

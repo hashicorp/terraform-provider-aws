@@ -103,14 +103,11 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			// Editable in place: UpdateWebFunctionEndpoint accepts authType and
+			// the domain name survives the change (verified live 2026-10-05).
 			"auth_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
 				Required:   true,
-				// GA: re-verify. The launch contract says the auth type is
-				// chosen at creation and cannot be edited afterward.
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"auto_deployment_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
@@ -252,15 +249,15 @@ func (r *endpointResource) ValidateConfig(ctx context.Context, req resource.Vali
 			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"` with explicit `revision_weights`.", endpointType))
 	}
 
-	// GA: re-verify. The service adds the home region to a PerRegion endpoint
-	// automatically and then requires at least two distinct regions, so a
-	// single configured region is always rejected. Omitting regions entirely
-	// is accepted. No minimum is confirmed for MultiRegion, so it is left to
-	// the API.
-	if endpointType == string(awstypes.EndpointTypePerRegion) && !cfg.Regions.IsNull() && !cfg.Regions.IsUnknown() && len(cfg.Regions.Elements()) == 1 {
+	// A PerRegion endpoint needs at least 2 distinct regions after the service
+	// adds the home region, so omitting regions is rejected by the API
+	// (verified live 2026-10-05). A single region is valid when it is not the
+	// home region; the provider cannot tell at validation time, so that case
+	// is left to the API, whose error message names the resulting region set.
+	if endpointType == string(awstypes.EndpointTypePerRegion) && cfg.Regions.IsNull() {
 		resp.Diagnostics.AddAttributeError(path.Root("regions"),
-			"Invalid regions",
-			fmt.Sprintf("%s endpoints require at least 2 distinct regions, or no `regions` at all: the home region is added automatically.", endpointType))
+			"Missing regions",
+			fmt.Sprintf("%s endpoints require `regions` with at least one Region other than the home Region, which is added automatically.", endpointType))
 	}
 
 	if hasWeights {

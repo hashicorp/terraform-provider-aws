@@ -176,12 +176,12 @@ The following arguments are optional:
 
 ### `endpoint_config` Block
 
-* `auth_type` - (Required) Authentication type. Valid values: `ApplicationManaged`, `IamAuth`. The authentication type is chosen at creation and cannot be edited afterward, so changing it forces a new resource to be created.
+* `auth_type` - (Required) Authentication type. Valid values: `ApplicationManaged`, `IamAuth`. Can be changed in place; the endpoint keeps its domain name.
 * `auto_deployment_mode` - (Optional) Automatic deployment mode. Valid values: `LatestRevision`, `Disabled`. Defaults to `LatestRevision` for `HomeRegion` endpoints: the provider sends it explicitly, because the API would otherwise create the endpoint `Disabled` and pin it to the initial revision. `MultiRegion` and `PerRegion` endpoints require `Disabled`, which must be set explicitly.
 * `description` - (Optional) Description of the endpoint.
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
-* `regions` - (Optional) List of Regions for the endpoint. The maximum number of Regions per endpoint is a service quota, enforced by the API. `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically. Changing this forces a new resource to be created.
+* `regions` - (Optional) List of Regions for the endpoint. The maximum number of Regions per endpoint is a service quota, enforced by the API. Required for `PerRegion` endpoints, which need at least 2 distinct Regions: the home Region is added automatically, so list at least one other Region. Changing this forces a new resource to be created.
 * `scaling_config` - (Optional) Scaling limits for the endpoint, an object (assigned with `=`, not a block) with a single `max_environments` attribute: the maximum number of concurrent execution environments, minimum 2. When unset, the service applies account-level defaults and reports no value.
 * `throttle_config` - (Optional) Request throttling for the endpoint, an object (assigned with `=`, not a block) with a single `rate_limit` attribute: the maximum request rate in requests per second, quantized (`0`, `100`-`1000` in steps of 100, `2000`-`10000` in steps of 1000). When unset, the service applies account-level defaults and reports no value.
 

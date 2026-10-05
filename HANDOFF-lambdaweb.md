@@ -100,12 +100,12 @@ Last full run (us-east-1, 2026-08-27): 45 acceptance PASS, 0 FAIL, single
 clean run. `make ci-quick` green (providerlint, golangci-lint 0 issues,
 import-lint, semgrep 0 findings). 0 orphan resources after runs.
 
-That run predates the 2026-09-29 changes (HomeRegion `auto_deployment_mode`
-default, `auth_type` replacement, `kms_key_arn` validator, regions and
-required-block validation) and the new acceptance test
-`TestAccLambdaWebFunction_endpointFollowsLatestRevision`. Those changes are
-verified by build, vet and unit tests only; the acceptance suite has to be
-re-run against the real SDK (section 7).
+Acceptance re-run 2026-10-05 against the generated SDK module (account
+279826012703): the full `TestAcc` suite (46 tests, including identity, tags
+and data-source tests) passed 46/46 in us-east-1 (alternate eu-west-1, 307 s)
+and 46/46 in eu-west-1 (alternate us-east-1, 241 s), 0 skips, 0 orphan
+resources. Then re-run after the `auth_type` / `regions` contract fixes below
+(see section 5), 46/46 again in us-east-1.
 
 Multi-region validation (2026-08-21): `Function_basic` + `Endpoint_basic` +
 `ResourcePolicy_basic` pass in all 17 regions where the API is available:
@@ -116,12 +116,17 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
 
 ## 5. Contract notes worth knowing during review
 
-- **Endpoint type and auth type are immutable after creation**: `HomeRegion` /
-  `MultiRegion` / `PerRegion`; `ApplicationManaged` / `IamAuth`. Both carry
-  `RequiresReplace` on the standalone endpoint and on the inline
-  `endpoint_config`. `auth_type` immutability comes from the launch contract
-  and is marked `// GA: re-verify` (the 2026-08-27 run still updated it in
-  place; the endpoint test now asserts a replacement instead).
+- **Endpoint type is immutable after creation** (`HomeRegion` /
+  `MultiRegion` / `PerRegion`) and carries `RequiresReplace` on the standalone
+  endpoint and on the inline `endpoint_config`.
+- **`auth_type` is editable in place** (`ApplicationManaged` <-> `IamAuth`).
+  The launch-contract wording said it was fixed at creation, but
+  `UpdateWebFunctionEndpoint` accepts `authType` in the generated SDK and the
+  CLI model, and a live probe on 2026-10-05 flipped it both ways with
+  `updateStatus: Successful` and the same `domainName`. The provider updates
+  it in place (both resources) and `TestAccLambdaWebEndpoint_basic` asserts an
+  `Update` action plus an unchanged domain name. If the service docs still say
+  "immutable", the docs are behind the API.
 - **`auto_deployment_mode` defaults to `LatestRevision` for `HomeRegion`.**
   `CreateWebFunction` and `CreateWebFunctionEndpoint` default a missing mode
   to `Disabled`, which pins the endpoint to revision 1, so both resources send
@@ -130,11 +135,16 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
 - **`MultiRegion` and `PerRegion` require `auto_deployment_mode = "Disabled"`.**
   The provider requires it explicitly at plan time. The service auto-pins the
   initial revision at 100%.
-- **`PerRegion` requires at least 2 distinct regions** (the home region is
-  auto-added). The provider enforces this for `PerRegion` only; no minimum is
-  confirmed for `MultiRegion`, so that is left to the API. The per-endpoint
-  region count is a service quota, so the schema only applies the model limit
-  (1-100). `regions` order is API-owned, so it is modeled as a set.
+- **`PerRegion` requires at least 2 distinct regions after the home region is
+  auto-added** (live probes 2026-10-05): `regions = ["eu-west-1"]` from
+  us-east-1 is accepted and becomes `[eu-west-1, us-east-1]`; `["us-east-1"]`
+  and an omitted `regions` are both rejected ("requires at least 2 distinct
+  regions ... The request results in the regions [us-east-1]"). The provider
+  requires `regions` for `PerRegion` at plan time and leaves the single-region
+  case to the API (it cannot know the home region during validation). No
+  minimum is confirmed for `MultiRegion`. The per-endpoint region count is a
+  service quota, so the schema only applies the model limit (1-100). `regions`
+  order is API-owned, so it is modeled as a set.
 - **`revision_config` and `endpoint_config` are required**, as are the nested
   `build_config`, `runtime_config`, `code_config`, `s3_object` and
   `service_config` blocks (`listvalidator.IsRequired`).
@@ -172,9 +182,9 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
 
 ## 6. Still pending (external, not code)
 
-1. **Official Go v2 SDK build (Trebuchet)** for `aws-sdk-go-v2/service/lambdaweb`.
-   Hard blocker for the GA swap. Requested from the Lambda Web service team,
-   together with confirmation of the module path and a preview drop.
+1. **Published `aws-sdk-go-v2/service/lambdaweb` module on the Go proxy.** The
+   generated code is already vendored (section 3); only the `replace` has to
+   go once a tag exists.
 
 HashiCorp's test accounts (primary 187416307283, alternate 067819342479) are
 allowlisted for the pre-release API in us-east-1 and eu-west-1, so acceptance
@@ -210,7 +220,9 @@ What remains is pointing go.mod at the published tag and an acceptance re-run
    make gen
    ```
 
-3. Re-run the acceptance suite in both regions, then CI:
+3. Re-run the acceptance suite in both regions (done 2026-10-05 against the
+   vendored module, 46/46 each; repeat once against the published tag), then
+   CI:
 
    ```
    AWS_DEFAULT_REGION=us-east-1 AWS_ALTERNATE_REGION=eu-west-1 TF_ACC=1 \
@@ -222,10 +234,7 @@ What remains is pointing go.mod at the published tag and an acceptance re-run
    make ci-quick
    ```
 
-4. Resolve every `// GA: re-verify` comment (`grep -rn "GA: re-verify"
-   internal/service/lambdaweb`) against the live API.
-
-5. PR prep: rename `.changelog/1.txt` and
+4. PR prep: rename `.changelog/1.txt` and
    `.changelog/lambdaweb-tagging-resourcepolicy.txt` to `{PR_NUMBER}.txt`,
    remove the "Pre-GA" header comments (`function.go`, `endpoint.go`,
    `resource_policy.go`) and the pre-GA wording in `function_test.go`, delete
