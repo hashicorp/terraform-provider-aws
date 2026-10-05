@@ -10,6 +10,8 @@ description: |-
 
 Provides a VPC DHCP Options resource.
 
+You can find more technical documentation about DHCP Options Set in the official [AWS User Guide](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html).
+
 ## Example Usage
 
 Basic usage:
@@ -55,8 +57,6 @@ This resource supports the following arguments:
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
-
-You can find more technical documentation about DHCP Options Set in the official [AWS User Guide](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html).
 
 * `arn` - ARN of the DHCP Options Set.
 * `id` - ID of the DHCP Options Set.
