@@ -59,9 +59,9 @@ locals {
 
 This resource supports the following arguments:
 
-* `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
+* `cascade` - (Optional) Whether to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) Description for the IPAM.
-* `enable_private_gua` - (Optional) Enable this option to use your own GUA ranges as private IPv6 addresses. Default: `false`.
+* `enable_private_gua` - (Optional) Whether to use your own GUA ranges as private IPv6 addresses. Default: `false`.
 * `metered_account` - (Optional) AWS account that is charged for active IP addresses managed in IPAM. Valid values are `ipam-owner` (default) and `resource-owner`.
 * `operating_regions` - (Required) Locales that can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions-block) parameter. You **must** set your provider block region as an operating_region.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
