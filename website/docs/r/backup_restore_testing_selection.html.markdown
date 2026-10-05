@@ -57,7 +57,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restore_metadata_overrides` - (Optional) Override certain restore metadata keys. See the complete list of [restore testing inferred metadata](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing-inferred-metadata.html) .
 * `restore_testing_plan_name` - (Required) Name of the restore testing plan.
-* `validation_window_hours` - (Optional) Amount of hours available to run a validation script on the data. Valid range is `1` to `168`.
+* `validation_window_hours` - (Optional) Amount of hours available to run a validation script on the data. Valid range is `0` to `168`. A value of `0` deletes the restored resource as soon as the restore job completes. Changing this value to `0` from a non-zero value forces a new resource to be created.
 
 ### `protected_resource_conditions` Block
 
