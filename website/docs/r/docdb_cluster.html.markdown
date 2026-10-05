@@ -49,7 +49,8 @@ This resource supports the following arguments:
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the DB cluster can be created in.
   DocumentDB automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
   We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
-  At most 3 AZs can be configured. **Note:** Do not set `availability_zones` to the output of a data source such as [`aws_availability_zones`](/docs/providers/aws/d/availability_zones.html). Data source values are controlled by AWS and can change at any time (for example, when a new AZ is added to a Region). Because changing `availability_zones` forces replacement, any change to the set of values will plan to destroy and recreate the cluster. Always use an explicit, static list of AZs.
+  At most 3 AZs can be configured.
+  **Note:** Do not set `availability_zones` to the output of a data source such as [`aws_availability_zones`](/docs/providers/aws/d/availability_zones.html), as this may be subject to change (for example, when a new AZ is added to a Region). Because changing `availability_zones` forces replacement, any change to the set of values will plan to destroy and recreate the cluster. Always use an explicit, static list of AZs.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
