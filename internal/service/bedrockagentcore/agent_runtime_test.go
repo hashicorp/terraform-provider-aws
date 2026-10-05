@@ -585,8 +585,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -601,7 +601,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 			{
 				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(
 					rName,
-					rImageUri,
+					rBucketName,
 					"https://accounts.google.com/.well-known/openid-configuration",
 					"weather", "sports",
 					"client-999", "client-888",
@@ -672,7 +672,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 				// Update to inbound_token_claim_value_type "STRING_ARRAY" and claim_match_operator "CONTAINS"
 				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(
 					rName,
-					rImageUri,
+					rBucketName,
 					"https://accounts.google.com/.well-known/openid-configuration",
 					"weather", "sports",
 					"client-999", "client-888",
@@ -736,7 +736,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 				// Update to use match_value_string_list instead of match_value_string for claim_match_operator "CONTAINS_ANY"
 				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimStringList(
 					rName,
-					rImageUri,
+					rBucketName,
 					"https://accounts.google.com/.well-known/openid-configuration",
 					"weather", "sports",
 					"client-999", "client-888",
@@ -1583,29 +1583,39 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
-func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string, inboundTokenClaimValueType awstypes.InboundTokenClaimValueType, claimMatchOperator awstypes.ClaimMatchOperatorType) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rBucketName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string, inboundTokenClaimValueType awstypes.InboundTokenClaimValueType, claimMatchOperator awstypes.ClaimMatchOperatorType) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[2]q
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
   authorizer_configuration {
     custom_jwt_authorizer {
-      discovery_url    = %[3]q
-      allowed_audience = [%[4]q, %[5]q]
-      allowed_clients  = [%[6]q, %[7]q]
-      allowed_scopes   = [%[8]q, %[9]q]
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
       custom_claim {
         inbound_token_claim_name       = "cognito:groups"
-        inbound_token_claim_value_type = %[10]q
+        inbound_token_claim_value_type = %[9]q
         authorizing_claim_match_value {
-          claim_match_operator = %[11]q
+          claim_match_operator = %[10]q
           claim_match_value {
             match_value_string = "admin"
           }
@@ -1618,27 +1628,37 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     network_mode = "PUBLIC"
   }
 }
-`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
 }
 
-func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimStringList(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimStringList(rName, rBucketName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[2]q
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
   authorizer_configuration {
     custom_jwt_authorizer {
-      discovery_url    = %[3]q
-      allowed_audience = [%[4]q, %[5]q]
-      allowed_clients  = [%[6]q, %[7]q]
-      allowed_scopes   = [%[8]q, %[9]q]
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
       custom_claim {
         inbound_token_claim_name       = "cognito:groups"
         inbound_token_claim_value_type = "STRING_ARRAY"
@@ -1656,7 +1676,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     network_mode = "PUBLIC"
   }
 }
-`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
 func testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, serverProtocol string) string {
