@@ -222,6 +222,7 @@ variable "service_labels" {
     "macie2",
     "mailmanager",
     "managedblockchain",
+    "marketplaceagreement",
     "marketplacecatalog",
     "marketplacecommerceanalytics",
     "marketplaceentitlement",

@@ -5769,6 +5769,40 @@ service "kafkaconnect" {
   brand                    = "AWS"
 }
 
+service "marketplaceagreement" {
+  cli_v2_command {
+    aws_cli_v2_command           = "marketplace-agreement"
+    aws_cli_v2_command_no_dashes = "marketplaceagreement"
+  }
+
+  sdk {
+    id            = "Marketplace Agreement"
+    arn_namespace = "aws-marketplace"
+  }
+
+  names {
+    provider_name_upper = "MarketplaceAgreement"
+    human_friendly      = "Marketplace Agreement"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "SearchAgreements"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_marketplaceagreement_"
+  }
+
+  provider_package_correct = "marketplaceagreement"
+  doc_prefix               = ["marketplaceagreement_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
 service "marketplacecatalog" {
   cli_v2_command {
     aws_cli_v2_command           = "marketplace-catalog"
