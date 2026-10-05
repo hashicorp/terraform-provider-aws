@@ -28,11 +28,15 @@ resource "aws_verifiedpermissions_policy" "test" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
+* `definition` - (Required) Definition of the policy. See [Definition](#definition) below.
+* `policy_store_id` - (Required) Policy store ID of the policy store.
+
+The following arguments are optional:
+
+* `policy_name` - (Optional) Name of the policy that must begin with `name/`. If omitted, AWS Verified Permissions can generate and return a name.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `policy_store_id` - (Required) The Policy Store ID of the policy store.
-* `definition`- (Required) The definition of the policy. See [Definition](#definition) below.
 
 ### Definition
 
@@ -60,6 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `created_date` - The date the policy was created.
 * `policy_id` - The Policy ID of the policy.
+* `policy_name` - The policy name.
 
 ## Import
 
