@@ -36,12 +36,12 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `created_date` - Date the Policy Store was created.
-* `policy_template_id` - ID of the Policy Store.
+* `created_date` - Date the policy template was created.
+* `policy_template_id` - ID of the policy template.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Permissions Policy Store using the `policy_store_id:policy_template_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Permissions Policy Template using the `policy_store_id:policy_template_id`. For example:
 
 ```terraform
 import {
@@ -50,7 +50,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Verified Permissions Policy Store using the `policy_store_id:policy_template_id`. For example:
+Using `terraform import`, import Verified Permissions Policy Template using the `policy_store_id:policy_template_id`. For example:
 
 ```console
 % terraform import aws_verifiedpermissions_policy_template.example policyStoreId:policyTemplateId
