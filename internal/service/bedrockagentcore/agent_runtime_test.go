@@ -1244,8 +1244,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1260,7 +1260,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *
 			{
 				// The API omits private_endpoint_overrides on read. Without the preserve fix, the
 				// implicit post-apply empty-plan check fails with "block count changed from 1 to 0".
-				Config: testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rImageUri),
+				Config: testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.#", "1"),
@@ -1280,8 +1280,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *
 	})
 }
 
-func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rImageUri string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1323,8 +1326,15 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[2]q
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
@@ -1352,7 +1362,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     }
   }
 }
-`, rName, rImageUri))
+`, rName))
 }
 
 func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
