@@ -1445,13 +1445,6 @@ check "schema_docs" {
     "resource/aws_organizations_tag",
     "resource/aws_osis_pipeline",
     "resource/aws_outposts_capacity_task",
-    # QuickSight analysis/dashboard/template mirror the QuickSight API's visual model:
-    # a reuse graph, not a tree -- 8,609 block paths but only 381 distinct shapes (one
-    # recurs at 907 paths), so path-keyed `coverage` wants ~8,600 sections per doc.
-    # Only `coverage` fails here; all other findings are fixed. See swissshepherd#74, #75.
-    "resource/aws_quicksight_analysis",
-    "resource/aws_quicksight_dashboard",
-    "resource/aws_quicksight_template",
     "resource/aws_rbin_rule",
     "resource/aws_redshift_authentication_profile",
     "resource/aws_redshift_cluster_iam_roles",
@@ -1778,12 +1771,10 @@ check "schema_docs" {
     "resource/aws_wafv2_api_key",
     "resource/aws_wafv2_ip_set",
     "resource/aws_wafv2_regex_pattern_set",
-    "resource/aws_wafv2_rule_group",
     "resource/aws_wafv2_web_acl_association",
     "resource/aws_wafv2_web_acl_logging_configuration",
     "resource/aws_wafv2_web_acl_rule_group_association",
     "resource/aws_wafv2_web_acl_rule",
-    "resource/aws_wafv2_web_acl",
     "resource/aws_workmail_group",
     "resource/aws_workmail_organization",
     "resource/aws_workmail_user",
@@ -1804,6 +1795,22 @@ check "schema_docs" {
     "resource/aws_workspacesweb_user_settings_association",
     "resource/aws_workspacesweb_user_settings",
   ]
+
+  # These mirror reuse graphs, not trees: QuickSight analysis/dashboard/template
+  # have 8,609 block paths but only 381 distinct shapes (one recurs at 907 paths),
+  # and WAFv2 statements nest recursively. Path-keyed `coverage` would want a
+  # section per path, so only `coverage` is off; every other sub-check runs.
+  # See swissshepherd#74.
+  override {
+    targets = [
+      "resource/aws_quicksight_analysis",
+      "resource/aws_quicksight_dashboard",
+      "resource/aws_quicksight_template",
+      "resource/aws_wafv2_rule_group",
+      "resource/aws_wafv2_web_acl",
+    ]
+    coverage = false
+  }
 }
 
 check "import_section" {
