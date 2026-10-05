@@ -1580,6 +1580,46 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// The API omits private_endpoint_overrides on read. Without the preserve fix, the
+				// implicit post-apply empty-plan check fails with "block count changed from 1 to 0".
+				Config: testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.0.domain", "example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The service omits private_endpoint_overrides from Get, so it cannot be recovered on import.
+				ImportStateVerifyIgnore:              []string{"authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
 func testAccCheckAgentRuntimeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -1638,131 +1678,6 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *testing.T) {
-	ctx := acctest.Context(t)
-	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := testAccRandomAgentRuntimeName(t)
-	rBucketName := strings.ReplaceAll(rName, "_", "-")
-	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckAgentRuntimes(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				// The API omits private_endpoint_overrides on read. Without the preserve fix, the
-				// implicit post-apply empty-plan check fails with "block count changed from 1 to 0".
-				Config: testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.0.domain", "example.com"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// The service omits private_endpoint_overrides from Get, so it cannot be recovered on import.
-				ImportStateVerifyIgnore:              []string{"authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides"},
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
-				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
-			},
-		},
-	})
-}
-
-func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName string) string {
-	return acctest.ConfigCompose(
-		testAccAgentRuntimeConfig_baseIAMRole(rName),
-		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
-		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-  name   = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_bedrockagentcore_agent_runtime" "test" {
-  agent_runtime_name = %[1]q
-  role_arn           = aws_iam_role.test.arn
-
-  agent_runtime_artifact {
-    code_configuration {
-      entry_point = ["main.py"]
-      runtime     = "PYTHON_3_13"
-      code {
-        s3 {
-          bucket = aws_s3_bucket.test.bucket
-          prefix = aws_s3_object.test.key
-        }
-      }
-    }
-  }
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["example-audience"]
-
-      private_endpoint_overrides {
-        domain = "example.com"
-
-        private_endpoint {
-          managed_vpc_resource {
-            endpoint_ip_address_type = "IPV4"
-            subnet_ids               = [aws_subnet.test.id]
-            vpc_identifier           = aws_vpc.test.id
-            security_group_ids       = [aws_security_group.test.id]
-          }
-        }
-      }
-    }
-  }
-}
-`, rName))
 }
 
 func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
@@ -2187,4 +2102,89 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, mountPath))
+}
+
+func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["example-audience"]
+
+      private_endpoint_overrides {
+        domain = "example.com"
+
+        private_endpoint {
+          managed_vpc_resource {
+            endpoint_ip_address_type = "IPV4"
+            subnet_ids               = [aws_subnet.test.id]
+            vpc_identifier           = aws_vpc.test.id
+            security_group_ids       = [aws_security_group.test.id]
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
 }
