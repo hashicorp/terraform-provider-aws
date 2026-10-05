@@ -146,7 +146,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the IPAM
 * `ipam_scope_type` - Type of the scope the pool belongs to.
 * `pool_depth` - Depth of pools in your IPAM pool.
-* `state` - ID of the IPAM
+* `state` - State of the IPAM pool.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
