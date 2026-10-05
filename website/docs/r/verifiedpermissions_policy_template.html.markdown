@@ -24,20 +24,20 @@ resource "aws_verifiedpermissions_policy_template" "example" {
 
 The following arguments are required:
 
-* `policy_store_id` - (Required) The ID of the Policy Store.
-* `statement` - (Required) Defines the content of the statement, written in Cedar policy language.
+* `policy_store_id` - (Required) ID of the Policy Store.
+* `statement` - (Required) Content of the statement, written in Cedar policy language.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Provides a description for the policy template.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `policy_template_id` - The ID of the Policy Store.
-* `created_date` - The date the Policy Store was created.
+* `created_date` - Date the Policy Store was created.
+* `policy_template_id` - ID of the Policy Store.
 
 ## Import
 
