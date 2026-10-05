@@ -1357,7 +1357,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
 func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "test_assume" {
+data "aws_iam_policy_document" "assume_role" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -1382,7 +1382,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_iam_role" "test" {
   name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -1392,7 +1392,7 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_iam_role" "test2" {
   name               = "%[1]s-2"
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy" "test2" {
