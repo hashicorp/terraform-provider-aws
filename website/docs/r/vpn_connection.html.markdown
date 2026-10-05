@@ -124,7 +124,7 @@ resource "aws_vpn_connection" "example" {
 This resource supports the following arguments:
 
 * `customer_gateway_id` - (Required) ID of the customer gateway.
-* `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
+* `enable_acceleration` - (Optional, Default `false`) Whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
 * `local_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `local_ipv6_network_cidr` - (Optional, Default `::/0`) IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `outside_ip_address_type` - (Optional, Default `PublicIpv4`) Type of VPN endpoint, either a public Site-to-Site VPN or a private Site-to-Site VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`.
@@ -138,7 +138,7 @@ This resource supports the following arguments:
 * `transport_transit_gateway_attachment_id` - (Optional) Attachment ID of the Transit Gateway attachment to Direct Connect Gateway. Required when `outside_ip_address_type` is set to `PrivateIpv4`. The ID is obtained through a data source only.
 * `tunnel1_dpd_timeout_action` - (Optional, Default `clear`) Action to take after DPD timeout occurs for the first VPN tunnel. Specify restart to restart the IKE initiation. Specify clear to end the IKE session. Valid values are `clear | none | restart`.
 * `tunnel1_dpd_timeout_seconds` - (Optional, Default `30`) Number of seconds after which a DPD timeout occurs for the first VPN tunnel. Valid value is equal or higher than `30`.
-* `tunnel1_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Turn on or off tunnel endpoint lifecycle control feature for the first VPN tunnel. Valid values are `true | false`.
+* `tunnel1_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Whether to enable the tunnel endpoint lifecycle control feature for the first VPN tunnel. Valid values are `true | false`.
 * `tunnel1_ike_versions` - (Optional) IKE versions that are permitted for the first VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel1_inside_cidr` - (Optional) CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
 * `tunnel1_inside_ipv6_cidr` - (Optional) Range of inside IPv6 addresses for the first VPN tunnel. Supports only EC2 Transit Gateway. Valid value is a size /126 CIDR block from the local fd00::/8 range.
@@ -158,7 +158,7 @@ This resource supports the following arguments:
 * `tunnel1_startup_action` - (Optional, Default `add`) Action to take when the establishing the tunnel for the first VPN connection. By default, your customer gateway device must initiate the IKE negotiation and bring up the tunnel. Specify start for AWS to initiate the IKE negotiation. Valid values are `add | start`.
 * `tunnel2_dpd_timeout_action` - (Optional, Default `clear`) Action to take after DPD timeout occurs for the second VPN tunnel. Specify restart to restart the IKE initiation. Specify clear to end the IKE session. Valid values are `clear | none | restart`.
 * `tunnel2_dpd_timeout_seconds` - (Optional, Default `30`) Number of seconds after which a DPD timeout occurs for the second VPN tunnel. Valid value is equal or higher than `30`.
-* `tunnel2_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Turn on or off tunnel endpoint lifecycle control feature for the second VPN tunnel. Valid values are `true | false`.
+* `tunnel2_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Whether to enable the tunnel endpoint lifecycle control feature for the second VPN tunnel. Valid values are `true | false`.
 * `tunnel2_ike_versions` - (Optional) IKE versions that are permitted for the second VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel2_inside_cidr` - (Optional) CIDR block of the inside IP addresses for the second VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
 * `tunnel2_inside_ipv6_cidr` - (Optional) Range of inside IPv6 addresses for the second VPN tunnel. Supports only EC2 Transit Gateway. Valid value is a size /126 CIDR block from the local fd00::/8 range.
@@ -198,10 +198,10 @@ The `tunnel2_log_options` block supports the following arguments:
 
 The `cloudwatch_log_options` blocks supports the following arguments:
 
-* `bgp_log_enabled` - (Optional) Enable or disable BGP logging feature. The default is `false`.
+* `bgp_log_enabled` - (Optional) Whether to enable the BGP logging feature. The default is `false`.
 * `bgp_log_group_arn` - (Optional) ARN of the CloudWatch log group to send BGP logs to.
 * `bgp_log_output_format` - (Optional) Set BGP log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
-* `log_enabled` - (Optional) Enable or disable VPN tunnel logging feature. The default is `false`.
+* `log_enabled` - (Optional) Whether to enable the VPN tunnel logging feature. The default is `false`.
 * `log_group_arn` - (Optional) ARN of the CloudWatch log group to send logs to.
 * `log_output_format` - (Optional) Set log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
 
