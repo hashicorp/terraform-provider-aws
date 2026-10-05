@@ -466,6 +466,8 @@ service/mailmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mailmanager_'
 service/managedblockchain:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_managedblockchain_'
+service/marketplaceagreement:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_marketplaceagreement_'
 service/marketplacecatalog:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_marketplacecatalog_'
 service/marketplacecommerceanalytics:
