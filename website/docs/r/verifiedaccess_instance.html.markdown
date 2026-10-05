@@ -46,7 +46,7 @@ The following arguments are optional:
 
 * `cidr_endpoints_custom_subdomain` - (Optional) Custom subdomain for the CIDR endpoints.
 * `description` - (Optional) Description for the AWS Verified Access Instance.
-* `fips_enabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
+* `fips_enabled` - (Optional, Forces new resource) Whether to enable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
