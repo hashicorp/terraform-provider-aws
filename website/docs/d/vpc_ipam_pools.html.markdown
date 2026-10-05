@@ -34,15 +34,15 @@ data "aws_vpc_ipam_pools" "test" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `filter` - (Required) Custom filter block as described below.
-
 The arguments of this data source act as filters for querying the available IPAM Pools in the current region.
 
-### `filter`
+* `filter` - (Required) Custom filter block as described below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-* `name` - (Required) The name of the filter. Filter names are case-sensitive.
-* `values` - (Required) The filter values. Filter values are case-sensitive.
+### `filter` Block
+
+* `name` - (Required) Name of the filter. Filter names are case-sensitive.
+* `values` - (Required) Filter values. Filter values are case-sensitive.
 
 ## Attribute Reference
 
@@ -50,14 +50,14 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ipam_pools` - List of IPAM pools and their attributes. See below for details
 
-### ipam_pools
+### `ipam_pools` Block
 
 The following attributes are available on each pool entry found.
 
 * `address_family` - IP protocol assigned to this pool.
-* `allocation_default_netmask_length` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
-* `allocation_max_netmask_length` - The maximum netmask length that will be required for CIDR allocations in this pool.
-* `allocation_min_netmask_length` - The minimum netmask length that will be required for CIDR allocations in this pool.
+* `allocation_default_netmask_length` - Default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
+* `allocation_max_netmask_length` - Maximum netmask length that will be required for CIDR allocations in this pool.
+* `allocation_min_netmask_length` - Minimum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_resource_tags` - Tags that are required to create resources in using this pool.
 * `arn` - ARN of the pool
 * `auto_import` - If enabled, IPAM will continuously look for resources within the CIDR range of this pool and automatically import them as allocations into your IPAM.
@@ -65,7 +65,10 @@ The following attributes are available on each pool entry found.
 * `description` - Description for the IPAM pool.
 * `id` - ID of the IPAM pool.
 * `ipam_scope_id` - ID of the scope the pool belongs to.
+* `ipam_scope_type` - Type of the scope the pool belongs to.
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
-* `publicly_advertisable` - Defines whether or not IPv6 pool space is publicly advertisable over the internet.
+* `pool_depth` - Depth of pools in your IPAM pool.
+* `publicly_advertisable` - Whether IPv6 pool space is publicly advertisable over the internet.
 * `source_ipam_pool_id` - ID of the source IPAM pool.
+* `state` - State of the IPAM pool.
 * `tags` - Map of tags to assigned to the resource.
