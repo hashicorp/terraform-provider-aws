@@ -762,3 +762,41 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 
 	return errors.Join(errs...)
 }
+
+func TestExpandIgnoreTagUpdates(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	for _, existing := range []*tftags.IgnoreConfig{nil, {Keys: tftags.New(ctx, []string{"external"})}} {
+		config := expandIgnoreTagUpdates(ctx, map[string]any{
+			"keys":         schema.NewSet(schema.HashString, []any{"CreatedOn"}),
+			"key_prefixes": schema.NewSet(schema.HashString, []any{"created:"}),
+		}, existing)
+		if !config.UpdateKeys.Equal(tftags.New(ctx, []string{"CreatedOn"})) || !config.UpdateKeyPrefixes.Equal(tftags.New(ctx, []string{"created:"})) {
+			t.Fatalf("unexpected update filters: %v", config)
+		}
+		if existing != nil && !config.Keys.Equal(tftags.New(ctx, []string{"external"})) {
+			t.Fatal("existing ignore_tags configuration was lost")
+		}
+	}
+	if config := expandIgnoreTagUpdates(ctx, nil, nil); len(config.UpdateKeys) != 0 || len(config.UpdateKeyPrefixes) != 0 {
+		t.Fatalf("empty block added filters: %v", config)
+	}
+}
+
+func TestIgnoreTagUpdatesRejectsEmptyStrings(t *testing.T) {
+	t.Parallel()
+	provider, err := NewProvider(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	block := provider.Schema["ignore_tag_updates"].Elem.(*schema.Resource)
+	for _, key := range []string{"keys", "key_prefixes"} {
+		validate := block.Schema[key].Elem.(*schema.Schema).ValidateFunc
+		for _, value := range []string{"", "CreatedOn"} {
+			_, errors := validate(value, key)
+			if (len(errors) > 0) != (value == "") {
+				t.Errorf("%s value %q: unexpected validation errors %v", key, value, errors)
+			}
+		}
+	}
+}

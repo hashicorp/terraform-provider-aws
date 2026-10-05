@@ -522,12 +522,12 @@ func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFramew
 		}
 	}
 
+	inner, _ := spec.Factory(ctx)
+
 	if spec.Tags.Enabled() {
-		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
+		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags, inner.Read))
 		interceptors = append(interceptors, resourceValidateRequiredTags())
 	}
-
-	inner, _ := spec.Factory(ctx)
 
 	if len(spec.Identity.Attributes) == 0 {
 		return &wrappedResource{

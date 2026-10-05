@@ -390,6 +390,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `https_proxy` - (Optional) URL of a proxy to use for HTTPS requests when accessing the AWS API.
   Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.
   To use an HTTP proxy **without** an HTTPS proxy, set `https_proxy` to an empty string (`""`).
+* `ignore_tag_updates` - (Optional) Resource tag settings to manage only during creation. See [ignore_tag_updates Configuration Block](#ignore_tag_updates-configuration-block) below.
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
@@ -774,6 +775,33 @@ The `default_tags` configuration block supports the following argument:
 * `tags` - (Optional) Key-value map of tags to apply to all resources.
 Default tags can also be provided via environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`.
 If a tag is present in both an environment variable and this argument, the value in the provider configuration takes precedence.
+
+### ignore_tag_updates Configuration Block
+
+Use `ignore_tag_updates` with `default_tags` to set creation metadata without updating it on subsequent applies:
+
+```terraform
+provider "aws" {
+  default_tags {
+    tags = {
+      CreatedOn = var.time_stamp
+    }
+  }
+
+  ignore_tag_updates {
+    keys = ["CreatedOn"]
+  }
+}
+```
+
+The `ignore_tag_updates` configuration block supports the following arguments:
+
+* `keys` - (Optional) Nonempty exact resource tag keys to manage only during creation.
+* `key_prefixes` - (Optional) Nonempty resource tag key prefixes to manage only during creation.
+
+Matching tags are sent when a resource is created, including when a resource is replaced. After creation, Terraform does not update, remove, or restore these tags. Adding this block to an existing resource preserves its matching tags without adding missing tags. Removing the block resumes normal tag management. When this block is configured, each update of a tagged resource makes an additional tag-listing call or resource read to preserve the current AWS values of matching tags.
+
+Matching tags are excluded from resource `tags` and `tags_all` in state. Data sources continue to return matching tags. Configure these tags through `default_tags` to avoid recurring differences. If a matching tag is explicitly configured in a resource's `tags` argument, also use `lifecycle.ignore_changes` for that tag. The block does not apply to individual service tag resources such as `aws_ec2_tag`.
 
 ### ignore_tags Configuration Block
 
