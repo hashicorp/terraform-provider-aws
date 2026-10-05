@@ -118,9 +118,9 @@ This resource supports the following arguments:
 * `allocation_max_netmask_length` - (Optional) Maximum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_min_netmask_length` - (Optional) Minimum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_resource_tags` - (Optional) Tags that are required for resources that use CIDRs from this IPAM pool. Resources that do not have these tags will not be allowed to allocate space from the pool. If the resources have their tags changed after they have allocated space or if the allocation tagging requirements are changed on the pool, the resource may be marked as noncompliant.
-* `auto_import` - (Optional) If you include this argument, IPAM automatically imports any VPCs you have in your scope that fall within the CIDR range in the pool.
+* `auto_import` - (Optional) Whether to automatically import any VPCs you have in your scope that fall within the CIDR range in the pool.
 * `aws_service` - (Optional) Limits which AWS service the pool can be used in. Only useable on public scopes. Valid Values: `ec2`.
-* `cascade` - (Optional) Enables you to quickly delete an IPAM pool and all resources within that pool, including provisioned CIDRs, allocations, and other pools.
+* `cascade` - (Optional) Whether to quickly delete an IPAM pool and all resources within that pool, including provisioned CIDRs, allocations, and other pools.
 * `description` - (Optional) Description for the IPAM pool.
 * `ipam_scope_id` - (Required) ID of the scope in which you would like to create the IPAM pool.
 * `locale` - (Optional) Locale in which you would like to create the IPAM pool. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. Possible values: Any AWS region, such as `us-east-1`.
