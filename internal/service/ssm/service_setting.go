@@ -28,16 +28,17 @@ import (
 )
 
 // @SDKResource("aws_ssm_service_setting", name="Service Setting")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.ServiceSetting")
+// @Testing(generator=false)
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.67.0")
 func resourceServiceSetting() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSettingUpdate,
 		ReadWithoutTimeout:   resourceServiceSettingRead,
 		UpdateWithoutTimeout: resourceServiceSettingUpdate,
 		DeleteWithoutTimeout: resourceServiceSettingDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{

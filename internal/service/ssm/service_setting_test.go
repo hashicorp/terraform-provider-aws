@@ -25,6 +25,7 @@ func TestAccSSMServiceSetting_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:     testAccServiceSetting_basic,
 		"upgradeFromV6_5_0": testAccServiceSetting_upgradeFromV6_5_0,
+		"identity":          testAccSSMServiceSetting_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -45,7 +46,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, t, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -59,7 +60,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, t, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -68,7 +69,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, t, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -86,7 +87,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, t, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -115,7 +116,7 @@ func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 				},
 				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, t, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -127,7 +128,7 @@ func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, t, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -172,7 +173,7 @@ func testAccCheckServiceSettingDestroy(ctx context.Context, t *testing.T) resour
 	}
 }
 
-func testAccServiceSettingExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServiceSetting) resource.TestCheckFunc {
+func testAccCheckServiceSettingExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServiceSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
