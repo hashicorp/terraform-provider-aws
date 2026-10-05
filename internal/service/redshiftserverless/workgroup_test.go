@@ -108,9 +108,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 	})
 }
 
-// Tests the complex logic involved in updating 'base_capacity' and 'max_capacity'.
-// The order of updates is crucial and is determined by their current state values.
-func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(t *testing.T) {
+func TestAccRedshiftServerlessWorkgroup_baseCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -136,34 +134,93 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_baseCapacityRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 64, 128, false),
+				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "128"),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 				),
 			},
 			{
-				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 256, false),
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_maxCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 128, 256),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
 				),
 			},
 			{
-				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 512, 5632, false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "5632"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
-				),
-			},
-			{
-				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 256, true),
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 128, 512),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "512"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_maxCapacityRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 128, 256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 				),
 			},
 			{
@@ -177,11 +234,11 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 	})
 }
 
-// Tests the logic involved in validating/updating 'base_capacity' and 'price_performance_target'.
-func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
+func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
@@ -189,19 +246,146 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, true),
-				ExpectError: regexache.MustCompile("base_capacity cannot be set when price_performance_target.enabled is true"),
-			},
-			{
-				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 64, 128),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "128"),
 				),
 			},
 			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 128, 256),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacity_baseExceedsCurrentMax(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 128, 256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 512, 5632),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "5632"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_publiclyAccessible(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_publiclyAccessible(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_publiclyAccessible(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_publiclyAccessible(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_baseCapacityAboveMaxCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 128, 256),
+			},
+			{
+				Config:      testAccWorkgroupConfig_baseAndMaxCapacity(rName, 512, 256),
+				ExpectError: regexache.MustCompile(`ValidationException`),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_maxCapacityBelowBaseCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacity(rName, 256, 512),
+			},
+			{
+				Config:      testAccWorkgroupConfig_baseAndMaxCapacity(rName, 256, 128),
+				ExpectError: regexache.MustCompile(`ValidationException`),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
 				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "1"),
 				),
@@ -213,12 +397,109 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "25"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget_enable(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "0"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget_disable(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "1"),
+				),
+			},
 			{
 				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtFalse),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget_disableWithoutBaseCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
+			},
+			{
+				Config:      testAccWorkgroupConfig_pricePerformanceTargetDisabled(rName),
+				ExpectError: regexache.MustCompile("base_capacity must be set when disabling price_performance_target"),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget_baseCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, true),
+				ExpectError: regexache.MustCompile("base_capacity cannot be set when price_performance_target.enabled is true"),
 			},
 		},
 	})
@@ -737,20 +1018,19 @@ resource "aws_redshiftserverless_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName string, baseCapacity int, maxCapacity int, publiclyAccessible bool) string {
+func testAccWorkgroupConfig_baseAndMaxCapacity(rName string, baseCapacity int, maxCapacity int) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 }
 
 resource "aws_redshiftserverless_workgroup" "test" {
-  namespace_name      = aws_redshiftserverless_namespace.test.namespace_name
-  workgroup_name      = %[1]q
-  base_capacity       = %[2]d
-  max_capacity        = %[3]d
-  publicly_accessible = %[4]t
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  base_capacity  = %[2]d
+  max_capacity   = %[3]d
 }
-`, rName, baseCapacity, maxCapacity, publiclyAccessible)
+`, rName, baseCapacity, maxCapacity)
 }
 
 func testAccWorkgroupConfig_baseCapacity(rName string, baseCapacity int) string {
@@ -766,6 +1046,20 @@ resource "aws_redshiftserverless_workgroup" "test" {
 }
 
 `, rName, baseCapacity)
+}
+
+func testAccWorkgroupConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name      = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name      = %[1]q
+  publicly_accessible = %[2]t
+}
+`, rName, publiclyAccessible)
 }
 
 func testAccWorkgroupConfig_pricePerformanceTarget(rName string, targetLevel int) string {
@@ -784,6 +1078,22 @@ resource "aws_redshiftserverless_workgroup" "test" {
 }
 
 `, rName, targetLevel)
+}
+
+func testAccWorkgroupConfig_pricePerformanceTargetDisabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  price_performance_target {
+    enabled = false
+  }
+}
+`, rName)
 }
 
 func testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName string, pricePerformanceEnabled bool) string {

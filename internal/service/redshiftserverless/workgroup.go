@@ -325,6 +325,13 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
+	if d.HasChange("price_performance_target") && d.Get("base_capacity").(int) == 0 {
+		pricePerformanceTarget := expandPerformanceTarget(d.Get("price_performance_target").([]any))
+		if pricePerformanceTarget != nil && pricePerformanceTarget.Status == awstypes.PerformanceTargetStatusDisabled {
+			return sdkdiag.AppendErrorf(diags, "base_capacity must be set when disabling price_performance_target")
+		}
+	}
+
 	updateOps := prepareCapacityUpdates(d)
 
 	if d.HasChange("config_parameter") {
