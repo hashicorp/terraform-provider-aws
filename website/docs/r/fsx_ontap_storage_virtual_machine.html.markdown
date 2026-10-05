@@ -86,12 +86,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `endpoints` Block
 
-* `iscsi` - Endpoint for accessing data on your storage virtual machine via iSCSI protocol. See [Endpoint](#endpoint).
-* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint).
-* `nfs` - Endpoint for accessing data on your storage virtual machine via NFS protocol. See [Endpoint](#endpoint).
-* `smb` - Endpoint for accessing data on your storage virtual machine via SMB protocol. This is only set if an active_directory_configuration has been set. See [Endpoint](#endpoint).
+* `iscsi` - Endpoint for accessing data on your storage virtual machine via iSCSI protocol. See [`endpoints.iscsi`](#endpointsiscsi-block) below.
+* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [`endpoints.management`](#endpointsmanagement-block) below.
+* `nfs` - Endpoint for accessing data on your storage virtual machine via NFS protocol. See [`endpoints.nfs`](#endpointsnfs-block) below.
+* `smb` - Endpoint for accessing data on your storage virtual machine via SMB protocol. This is only set if an active_directory_configuration has been set. See [`endpoints.smb`](#endpointssmb-block) below.
 
-#### Endpoint
+#### `endpoints.iscsi` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
+* `ip_addresses` - IP addresses of the storage virtual machine endpoint.
+
+#### `endpoints.management` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
+* `ip_addresses` - IP addresses of the storage virtual machine endpoint.
+
+#### `endpoints.nfs` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
+* `ip_addresses` - IP addresses of the storage virtual machine endpoint.
+
+#### `endpoints.smb` Block
 
 * `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
 * `ip_addresses` - IP addresses of the storage virtual machine endpoint.
