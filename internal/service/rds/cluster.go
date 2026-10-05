@@ -2413,7 +2413,7 @@ func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DB
 		d.Set("domain_iam_role_name", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
-	d.Set("enable_global_write_forwarding", aws.ToBool(dbc.GlobalWriteForwardingRequested))
+	d.Set("enable_global_write_forwarding", dbc.GlobalWriteForwardingRequested)
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set("enable_local_write_forwarding", clusterLocalWriteForwardingRequested(dbc.LocalWriteForwardingStatus))
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
