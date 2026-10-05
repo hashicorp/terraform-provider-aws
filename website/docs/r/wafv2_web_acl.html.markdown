@@ -486,9 +486,9 @@ The `association_config` block supports the following arguments:
 
 Each `custom_response_body` block supports the following arguments:
 
-* `key` - (Required) Unique key identifying the custom response body. This is referenced by the `custom_response_body_key` argument in the [`custom_response`](#custom_response-block) block.
 * `content` - (Required) Payload of the custom response.
 * `content_type` - (Required) Type of content in the payload that you are defining in the `content` argument. Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
+* `key` - (Required) Unique key identifying the custom response body. This is referenced by the `custom_response_body_key` argument in the [`custom_response`](#custom_response-block) block.
 
 ### `data_protection_config` Block
 
@@ -501,16 +501,16 @@ The `data_protection_config` block supports the following arguments:
 Each `data_protection` block supports the following arguments:
 
 * `action` - (Required) Protection behavior to apply to the field. Valid values are `SUBSTITUTION` or `HASH`.
-* `field` - (Required) Field type and optional keys to apply the protection behavior to. See [`field`](#field-block) block below for details.
 * `exclude_rate_based_details` - (Optional) Boolean to specify whether to also exclude any rate-based rule details from the data protection you have enabled for a given field.
 * `exclude_rule_match_details` - (Optional) Boolean to specify whether to also exclude any rule match details from the data protection you have enabled for a given field. AWS WAF logs these details for non-terminating matching rules and for the terminating matching rule.
+* `field` - (Required) Field type and optional keys to apply the protection behavior to. See [`field`](#field-block) block below for details.
 
 ### `field` Block
 
 The `field` block supports the following arguments:
 
-* `field_type` - (Required) Web request component type to protect. Valid Values are `SINGLE_HEADER`, `SINGLE_COOKIE`, `SINGLE_QUERY_ARGUMENT`, `QUERY_STRING`, `BODY`.
 * `field_keys` - (Optional) Array of strings to specify the keys to protect for the specified field type. If you don't specify any key, then all keys for the field type are protected.
+* `field_type` - (Required) Web request component type to protect. Valid Values are `SINGLE_HEADER`, `SINGLE_COOKIE`, `SINGLE_QUERY_ARGUMENT`, `QUERY_STRING`, `BODY`.
 
 ### `default_action` Block
 
@@ -600,8 +600,8 @@ The `custom_request_handling` block supports the following arguments:
 
 Each `insert_header` block supports the following arguments. Duplicate header names are not allowed:
 
-* `name` - Name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
-* `value` - Value of the custom header.
+* `name` - (Required) Name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
+* `value` - (Required) Value of the custom header.
 
 ### `custom_response` Block
 
@@ -615,14 +615,14 @@ The `custom_response` block supports the following arguments:
 
 Each `response_header` block supports the following arguments. Duplicate header names are not allowed:
 
-* `name` - Name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
-* `value` - Value of the custom header.
+* `name` - (Required) Name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
+* `value` - (Required) Value of the custom header.
 
 ### `rule_label` Block
 
 Each block supports the following arguments:
 
-* `name` - Label string.
+* `name` - (Required) Label string.
 
 ### `statement` Block
 
@@ -674,8 +674,8 @@ The `byte_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`field_to_match`](#field_to_match-block) below for details.
 * `positional_constraint` - (Required) Area within the portion of a web request that you want AWS WAF to search for `search_string`. Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchStatement.html) for more information.
-* `search_string` - (Required) String value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`. The maximum length of the value is 50 bytes.
 * `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [`pre_parse_text_transformation`](#pre_parse_text_transformation-block) below for details.
+* `search_string` - (Required) String value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`. The maximum length of the value is 50 bytes.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
 
 ### `geo_match_statement` Block
@@ -698,8 +698,8 @@ The `ip_set_reference_statement` block supports the following arguments:
 
 The `label_match_statement` block supports the following arguments:
 
-* `scope` - (Required) Specify whether you want to match using the label name or just the namespace. Valid values are `LABEL` or `NAMESPACE`.
 * `key` - (Required) String to match against.
+* `scope` - (Required) Specify whether you want to match using the label name or just the namespace. Valid values are `LABEL` or `NAMESPACE`.
 
 ### `managed_rule_group_statement` Block
 
@@ -709,10 +709,10 @@ You can't nest a `managed_rule_group_statement`, for example for use inside a `n
 
 The `managed_rule_group_statement` block supports the following arguments:
 
+* `managed_rule_group_configs`- (Optional) Additional information that's used by a managed rule group. Only one rule attribute is allowed in each config. See [`managed_rule_group_configs`](#managed_rule_group_configs-block) for more details
 * `name` - (Required) Name of the managed rule group.
 * `rule_action_override` - (Optional) Action settings to use in the place of the rule actions that are configured inside the rule group. You specify one override for each rule whose action you want to change. See [`rule_action_override`](#rule_action_override-block) below for details.
-* `managed_rule_group_configs`- (Optional) Additional information that's used by a managed rule group. Only one rule attribute is allowed in each config. See [`managed_rule_group_configs`](#managed_rule_group_configs-block) for more details
-* `scope_down_statement` - Narrows the scope of the statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement-block) above for details.
+* `scope_down_statement` - (Optional) Narrows the scope of the statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement-block) above for details.
 * `vendor_name` - (Required) Name of the managed rule group vendor.
 * `version` - (Optional) Version of the managed rule group. You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
 
@@ -755,9 +755,9 @@ A rule statement used to search web request components for a match against a sin
 
 The `regex_match_statement` block supports the following arguments:
 
-* `regex_string` - (Required) String representing the regular expression. Minimum of `1` and maximum of `512` characters.
 * `field_to_match` - (Required) Part of a web request that you want AWS WAF to inspect. See [`field_to_match`](#field_to_match-block) below for details.
 * `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [`pre_parse_text_transformation`](#pre_parse_text_transformation-block) below for details.
+* `regex_string` - (Required) String representing the regular expression. Minimum of `1` and maximum of `512` characters.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
 
 ### `regex_pattern_set_reference_statement` Block
@@ -791,8 +791,8 @@ The `size_constraint_statement` block supports the following arguments:
 
 * `comparison_operator` - (Required) Operator to use to compare the request part to the size setting. Valid values include: `EQ`, `NE`, `LE`, `LT`, `GE`, or `GT`.
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`field_to_match`](#field_to_match-block) below for details.
-* `size` - (Required) Size, in bytes, to compare to the request part, after any transformations. Valid values are integers between 0 and 21474836480, inclusive.
 * `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [`pre_parse_text_transformation`](#pre_parse_text_transformation-block) below for details.
+* `size` - (Required) Size, in bytes, to compare to the request part, after any transformations. Valid values are integers between 0 and 21474836480, inclusive.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
 
 ### `sqli_match_statement` Block
@@ -802,8 +802,8 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqli_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`field_to_match`](#field_to_match-block) below for details.
-* `sensitivity_level` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
 * `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [`pre_parse_text_transformation`](#pre_parse_text_transformation-block) below for details.
+* `sensitivity_level` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
 
 ### `xss_match_statement` Block
@@ -827,19 +827,19 @@ The `rule_action_override` block supports the following arguments:
 
 The `managed_rule_group_configs` block support the following arguments:
 
-* `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set-block) for more details
 * `aws_managed_rules_acfp_rule_set` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client.
 * `aws_managed_rules_anti_ddos_rule_set` - (Optional) Configuration for using the anti-DDoS managed rule group. See [`aws_managed_rules_anti_ddos_rule_set`](#aws_managed_rules_anti_ddos_rule_set-block) for more details.
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
-* `login_path` - (Optional, **Deprecated**) Path of the login endpoint for your application.
+* `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set-block) for more details
+* `login_path` - (Optional) Path of the login endpoint for your application.
 * `password_field` - (Optional, **Deprecated**) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
-* `payload_type`- (Optional, **Deprecated**) Payload type for your login endpoint, either JSON or form encoded.
+* `payload_type`- (Optional) Payload type for your login endpoint, either JSON or form encoded.
 * `username_field` - (Optional, **Deprecated**) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
 
 ### `aws_managed_rules_bot_control_rule_set` Block
 
 * `enable_machine_learning` - (Optional) Applies only to the targeted inspection level. Determines whether to use machine learning (ML) to analyze your web traffic for bot-related activity. Defaults to `true`.
-* `inspection_level` - (Optional) Inspection level to use for the Bot Control rule group.
+* `inspection_level` - (Required) Inspection level to use for the Bot Control rule group.
 
 ### `aws_managed_rules_acfp_rule_set` Block
 
@@ -865,11 +865,17 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `client_side_action_config` Block
 
-* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`.
-    * `exempt_uri_regular_expression` - (Optional) Block for the list of the regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge.
-        * `regex_string` - (Optional) Regular expression string.
-    * `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
-    * `usage_of_action` - (Required) Configuration whether to use the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` in the rule group evaluation. Valid values are `ENABLED` and `DISABLED`.
+* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`. See [`challenge`](#client_side_action_configchallenge-block) below for details.
+
+#### `client_side_action_config.challenge` Block
+
+* `exempt_uri_regular_expression` - (Optional) Block for the list of the regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge. See [`exempt_uri_regular_expression`](#client_side_action_configchallengeexempt_uri_regular_expression-block) below for details.
+* `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
+* `usage_of_action` - (Required) Configuration whether to use the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` in the rule group evaluation. Valid values are `ENABLED` and `DISABLED`.
+
+#### `client_side_action_config.challenge.exempt_uri_regular_expression` Block
+
+* `regex_string` - (Optional) Regular expression string.
 
 ### `aws_managed_rules_atp_rule_set` Block
 
@@ -989,12 +995,17 @@ Inspect the request headers.
 
 The `headers` block supports the following arguments:
 
-* `match_pattern` - (Required) Filter to use to identify the subset of headers to inspect in a web request. The `match_pattern` block supports only one of the following arguments:
-    * `all` - Empty configuration block that is used for inspecting all headers.
-    * `included_headers` - Array of strings that will be used for inspecting headers that have a key that matches one of the provided values.
-    * `excluded_headers` - Array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
+* `match_pattern` - (Required) Filter to use to identify the subset of headers to inspect in a web request. See [`headers.match_pattern`](#headersmatch_pattern-block) below for details.
 * `match_scope` - (Required) Parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
 * `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+
+#### `headers.match_pattern` Block
+
+The `match_pattern` block supports only one of the following arguments:
+
+* `all` - (Optional) Empty configuration block that is used for inspecting all headers.
+* `excluded_headers` - (Optional) Array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
+* `included_headers` - (Optional) Array of strings that will be used for inspecting headers that have a key that matches one of the provided values.
 
 ### `ja3_fingerprint` Block
 
@@ -1148,8 +1159,8 @@ The `custom_key` block supports the following arguments:
 * `asn` - (Optional) Use an Autonomous System Number (ASN) derived from the request's originating or forwarded IP address as an aggregate key. See [RateLimit `asn`](#ratelimit-asn-block) below for details.
 * `cookie` - (Optional) Use the value of a cookie in the request as an aggregate key. See [RateLimit `cookie`](#ratelimit-cookie-block) below for details.
 * `forwarded_ip` - (Optional) Use the first IP address in an HTTP header as an aggregate key. See [`forwarded_ip`](#ratelimit-forwarded_ip-block) below for details.
-* `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
+* `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
 * `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
 * `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
 * `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
