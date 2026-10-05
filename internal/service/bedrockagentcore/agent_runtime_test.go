@@ -412,8 +412,8 @@ func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) 
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -426,7 +426,7 @@ func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) 
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, "/mnt/data"),
+				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rBucketName, "/mnt/data"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -449,7 +449,7 @@ func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) 
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
-				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, "/mnt/data2"),
+				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rBucketName, "/mnt/data2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -1672,15 +1672,25 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, rImageUri, serverProtocol))
 }
 
-func testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, mountPath string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+func testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rBucketName, mountPath string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[2]q
+    code_configuration {
+      entry_point = ["runtime_example.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
@@ -1690,9 +1700,9 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   filesystem_configuration {
     session_storage {
-      mount_path = %[3]q
+      mount_path = %[2]q
     }
   }
 }
-`, rName, rImageUri, mountPath))
+`, rName, mountPath))
 }
