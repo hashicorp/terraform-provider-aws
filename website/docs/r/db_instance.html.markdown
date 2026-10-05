@@ -438,7 +438,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - RDS DBI resource ID.
 * `instance_class` - RDS instance class.
 * `latest_restorable_time` - Latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
-* `listener_endpoint` - Listener connection endpoint for SQL Server Always On. See [Endpoint](#endpoint) below.
+* `listener_endpoint` - Listener connection endpoint for SQL Server Always On. See [`listener_endpoint` Block](#listener_endpoint-block) below.
 * `maintenance_window` - Instance maintenance window.
 * `master_user_secret` - Block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. See [`master_user_secret` Block](#master_user_secret-block) below.
 * `multi_az` - If the RDS instance is multi AZ enabled.
@@ -451,7 +451,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `upgrade_rollout_order` - Order in which the instances are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 * `username` - Master username for the database.
 
-### Endpoint
+### `listener_endpoint` Block
 
 * `address` - DNS address of the DB instance.
 * `hosted_zone_id` - ID that Amazon Route 53 assigns when you create a hosted zone.
