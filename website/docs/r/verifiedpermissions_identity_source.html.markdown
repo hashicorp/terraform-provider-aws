@@ -84,8 +84,10 @@ This resource supports the following arguments:
 
 ### `configuration` Block
 
-* `cognito_user_pool_configuration` - (Required) Configuration details of an Amazon Cognito user pool that Verified Permissions can use as a source of authenticated identities as entities. See [Cognito User Pool Configuration](#cognito_user_pool_configuration-block) below.
-* `open_id_connect_configuration` - (Required) Configuration details of an OpenID Connect (OIDC) identity provider, or identity source, that Verified Permissions can use to generate entities from authenticated identities. See [Open ID Connect Configuration](#open_id_connect_configuration-block) below.
+Exactly one of `cognito_user_pool_configuration` or `open_id_connect_configuration` must be configured. If both are configured, `cognito_user_pool_configuration` takes precedence.
+
+* `cognito_user_pool_configuration` - (Optional) Configuration details of an Amazon Cognito user pool that Verified Permissions can use as a source of authenticated identities as entities. See [Cognito User Pool Configuration](#cognito_user_pool_configuration-block) below.
+* `open_id_connect_configuration` - (Optional) Configuration details of an OpenID Connect (OIDC) identity provider, or identity source, that Verified Permissions can use to generate entities from authenticated identities. See [Open ID Connect Configuration](#open_id_connect_configuration-block) below.
 
 #### `cognito_user_pool_configuration` Block
 

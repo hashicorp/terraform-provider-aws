@@ -80,7 +80,7 @@ resource "aws_verifiedaccess_endpoint" "example" {
 The following arguments are required:
 
 * `attachment_type` - (Required) Type of attachment. Currently, only `vpc` is supported.
-* `endpoint_type` - (Required) Type of Verified Access endpoint to create. Currently `load-balancer` or `network-interface` are supported.
+* `endpoint_type` - (Required) Type of Verified Access endpoint to create. Valid values are `load-balancer`, `network-interface`, `cidr`, and `rds`.
 * `verified_access_group_id` - (Required) ID of the Verified Access group to associate the endpoint with.
 
 The following arguments are optional:
