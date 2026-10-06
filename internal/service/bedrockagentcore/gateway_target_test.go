@@ -858,7 +858,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -870,7 +870,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_gatewayIAMRole()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rBucketName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1096,7 +1096,7 @@ func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1108,7 +1108,7 @@ func TestAccBedrockAgentCoreGatewayTarget_callerIAMCredentials(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_callerIAMCredentials()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rBucketName, testAccCredentialProvider_callerIAMCredentials()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1140,7 +1140,7 @@ func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := testAccRandomAgentRuntimeName(t)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1152,7 +1152,7 @@ func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_jwtPassthrough()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rBucketName, testAccCredentialProvider_jwtPassthrough()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -3344,8 +3344,8 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, toolOverrideSuffix))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rBucketName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rBucketName, "HTTP"), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "gateway_assume" {
@@ -3396,8 +3396,8 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rBucketName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rBucketName, "HTTP"), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "gateway_assume" {
