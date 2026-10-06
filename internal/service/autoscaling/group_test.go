@@ -12,12 +12,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -104,6 +106,90 @@ func TestExpandCapacityReservationSpecification(t *testing.T) {
 
 			if diff := cmp.Diff(testCase.want, got, cmpopts.IgnoreUnexported(awstypes.CapacityReservationSpecification{})); diff != "" {
 				t.Errorf("unexpected diff (-want +got): %s", diff)
+			}
+		})
+	}
+}
+
+// TestInitialLifecycleHookNeedsReplacement covers the one case PutLifecycleHook
+// cannot express. Omitted arguments are left untouched on an existing hook and
+// the three arguments below reject an empty string, so dropping one from the
+// configuration is only possible by recreating the hook.
+func TestInitialLifecycleHookNeedsReplacement(t *testing.T) {
+	t.Parallel()
+
+	const (
+		metadata = "notification_metadata"
+		target   = "notification_target_arn"
+	)
+
+	topicARN := arn.ARN{
+		Partition: endpoints.AwsPartitionID,
+		Service:   "sns",
+		Region:    endpoints.UsWest2RegionID,
+		AccountID: acctest.Ct12Digit,
+		Resource:  "test",
+	}.String()
+	roleARN := arn.ARN{
+		Partition: endpoints.AwsPartitionID,
+		Service:   "iam",
+		AccountID: acctest.Ct12Digit,
+		Resource:  "role/test",
+	}.String()
+
+	testCases := map[string]struct {
+		oldHook, newHook map[string]any
+		want             bool
+	}{
+		"notification_metadata removed": {
+			oldHook: map[string]any{metadata: "payload"},
+			newHook: map[string]any{metadata: ""},
+			want:    true,
+		},
+		"notification_target_arn removed": {
+			oldHook: map[string]any{target: topicARN},
+			newHook: map[string]any{target: ""},
+			want:    true,
+		},
+		"role_arn removed": {
+			oldHook: map[string]any{names.AttrRoleARN: roleARN},
+			newHook: map[string]any{names.AttrRoleARN: ""},
+			want:    true,
+		},
+		"notification_metadata changed": {
+			oldHook: map[string]any{metadata: "before"},
+			newHook: map[string]any{metadata: "after"},
+		},
+		"notification_metadata added": {
+			oldHook: map[string]any{metadata: ""},
+			newHook: map[string]any{metadata: "payload"},
+		},
+		"unset argument stays unset": {
+			oldHook: map[string]any{metadata: ""},
+			newHook: map[string]any{metadata: ""},
+		},
+		// Both are always reported by AWS, defaulting to ABANDON and 3600, so a
+		// removed argument cannot be told apart from an explicit one. Recreating
+		// the hook would re-trigger on the AWS-assigned default forever.
+		"heartbeat_timeout removed": {
+			oldHook: map[string]any{"heartbeat_timeout": 300},
+			newHook: map[string]any{"heartbeat_timeout": 0},
+		},
+		"default_result removed": {
+			oldHook: map[string]any{"default_result": "CONTINUE"},
+			newHook: map[string]any{"default_result": ""},
+		},
+		"hook is new": {
+			newHook: map[string]any{metadata: "payload"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfautoscaling.InitialLifecycleHookNeedsReplacement(testCase.oldHook, testCase.newHook); got != testCase.want {
+				t.Errorf("got %t, want %t", got, testCase.want)
 			}
 		})
 	}
