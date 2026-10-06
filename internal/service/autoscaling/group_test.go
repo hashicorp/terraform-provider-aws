@@ -1389,25 +1389,26 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_initialLifecycleHook(rName, 30),
+				Config: testAccGroupConfig_initialLifecycleHook(rName, "launching", 30, "initial"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 2),
 					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "initial_lifecycle_hook.*", map[string]string{
-						"default_result":       "CONTINUE",
-						"heartbeat_timeout":    "30",
-						"lifecycle_transition": "autoscaling:EC2_INSTANCE_LAUNCHING",
-						names.AttrName:         "launching",
+						"default_result":        "CONTINUE",
+						"heartbeat_timeout":     "30",
+						"lifecycle_transition":  "autoscaling:EC2_INSTANCE_LAUNCHING",
+						names.AttrName:          "launching",
+						"notification_metadata": "initial",
 					}),
 				),
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_initialLifecycleHook(rName, 40),
+				Config: testAccGroupConfig_initialLifecycleHook(rName, "launching", 40, "updated"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -1415,11 +1416,70 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 					testAccCheckGroupHealthyInstanceCount(&group, 2),
 					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "initial_lifecycle_hook.*", map[string]string{
-						"default_result":       "CONTINUE",
+						"default_result":        "CONTINUE",
+						"heartbeat_timeout":     "40",
+						"lifecycle_transition":  "autoscaling:EC2_INSTANCE_LAUNCHING",
+						names.AttrName:          "launching",
+						"notification_metadata": "updated",
+					}),
+					// The update must reach AWS, not just Terraform state.
+					testAccCheckLifecycleHookAttributes(ctx, t, rName, "launching", 40, "updated"),
+				),
+			},
+			{
+				// PutLifecycleHook cannot clear notification_metadata, so the hook
+				// is deleted and recreated. The group is still updated in place and
+				// the hook keeps its name.
+				Config: testAccGroupConfig_initialLifecycleHook(rName, "launching", 40, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "initial_lifecycle_hook.*", map[string]string{
+						"heartbeat_timeout":     "40",
+						names.AttrName:          "launching",
+						"notification_metadata": "",
+					}),
+					// The metadata must be gone from AWS, not just from state.
+					testAccCheckLifecycleHookAttributes(ctx, t, rName, "launching", 40, ""),
+				),
+			},
+			{
+				Config: testAccGroupConfig_initialLifecycleHook(rName, "renamed", 40, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "initial_lifecycle_hook.*", map[string]string{
 						"heartbeat_timeout":    "40",
 						"lifecycle_transition": "autoscaling:EC2_INSTANCE_LAUNCHING",
-						names.AttrName:         "launching",
+						names.AttrName:         "renamed",
 					}),
+					// Renaming must create the new hook and delete the old one.
+					testAccCheckLifecycleHookAttributes(ctx, t, rName, "renamed", 40, ""),
+					testAccCheckLifecycleHookNotExists(ctx, t, rName, "launching"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					// Removing the block must delete the hook from the group.
+					testAccCheckLifecycleHookNotExists(ctx, t, rName, "renamed"),
 				),
 			},
 		},
@@ -4431,6 +4491,50 @@ func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCh
 	}
 }
 
+// testAccCheckLifecycleHookAttributes asserts the state of a lifecycle hook in
+// AWS itself, so that an update which only touches Terraform state cannot pass.
+func testAccCheckLifecycleHookAttributes(ctx context.Context, t *testing.T, asgName, hookName string, heartbeatTimeout int32, notificationMetadata string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
+
+		output, err := tfautoscaling.FindLifecycleHookByTwoPartKey(ctx, conn, asgName, hookName)
+
+		if err != nil {
+			return err
+		}
+
+		if got := aws.ToInt32(output.HeartbeatTimeout); got != heartbeatTimeout {
+			return fmt.Errorf("HeartbeatTimeout = %d, want %d", got, heartbeatTimeout)
+		}
+
+		if got := aws.ToString(output.NotificationMetadata); got != notificationMetadata {
+			return fmt.Errorf("NotificationMetadata = %q, want %q", got, notificationMetadata)
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckLifecycleHookNotExists asserts that a hook removed from
+// configuration was actually deleted from the Auto Scaling Group.
+func testAccCheckLifecycleHookNotExists(ctx context.Context, t *testing.T, asgName, hookName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
+
+		_, err := tfautoscaling.FindLifecycleHookByTwoPartKey(ctx, conn, asgName, hookName)
+
+		if retry.NotFound(err) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Auto Scaling Lifecycle Hook (%s) still exists", hookName)
+	}
+}
+
 func testAccCheckGroupHealthyInstanceCount(v *awstypes.AutoScalingGroup, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := 0
@@ -5485,7 +5589,12 @@ resource "aws_autoscaling_group" "test" {
 `, rName, maxInstanceLifetime))
 }
 
-func testAccGroupConfig_initialLifecycleHook(rName string, timeout int) string {
+func testAccGroupConfig_initialLifecycleHook(rName, hookName string, timeout int, metadata string) string {
+	metadataConfiguration := ""
+	if metadata != "" {
+		metadataConfiguration = fmt.Sprintf("notification_metadata = %q", metadata)
+	}
+
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -5499,10 +5608,11 @@ resource "aws_autoscaling_group" "test" {
   launch_configuration = aws_launch_configuration.test.name
 
   initial_lifecycle_hook {
-    name                 = "launching"
+    name                 = %[2]q
     default_result       = "CONTINUE"
-    heartbeat_timeout    = %[2]d
+    heartbeat_timeout    = %[3]d
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
+    %[4]s
   }
 
   tag {
@@ -5511,7 +5621,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName, timeout))
+`, rName, hookName, timeout, metadataConfiguration))
 }
 
 func testAccGroupConfig_launchTemplate(rName string) string {

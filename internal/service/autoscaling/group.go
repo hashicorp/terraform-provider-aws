@@ -200,32 +200,27 @@ func resourceGroup() *schema.Resource {
 				"initial_lifecycle_hook": {
 					Type:     schema.TypeSet,
 					Optional: true,
-					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"default_result": {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Computed:         true,
-								ForceNew:         true,
 								ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
 							},
 							"heartbeat_timeout": {
 								Type:         schema.TypeInt,
 								Optional:     true,
-								ForceNew:     true,
 								ValidateFunc: validation.IntBetween(30, 7200),
 							},
 							"lifecycle_transition": {
 								Type:             schema.TypeString,
 								Required:         true,
-								ForceNew:         true,
 								ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
 							},
 							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
-								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 255),
 									validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
@@ -235,18 +230,15 @@ func resourceGroup() *schema.Resource {
 							"notification_metadata": {
 								Type:     schema.TypeString,
 								Optional: true,
-								ForceNew: true,
 							},
 							"notification_target_arn": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
 							},
 							names.AttrRoleARN: {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
 							},
 						},
@@ -1266,16 +1258,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if twoPhases {
 		for _, input := range expandPutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			const (
-				timeout = 5 * time.Minute
-			)
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout,
-				func(ctx context.Context) (any, error) {
-					return conn.PutLifecycleHook(ctx, input)
-				},
-				errCodeValidationError, "Unable to publish test message to notification target")
-
-			if err != nil {
+			if err := putLifecycleHook(ctx, conn, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s) Lifecycle Hook: %s", d.Id(), err)
 			}
 		}
@@ -1397,6 +1380,10 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
+	// "initial_lifecycle_hook" is deliberately not read back from AWS. Its nested
+	// Optional+Computed attributes contribute to the set element hash, so writing
+	// AWS-side defaults into state would make every element's hash differ from the
+	// configured one and produce a permanent remove/add diff.
 	if err := d.Set("instance_lifecycle_policy", flattenInstanceLifecyclePolicy(g.InstanceLifecyclePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_lifecycle_policy: %s", err)
 	}
@@ -1474,6 +1461,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChangesExcept(
 		"enabled_metrics",
+		"initial_lifecycle_hook",
 		"load_balancers",
 		"suspended_processes",
 		"tag",
@@ -1763,6 +1751,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("initial_lifecycle_hook") {
+		if err := updateInitialLifecycleHooks(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Group (%s) Lifecycle Hooks: %s", d.Id(), err)
 		}
 	}
 
@@ -3132,6 +3126,25 @@ func expandMixedInstancesPolicy(tfMap map[string]any, hasDefaultVersion bool) *a
 	return apiObject
 }
 
+func initialLifecycleHookNames(tfList []any) []string {
+	hookNames := make([]string, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		if name, ok := tfMap[names.AttrName].(string); ok && name != "" {
+			hookNames = append(hookNames, name)
+		}
+	}
+
+	slices.Sort(hookNames)
+
+	return hookNames
+}
+
 func expandPutLifecycleHookInput(name string, tfMap map[string]any) *autoscaling.PutLifecycleHookInput {
 	if tfMap == nil {
 		return nil
@@ -3170,6 +3183,125 @@ func expandPutLifecycleHookInput(name string, tfMap map[string]any) *autoscaling
 	}
 
 	return apiObject
+}
+
+// updateInitialLifecycleHooks reconciles changes to the "initial_lifecycle_hook"
+// configuration block against an existing Auto Scaling Group without replacing it.
+//
+// Lifecycle hooks are identified by name from AWS's perspective, regardless of
+// whether they were originally created via CreateAutoScalingGroup's
+// LifecycleHookSpecificationList or via the separate PutLifecycleHook API, so
+// added or modified hooks are reconciled with PutLifecycleHook (which creates or
+// updates in place), and hooks whose names are removed from the configuration are
+// removed with DeleteLifecycleHook.
+//
+// PutLifecycleHook leaves omitted optional fields unchanged on an existing hook
+// rather than resetting them, and the arguments listed in
+// initialLifecycleHookUnresettableArguments reject an empty string, so removing one
+// of them from the configuration cannot be applied in place. Such a hook is deleted
+// and recreated from the new configuration instead.
+func updateInitialLifecycleHooks(ctx context.Context, conn *autoscaling.Client, d *schema.ResourceData) error {
+	asgName := d.Id()
+
+	o, n := d.GetChange("initial_lifecycle_hook")
+	oldHooks, newHooks := o.(*schema.Set), n.(*schema.Set)
+
+	oldHooksByName := initialLifecycleHooksByName(oldHooks.List())
+
+	newNames := make(map[string]struct{}, newHooks.Len())
+	for _, name := range initialLifecycleHookNames(newHooks.List()) {
+		newNames[name] = struct{}{}
+	}
+
+	// Only hooks that were added or modified need a PutLifecycleHook call;
+	// set difference excludes elements that are unchanged.
+	for _, tfMapRaw := range newHooks.Difference(oldHooks).List() {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		input := expandPutLifecycleHookInput(asgName, tfMap)
+		if input == nil {
+			continue
+		}
+
+		name := aws.ToString(input.LifecycleHookName)
+
+		// Deleting the hook is the only way to drop an argument that
+		// PutLifecycleHook cannot reset. Any instance currently waiting on this
+		// hook has its lifecycle action completed as a result.
+		if initialLifecycleHookNeedsReplacement(oldHooksByName[name], tfMap) {
+			if err := deleteLifecycleHook(ctx, conn, asgName, name); err != nil {
+				return fmt.Errorf("deleting Lifecycle Hook (%s): %w", name, err)
+			}
+		}
+
+		if err := putLifecycleHook(ctx, conn, input); err != nil {
+			return fmt.Errorf("putting Lifecycle Hook (%s): %w", name, err)
+		}
+	}
+
+	// A hook is only deleted when its name no longer appears in the configuration;
+	// a hook that was merely modified keeps its name and was handled above.
+	for _, name := range initialLifecycleHookNames(oldHooks.List()) {
+		if _, ok := newNames[name]; ok {
+			continue
+		}
+
+		if err := deleteLifecycleHook(ctx, conn, asgName, name); err != nil {
+			return fmt.Errorf("deleting Lifecycle Hook (%s): %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func initialLifecycleHooksByName(tfList []any) map[string]map[string]any {
+	hooks := make(map[string]map[string]any, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		if name, ok := tfMap[names.AttrName].(string); ok && name != "" {
+			hooks[name] = tfMap
+		}
+	}
+
+	return hooks
+}
+
+// initialLifecycleHookUnresettableArguments are the optional arguments that
+// PutLifecycleHook cannot reset on an existing hook. AWS omits them from
+// DescribeLifecycleHooks when unset and rejects an empty string for each, so
+// removing one from the configuration requires recreating the hook.
+var initialLifecycleHookUnresettableArguments = []string{
+	"notification_metadata",
+	"notification_target_arn",
+	names.AttrRoleARN,
+}
+
+// initialLifecycleHookNeedsReplacement reports whether newHook drops an argument
+// that oldHook set and PutLifecycleHook cannot clear. Changing or setting a value
+// is applied in place.
+func initialLifecycleHookNeedsReplacement(oldHook, newHook map[string]any) bool {
+	if oldHook == nil || newHook == nil {
+		return false
+	}
+
+	for _, argument := range initialLifecycleHookUnresettableArguments {
+		oldValue, _ := oldHook[argument].(string)
+		newValue, _ := newHook[argument].(string)
+
+		if oldValue != "" && newValue == "" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func expandPutLifecycleHookInputs(name string, tfList []any) []*autoscaling.PutLifecycleHookInput {
