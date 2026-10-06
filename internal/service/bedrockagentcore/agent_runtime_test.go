@@ -231,6 +231,7 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 							"network_mode_config": knownvalue.ListSizeExact(0),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V1")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("request_header_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRoleARN), tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(`role/.+`))),
