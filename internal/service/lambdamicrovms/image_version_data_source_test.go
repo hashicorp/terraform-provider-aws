@@ -57,7 +57,7 @@ func TestAccLambdaMicroVMsImageVersionDataSource_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
-						"KEY1": knownvalue.StringExact("value1"),
+						"KEY1": knownvalue.StringExact(acctest.CtValue1),
 					})),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("image_arn"), checkImageARN(rName)),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("image_identifier"), checkImageARN(rName)),
