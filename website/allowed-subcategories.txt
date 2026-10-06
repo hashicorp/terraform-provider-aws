@@ -187,6 +187,7 @@ Neptune
 Neptune Analytics
 Network Firewall
 Network Manager
+Network Security Manager
 OpenSearch
 OpenSearch Ingestion (OSIS)
 OpenSearch Serverless

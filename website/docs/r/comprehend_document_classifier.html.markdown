@@ -50,7 +50,7 @@ The following arguments are required:
   One of `en`, `es`, `fr`, `it`, `de`, or `pt`.
 * `name` - (Required) Name for the Document Classifier.
   Has a maximum length of 63 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
 
 The following arguments are optional:
 
@@ -68,11 +68,11 @@ The following arguments are optional:
   If omitted, Terraform will assign a random, unique version name.
   If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
   Conflicts with `version_name_prefix`.
 * `version_name_prefix` - (Optional) Creates a unique version name beginning with the specified prefix.
   Has a maximum length of 37 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
   Conflicts with `version_name`.
 * `volume_kms_key_id` - (Optional) KMS Key used to encrypt storage volumes during job processing.
   Can be a KMS Key ID or a KMS Key ARN.

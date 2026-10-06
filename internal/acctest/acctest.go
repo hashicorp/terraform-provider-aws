@@ -2344,6 +2344,22 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*t
 	}
 }
 
+// RunLimitedConcurrencyTests1Level runs test cases with concurrency limited via `semaphore`.
+func RunLimitedConcurrencyTests1Level(t *testing.T, semaphore tfsync.Semaphore, testCases map[string]func(*testing.T, tfsync.Semaphore)) {
+	t.Helper()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Cleanup(func() {
+				if os.Getenv(resource.EnvTfAcc) != "" {
+					semaphore.Notify()
+				}
+			})
+			tc(t, semaphore)
+		})
+	}
+}
+
 // RunLimitedConcurrencyTests2Levels runs test cases with concurrency limited via `semaphore`.
 func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore, testCases map[string]map[string]func(*testing.T, tfsync.Semaphore)) {
 	t.Helper()

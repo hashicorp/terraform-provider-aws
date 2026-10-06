@@ -61,7 +61,7 @@ resource "aws_api_gateway_domain_name_access_association" "example" {
 
 - `arn` (String) ARN of the API Gateway domain name access association.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain name acces associations using their `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain name access associations using their `arn`. For example:
 
 ```terraform
 import {
@@ -70,7 +70,7 @@ import {
 }
 ```
 
-Using `terraform import`, import API Gateway domain name acces associations as using their `arn`. For example:
+Using `terraform import`, import API Gateway domain name access associations as using their `arn`. For example:
 
 ```console
 % terraform import aws_api_gateway_domain_name_access_association.example arn:aws:apigateway:us-west-2:123456789012:/domainnameaccessassociations/domainname/12qmzgp2.9m7ilski.test+hykg7a12e7/vpcesource/vpce-05de3f8f82740a748

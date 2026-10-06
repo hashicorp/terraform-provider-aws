@@ -33,16 +33,19 @@ resource "aws_verifiedpermissions_schema" "example" {
 
 This resource supports the following arguments:
 
+* `definition` - (Required) Definition of the schema. See [Definition](#definition-block) below.
+* `policy_store_id` - (Required) ID of the Policy Store.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `policy_store_id` - (Required) The ID of the Policy Store.
-* `definition` - (Required) The definition of the schema.
-    * `value` - (Required) A JSON string representation of the schema.
+
+### `definition` Block
+
+* `value` - (Required) JSON string representation of the schema.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `namespaces` - (Optional) Identifies the namespaces of the entities referenced by this schema.
+* `namespaces` - Namespaces of the entities referenced by this schema.
 
 ## Import
 

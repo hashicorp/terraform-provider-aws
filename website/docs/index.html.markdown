@@ -263,7 +263,7 @@ credential_process = custom-process --username jdoe
 
 ### Assume Role Configuration Reference
 
-Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
+Configuration for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
 Note that environment variables are not supported for assuming IAM roles.

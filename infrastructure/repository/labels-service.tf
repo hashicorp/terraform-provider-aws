@@ -255,6 +255,7 @@ variable "service_labels" {
     "networkflowmonitor",
     "networkmanager",
     "networkmonitor",
+    "networksecuritymanager",
     "nimble",
     "notifications",
     "notificationscontacts",
