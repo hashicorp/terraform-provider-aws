@@ -358,6 +358,41 @@ func testAccDataSource_parsingModality(t *testing.T) {
 	})
 }
 
+func testAccDataSource_contextEnrichment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource types.DataSource
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+	enrichmentModel := "anthropic.claude-3-haiku-20240307-v1:0"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_contextEnrichment(rName, enrichmentModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.type", "BEDROCK_FOUNDATION_MODEL"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.#", "1"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.0.model_arn", "bedrock", "foundation-model/"+enrichmentModel),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.0.enrichment_strategy_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.0.enrichment_strategy_configuration.0.method", "CHUNK_ENTITY_EXTRACTION"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccDataSource_disappears(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
@@ -833,6 +868,42 @@ resource "aws_bedrockagent_data_source" "test" {
   }
 }
 `, rName, parsingModel))
+}
+
+func testAccDataSourceConfig_contextEnrichment(rName, enrichmentModel string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_NeptuneAnalytics_basic(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name                 = %[1]q
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
+  data_deletion_policy = "RETAIN"
+
+  data_source_configuration {
+    type = "S3"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.test.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    context_enrichment_configuration {
+      type = "BEDROCK_FOUNDATION_MODEL"
+
+      bedrock_foundation_model_configuration {
+        model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+
+        enrichment_strategy_configuration {
+          method = "CHUNK_ENTITY_EXTRACTION"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`, rName, enrichmentModel))
 }
 
 func testAccDataSourceConfig_fullSemantic(rName, embeddingModel string) string {

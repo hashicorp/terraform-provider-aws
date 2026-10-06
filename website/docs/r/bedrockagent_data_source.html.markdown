@@ -349,6 +349,7 @@ The `server_side_encryption_configuration` configuration block supports the foll
 The `vector_ingestion_configuration` configuration block supports the following arguments:
 
 * `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` block](#chunking_configuration-block) for details.
+* `context_enrichment_configuration` - (Optional, Forces new resource) Configuration for enriching the context of chunks during ingestion. Only supported for knowledge bases that use Amazon Neptune Analytics as the vector store. See [`context_enrichment_configuration` block](#context_enrichment_configuration-block) for details.
 * `custom_transformation_configuration`- (Optional, Forces new resource) Configuration for custom transformation of data source documents.
 * `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` block](#parsing_configuration-block) for details.
 
@@ -388,6 +389,26 @@ The `semantic_chunking_configuration` block supports the following arguments:
 * `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `buffer_size` - (Required, Forces new resource) The buffer size.
 * `max_token` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+
+### `context_enrichment_configuration` block
+
+The `context_enrichment_configuration` block supports the following arguments:
+
+* `type` - (Required, Forces new resource) Method used for context enrichment. Valid values: `BEDROCK_FOUNDATION_MODEL`.
+* `bedrock_foundation_model_configuration` - (Optional, Forces new resource) Configuration of the foundation model used for context enrichment. Required when `type` is `BEDROCK_FOUNDATION_MODEL`. See [Context Enrichment `bedrock_foundation_model_configuration` block](#context-enrichment-bedrock_foundation_model_configuration-block) for details.
+
+### Context Enrichment `bedrock_foundation_model_configuration` block
+
+The Context Enrichment `bedrock_foundation_model_configuration` block supports the following arguments:
+
+* `model_arn` - (Required, Forces new resource) ARN of the foundation model used for context enrichment.
+* `enrichment_strategy_configuration` - (Optional, Forces new resource) Strategy used for context enrichment. See [`enrichment_strategy_configuration` block](#enrichment_strategy_configuration-block) for details.
+
+### `enrichment_strategy_configuration` block
+
+The `enrichment_strategy_configuration` block supports the following arguments:
+
+* `method` - (Required, Forces new resource) Method used for the context enrichment strategy. Valid values: `CHUNK_ENTITY_EXTRACTION`.
 
 ### `custom_transformation_configuration` block
 
