@@ -10,7 +10,11 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -116,12 +121,113 @@ func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+					testAccCheckNetworkPeeringRoute(ctx, t, "aws_vpc.test", "main_route_table_id", false),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkPeeringConnection_routeTable(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	odbPeeringName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	resourceName := "aws_odb_network_peering_connection.test"
+	mainRouteTableConfig := oracleDBNwkPeeringTestResource.routeTableConfig(vpcName, odbNetName, odbPeeringName, "aws_vpc.test.main_route_table_id")
+	alternateRouteTableConfig := oracleDBNwkPeeringTestResource.routeTableConfig(vpcName, odbNetName, odbPeeringName, "aws_route_table.alternate.id")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: mainRouteTableConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "peer_network_route_table_id", "aws_vpc.test", "main_route_table_id"),
+					testAccCheckNetworkPeeringRoute(ctx, t, "aws_vpc.test", "main_route_table_id", true),
+				),
+			},
+			{
+				Config: mainRouteTableConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: alternateRouteTableConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "peer_network_route_table_id", "aws_route_table.alternate", names.AttrID),
+					testAccCheckNetworkPeeringRoute(ctx, t, "aws_vpc.test", "main_route_table_id", false),
+					testAccCheckNetworkPeeringRoute(ctx, t, "aws_route_table.alternate", names.AttrID, true),
+				),
+			},
+			{
+				Config: alternateRouteTableConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"peer_network_route_table_id"},
+			},
+			{
+				Config: oracleDBNwkPeeringTestResource.routeTableBaseConfig(vpcName, odbNetName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
+					},
+				},
+				Check: testAccCheckNetworkPeeringRoute(ctx, t, "aws_route_table.alternate", names.AttrID, false),
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkPeeringConnection_invalidRouteTableID(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      oracleDBNwkPeeringTestResource.invalidRouteTableConfig(`"invalid-route-table"`),
+				ExpectError: regexache.MustCompile("must be a VPC route table ID"),
+			},
+			{
+				Config: oracleDBNwkPeeringTestResource.invalidRouteTableConfig(`[
+  "rtb-0123456789abcdef0",
+  "rtb-0123456789abcdef1"
+]`),
+				ExpectError: regexache.MustCompile("peer_network_route_table_id"),
 			},
 		},
 	})
@@ -452,6 +558,55 @@ func testAccCheckNetworkPeeringConnectionExists(ctx context.Context, t *testing.
 	}
 }
 
+func testAccCheckNetworkPeeringRoute(ctx context.Context, t *testing.T, routeTableResourceName, routeTableAttribute string, wantRoute bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		routeTableResource, ok := s.RootModule().Resources[routeTableResourceName]
+		if !ok {
+			return fmt.Errorf("Route Table resource %s not found", routeTableResourceName)
+		}
+		routeTableID := routeTableResource.Primary.Attributes[routeTableAttribute]
+		if routeTableID == "" {
+			return fmt.Errorf("Route Table ID not set on %s", routeTableResourceName)
+		}
+
+		odbNetworkResource, ok := s.RootModule().Resources["aws_odb_network.test"]
+		if !ok {
+			return errors.New("ODB Network resource not found")
+		}
+		odbNetworkARN := odbNetworkResource.Primary.Attributes[names.AttrARN]
+		clientSubnetCIDR := odbNetworkResource.Primary.Attributes["client_subnet_cidr"]
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		return tfresource.Retry(ctx, 3*time.Minute, func(ctx context.Context) *tfresource.RetryError {
+			out, err := conn.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
+				RouteTableIds: []string{routeTableID},
+			})
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+			if out == nil || len(out.RouteTables) != 1 {
+				return tfresource.NonRetryableError(fmt.Errorf("Route Table (%s) not found", routeTableID))
+			}
+			for _, route := range out.RouteTables[0].Routes {
+				if aws.ToString(route.DestinationCidrBlock) != clientSubnetCIDR {
+					continue
+				}
+				if !wantRoute {
+					return tfresource.RetryableError(fmt.Errorf("route to %s still exists in Route Table (%s)", clientSubnetCIDR, routeTableID))
+				}
+				if aws.ToString(route.OdbNetworkArn) == odbNetworkARN || aws.ToString(route.GatewayId) == odbNetworkARN {
+					return nil
+				}
+				return tfresource.RetryableError(fmt.Errorf("route to %s in Route Table (%s) does not target ODB Network (%s)", clientSubnetCIDR, routeTableID, odbNetworkARN))
+			}
+			if wantRoute {
+				return tfresource.RetryableError(fmt.Errorf("route to %s not found in Route Table (%s)", clientSubnetCIDR, routeTableID))
+			}
+			return nil
+		})
+	}
+}
+
 func (oracleDBNwkPeeringResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListOdbPeeringConnectionsInput{}
@@ -494,7 +649,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_odb_network" "test" {
   display_name         = %[2]q
-  availability_zone_id = "use1-az6"
+  availability_zone_id = %[4]q
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
   s3_access            = "DISABLED"
@@ -509,7 +664,62 @@ resource "aws_odb_network_peering_connection" "test" {
     "env" = "dev"
   }
 }
-`, vpcName, odbNetName, odbPeeringName)
+`, vpcName, odbNetName, odbPeeringName, testAccODBNetworkPeeringAvailabilityZoneID())
+}
+
+func (oracleDBNwkPeeringResourceTest) routeTableBaseConfig(vpcName, odbNetName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "alternate" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_odb_network" "test" {
+  display_name         = %[2]q
+  availability_zone_id = %[3]q
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
+}
+`, vpcName, odbNetName, testAccODBNetworkPeeringAvailabilityZoneID())
+}
+
+func testAccODBNetworkPeeringAvailabilityZoneID() string {
+	if acctest.Region() == "us-west-2" {
+		return "usw2-az3"
+	}
+	return "use1-az6"
+}
+
+func (oracleDBNwkPeeringResourceTest) routeTableConfig(vpcName, odbNetName, odbPeeringName, routeTableReference string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_odb_network_peering_connection" "test" {
+  display_name                = %[2]q
+  odb_network_id              = aws_odb_network.test.id
+  peer_network_id             = aws_vpc.test.id
+  peer_network_route_table_id = %[3]s
+}
+`, oracleDBNwkPeeringTestResource.routeTableBaseConfig(vpcName, odbNetName), odbPeeringName, routeTableReference)
+}
+
+func (oracleDBNwkPeeringResourceTest) invalidRouteTableConfig(routeTableValue string) string {
+	return fmt.Sprintf(`
+resource "aws_odb_network_peering_connection" "test" {
+  display_name                = "invalid-route-table"
+  odb_network_id              = "odbnet_3l9st3litg"
+  peer_network_id             = "vpc-0123456789abcdef0"
+  peer_network_route_table_id = %[1]s
+}
+`, routeTableValue)
 }
 
 func (oracleDBNwkPeeringResourceTest) basicConfig_useVariables(vpcName, odbNetName, odbPeeringName string) string {
