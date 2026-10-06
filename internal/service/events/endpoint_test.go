@@ -35,8 +35,8 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &v),
@@ -67,8 +67,8 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -93,8 +93,8 @@ func TestAccEventsEndpoint_disappears(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:    config.StringVariable(rName),
+					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &v),
