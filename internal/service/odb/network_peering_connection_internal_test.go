@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const testNetworkPeeringConnectionAccountID = "123456789012" // nosemgrep:ci.literal-12Digit-string-test-constant -- same-package tests cannot import acctest without a provider import cycle
+
 func testNetworkPeeringConnectionARN(region, accountID, resource string) string {
 	return arn.ARN{
 		Partition: endpoints.AwsPartitionID,
@@ -25,7 +27,7 @@ func TestNetworkPeeringConnectionNetworkID(t *testing.T) {
 	t.Parallel()
 
 	const networkID = "odbnet_abcdefgh12"
-	networkARN := testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, "123456789012", "odb-network/"+networkID)
+	networkARN := testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, testNetworkPeeringConnectionAccountID, "odb-network/"+networkID)
 
 	tests := map[string]struct {
 		current types.String
@@ -35,7 +37,7 @@ func TestNetworkPeeringConnectionNetworkID(t *testing.T) {
 		"configured ID":  {types.StringValue(networkID), types.StringValue(networkID)},
 		"imported":       {types.StringNull(), types.StringValue(networkID)},
 		"unknown":        {types.StringUnknown(), types.StringValue(networkID)},
-		"different ARN":  {types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, "123456789012", "odb-network/odbnet-other")), types.StringValue(networkID)},
+		"different ARN":  {types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, testNetworkPeeringConnectionAccountID, "odb-network/odbnet-other")), types.StringValue(networkID)},
 		"different ID":   {types.StringValue("odbnet-other"), types.StringValue(networkID)},
 	}
 
@@ -55,7 +57,7 @@ func TestNetworkPeeringConnectionSameNetwork(t *testing.T) {
 	t.Parallel()
 
 	const networkID = "odbnet_abcdefgh12"
-	networkARN := testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, "123456789012", "odb-network/"+networkID)
+	networkARN := testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, testNetworkPeeringConnectionAccountID, "odb-network/"+networkID)
 
 	tests := map[string]struct {
 		current    types.String
@@ -67,14 +69,14 @@ func TestNetworkPeeringConnectionSameNetwork(t *testing.T) {
 		"ARN to ID":               {types.StringValue(networkARN), types.StringValue(networkID), types.StringValue(networkARN), true},
 		"same network ID":         {types.StringValue(networkID), types.StringValue(networkID), types.StringValue(networkARN), true},
 		"different network ID":    {types.StringValue(networkID), types.StringValue("odbnet_different"), types.StringValue(networkARN), false},
-		"different network ARN":   {types.StringValue(networkID), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, "123456789012", "odb-network/odbnet_different")), types.StringValue(networkARN), false},
+		"different network ARN":   {types.StringValue(networkID), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, testNetworkPeeringConnectionAccountID, "odb-network/odbnet_different")), types.StringValue(networkARN), false},
 		"different account":       {types.StringValue(networkID), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, "999999999999", "odb-network/"+networkID)), types.StringValue(networkARN), false},
-		"different region":        {types.StringValue(networkID), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsWest2RegionID, "123456789012", "odb-network/"+networkID)), types.StringValue(networkARN), false},
+		"different region":        {types.StringValue(networkID), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsWest2RegionID, testNetworkPeeringConnectionAccountID, "odb-network/"+networkID)), types.StringValue(networkARN), false},
 		"missing current":         {types.StringNull(), types.StringValue(networkARN), types.StringValue(networkARN), false},
 		"unknown planned":         {types.StringValue(networkID), types.StringUnknown(), types.StringValue(networkARN), false},
 		"missing network ARN":     {types.StringValue(networkID), types.StringValue(networkARN), types.StringNull(), false},
 		"malformed network ARN":   {types.StringValue(networkID), types.StringValue(networkARN), types.StringValue("not-an-arn"), false},
-		"different resource kind": {types.StringValue(networkID), types.StringValue(networkARN), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, "123456789012", "odb-peering/"+networkID)), false},
+		"different resource kind": {types.StringValue(networkID), types.StringValue(networkARN), types.StringValue(testNetworkPeeringConnectionARN(endpoints.UsEast1RegionID, testNetworkPeeringConnectionAccountID, "odb-peering/"+networkID)), false},
 	}
 
 	for name, test := range tests {
