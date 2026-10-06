@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `reply_to` - (Optional) The destination to which the receiver of an email should reply to.
 * `source_arn` - (Required) ARN of the identity that is associated with the sending authorization policy. This identity permits Amazon Cognito to send for the email address specified in the From parameter.
 
-##### notify email type
+#### notify email type
 
 * `html_body` - (Required) The email HTML body.
 * `subject` - (Required) The email subject.
@@ -59,7 +59,7 @@ This resource supports the following arguments:
 * `low_action` - (Optional) Action to take for a low risk. See action block below.
 * `medium_action` - (Optional) Action to take for a medium risk. See action block below.
 
-##### action
+#### action
 
 * `event_action` - (Required) The action to take in response to the account takeover action. Valid values are `BLOCK`, `MFA_IF_CONFIGURED`, `MFA_REQUIRED` and `NO_ACTION`.
 * `notify` - (Required) Whether to send a notification.

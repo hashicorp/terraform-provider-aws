@@ -470,7 +470,7 @@ The `node_resources_fit` configuration block supports the following arguments:
 The `scoring_strategy` configuration block supports the following arguments:
 
 * `type` - (Optional) The scoring strategy type. Valid values are `LeastAllocated` and `MostAllocated`. Default is `LeastAllocated`.
-* `resource` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resources) below.
+* `resource` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resource) below.
 
 #### resource
 

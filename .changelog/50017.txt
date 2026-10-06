@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_network_acl_rule: Remove filtering of default Ipv4 and Ipv6 rules from list
+```

@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIP Assocations using their association IDs. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIP Associations using their association IDs. For example:
 
 ```terraform
 import {
@@ -73,7 +73,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EIP Assocations using their association IDs. For example:
+Using `terraform import`, import EIP Associations using their association IDs. For example:
 
 ```console
 % terraform import aws_eip_association.test eipassoc-ab12c345

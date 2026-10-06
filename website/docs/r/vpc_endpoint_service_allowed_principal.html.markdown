@@ -33,12 +33,12 @@ resource "aws_vpc_endpoint_service_allowed_principal" "allow_me_to_foo" {
 
 This resource supports the following arguments:
 
+* `principal_arn` - (Required) ARN of the principal to allow permissions.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_endpoint_service_id` - (Required) The ID of the VPC endpoint service to allow permission.
-* `principal_arn` - (Required) The ARN of the principal to allow permissions.
+* `vpc_endpoint_service_id` - (Required) ID of the VPC endpoint service to allow permission.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the association.
+* `id` - ID of the association.

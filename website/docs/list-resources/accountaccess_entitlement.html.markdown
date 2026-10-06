@@ -19,6 +19,12 @@ list "aws_accountaccess_entitlement" "example" {
   config {
     account_id      = "123456789012"
     application_arn = "arn:aws:account-access:us-east-1:123456789012:application/aam-0123456789abcdef"
+
+    filter {
+      principal_role {
+        account_id = "123456789012"
+      }
+    }
   }
 }
 ```

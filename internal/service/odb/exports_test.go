@@ -5,10 +5,16 @@ package odb
 
 // Exports for use in tests only.
 var (
-	ResourceCloudAutonomousVMCluster   = newResourceCloudAutonomousVmCluster
-	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
+	ListTags = listTags
 
-	FindCloudAutonomousVmClusterByID  = findCloudAutonomousVmClusterByID
-	FindExadataInfraResourceByID      = findExadataInfraResourceByID
-	FindCloudVmClusterForResourceByID = findCloudVmClusterForResourceByID
+	ResourceCloudAutonomousVMCluster                    = newResourceCloudAutonomousVmCluster
+	ResourceAutonomousDatabase                          = newResourceAutonomousDatabase
+	ResourceAutonomousDatabaseSecretsManagerIntegration = newResourceAutonomousDatabaseSecretsManagerIntegration
+	ResourceCloudExadataInfrastructure                  = newResourceCloudExadataInfrastructure
+
+	FindCloudAutonomousVmClusterByID                = findCloudAutonomousVmClusterByID
+	FindAutonomousDatabaseByID                      = findAutonomousDatabaseByID
+	FindAutonomousDatabaseSecretsManagerIntegration = findAutonomousDatabaseSecretsManagerIntegration
+	FindExadataInfraResourceByID                    = findExadataInfraResourceByID
+	FindCloudVmClusterForResourceByID               = findCloudVmClusterForResourceByID
 )

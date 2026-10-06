@@ -23,7 +23,6 @@ import (
 
 func TestAccLambdaFunction_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_lambda_function.test[0]"
 	resourceName2 := "aws_lambda_function.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -47,8 +46,8 @@ func TestAccLambdaFunction_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", "function:"+rName+"-0")),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", "function:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-1")),
 				},
 			},
 
@@ -79,10 +78,8 @@ func TestAccLambdaFunction_List_basic(t *testing.T) {
 
 func TestAccLambdaFunction_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_lambda_function.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +102,7 @@ func TestAccLambdaFunction_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", "function:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-0")),
 				},
 			},
 
@@ -120,7 +117,7 @@ func TestAccLambdaFunction_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambda_function.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_lambda_function.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", "function:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("function_name"), knownvalue.StringExact(rName+"-0")),
 					}),
 				},
@@ -131,7 +128,6 @@ func TestAccLambdaFunction_List_includeResource(t *testing.T) {
 
 func TestAccLambdaFunction_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_lambda_function.test[0]"
 	resourceName2 := "aws_lambda_function.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -157,8 +153,8 @@ func TestAccLambdaFunction_List_regionOverride(t *testing.T) {
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("lambda", "function:"+rName+"-0")),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("lambda", "function:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkFunctionARNAlternateRegion(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkFunctionARNAlternateRegion(rName+"-1")),
 				},
 			},
 

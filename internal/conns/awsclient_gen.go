@@ -40,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -184,6 +185,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
@@ -413,6 +415,10 @@ func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client
 
 func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcorecontrol.Client {
 	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
+}
+
+func (c *AWSClient) BedrockRuntimeClient(ctx context.Context) *bedrockruntime.Client {
+	return errs.Must(client[*bedrockruntime.Client](ctx, c, names.BedrockRuntime, make(map[string]any)))
 }
 
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
@@ -989,6 +995,10 @@ func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Cl
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Client {
 	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
+}
+
+func (c *AWSClient) NetworkSecurityManagerClient(ctx context.Context) *networksecuritymanager.Client {
+	return errs.Must(client[*networksecuritymanager.Client](ctx, c, names.NetworkSecurityManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {

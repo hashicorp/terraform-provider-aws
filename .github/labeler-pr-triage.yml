@@ -364,6 +364,12 @@ service/bedrockagentcore:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagentcore/**/*'
               - 'website/**/bedrockagentcore_*'
+service/bedrockruntime:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockruntime/**/*'
+              - 'website/**/bedrockruntime_*'
 service/billing:
   - any:
       - changed-files:
@@ -1673,6 +1679,12 @@ service/networkmonitor:
           - any-glob-to-any-file:
               - 'internal/service/networkmonitor/**/*'
               - 'website/**/networkmonitor_*'
+service/networksecuritymanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networksecuritymanager/**/*'
+              - 'website/**/networksecuritymanager_*'
 service/nimble:
   - any:
       - changed-files:

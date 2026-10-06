@@ -26,7 +26,7 @@ data "aws_quicksight_user" "example" {
 
 The following arguments are required:
 
-* `user_name` - (Required) The name of the user that you want to match.
+* `user_name` - (Required) Name of the user that you want to match.
 
 The following arguments are optional:
 
@@ -38,13 +38,10 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `active` - The active status of user. When you create an Amazon QuickSight user that’s not an IAM user or an Active Directory user, that user is inactive until they sign in and provide a password.
+* `active` - Active status of user. When you create an Amazon QuickSight user that’s not an IAM user or an Active Directory user, that user is inactive until they sign in and provide a password.
 * `arn` - ARN for the user.
-* `custom_permissions_name` - The custom permissions profile associated with this user.
-* `email` - The user's email address.
-* `identity_type` - The type of identity authentication used by the user.
-* `principal_id` - The principal ID of the user.
-* `user_role` - The Amazon QuickSight role for the user. The user role can be one of the following:.
-    - `READER`: A user who has read-only access to dashboards.
-    - `AUTHOR`: A user who can create data sources, datasets, analyzes, and dashboards.
-    - `ADMIN`: A user who is an author, who can also manage Amazon QuickSight settings.
+* `custom_permissions_name` - Custom permissions profile associated with this user.
+* `email` - User's email address.
+* `identity_type` - Type of identity authentication used by the user.
+* `principal_id` - Principal ID of the user.
+* `user_role` - Amazon QuickSight role for the user. Valid values are `READER` (read-only access to dashboards), `AUTHOR` (can create data sources, datasets, analyses, and dashboards), and `ADMIN` (an author who can also manage Amazon QuickSight settings).

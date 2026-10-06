@@ -23,6 +23,11 @@ func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckServiceDestroy(ctx, t),
+			testAccCheckTaskDefinitionDestroy(ctx, t),
+			testAccCheckClusterDestroy(ctx, t),
+		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerDefinitionDataSourceConfig_basic(clusterName, tdName, svcName),

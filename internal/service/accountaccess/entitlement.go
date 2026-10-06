@@ -368,6 +368,16 @@ func (m *entitlementModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 		m.PrincipalRole, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
+	case awstypes.EntitlementSummaryMemberPrincipalRole:
+		var model principalRoleEntitlementModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.PrincipalRole, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	default:
 		diags.AddError(
 			"Unsupported Type",

@@ -2948,6 +2948,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)NetworkMonitor"
     severity: WARNING
+  - id: networksecuritymanager-in-func-name
+    languages:
+      - go
+    message: Do not use "NetworkSecurityManager" in func name inside networksecuritymanager package
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager"
+      exclude:
+        - "/internal/service/networksecuritymanager/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkSecurityManager"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: networksecuritymanager-in-test-name
+    languages:
+      - go
+    message: Include "NetworkSecurityManager" in test name
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccNetworkSecurityManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: networksecuritymanager-in-const-name
+    languages:
+      - go
+    message: Do not use "NetworkSecurityManager" in const name inside networksecuritymanager package
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkSecurityManager"
+    severity: WARNING
+  - id: networksecuritymanager-in-var-name
+    languages:
+      - go
+    message: Do not use "NetworkSecurityManager" in var name inside networksecuritymanager package
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkSecurityManager"
+    severity: WARNING
   - id: notifications-in-func-name
     languages:
       - go
@@ -4694,36 +4755,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)rdsdataservice"
-    severity: WARNING
-  - id: rdsdataservice-in-var-name
-    languages:
-      - go
-    message: Do not use "rdsdataservice" in var name inside rdsdata package
-    paths:
-      include:
-        - "/internal/service/rdsdata"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)rdsdataservice"
-    severity: WARNING
-  - id: recyclebin-in-func-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in func name inside rbin package
-    paths:
-      include:
-        - "/internal/service/rbin"
-      exclude:
-        - "/internal/service/rbin/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING

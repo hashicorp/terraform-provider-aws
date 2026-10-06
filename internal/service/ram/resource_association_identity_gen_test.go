@@ -33,7 +33,10 @@ func TestAccRAMResourceAssociation_Identity_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -121,7 +124,10 @@ func TestAccRAMResourceAssociation_Identity_regionOverride(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -214,7 +220,10 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.RAMServiceID),
 		CheckDestroy: testAccCheckResourceAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -274,7 +283,10 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_noRefreshNoChange(t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.RAMServiceID),
 		CheckDestroy: testAccCheckResourceAssociationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{

@@ -9,7 +9,7 @@ description: |-
 
 The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. It is an indispensable part of how leading technology companies, global banks, government agencies, and some of the largest enterprises in the world build and operate in the cloud. Every day, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations.
 
-With 1,711 resources, 10 ephemeral resources, 210 list resources and 679 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
+With 1,725 resources, 10 ephemeral resources, 241 list resources and 683 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
 
 Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
@@ -263,7 +263,7 @@ credential_process = custom-process --username jdoe
 
 ### Assume Role Configuration Reference
 
-Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
+Configuration for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
 Note that environment variables are not supported for assuming IAM roles.
