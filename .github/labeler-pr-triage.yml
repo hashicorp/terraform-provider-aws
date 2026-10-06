@@ -979,6 +979,12 @@ service/emrserverless:
           - any-glob-to-any-file:
               - 'internal/service/emrserverless/**/*'
               - 'website/**/emrserverless_*'
+service/eventbridgev2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/eventbridgev2/**/*'
+              - 'website/**/eventbridgev2_*'
 service/events:
   - any:
       - changed-files:
@@ -1685,6 +1691,12 @@ service/networkmonitor:
           - any-glob-to-any-file:
               - 'internal/service/networkmonitor/**/*'
               - 'website/**/networkmonitor_*'
+service/networksecuritymanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networksecuritymanager/**/*'
+              - 'website/**/networksecuritymanager_*'
 service/nimble:
   - any:
       - changed-files:

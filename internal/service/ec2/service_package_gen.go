@@ -1401,6 +1401,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ec2_transit_gateway_route",
 			Name:     "Transit Gateway Route",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_route_table_id", true),
+				inttypes.StringIdentityAttribute("destination_cidr_block", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      transitGatewayRouteImportID{},
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTable,
@@ -2011,6 +2019,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newTransitGatewayRouteResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_route",
+			Name:     "Transit Gateway Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_route_table_id", true),
+				inttypes.StringIdentityAttribute("destination_cidr_block", true),
+			}),
 		},
 		{
 			Factory:  newTransitGatewayRouteTablePropagationResourceAsListResource,

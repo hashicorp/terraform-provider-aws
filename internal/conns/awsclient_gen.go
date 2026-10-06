@@ -118,6 +118,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -186,6 +187,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
@@ -725,6 +727,10 @@ func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservi
 	return errs.Must(client[*elasticsearchservice.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
+func (c *AWSClient) EventBridgeV2Client(ctx context.Context) *eventbridgev2.Client {
+	return errs.Must(client[*eventbridgev2.Client](ctx, c, names.EventBridgeV2, make(map[string]any)))
+}
+
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge.Client {
 	return errs.Must(client[*eventbridge.Client](ctx, c, names.Events, make(map[string]any)))
 }
@@ -999,6 +1005,10 @@ func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Cl
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Client {
 	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
+}
+
+func (c *AWSClient) NetworkSecurityManagerClient(ctx context.Context) *networksecuritymanager.Client {
+	return errs.Must(client[*networksecuritymanager.Client](ctx, c, names.NetworkSecurityManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {

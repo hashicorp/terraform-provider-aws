@@ -1,5 +1,29 @@
 ## 6.68.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_docdb_cluster: `availability_zones` now validates that at most 3 items are provided at plan time. This is acceptable in a minor version because AWS would always reject requests with more than 3 availability zones at apply time. ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
+* resource/aws_rds_cluster: `availability_zones` now validates that at most 3 items are provided at plan time. This is acceptable in a minor version because AWS would always reject requests with more than 3 availability zones at apply time. ([#50014](https://github.com/hashicorp/terraform-provider-aws/issues/50014))
+
+FEATURES:
+
+* **New Data Source:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+* **New List Resource:** `aws_ec2_transit_gateway_route` ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* **New Resource:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+* **New Resource:** `aws_odb_autonomous_database_secrets_manager_integration` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+
+ENHANCEMENTS:
+
+* resource/aws_docdb_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
+* resource/aws_ec2_transit_gateway_route: Add resource identity support ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* resource/aws_network_interface: Add `connection_tracking_specification` argument ([#50119](https://github.com/hashicorp/terraform-provider-aws/issues/50119))
+* resource/aws_rds_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50014](https://github.com/hashicorp/terraform-provider-aws/issues/50014))
+
+BUG FIXES:
+
+* resource/aws_odb_autonomous_database_secrets_manager_integration: Avoid redundant disable requests when the integration is already absent or terminating ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+* resource/aws_redshiftserverless_workgroup: Restores fully reading `config_parameter` when not specified ([#50255](https://github.com/hashicorp/terraform-provider-aws/issues/50255))
+
 ## 6.67.0 (September 30, 2026)
 
 NOTES:

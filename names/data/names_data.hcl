@@ -3929,6 +3929,30 @@ service "events" {
   brand                    = "AWS"
 }
 
+service "eventbridgev2" {
+  sdk {
+    id            = "EventBridgeV2"
+    arn_namespace = "events"
+  }
+
+  names {
+    provider_name_upper = "EventBridgeV2"
+    human_friendly      = "EventBridge V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEventBuses"
+  }
+
+  resource_prefix {
+    correct = "aws_eventbridgev2_"
+  }
+
+  provider_package_correct = "eventbridgev2"
+  doc_prefix               = ["eventbridgev2_"]
+  brand                    = "AWS"
+}
+
 service "schemas" {
   sdk {
     id            = "schemas"
@@ -6303,6 +6327,35 @@ service "networkmanager" {
   brand                    = "AWS"
 
   is_global = true
+}
+
+service "networksecuritymanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "network-security-manager"
+    aws_cli_v2_command_no_dashes = "networksecuritymanager"
+  }
+
+  sdk {
+    id            = "Network Security Manager"
+    arn_namespace = "network-security-manager"
+  }
+
+  names {
+    provider_name_upper = "NetworkSecurityManager"
+    human_friendly      = "Network Security Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListScopes"
+  }
+
+  resource_prefix {
+    correct = "aws_networksecuritymanager_"
+  }
+
+  provider_package_correct = "networksecuritymanager"
+  doc_prefix               = ["networksecuritymanager_"]
+  brand                    = "AWS"
 }
 
 service "nimble" {

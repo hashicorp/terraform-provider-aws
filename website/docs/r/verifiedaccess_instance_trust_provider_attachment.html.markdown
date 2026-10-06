@@ -36,14 +36,14 @@ resource "aws_verifiedaccess_instance_trust_provider_attachment" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `verifiedaccess_instance_id` - (Required) The ID of the Verified Access instance to attach the Trust Provider to.
-* `verifiedaccess_trust_provider_id` - (Required) The ID of the Verified Access trust provider.
+* `verifiedaccess_instance_id` - (Required) ID of the Verified Access instance to attach the Trust Provider to.
+* `verifiedaccess_trust_provider_id` - (Required) ID of the Verified Access trust provider.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes, separated by a `/` to create a unique id: `verifiedaccess_instance_id`,`verifiedaccess_trust_provider_id`
+* `id` - Combination of attributes, separated by a `/` to create a unique id: `verifiedaccess_instance_id`,`verifiedaccess_trust_provider_id`
 
 ## Import
 

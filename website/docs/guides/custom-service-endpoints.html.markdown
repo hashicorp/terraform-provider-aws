@@ -194,6 +194,7 @@ provider "aws" {
 |EMR|`emr`|`AWS_ENDPOINT_URL_EMR`|`emr`|
 |EMR Containers|`emrcontainers`|`AWS_ENDPOINT_URL_EMR_CONTAINERS`|`emr_containers`|
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
+|EventBridge V2|`eventbridgev2`|`AWS_ENDPOINT_URL_EVENTBRIDGEV2`|`eventbridgev2`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
 |Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
@@ -264,6 +265,7 @@ provider "aws" {
 |CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|Network Security Manager|`networksecuritymanager`|`AWS_ENDPOINT_URL_NETWORK_SECURITY_MANAGER`|`network_security_manager`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|

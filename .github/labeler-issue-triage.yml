@@ -300,6 +300,8 @@ service/emrcontainers:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emrcontainers_'
 service/emrserverless:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emrserverless_'
+service/eventbridgev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_eventbridgev2_'
 service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:
@@ -532,6 +534,8 @@ service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
 service/networkmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
+service/networksecuritymanager:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networksecuritymanager_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/notifications:

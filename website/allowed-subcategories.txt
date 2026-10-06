@@ -133,6 +133,7 @@ EventBridge
 EventBridge Pipes
 EventBridge Scheduler
 EventBridge Schemas
+EventBridge V2
 FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
 FSx
@@ -187,6 +188,7 @@ Neptune
 Neptune Analytics
 Network Firewall
 Network Manager
+Network Security Manager
 OpenSearch
 OpenSearch Ingestion (OSIS)
 OpenSearch Serverless

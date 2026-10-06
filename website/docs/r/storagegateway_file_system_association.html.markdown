@@ -3,7 +3,7 @@ subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_file_system_association"
 description: |-
-  Mananges an association between an Amazon FSx file system and an Amazon FSx File Gateway.
+  Manages an association between an Amazon FSx file system and an Amazon FSx File Gateway.
 ---
 
 # Resource: aws_storagegateway_file_system_association

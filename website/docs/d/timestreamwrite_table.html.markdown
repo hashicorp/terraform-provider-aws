@@ -37,7 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `creation_time` - Time that table was created.
 * `database_name` - Name of database.
 * `last_updated_time` - Last time table was updated.
-* `magnetic_store_write_properties` - Object containing the following attributes to desribe magnetic store writes.
+* `magnetic_store_write_properties` - Object containing the following attributes to describe magnetic store writes.
     * `enable_magnetic_store_writes` - Flag that is set based on if magnetic store writes are enabled.
     * `magnetic_store_rejected_data_location` - Object containing the following attributes to describe error reports for records rejected during magnetic store writes.
         * `s3_configuration` - Object containing the following attributes to describe the configuration of an s3 location to write error reports for records rejected.

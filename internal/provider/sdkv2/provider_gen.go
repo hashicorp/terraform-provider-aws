@@ -1014,6 +1014,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// eventbridgev2
+
+				"eventbridgev2": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// events
 
 				"events": {
@@ -1653,6 +1661,14 @@ func endpointsSchema() *schema.Schema {
 				// networkmonitor
 
 				"networkmonitor": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// networksecuritymanager
+
+				"networksecuritymanager": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
