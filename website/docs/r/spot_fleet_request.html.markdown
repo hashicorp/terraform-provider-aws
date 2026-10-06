@@ -307,7 +307,7 @@ This configuration block supports the following:
       * xilinx
     ```
 
-* `accelerator_names` - (Optional) List of accelerator names. Default is any acclerator.
+* `accelerator_names` - (Optional) List of accelerator names. Default is any accelerator.
 
     ```
     Valid names:
@@ -336,7 +336,7 @@ This configuration block supports the following:
 
     ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
 
-* `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `bare_metal` - (Optional) Indicate whether bare metal instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
