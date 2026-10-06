@@ -39,6 +39,7 @@ const (
 // @IdentityAttribute("resource_arn")
 // @ImportIDHandler("resourceAssociationImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShareAssociation")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckRAMSharingWithOrganizationEnabled")
 // @Testing(preIdentityVersion="v6.65.0")
 func resourceResourceAssociation() *schema.Resource {
 	return &schema.Resource{
