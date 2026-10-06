@@ -1118,7 +1118,7 @@ The `request_body` block supports the following arguments:
 * `app_runner_service` - (Optional) Customizes the request body that your protected Amazon App Runner services forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`app_runner_service`](#app_runner_service-block) below for details.
 * `cloudfront` - (Optional) Customizes the request body that your protected Amazon CloudFront distributions forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cloudfront`](#cloudfront-block) below for details.
 * `cognito_user_pool` - (Optional) Customizes the request body that your protected Amazon Cognito user pools forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cognito_user_pool`](#cognito_user_pool-block) below for details.
-* `verified_access_instance` - (Optional) Customizes the request body that your protected AWS Verfied Access instances forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`verified_access_instance`](#verified_access_instance-block) below for details.
+* `verified_access_instance` - (Optional) Customizes the request body that your protected AWS Verified Access instances forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`verified_access_instance`](#verified_access_instance-block) below for details.
 
 ### `api_gateway` Block
 
