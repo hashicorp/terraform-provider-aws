@@ -2,15 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrockagentcore_resource_policy" "test" {
-  count = var.resource_count
+  region = var.region
 
-  resource_arn = aws_bedrockagentcore_agent_runtime.test[count.index].agent_runtime_arn
-  policy       = data.aws_iam_policy_document.resource_policy[count.index].json
+  resource_arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+  policy       = data.aws_iam_policy_document.resource_policy.json
 }
 
 data "aws_iam_policy_document" "resource_policy" {
-  count = var.resource_count
-
   statement {
     effect = "Allow"
     actions = [
@@ -21,20 +19,22 @@ data "aws_iam_policy_document" "resource_policy" {
       identifiers = ["*"]
     }
     resources = [
-      aws_bedrockagentcore_agent_runtime.test[count.index].agent_runtime_arn
+      aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
     ]
   }
 }
 
-resource "aws_bedrockagentcore_agent_runtime" "test" {
-  count = var.resource_count
+# testAccAgentRuntimeConfig_codeConfiguration
 
-  agent_runtime_name = "${var.rName}_${count.index}"
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  region = var.region
+
+  agent_runtime_name = var.rName
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -52,6 +52,13 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   depends_on = [aws_iam_role_policy.bucket]
 }
 
+# testAccAgentRuntimeConfig_baseIAMRole
+
+resource "aws_iam_role" "test" {
+  name               = var.rName
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect  = "Allow"
@@ -63,9 +70,21 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  name               = var.rName
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+# testAccAgentRuntimeConfig_baseS3Bucket
+
+resource "aws_s3_bucket" "test" {
+  region = var.region
+
+  bucket        = replace(var.rName, "_", "-")
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  region = var.region
+
+  bucket = aws_s3_bucket.test.bucket
+  key    = "agent-runtime-codezip.zip"
+  source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
 }
 
 resource "aws_iam_role_policy" "bucket" {
@@ -81,25 +100,14 @@ resource "aws_iam_role_policy" "bucket" {
   })
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket        = replace(var.rName, "_", "-")
-  force_destroy = true
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "runtime_example.zip"
-  source = "test-fixtures/runtime_example.zip"
-}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
 
-variable "resource_count" {
-  description = "Number of resources to create"
-  type        = number
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
   nullable    = false
 }

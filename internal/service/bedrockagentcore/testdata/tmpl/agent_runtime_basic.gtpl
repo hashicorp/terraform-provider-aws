@@ -46,11 +46,13 @@ data "aws_iam_policy_document" "assume_role" {
 # testAccAgentRuntimeConfig_baseS3Bucket
 
 resource "aws_s3_bucket" "test" {
+{{- template "region" }}
   bucket        = replace(var.rName, "_", "-")
   force_destroy = true
 }
 
 resource "aws_s3_object" "test" {
+{{- template "region" . }}
   bucket = aws_s3_bucket.test.bucket
   key    = "agent-runtime-codezip.zip"
   source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
