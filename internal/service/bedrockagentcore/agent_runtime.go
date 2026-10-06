@@ -88,6 +88,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 			"agent_runtime_version": schema.StringAttribute{
 				Computed: true,
 			},
+			"default_endpoint_arn": framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -715,6 +716,16 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	}
 	data.AuthorizerConfiguration = authorizerConfiguration
 
+	// AWS creates a "DEFAULT" endpoint automatically alongside the agent runtime; there is no
+	// dedicated Create call for it. A NotFound here is tolerated rather than failing the whole
+	// resource, since fetching it is secondary to the runtime itself.
+	if defaultEndpoint, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, "DEFAULT"); err == nil {
+		data.DefaultEndpointARN = fwflex.StringToFramework(ctx, defaultEndpoint.AgentRuntimeEndpointArn)
+	} else if !retry.NotFound(err) {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+		return
+	}
+
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
@@ -751,6 +762,13 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 	data.AuthorizerConfiguration = authorizerConfiguration
+
+	if defaultEndpoint, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, "DEFAULT"); err == nil {
+		data.DefaultEndpointARN = fwflex.StringToFramework(ctx, defaultEndpoint.AgentRuntimeEndpointArn)
+	} else if !retry.NotFound(err) {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+		return
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -814,6 +832,10 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
 	}
+
+	// default_endpoint_arn never changes once the runtime is created, and UpdateAgentRuntime's
+	// response doesn't carry it, so there's nothing to re-fetch here.
+	new.DefaultEndpointARN = old.DefaultEndpointARN
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
@@ -957,6 +979,7 @@ type agentRuntimeResourceModel struct {
 	AgentRuntimeName           types.String                                                     `tfsdk:"agent_runtime_name"`
 	AgentRuntimeVersion        types.String                                                     `tfsdk:"agent_runtime_version"`
 	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
+	DefaultEndpointARN         types.String                                                     `tfsdk:"default_endpoint_arn"`
 	Description                types.String                                                     `tfsdk:"description"`
 	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
 	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]    `tfsdk:"filesystem_configuration"`
