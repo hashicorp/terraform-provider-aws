@@ -502,6 +502,48 @@ func TestAccVPCNetworkInterface_enaSrdSpecification(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInterface_connectionTrackingSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecification(rName, 3600, 120, 45),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.0.tcp_established_timeout", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.0.udp_stream_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.0.udp_timeout", "45"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecification(rName, 7200, 60, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.0.tcp_established_timeout", "7200"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.0.udp_stream_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification.0.udp_timeout", "30"),
+				),
+			},
+		},
+	})
+}
+
 // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
 // This test requires an expensive instance type that supports multiple network cards, such as "c6in.32xlarge" or "c6in.metal".
 // Set the environment variable `VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS` to run this test.
@@ -1745,6 +1787,26 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName, enaSrdEnabled, enaSrdUdpEnabled))
+}
+
+func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecification(rName string, tcpEstablishedTimeout, udpStreamTimeout, udpTimeout int) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV4(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  connection_tracking_specification {
+    tcp_established_timeout = %[2]d
+    udp_stream_timeout      = %[3]d
+    udp_timeout             = %[4]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, tcpEstablishedTimeout, udpStreamTimeout, udpTimeout))
 }
 
 func testAccVPCNetworkInterfaceConfig_enaSrdSpecificationDisabled(rName string) string {
