@@ -214,7 +214,7 @@ func (d *imageVersionDataSource) Schema(ctx context.Context, req datasource.Sche
 					},
 				},
 			},
-			"resources": schema.ListNestedBlock{
+			names.AttrResources: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
