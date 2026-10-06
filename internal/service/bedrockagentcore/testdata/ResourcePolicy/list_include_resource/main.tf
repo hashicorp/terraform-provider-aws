@@ -34,7 +34,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -88,8 +88,8 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
-  key    = "runtime_example.zip"
-  source = "test-fixtures/runtime_example.zip"
+  key    = "agent-runtime-codezip.zip"
+  source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
 }
 
 variable "rName" {
