@@ -60,5 +60,5 @@ This resource exports the following attributes in addition to the arguments abov
 * `deletion_time` - Timestamp when the access group was deleted.
 * `last_updated_time` - Timestamp when the access group was last updated.
 * `owner` - AWS account number owning this resource.
-* `verifiedaccess_group_arn` - ARN of this verified acess group.
+* `verifiedaccess_group_arn` - ARN of this verified access group.
 * `verifiedaccess_group_id` - ID of this verified access group.

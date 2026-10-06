@@ -26,7 +26,7 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
   total_container_databases             = 1
   cpu_core_count_per_node               = 40
   license_model                         = "LICENSE_INCLUDED"
-  # ids of db server. refer your exa infra. This is a manadatory fileld. Refer your cloud exadata infrastructure for db server id
+  # ids of db server. refer your exa infra. This is a manadatory field. Refer your cloud exadata infrastructure for db server id
   db_servers                 = ["<my_db_server_id>"]
   scan_listener_port_tls     = 8561
   scan_listener_port_non_tls = 1024

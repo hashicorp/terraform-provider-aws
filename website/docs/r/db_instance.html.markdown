@@ -174,7 +174,7 @@ data "aws_rds_orderable_db_instance" "example" {
   preferred_instance_classes = ["db.t3.small", "db.r6i.large", "db.m6i.large"]
 }
 
-# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default paramater group as a source, and set license information.
+# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default parameter group as a source, and set license information.
 resource "aws_db_parameter_group" "example" {
   name   = "db-db2-params"
   family = data.aws_rds_engine_version.default.parameter_group_family

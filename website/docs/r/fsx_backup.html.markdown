@@ -35,7 +35,7 @@ resource "aws_fsx_backup" "example" {
 }
 
 resource "aws_fsx_windows_file_system" "example" {
-  active_directory_id = aws_directory_service_directory.eample.id
+  active_directory_id = aws_directory_service_directory.example.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.example1.id]
