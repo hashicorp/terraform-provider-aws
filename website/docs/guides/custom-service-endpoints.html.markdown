@@ -193,6 +193,7 @@ provider "aws" {
 |EMR|`emr`|`AWS_ENDPOINT_URL_EMR`|`emr`|
 |EMR Containers|`emrcontainers`|`AWS_ENDPOINT_URL_EMR_CONTAINERS`|`emr_containers`|
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
+|EventBridge V2|`eventbridgev2`|`AWS_ENDPOINT_URL_EVENTBRIDGEV2`|`eventbridgev2`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
 |Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
