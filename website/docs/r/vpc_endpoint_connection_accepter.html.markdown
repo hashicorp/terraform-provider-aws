@@ -51,7 +51,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the VPC Endpoint Connection.
+* `id` - ID of the VPC Endpoint Connection.
 * `vpc_endpoint_state` - State of the VPC Endpoint.
 
 ## Import
