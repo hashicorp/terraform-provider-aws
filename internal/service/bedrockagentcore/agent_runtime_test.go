@@ -350,10 +350,8 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion_V1ToV2(t *testing.T) {
 	ctx := acctest.Context(t)
-	// Each V2 step takes several minutes, and the image must answer GET /ping
-	// healthy within 120 seconds for AgentCore to snapshot it.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -376,7 +374,139 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				// The service default when the argument is omitted.
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion_defaultToV1(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion_defaultToV2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			// Platform version V2 is only available in a subset of the Regions that support AgentCore.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsEast2RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
 				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
@@ -412,8 +542,54 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 				},
 			},
 			{
-				// Re-import after the update so the recorded platform version is compared
-				// against what GetAgentRuntime reports, not just what was planned.
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion_V2ToV1(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			// Platform version V2 is only available in a subset of the Regions that support AgentCore.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsEast2RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
+				},
+			},
+			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
@@ -421,11 +597,122 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
-				// Removing the argument must not revert an existing runtime to V1.
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion_V1_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
 				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_platformVersion_V2_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			// Platform version V2 is only available in a subset of the Regions that support AgentCore.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsEast2RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -433,20 +720,29 @@ func TestAccBedrockAgentCoreAgentRuntime_platformVersion(t *testing.T) {
 				},
 			},
 			{
-				// Nor may an unrelated update while the argument is omitted.
-				Config: testAccAgentRuntimeConfig_description(rName, rBucketName, "Platform version omitted"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("platform_version"), knownvalue.StringExact("V2")),
-				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 		},
 	})
