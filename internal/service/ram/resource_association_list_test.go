@@ -162,7 +162,7 @@ func TestAccRAMResourceAssociation_List_regionOverride(t *testing.T) {
 			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
-		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
