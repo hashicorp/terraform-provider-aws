@@ -15,6 +15,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,10 +26,70 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// TestPreserveEnvironmentVariables directly exercises the fix for
+// https://github.com/hashicorp/terraform-provider-aws/issues/45885: CreateAgentRuntime and
+// UpdateAgentRuntime's responses don't reliably echo environment_variables, so Flatten can null
+// out a value that Terraform's plan already knows, producing "Provider produced inconsistent
+// result after apply". preserveEnvironmentVariables(dst, src) is called with dst = the value
+// just flattened from the API response and src = the planned/prior value captured before
+// Flatten ran.
+func TestPreserveEnvironmentVariables(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	known := fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"KEY": types.StringValue(names.AttrValue)})
+	otherKnown := fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{"OTHER": types.StringValue("other")})
+	null := fwtypes.NewMapValueOfNull[types.String](ctx)
+
+	testCases := []struct {
+		name string
+		dst  fwtypes.MapOfString
+		src  fwtypes.MapOfString
+		want fwtypes.MapOfString
+	}{
+		{
+			name: "API omitted a value the plan already knew: issue #45885's exact shape",
+			dst:  null,
+			src:  known,
+			want: known,
+		},
+		{
+			name: "API echoed a real value: must not be overridden by the older planned value",
+			dst:  otherKnown,
+			src:  known,
+			want: otherKnown,
+		},
+		{
+			name: "neither configured nor returned: stays null",
+			dst:  null,
+			src:  null,
+			want: null,
+		},
+		{
+			name: "API echoed a known value with nothing to preserve from: stays as returned",
+			dst:  known,
+			src:  null,
+			want: known,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfbedrockagentcore.PreserveEnvironmentVariables(tc.dst, tc.src)
+			if !got.Equal(tc.want) {
+				t.Errorf("PreserveEnvironmentVariables() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
 
 // TestCustomJWTAuthorizerPrivateEndpointRoundTrip proves that AutoFlex round-trips
 // every combination of private_endpoint union arms.
@@ -347,6 +409,58 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"ENV_KEY_2": knownvalue.StringExact("env_value_2_updated"),
+					})),
+				},
+			},
+			{
+				// Real update triggered by an unrelated field (description), with
+				// environment_variables left at the same explicit config value. This is the
+				// literal shape https://github.com/hashicorp/terraform-provider-aws/issues/45885
+				// reported: reaches the `if diff.HasChanges()` branch, calls UpdateAgentRuntime,
+				// and Flattens its response straight into a value the plan already knows. The
+				// preserveEnvironmentVariables unit test (TestPreserveEnvironmentVariables)
+				// pins the fix directly; this step is the closest acceptance-test coverage of
+				// the reported trigger that a live AWS response can exercise.
+				Config: testAccAgentRuntimeConfig_environmentVariablesAndDescription(rName, rImageUri, "ENV_KEY_2", "env_value_2_updated", "updated description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"ENV_KEY_2": knownvalue.StringExact("env_value_2_updated"),
+					})),
+				},
+			},
+			{
+				// https://github.com/hashicorp/terraform-provider-aws/issues/45885: a tags-only
+				// update (Update() is called, but the resource's own diff reports no changes, so
+				// UpdateAgentRuntime is never called) must retain environment_variables -- here
+				// omitted from config -- instead of losing it to Unknown/null. A related but
+				// distinct trigger from the step above: this exercises the `else` branch's copy,
+				// not preserveEnvironmentVariables.
+				Config: testAccAgentRuntimeConfig_environmentVariablesTagsOnly(rName, rImageUri, "tagkey1", "tagvalue1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1419,6 +1533,53 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, envKey, envValue, rImageUri))
+}
+
+func testAccAgentRuntimeConfig_environmentVariablesAndDescription(rName, rImageUri, envKey, envValue, description string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  description        = %[5]q
+
+  environment_variables = {
+    %[2]s = %[3]q
+  }
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[4]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, envKey, envValue, rImageUri, description))
+}
+
+func testAccAgentRuntimeConfig_environmentVariablesTagsOnly(rName, rImageUri, tagKey, tagValue string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[4]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  tags = {
+    %[2]s = %[3]q
+  }
+}
+`, rName, tagKey, tagValue, rImageUri))
 }
 
 func testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
