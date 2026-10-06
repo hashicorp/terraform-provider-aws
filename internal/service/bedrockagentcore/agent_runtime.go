@@ -7,6 +7,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -886,6 +887,7 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -903,6 +905,7 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -919,6 +922,7 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
