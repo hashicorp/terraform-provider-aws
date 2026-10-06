@@ -136,6 +136,7 @@ provider "aws" {
 |CloudSearch|`cloudsearch`|`AWS_ENDPOINT_URL_CLOUDSEARCH`|`cloudsearch`|
 |CloudTrail|`cloudtrail`|`AWS_ENDPOINT_URL_CLOUDTRAIL`|`cloudtrail`|
 |CloudWatch|`cloudwatch`|`AWS_ENDPOINT_URL_CLOUDWATCH`|`cloudwatch`|
+|CloudWatch Omni|`cloudwatchomni`|`AWS_ENDPOINT_URL_CLOUDWATCHOMNI`|`cloudwatchomni`|
 |CodeArtifact|`codeartifact`|`AWS_ENDPOINT_URL_CODEARTIFACT`|`codeartifact`|
 |CodeBuild|`codebuild`|`AWS_ENDPOINT_URL_CODEBUILD`|`codebuild`|
 |CodeCatalyst|`codecatalyst`|`AWS_ENDPOINT_URL_CODECATALYST`|`codecatalyst`|

@@ -405,6 +405,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// cloudwatchomni
+
+				"cloudwatchomni": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// codeartifact
 
 				"codeartifact": schema.StringAttribute{

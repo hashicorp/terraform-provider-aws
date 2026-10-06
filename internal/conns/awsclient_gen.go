@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
@@ -492,6 +493,10 @@ func (c *AWSClient) CloudTrailClient(ctx context.Context) *cloudtrail.Client {
 
 func (c *AWSClient) CloudWatchClient(ctx context.Context) *cloudwatch.Client {
 	return errs.Must(client[*cloudwatch.Client](ctx, c, names.CloudWatch, make(map[string]any)))
+}
+
+func (c *AWSClient) CloudWatchOmniClient(ctx context.Context) *cloudwatchomni.Client {
+	return errs.Must(client[*cloudwatchomni.Client](ctx, c, names.CloudWatchOmni, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeArtifactClient(ctx context.Context) *codeartifact.Client {
