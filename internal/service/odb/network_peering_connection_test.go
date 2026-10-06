@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -655,7 +656,7 @@ func (oracleDBNwkPeeringResourceTest) basicConfigWithARNAttribute(vpcName, odbNe
 
 func (oracleDBNwkPeeringResourceTest) basicConfigWithNetworkReference(vpcName, odbNetName, odbPeeringName, networkAttribute, networkReference string) string {
 	availabilityZoneID := "use1-az6"
-	if acctest.Region() == "us-west-2" {
+	if acctest.Region() == endpoints.UsWest2RegionID {
 		availabilityZoneID = "usw2-az3"
 	}
 
