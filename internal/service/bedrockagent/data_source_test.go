@@ -898,6 +898,10 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+data "aws_bedrock_inference_profile" "test" {
+  inference_profile_id = "us.%[2]s"
+}
+
 # The Neptune Analytics base config grants only Neptune and RDS permissions.
 resource "aws_iam_role_policy" "test_context_enrichment" {
   name = "%[1]s-context-enrichment"
@@ -918,20 +922,13 @@ resource "aws_iam_role_policy" "test_context_enrichment" {
         Resource = ["*"]
       },
       {
-        Effect = "Allow"
-        Action = ["bedrock:InvokeModel"]
-        Resource = [
-          "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.%[2]s",
-        ]
-      },
-      {
         # An inference profile also requires the underlying model in each Region it routes to.
         Effect = "Allow"
         Action = ["bedrock:InvokeModel"]
-        Resource = [
-          for r in ["us-east-1", "us-east-2", "us-west-2"] :
-          "arn:${data.aws_partition.current.partition}:bedrock:${r}::foundation-model/%[2]s"
-        ]
+        Resource = concat(
+          [data.aws_bedrock_inference_profile.test.inference_profile_arn],
+          data.aws_bedrock_inference_profile.test.models[*].model_arn,
+        )
       },
     ]
   })
@@ -956,7 +953,7 @@ resource "aws_bedrockagent_data_source" "test" {
       type = "BEDROCK_FOUNDATION_MODEL"
 
       bedrock_foundation_model_configuration {
-        model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.%[2]s"
+        model_arn = data.aws_bedrock_inference_profile.test.inference_profile_arn
 
         enrichment_strategy_configuration {
           method = "CHUNK_ENTITY_EXTRACTION"
