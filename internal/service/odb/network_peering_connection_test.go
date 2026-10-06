@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -216,6 +217,7 @@ func TestAccODBNetworkPeeringConnection_invalidRouteTableID(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -664,7 +666,7 @@ resource "aws_odb_network_peering_connection" "test" {
     "env" = "dev"
   }
 }
-`, vpcName, odbNetName, odbPeeringName, testAccODBNetworkPeeringAvailabilityZoneID())
+`, vpcName, odbNetName, odbPeeringName, testAccNetworkPeeringAvailabilityZoneID())
 }
 
 func (oracleDBNwkPeeringResourceTest) routeTableBaseConfig(vpcName, odbNetName string) string {
@@ -688,11 +690,11 @@ resource "aws_odb_network" "test" {
   s3_access            = "DISABLED"
   zero_etl_access      = "DISABLED"
 }
-`, vpcName, odbNetName, testAccODBNetworkPeeringAvailabilityZoneID())
+`, vpcName, odbNetName, testAccNetworkPeeringAvailabilityZoneID())
 }
 
-func testAccODBNetworkPeeringAvailabilityZoneID() string {
-	if acctest.Region() == "us-west-2" {
+func testAccNetworkPeeringAvailabilityZoneID() string {
+	if acctest.Region() == endpoints.UsWest2RegionID {
 		return "usw2-az3"
 	}
 	return "use1-az6"
