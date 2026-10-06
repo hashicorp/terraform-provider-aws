@@ -197,14 +197,14 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectPartial(map[string]knownvalue.Check{
 													names.AttrBucket: knownvalue.StringExact(rBucketName),
-													"prefix":         knownvalue.StringExact("runtime_example.zip"),
+													"prefix":         knownvalue.StringExact("agent-runtime-codezip.zip"),
 													"version_id":     knownvalue.Null(),
 												}),
 											}),
 										}),
 									}),
 									"entry_point": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.StringExact("runtime_example.py"),
+										knownvalue.StringExact("main.py"),
 									}),
 									"runtime": knownvalue.StringExact(string(awstypes.AgentManagedRuntimeTypePython313)),
 								}),
@@ -1104,7 +1104,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 							"code_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"entry_point": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.StringExact("runtime_example.py"),
+										knownvalue.StringExact("main.py"),
 									}),
 									"runtime": knownvalue.StringExact(string(awstypes.AgentManagedRuntimeTypePython313)),
 									"code": knownvalue.ListExact([]knownvalue.Check{
@@ -1112,7 +1112,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
 													names.AttrBucket: knownvalue.StringExact(rBucketNameV1),
-													names.AttrPrefix: knownvalue.StringExact("runtime_example.zip"),
+													names.AttrPrefix: knownvalue.StringExact("agent-runtime-codezip.zip"),
 													"version_id":     knownvalue.Null(),
 												}),
 											}),
@@ -1148,7 +1148,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 							"code_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"entry_point": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.StringExact("runtime_example.py"),
+										knownvalue.StringExact("main.py"),
 									}),
 									"runtime": knownvalue.StringExact(string(awstypes.AgentManagedRuntimeTypePython313)),
 									"code": knownvalue.ListExact([]knownvalue.Check{
@@ -1156,7 +1156,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
 													names.AttrBucket: knownvalue.StringExact(rBucketNameV2),
-													names.AttrPrefix: knownvalue.StringExact("runtime_example.zip"),
+													names.AttrPrefix: knownvalue.StringExact("agent-runtime-codezip.zip"),
 													"version_id":     knownvalue.Null(),
 												}),
 											}),
@@ -1241,7 +1241,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
 													names.AttrBucket: knownvalue.StringExact(rBucketName),
-													"prefix":         knownvalue.StringExact("runtime_example.zip"),
+													"prefix":         knownvalue.StringExact("agent-runtime-codezip.zip"),
 													"version_id":     knownvalue.Null(),
 												}),
 											}),
@@ -1430,7 +1430,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1524,8 +1524,8 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
-  key    = "runtime_example.zip"
-  source = "${path.module}/test-fixtures/runtime_example.zip"
+  key    = "agent-runtime-codezip.zip"
+  source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
 }
 
 resource "aws_iam_role_policy" "bucket" {
@@ -1554,7 +1554,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1605,7 +1605,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1637,7 +1637,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1651,6 +1651,8 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   network_configuration {
     network_mode = "PUBLIC"
   }
+
+  depends_on = [aws_iam_role_policy.bucket]
 }
 `, rName, platformVersion))
 }
@@ -1670,7 +1672,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1699,7 +1701,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1737,7 +1739,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1785,7 +1787,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1833,7 +1835,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
@@ -1866,7 +1868,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   agent_runtime_artifact {
     code_configuration {
-      entry_point = ["runtime_example.py"]
+      entry_point = ["main.py"]
       runtime     = "PYTHON_3_13"
       code {
         s3 {
