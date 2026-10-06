@@ -28,24 +28,24 @@ resource "aws_vpc_route_server_endpoint" "test" {
 
 The following arguments are required:
 
-* `route_server_id` - (Required) The ID of the route server for which to create an endpoint.
-* `subnet_id` - (Required) The ID of the subnet in which to create the route server endpoint.
+* `route_server_id` - (Required) ID of the route server for which to create an endpoint.
+* `subnet_id` - (Required) ID of the subnet in which to create the route server endpoint.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the route server endpoint.
-* `route_server_endpoint_id` - The unique identifier of the route server endpoint.
-* `eni_id` - The ID of the Elastic network interface for the endpoint.
-* `eni_address` - The IP address of the Elastic network interface for the endpoint.
-* `vpc_id` - The ID of the VPC containing the endpoint.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the route server endpoint.
+* `eni_address` - IP address of the Elastic network interface for the endpoint.
+* `eni_id` - ID of the Elastic network interface for the endpoint.
+* `route_server_endpoint_id` - Unique identifier of the route server endpoint.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpc_id` - ID of the VPC containing the endpoint.
 
 ## Timeouts
 

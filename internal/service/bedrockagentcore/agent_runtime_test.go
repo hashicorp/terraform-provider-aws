@@ -197,7 +197,7 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectPartial(map[string]knownvalue.Check{
 													names.AttrBucket: knownvalue.StringExact(rBucketName),
-													"prefix":         knownvalue.StringExact("agent-runtime-codezip.zip"),
+													names.AttrPrefix: knownvalue.StringExact("agent-runtime-codezip.zip"),
 													"version_id":     knownvalue.Null(),
 												}),
 											}),
@@ -1538,7 +1538,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
 													names.AttrBucket: knownvalue.StringExact(rBucketName),
-													"prefix":         knownvalue.StringExact("agent-runtime-codezip.zip"),
+													names.AttrPrefix: knownvalue.StringExact("agent-runtime-codezip.zip"),
 													"version_id":     knownvalue.Null(),
 												}),
 											}),

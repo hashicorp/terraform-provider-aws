@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Testing BedRock Agent Core Resource Types
 
 The resource type `aws_bedrockagentcore_agent_runtime` requires code delivered in either

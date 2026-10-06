@@ -362,6 +362,24 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	})
 }
 
+func TestAccDocDBCluster_availabilityZonesExceedMax(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_availabilityZonesExceedMax(rName),
+				ExpectError: regexache.MustCompile(`Attribute availability_zones supports 3 item maximum`),
+			},
+		},
+	})
+}
+
 func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
@@ -1342,6 +1360,20 @@ resource "aws_docdb_cluster" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccClusterConfig_availabilityZonesExceedMax(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  availability_zones = ["test-az-1", "test-az-2", "test-az-3", "test-az-4"]
+
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName)
 }
 
 func testAccClusterConfig_identifierGenerated() string {

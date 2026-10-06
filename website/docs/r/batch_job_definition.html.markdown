@@ -342,7 +342,7 @@ The following arguments are optional:
 #### `env` Block
 
 * `name` - (Required) Name of the environment variable.
-* `value` - (Optional) Value of the environment variable.
+* `value` - (Required) Value of the environment variable.
 
 #### `resources` Block
 
@@ -351,8 +351,8 @@ The following arguments are optional:
 
 #### `volume_mounts` Block
 
-* `mount_path` - (Optional) Path on the container where the volume is mounted.
-* `name` - (Optional) Name the volume mount. This must match the name of one of the volumes in the pod.
+* `mount_path` - (Required) Path on the container where the volume is mounted.
+* `name` - (Required) Name the volume mount. This must match the name of one of the volumes in the pod.
 * `read_only` - (Optional) Whether the container has read-only access to the volume. The default value is `false`.
 
 #### `volumes` Block

@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 * `automatic_backup_retention_days` - Number of days to retain automatic backups.
 * `daily_automatic_backup_start_time` - Preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deployment_type` - File system deployment type.
-* `disk_iops_configuration` - SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system, specifying the number of provisioned IOPS and the provision mode. See [Disk IOPS](#disk-iops) Below.
+* `disk_iops_configuration` - SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system, specifying the number of provisioned IOPS and the provision mode. See [`disk_iops_configuration`](#disk_iops_configuration-block) below.
 * `dns_name` - DNS name for the file system.
 
   **Note:** This attribute does not apply to FSx for ONTAP file systems and is consequently not set. You can access your FSx for ONTAP file system and volumes via a [Storage Virtual Machine (SVM)](fsx_ontap_storage_virtual_machine.html) using its DNS name or IP address.
@@ -58,17 +58,22 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - ID of the primary VPC for the file system.
 * `weekly_maintenance_start_time` - Preferred start time (in `D:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
-### Disk IOPS
+### `disk_iops_configuration` Block
 
 * `iops` - Total number of SSD IOPS provisioned for the file system.
 * `mode` - Whether the file system is using the `AUTOMATIC` setting of SSD IOPS of 3 IOPS per GB of storage capacity, or if it using a `USER_PROVISIONED` value.
 
 ### `endpoints` Block
 
-* `intercluster` - FileSystemEndpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [Endpoint](#endpoint) below.
-* `management` - FileSystemEndpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint) below.
+* `intercluster` - FileSystemEndpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [`endpoints.intercluster`](#endpointsintercluster-block) below.
+* `management` - FileSystemEndpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [`endpoints.management`](#endpointsmanagement-block) below.
 
-#### Endpoint
+#### `endpoints.intercluster` Block
+
+* `dns_name` - File system's DNS name. You can mount your file system using its DNS name.
+* `ip_addresses` - IP addresses of the file system endpoint.
+
+#### `endpoints.management` Block
 
 * `dns_name` - File system's DNS name. You can mount your file system using its DNS name.
 * `ip_addresses` - IP addresses of the file system endpoint.
