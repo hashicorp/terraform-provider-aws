@@ -7,6 +7,7 @@ BREAKING CHANGES:
 
 FEATURES:
 
+* **New Data Source:** `aws_lambdamicrovms_image_version` ([#50299](https://github.com/hashicorp/terraform-provider-aws/issues/50299))
 * **New Data Source:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * **New List Resource:** `aws_ec2_transit_gateway_route` ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
 * **New Resource:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
