@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster_instance: Omit `performance_insights_kms_key_id` and `performance_insights_retention_period` from the update request when `performance_insights_enabled` is `false`, fixing `InvalidParameterCombination: You can't set a Performance Insights retention period without enabling Performance Insights` when disabling Performance Insights
+```
