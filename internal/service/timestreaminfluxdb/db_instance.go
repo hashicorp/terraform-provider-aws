@@ -740,11 +740,12 @@ func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequ
 		Identifier: aws.String(instanceID),
 	}
 
-	// A background update action blocks deletion with a ValidationException until it finishes.
+	// Applying db_backup_configuration starts a background update action that outlives the AVAILABLE
+	// status, and the service rejects deletion with a ValidationException until it finishes.
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*timestreaminfluxdb.DeleteDbInstanceOutput, *awstypes.ValidationException](ctx, deleteTimeout, func(ctx context.Context) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, deleteTimeout, func(ctx context.Context) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
 		return conn.DeleteDbInstance(ctx, &input)
-	}, "in progress")
+	}, "ValidationException", "in progress")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
