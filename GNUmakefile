@@ -1232,7 +1232,7 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 
 website-misspell: ## [CI] Website Checks / misspell
 	@echo "make: Website Checks / misspell..."
-	@misspell -error -source text website/
+	@misspell -error -source text website/docs/*.html.markdown website/docs/*/*.html.markdown
 
 website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
