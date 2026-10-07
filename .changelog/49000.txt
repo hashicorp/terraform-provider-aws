@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Fix `InvalidParameterCombination` error when disabling `manage_master_user_password` on a cluster restored from a snapshot where Secrets Manager was never active
+```
