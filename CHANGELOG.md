@@ -26,6 +26,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fixes error when parsing YAML documents with literal tab characters in double-quoted string ([#50340](https://github.com/hashicorp/terraform-provider-aws/issues/50340))
 * resource/aws_odb_autonomous_database_secrets_manager_integration: Avoid redundant disable requests when the integration is already absent or terminating ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * resource/aws_redshiftserverless_workgroup: Restores fully reading `config_parameter` when not specified ([#50255](https://github.com/hashicorp/terraform-provider-aws/issues/50255))
 
