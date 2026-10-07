@@ -694,10 +694,14 @@ resource "aws_odb_network" "test" {
 }
 
 func testAccNetworkPeeringAvailabilityZoneID() string {
-	if acctest.Region() == endpoints.UsWest2RegionID {
+	switch acctest.Region() {
+	case endpoints.UsWest2RegionID:
 		return "usw2-az3"
+	case endpoints.EuWest1RegionID:
+		return "euw1-az1"
+	default:
+		return "use1-az6"
 	}
-	return "use1-az6"
 }
 
 func (oracleDBNwkPeeringResourceTest) routeTableConfig(vpcName, odbNetName, odbPeeringName, routeTableReference string) string {
