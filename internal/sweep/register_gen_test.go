@@ -46,6 +46,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
@@ -246,6 +247,7 @@ func registerSweepers() {
 	cloudhsmv2.RegisterSweepers()
 	cloudtrail.RegisterSweepers()
 	cloudwatch.RegisterSweepers()
+	cloudwatchomni.RegisterSweepers()
 	codeartifact.RegisterSweepers()
 	codebuild.RegisterSweepers()
 	codegurureviewer.RegisterSweepers()
