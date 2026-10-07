@@ -410,3 +410,7 @@ require (
 	google.golang.org/grpc v1.85.0-dev.0.20260825072537-93e31b48545e // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
+
+// Addresses https://github.com/hashicorp/terraform-provider-aws/issues/50292
+// https://github.com/goccy/go-yaml/pull/949
+replace github.com/goccy/go-yaml => github.com/gdavison/go-yaml v0.0.0-20261007181749-9c42d2998a88
