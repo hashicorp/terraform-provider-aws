@@ -7,6 +7,8 @@ package ram
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
@@ -74,6 +76,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ram_resource_association",
 			Name:     "Resource Association",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("resource_share_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceARN, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      resourceAssociationImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourceShare,
@@ -95,6 +105,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newResourceAssociationResourceAsListResource,
+			TypeName: "aws_ram_resource_association",
+			Name:     "Resource Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("resource_share_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrResourceARN, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
