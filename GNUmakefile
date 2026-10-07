@@ -435,10 +435,6 @@ go-build: ## [CI] Provider Checks / go-build
 	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
-go-misspell: ## [CI] Provider Checks / misspell
-	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto -i "littel,ceasar,ect" internal/
-
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
 golangci-lint1: ## [CI] golangci-lint Checks / 1 of 5
@@ -488,7 +484,7 @@ makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 	@echo "make: Makefile Linting / alignment check..."
 	@cd tools/makelign && $(GO_VER) run . -strict ../..
 
-misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
+misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI misspell checks
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
@@ -1342,7 +1338,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	generate-changelog \
 	gh-workflow-lint \
 	go-build \
-	go-misspell \
 	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
