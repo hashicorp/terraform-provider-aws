@@ -65,6 +65,9 @@ func TestAccLambdaMicroVMsImageVersionDataSource_basic(t *testing.T) {
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("image_version"), resourceName, tfjsonpath.New("image_version"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.MicrovmImageVersionStateSuccessful)),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.MicrovmImageVersionStatusActive)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
 				},
 			},
@@ -91,6 +94,10 @@ resource "aws_lambdamicrovms_image" "test" {
 
   cpu_configuration {
     architecture = "ARM_64"
+  }
+
+  tags = {
+    key1 = "value1"
   }
 }
 
