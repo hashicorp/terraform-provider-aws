@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ecr_repository: Add `repository_url_dualstack` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ecr_repository: Add `repository_url_dualstack` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ecr_image: Add `image_uri_dualstack` attribute
+```

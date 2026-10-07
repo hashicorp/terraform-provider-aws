@@ -37,6 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `image_tag_mutability_exclusion_filter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
 * `most_recent_image_tags` - List of image tags associated with the most recently pushed image in the repository.
 * `repository_url` - URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
+* `repository_url_dualstack` - The dual-stack (IPv6-compatible) URL of the repository (in the form `aws_account_id.dkr-ecr.region.on.aws/repositoryName`). Use this for ECS tasks in IPv6-only subnets.
 * `tags` - Map of tags assigned to the resource.
 
 ### Encryption Configuration
