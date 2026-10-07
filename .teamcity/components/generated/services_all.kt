@@ -150,6 +150,7 @@ val services = mapOf(
     "lambda" to ServiceSpec("Lambda", vpcLock = true),
     "lambdacore" to ServiceSpec("Lambda Core"),
     "lambdamicrovms" to ServiceSpec("Lambda MicroVMs"),
+    "lambdaweb" to ServiceSpec("Lambda Web"),
     "launchwizard" to ServiceSpec("Launch Wizard"),
     "lexv2models" to ServiceSpec("Lex V2 Models"),
     "licensemanager" to ServiceSpec("License Manager"),
