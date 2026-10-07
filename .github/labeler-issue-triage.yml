@@ -434,6 +434,8 @@ service/lambdacore:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdacore_'
 service/lambdamicrovms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
+service/lambdaweb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdaweb_'
 service/launchwizard:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:

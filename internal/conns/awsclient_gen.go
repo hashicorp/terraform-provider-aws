@@ -159,6 +159,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
+	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -889,6 +890,10 @@ func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
 
 func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Client {
 	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
+}
+
+func (c *AWSClient) LambdaWebClient(ctx context.Context) *lambdaweb.Client {
+	return errs.Must(client[*lambdaweb.Client](ctx, c, names.LambdaWeb, make(map[string]any)))
 }
 
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {

@@ -206,6 +206,7 @@ variable "service_labels" {
     "lambda",
     "lambdacore",
     "lambdamicrovms",
+    "lambdaweb",
     "launchwizard",
     "lexmodels",
     "lexruntime",
