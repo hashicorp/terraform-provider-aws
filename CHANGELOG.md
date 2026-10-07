@@ -14,6 +14,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_bedrockagentcore_agent_runtime: Add `platform_version` argument ([#50081](https://github.com/hashicorp/terraform-provider-aws/issues/50081))
 * resource/aws_docdb_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
 * resource/aws_ec2_transit_gateway_route: Add resource identity support ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
 * resource/aws_network_interface: Add `connection_tracking_specification` argument ([#50119](https://github.com/hashicorp/terraform-provider-aws/issues/50119))
