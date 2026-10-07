@@ -25,6 +25,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the ECR Repository.
 * `registry_id` - (Optional) Registry ID where the repository was created.
+* `fetch_most_recent_image_tags` - (Optional) Whether to populate `most_recent_image_tags`. Doing so requires listing every image in the repository, which can be slow for repositories with many images. Defaults to `true`.
 
 ## Attribute Reference
 
@@ -35,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 * `image_scanning_configuration` - Configuration block that defines image scanning configuration for the repository. See [Image Scanning Configuration](#image-scanning-configuration) below.
 * `image_tag_mutability` - The tag mutability setting for the repository.
 * `image_tag_mutability_exclusion_filter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
-* `most_recent_image_tags` - List of image tags associated with the most recently pushed image in the repository.
+* `most_recent_image_tags` - List of image tags associated with the most recently pushed image in the repository. Empty when `fetch_most_recent_image_tags` is `false`.
 * `repository_url` - URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
 * `tags` - Map of tags assigned to the resource.
 
