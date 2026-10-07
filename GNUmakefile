@@ -349,7 +349,7 @@ docs-markdown-lint: ## [CI] Documentation Checks / markdown-lint
 
 docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
-	@misspell -error -source text docs/
+	@misspell -error -source text docs/*.md docs/*/*.md
 
 examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
