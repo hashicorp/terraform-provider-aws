@@ -6,7 +6,9 @@ package ecs_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"math"
+	"net/http"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -18,6 +20,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -3380,8 +3385,8 @@ func testAccCheckServiceDestroy(ctx context.Context, t *testing.T) resource.Test
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ecs_service" {
+		for name, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecs_service" || strings.HasPrefix(name, "data.") {
 				continue
 			}
 
@@ -8878,4 +8883,373 @@ resource "aws_ecs_service" "test" {
 
 data "aws_region" "current" {}
 `, rName, format, includeQueryParams))
+}
+
+func TestServiceMonitoring(t *testing.T) {
+	t.Parallel()
+
+	metric := func(names []any, resolution int) map[string]any {
+		return map[string]any{"metric_names": names, "resolution_seconds": resolution}
+	}
+	for _, tc := range []struct {
+		name    string
+		metrics []any
+		wantCPU int32
+		wantMem int32
+	}{
+		{"removed", nil, 60, 60},
+		{"both", []any{metric([]any{"CPUUtilization", "MemoryUtilization"}, 20)}, 20, 20},
+		{"cpu", []any{metric([]any{"CPUUtilization"}, 20)}, 20, 60},
+		{"memory", []any{metric([]any{"MemoryUtilization"}, 20)}, 60, 20},
+		{"standard", []any{metric([]any{"CPUUtilization", "MemoryUtilization"}, 60)}, 60, 60},
+		{"separate", []any{metric([]any{"CPUUtilization"}, 20), metric([]any{"MemoryUtilization"}, 20)}, 20, 20},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			raw := map[string]any{}
+			if tc.metrics != nil {
+				raw["monitoring"] = []any{map[string]any{"metric_configuration": tc.metrics}}
+			}
+			d := schema.TestResourceDataRaw(t, tfecs.ResourceService().SchemaMap(), raw)
+			configured := d.Get("monitoring").([]any)
+			apiObject := tfecs.ExpandServiceMonitoring(configured)
+			got := make(map[string]int32)
+			for _, config := range apiObject.MetricConfigurations {
+				for _, name := range config.MetricNames {
+					if _, ok := got[name]; ok {
+						t.Fatalf("duplicate metric %s", name)
+					}
+					got[name] = aws.ToInt32(config.ResolutionSeconds)
+				}
+			}
+			if got["CPUUtilization"] != tc.wantCPU || got["MemoryUtilization"] != tc.wantMem {
+				t.Fatalf("unexpected resolutions: %v", got)
+			}
+
+			// Simulate AWS regrouping metrics with the same resolution.
+			if tc.wantCPU == tc.wantMem {
+				apiObject.MetricConfigurations = []awstypes.MetricConfiguration{{
+					MetricNames: []string{"MemoryUtilization", "CPUUtilization"}, ResolutionSeconds: aws.Int32(tc.wantCPU),
+				}}
+			}
+			if err := d.Set("monitoring", tfecs.FlattenServiceMonitoringForResource(apiObject, configured)); err != nil {
+				t.Fatal(err)
+			}
+			actual := d.Get("monitoring").([]any)
+			if len(actual) != len(configured) {
+				t.Fatalf("block count: got %d, want %d", len(actual), len(configured))
+			}
+			if len(actual) > 0 && !actual[0].(map[string]any)["metric_configuration"].(*schema.Set).Equal(configured[0].(map[string]any)["metric_configuration"].(*schema.Set)) {
+				t.Fatalf("unexpected state: %#v", actual)
+			}
+		})
+	}
+}
+
+func TestServiceMonitoringDrift(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name       string
+		configured bool
+		monitoring *awstypes.MonitoringConfiguration
+		wantGroups int
+	}{
+		{"absent", false, nil, 0},
+		{"reset_outside_terraform", true, nil, 1},
+		{"import", false, &awstypes.MonitoringConfiguration{MetricConfigurations: []awstypes.MetricConfiguration{{MetricNames: []string{"CPUUtilization"}, ResolutionSeconds: aws.Int32(20)}}}, 1},
+		{"one_metric_changed", true, &awstypes.MonitoringConfiguration{MetricConfigurations: []awstypes.MetricConfiguration{{MetricNames: []string{"CPUUtilization"}, ResolutionSeconds: aws.Int32(20)}}}, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			raw := map[string]any{}
+			if tc.configured {
+				raw["monitoring"] = []any{map[string]any{"metric_configuration": []any{map[string]any{
+					"metric_names": []any{"CPUUtilization", "MemoryUtilization"}, "resolution_seconds": 20,
+				}}}}
+			}
+			d := schema.TestResourceDataRaw(t, tfecs.ResourceService().SchemaMap(), raw)
+			if err := d.Set("monitoring", tfecs.FlattenServiceMonitoringForResource(tc.monitoring, d.Get("monitoring").([]any))); err != nil {
+				t.Fatal(err)
+			}
+			if got := d.Get("monitoring.0.metric_configuration").(*schema.Set).Len(); got != tc.wantGroups {
+				t.Fatalf("got %d groups, want %d", got, tc.wantGroups)
+			}
+		})
+	}
+}
+
+func TestServiceMonitoringValidation(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name       string
+		names      []any
+		resolution int
+		duplicate  bool
+		wantError  bool
+	}{
+		{"high_resolution", []any{"CPUUtilization"}, 20, false, false},
+		{"standard", []any{"MemoryUtilization"}, 60, false, false},
+		{"invalid_resolution", []any{"CPUUtilization"}, 30, false, true},
+		{"invalid_metric", []any{"RunningTaskCount"}, 20, false, true},
+		{"empty_metrics", nil, 20, false, true},
+		{"duplicate_metric", []any{"CPUUtilization"}, 20, true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			metrics := []any{map[string]any{"metric_names": tc.names, "resolution_seconds": tc.resolution}}
+			if tc.duplicate {
+				metrics = append(metrics, map[string]any{"metric_names": tc.names, "resolution_seconds": 60})
+			}
+			config := sdkterraform.NewResourceConfigRaw(map[string]any{
+				names.AttrName: "test", "monitoring": []any{map[string]any{"metric_configuration": metrics}},
+			})
+			r := tfecs.ResourceService()
+			hasError := r.Validate(config).HasError()
+			if !hasError {
+				_, err := r.Diff(t.Context(), nil, config, nil)
+				hasError = err != nil
+			}
+			if hasError != tc.wantError {
+				t.Fatalf("validation error: got %t, want %t", hasError, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestServiceMonitoringRevisionARN(t *testing.T) {
+	t.Parallel()
+
+	const revisionARN = "arn:aws:ecs:us-west-2:123456789012:service-revision/test/test/123" // lintignore:AWSAT003,AWSAT005
+	for _, tc := range []struct {
+		name    string
+		service awstypes.Service
+		want    string
+		missing bool
+	}{
+		{"legacy", awstypes.Service{}, "", false},
+		{"external", awstypes.Service{DeploymentController: &awstypes.DeploymentController{Type: awstypes.DeploymentControllerTypeExternal}}, "", false},
+		{"primary", awstypes.Service{
+			Deployments: []awstypes.Deployment{{Id: aws.String("ecs-svc/123"), Status: aws.String("PRIMARY")}},
+			CurrentServiceRevisions: []awstypes.ServiceCurrentRevisionSummary{
+				{Arn: aws.String(revisionARN + "4"), RunningTaskCount: 10},
+				{Arn: aws.String(revisionARN)},
+			},
+		}, revisionARN, false},
+		{"missing_primary", awstypes.Service{CurrentServiceRevisions: []awstypes.ServiceCurrentRevisionSummary{{Arn: aws.String(revisionARN)}}}, "", true},
+		{"not_yet_visible", awstypes.Service{CurrentServiceDeployment: aws.String("deployment")}, "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := tfecs.ServiceMonitoringRevisionARN(&tc.service)
+			if got != tc.want || retry.NotFound(err) != tc.missing {
+				t.Fatalf("got %q, %v; want %q, missing=%t", got, err, tc.want, tc.missing)
+			}
+		})
+	}
+}
+
+func TestFindServiceMonitoring(t *testing.T) {
+	t.Parallel()
+
+	const revisionARN = "arn:aws:ecs:us-west-2:123456789012:service-revision/test/test/123" // lintignore:AWSAT003,AWSAT005
+	for _, tc := range []struct {
+		name   string
+		status int
+		body   string
+		err    string
+	}{
+		{"success", 200, `{"serviceRevisions":[{"serviceRevisionArn":"` + revisionARN + `","monitoring":{"metricConfigurations":[{"metricNames":["CPUUtilization"],"resolutionSeconds":20}]}}]}`, ""},
+		{"access_denied", 400, `{"__type":"AccessDeniedException","message":"denied"}`, "denied"},
+		{"failure", 200, `{"failures":[{"reason":"UNKNOWN","detail":"failed"}]}`, "failed"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			conn := ecs.New(ecs.Options{
+				Region: "us-west-2", Credentials: aws.AnonymousCredentials{},
+				HTTPClient: smithyhttp.ClientDoFunc(func(req *http.Request) (*http.Response, error) {
+					body, err := io.ReadAll(req.Body)
+					if err != nil {
+						return nil, err
+					}
+					if !strings.Contains(string(body), revisionARN) || !strings.HasSuffix(req.Header.Get("X-Amz-Target"), ".DescribeServiceRevisions") {
+						t.Errorf("unexpected request: %s %s", req.Header.Get("X-Amz-Target"), body)
+					}
+					return &http.Response{StatusCode: tc.status, Header: http.Header{"Content-Type": {"application/x-amz-json-1.1"}}, Body: io.NopCloser(strings.NewReader(tc.body))}, nil
+				}),
+			})
+			monitoring, err := tfecs.FindServiceMonitoring(t.Context(), conn, &awstypes.Service{
+				Deployments:             []awstypes.Deployment{{Id: aws.String("ecs-svc/123"), Status: aws.String("PRIMARY")}},
+				CurrentServiceRevisions: []awstypes.ServiceCurrentRevisionSummary{{Arn: aws.String(revisionARN)}},
+			})
+			if tc.err != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.err) {
+					t.Fatalf("got %v, want error containing %q", err, tc.err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if monitoring == nil || len(monitoring.MetricConfigurations) != 1 || aws.ToInt32(monitoring.MetricConfigurations[0].ResolutionSeconds) != 20 {
+				t.Fatalf("unexpected monitoring: %#v", monitoring)
+			}
+		})
+	}
+}
+
+func TestAccECSService_monitoring(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+	dataSourceName := "data.aws_ecs_service.test"
+	both := `
+  monitoring {
+    metric_configuration {
+      metric_names       = ["CPUUtilization", "MemoryUtilization"]
+      resolution_seconds = 20
+    }
+  }
+`
+	cpu := `
+  monitoring {
+    metric_configuration {
+      metric_names       = ["CPUUtilization"]
+      resolution_seconds = 20
+    }
+  }
+`
+	separate := `
+  monitoring {
+    metric_configuration {
+      metric_names       = ["CPUUtilization"]
+      resolution_seconds = 60
+    }
+    metric_configuration {
+      metric_names       = ["MemoryUtilization"]
+      resolution_seconds = 20
+    }
+  }
+`
+	step := func(config string, groups int, action plancheck.ResourceActionType) resource.TestStep {
+		return resource.TestStep{
+			Config: testAccServiceConfig_monitoring(rName, config),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckServiceExists(ctx, t, resourceName, &service),
+				resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.#", strconv.Itoa(groups)),
+				resource.TestCheckResourceAttr(dataSourceName, "monitoring.#", "1"),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(resourceName, action)},
+			},
+		}
+	}
+	create := step(both, 1, plancheck.ResourceActionCreate)
+	create.Check = resource.ComposeAggregateTestCheckFunc(create.Check,
+		resource.TestCheckResourceAttrPair(resourceName, "monitoring", dataSourceName, "monitoring"),
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "monitoring.0.metric_configuration.*", map[string]string{
+			"metric_names.#": "2", "resolution_seconds": "20",
+		}),
+	)
+	removed := step("", 0, plancheck.ResourceActionUpdate)
+	removed.Check = resource.ComposeAggregateTestCheckFunc(
+		testAccCheckServiceExists(ctx, t, resourceName, &service),
+		resource.TestCheckResourceAttr(resourceName, "monitoring.#", "0"),
+		resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "monitoring.0.metric_configuration.*", map[string]string{
+			"metric_names.#": "2", "resolution_seconds": "60",
+		}),
+	)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			create,
+			{
+				ResourceName:            resourceName,
+				ImportStateId:           fmt.Sprintf("%s/%s", rName, rName),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_steady_state", "task_definition"},
+			},
+			step(separate, 2, plancheck.ResourceActionUpdate),
+			step(cpu, 1, plancheck.ResourceActionUpdate),
+			step(strings.ReplaceAll(both, "= 20", "= 60"), 1, plancheck.ResourceActionUpdate),
+			step(both, 1, plancheck.ResourceActionUpdate),
+			removed,
+			step(both, 1, plancheck.ResourceActionUpdate),
+		},
+	})
+}
+
+func testAccServiceConfig_monitoring(rName, monitoring string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = jsonencode([{
+    name   = "test"
+    image  = "nginx:latest"
+    cpu    = 128
+    memory = 128
+  }])
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.arn
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 0
+%[2]s
+}
+
+data "aws_ecs_service" "test" {
+  service_name = aws_ecs_service.test.name
+  cluster_arn  = aws_ecs_cluster.test.arn
+}
+`, rName, monitoring)
+}
+
+func TestFindServiceMonitoringRetry(t *testing.T) {
+	t.Parallel()
+
+	const revisionARN = "arn:aws:ecs:us-west-2:123456789012:service-revision/test/test/123" // lintignore:AWSAT003,AWSAT005
+	calls := 0
+	conn := ecs.New(ecs.Options{
+		Region: "us-west-2", Credentials: aws.AnonymousCredentials{},
+		HTTPClient: smithyhttp.ClientDoFunc(func(req *http.Request) (*http.Response, error) {
+			calls++
+			var body string
+			switch calls {
+			case 1:
+				body = `{"failures":[{"reason":"MISSING"}]}`
+			case 2:
+				if !strings.HasSuffix(req.Header.Get("X-Amz-Target"), ".DescribeServices") {
+					t.Errorf("expected service refresh, got %s", req.Header.Get("X-Amz-Target"))
+				}
+				body = `{"services":[{"deployments":[{"id":"ecs-svc/123","status":"PRIMARY"}],"currentServiceRevisions":[{"arn":"` + revisionARN + `"}]}]}`
+			default:
+				body = `{"serviceRevisions":[{"serviceRevisionArn":"` + revisionARN + `","monitoring":{"metricConfigurations":[{"metricNames":["CPUUtilization"],"resolutionSeconds":20}]}}]}`
+			}
+			return &http.Response{StatusCode: 200, Header: http.Header{"Content-Type": {"application/x-amz-json-1.1"}}, Body: io.NopCloser(strings.NewReader(body))}, nil
+		}),
+	})
+	monitoring, err := tfecs.FindServiceMonitoring(t.Context(), conn, &awstypes.Service{
+		ServiceArn:              aws.String("test"),
+		ClusterArn:              aws.String("test"),
+		Deployments:             []awstypes.Deployment{{Id: aws.String("ecs-svc/123"), Status: aws.String("PRIMARY")}},
+		CurrentServiceRevisions: []awstypes.ServiceCurrentRevisionSummary{{Arn: aws.String(revisionARN)}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calls != 3 || monitoring == nil || len(monitoring.MetricConfigurations) != 1 {
+		t.Fatalf("got %d calls and %#v", calls, monitoring)
+	}
 }

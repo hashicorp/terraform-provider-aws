@@ -48,6 +48,7 @@ This data source exports the following attributes in addition to the arguments a
 * `iam_role` - ARN of the IAM role associated with the service
 * `launch_type` - Launch type for the ECS Service
 * `load_balancer` - Load balancers for the ECS Service. See [`load_balancer` Block](#load_balancer-block) for details.
+* `monitoring` - Service-level CloudWatch metric resolution. See [`monitoring` Block](#monitoring-block) below. Reading this attribute requires `ecs:DescribeServiceRevisions` permission.
 * `network_configuration` - Network configuration for the service. See [`network_configuration` Block](#network_configuration-block) for details.
 * `ordered_placement_strategy` - Placement strategy for tasks. See [`ordered_placement_strategy` Block](#ordered_placement_strategy-block) for details.
 * `pending_count` - Number of tasks in PENDING state
@@ -222,3 +223,16 @@ The `advanced_configuration` block exports the following attributes:
 * `production_listener_rule` - ARN of the listener rule that routes production traffic.
 * `role_arn` - ARN of the IAM role that allows ECS to manage the target groups.
 * `test_listener_rule` - ARN of the listener rule that routes test traffic.
+
+### `metric_configuration` Block
+
+The `metric_configuration` block exports the following attributes:
+
+* `metric_names` - Set of metric names.
+* `resolution_seconds` - Metric collection resolution in seconds.
+
+### `monitoring` Block
+
+The `monitoring` block exports the following attributes:
+
+* `metric_configuration` - Set of metric configurations. See [`metric_configuration` Block](#metric_configuration-block) below.

@@ -101,7 +101,7 @@ func (l *listResourceService) List(ctx context.Context, request list.ListRequest
 				continue
 			}
 
-			diags := resourceServiceFlatten(ctx, rd, service, cluster)
+			diags := resourceServiceFlatten(ctx, conn, rd, service, cluster)
 			if diags.HasError() {
 				tflog.Error(ctx, "Flatten ECS (Elastic Container) Service", map[string]any{
 					"diags": sdkdiag.DiagnosticsString(diags),

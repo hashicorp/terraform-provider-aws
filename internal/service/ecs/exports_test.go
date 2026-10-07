@@ -26,6 +26,10 @@ var (
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
 	FindExpressGatewayServiceByARN          = findExpressGatewayServiceByARN
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
+	FindServiceMonitoring                   = findServiceMonitoring
+	ExpandServiceMonitoring                 = expandServiceMonitoring
+	FlattenServiceMonitoringForResource     = flattenServiceMonitoringForResource
+	ServiceMonitoringRevisionARN            = serviceMonitoringRevisionARN
 	FindTag                                 = findTag
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
 	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey

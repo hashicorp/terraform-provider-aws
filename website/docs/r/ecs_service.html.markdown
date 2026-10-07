@@ -43,6 +43,24 @@ resource "aws_ecs_service" "mongo" {
 }
 ```
 
+### High-Resolution Metrics
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name            = "example"
+  cluster         = aws_ecs_cluster.example.id
+  task_definition = aws_ecs_task_definition.example.arn
+  desired_count   = 1
+
+  monitoring {
+    metric_configuration {
+      metric_names       = ["CPUUtilization", "MemoryUtilization"]
+      resolution_seconds = 20
+    }
+  }
+}
+```
+
 ### Ignoring Changes to Desired Count
 
 You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
@@ -250,6 +268,7 @@ The following arguments are optional:
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`. Conflicts with `capacity_provider_strategy`.
 * `load_balancer` - (Optional) Configuration block for load balancers. [See below](#load_balancer-block).
+* `monitoring` - (Optional) Service-level CloudWatch metric resolution. See [`monitoring` Block](#monitoring-block) below. Removing this block resets CPU and memory metrics to 60-second resolution.
 * `network_configuration` - (Optional) Network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. [See below](#network_configuration-block).
 * `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless `force_new_deployment` is enabled. The maximum number of `ordered_placement_strategy` blocks is `5`. [See below](#ordered_placement_strategy-block).
 * `placement_constraints` - (Optional) Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless `force_new_deployment` is enabled. Maximum number of `placement_constraints` is `10`. [See below](#placement_constraints-block).
@@ -389,6 +408,23 @@ The `advanced_configuration` configuration block supports the following:
 * `production_listener_rule` - (Required) ARN of the listener rule that routes production traffic.
 * `role_arn` - (Required) ARN of the IAM role that allows ECS to manage the target groups.
 * `test_listener_rule` - (Optional) ARN of the listener rule that routes test traffic.
+
+### `metric_configuration` Block
+
+Metrics omitted from the configuration use 60-second resolution. CPU and memory metrics can share one configuration block or use separate blocks with different resolutions.
+
+The `metric_configuration` block supports:
+
+* `metric_names` - (Required) Set of metric names. Valid values are `CPUUtilization` and `MemoryUtilization`. Each metric can appear in only one configuration block.
+* `resolution_seconds` - (Required) Metric collection resolution in seconds. Valid values are `20` and `60`.
+
+### `monitoring` Block
+
+The `monitoring` block supports:
+
+* `metric_configuration` - (Required) Set of metric configurations. See [`metric_configuration` Block](#metric_configuration-block) below.
+
+-> **Note:** Reading monitoring settings requires `ecs:DescribeServiceRevisions` permission, including when importing or listing services. Monitoring changes trigger a service deployment. Use `wait_for_steady_state = true` to wait for deployment completion before configuring a high-resolution scaling policy. High-resolution metrics do not support the `CODE_DEPLOY` or `EXTERNAL` deployment controllers or Classic Load Balancers without target groups. See [Faster auto scaling with high-resolution metrics](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/target-tracking-faster-auto-scaling.html).
 
 ### `network_configuration` Block
 

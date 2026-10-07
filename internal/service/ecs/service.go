@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -39,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -893,6 +895,40 @@ func resourceService() *schema.Resource {
 						},
 					},
 				},
+				"monitoring": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_configuration": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 5,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_names": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 5,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringInSlice([]string{"CPUUtilization", "MemoryUtilization"}, false),
+											},
+										},
+										"resolution_seconds": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntInSlice([]int{20, 60}),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -1396,6 +1432,7 @@ func resourceService() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			capacityProviderStrategyCustomizeDiff,
+			serviceMonitoringCustomizeDiff,
 			triggersCustomizeDiff,
 		),
 	}
@@ -1543,6 +1580,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("monitoring"); ok {
+		input.Monitoring = expandServiceMonitoring(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = awstypes.PropagateTags(v.(string))
 	}
@@ -1622,7 +1663,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceServiceFlatten(ctx, d, service, cluster)...)
+	return append(diags, resourceServiceFlatten(ctx, conn, d, service, cluster)...)
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1765,6 +1806,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("enable_execute_command") {
 			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
+		}
+
+		if d.HasChange("monitoring") {
+			input.Monitoring = expandServiceMonitoring(d.Get("monitoring").([]any))
 		}
 
 		if d.HasChange("health_check_grace_period_seconds") {
@@ -3090,6 +3135,175 @@ func flattenPlacementStrategy(apiObjects []awstypes.PlacementStrategy) []any {
 	return tfList
 }
 
+func serviceMonitoringCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown("monitoring") {
+		return nil
+	}
+	if v, ok := d.GetOk("monitoring"); ok {
+		seen := make(map[string]bool)
+		for _, v := range v.([]any)[0].(map[string]any)["metric_configuration"].(*schema.Set).List() {
+			for _, name := range v.(map[string]any)["metric_names"].(*schema.Set).List() {
+				name := name.(string)
+				if seen[name] {
+					return fmt.Errorf("monitoring: metric %q must appear in only one metric_configuration block", name)
+				}
+				seen[name] = true
+			}
+		}
+	}
+	return nil
+}
+
+func expandServiceMonitoring(tfList []any) *awstypes.MonitoringConfiguration {
+	apiObject := &awstypes.MonitoringConfiguration{}
+	configured := make(map[string]bool)
+	if len(tfList) > 0 && tfList[0] != nil {
+		for _, v := range tfList[0].(map[string]any)["metric_configuration"].(*schema.Set).List() {
+			tfMap := v.(map[string]any)
+			names := flex.ExpandStringValueSet(tfMap["metric_names"].(*schema.Set))
+			apiObject.MetricConfigurations = append(apiObject.MetricConfigurations, awstypes.MetricConfiguration{
+				MetricNames:       names,
+				ResolutionSeconds: aws.Int32(int32(tfMap["resolution_seconds"].(int))),
+			})
+			for _, name := range names {
+				configured[name] = true
+			}
+		}
+	}
+
+	// Explicit defaults also reset metrics removed from the configuration.
+	var defaults []string
+	for _, name := range []string{"CPUUtilization", "MemoryUtilization"} {
+		if !configured[name] {
+			defaults = append(defaults, name)
+		}
+	}
+	if len(defaults) > 0 {
+		apiObject.MetricConfigurations = append(apiObject.MetricConfigurations, awstypes.MetricConfiguration{
+			MetricNames:       defaults,
+			ResolutionSeconds: aws.Int32(60),
+		})
+	}
+	return apiObject
+}
+
+func flattenServiceMonitoring(apiObject *awstypes.MonitoringConfiguration) []any {
+	if apiObject == nil || len(apiObject.MetricConfigurations) == 0 {
+		return nil
+	}
+
+	var configurations []any
+	for _, v := range apiObject.MetricConfigurations {
+		configurations = append(configurations, map[string]any{
+			"metric_names":       v.MetricNames,
+			"resolution_seconds": aws.ToInt32(v.ResolutionSeconds),
+		})
+	}
+	return []any{map[string]any{"metric_configuration": configurations}}
+}
+
+func flattenServiceMonitoringForResource(apiObject *awstypes.MonitoringConfiguration, tfList []any) []any {
+	resolutions := map[string]int32{"CPUUtilization": 60, "MemoryUtilization": 60}
+	if apiObject != nil {
+		for _, v := range apiObject.MetricConfigurations {
+			for _, name := range v.MetricNames {
+				resolutions[name] = aws.ToInt32(v.ResolutionSeconds)
+			}
+		}
+	}
+
+	result := &awstypes.MonitoringConfiguration{}
+	// Preserve configured groups, even if AWS groups metrics differently. Split a
+	// group when only one metric has drifted so that the change remains visible.
+	if len(tfList) > 0 && tfList[0] != nil {
+		for _, v := range tfList[0].(map[string]any)["metric_configuration"].(*schema.Set).List() {
+			groups := make(map[int32][]string)
+			for _, v := range v.(map[string]any)["metric_names"].(*schema.Set).List() {
+				name := v.(string)
+				groups[resolutions[name]] = append(groups[resolutions[name]], name)
+				delete(resolutions, name)
+			}
+			for resolution, names := range groups {
+				result.MetricConfigurations = append(result.MetricConfigurations, awstypes.MetricConfiguration{
+					MetricNames: names, ResolutionSeconds: aws.Int32(resolution),
+				})
+			}
+		}
+	}
+	// Unconfigured standard-resolution metrics are defaults, not configuration.
+	// Keep other values for import, list results, and drift detection.
+	groups := make(map[int32][]string)
+	for name, resolution := range resolutions {
+		if resolution != 60 {
+			groups[resolution] = append(groups[resolution], name)
+		}
+	}
+	for resolution, names := range groups {
+		result.MetricConfigurations = append(result.MetricConfigurations, awstypes.MetricConfiguration{
+			MetricNames: names, ResolutionSeconds: aws.Int32(resolution),
+		})
+	}
+	return flattenServiceMonitoring(result)
+}
+
+func serviceMonitoringRevisionARN(service *awstypes.Service) (string, error) {
+	if service.DeploymentController != nil && service.DeploymentController.Type != awstypes.DeploymentControllerTypeEcs {
+		return "", nil
+	}
+	// Services without revision history predate DescribeServiceRevisions support.
+	if len(service.CurrentServiceRevisions) == 0 && aws.ToString(service.CurrentServiceDeployment) == "" {
+		return "", nil
+	}
+	if primary := findPrimaryTaskSet(service.Deployments); primary != nil {
+		if _, id, ok := strings.Cut(aws.ToString(primary.Id), "/"); ok && id != "" {
+			for _, revision := range service.CurrentServiceRevisions {
+				if arn := aws.ToString(revision.Arn); strings.HasSuffix(arn, "/"+id) {
+					return arn, nil
+				}
+			}
+		}
+	}
+	return "", &retry.NotFoundError{Message: "primary ECS service revision not found"}
+}
+
+func findServiceMonitoring(ctx context.Context, conn *ecs.Client, service *awstypes.Service) (*awstypes.MonitoringConfiguration, error) {
+	serviceName, cluster := aws.ToString(service.ServiceArn), aws.ToString(service.ClusterArn)
+	return tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.MonitoringConfiguration, error) {
+		if service == nil {
+			var err error
+			service, err = findServiceByTwoPartKey(ctx, conn, serviceName, cluster)
+			if err != nil {
+				return nil, smarterr.NewError(err)
+			}
+		}
+		arn, err := serviceMonitoringRevisionARN(service)
+		service = nil // Refresh the revision selection if eventual consistency requires a retry.
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		if arn == "" {
+			return nil, nil
+		}
+		output, err := conn.DescribeServiceRevisions(ctx, &ecs.DescribeServiceRevisionsInput{
+			ServiceRevisionArns: []string{arn},
+		})
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		for _, failure := range output.Failures {
+			if aws.ToString(failure.Reason) == failureReasonMissing {
+				return nil, &retry.NotFoundError{LastError: failureError(&failure)}
+			}
+			return nil, smarterr.NewError(failureError(&failure))
+		}
+		revision, err := tfresource.AssertSingleValueResult(output.ServiceRevisions)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		return revision.Monitoring, nil
+	})
+}
+
 func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectConfiguration {
 	if len(tfList) == 0 {
 		return &awstypes.ServiceConnectConfiguration{
@@ -3860,8 +4074,16 @@ func flattenServiceRegistries(apiObjects []awstypes.ServiceRegistry) []any {
 	return tfList
 }
 
-func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service *awstypes.Service, cluster string) diag.Diagnostics {
+func resourceServiceFlatten(ctx context.Context, conn *ecs.Client, d *schema.ResourceData, service *awstypes.Service, cluster string) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	monitoring, err := findServiceMonitoring(ctx, conn, service)
+	if err != nil {
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+	}
+	if err := d.Set("monitoring", flattenServiceMonitoringForResource(monitoring, d.Get("monitoring").([]any))); err != nil {
+		return smerr.Append(ctx, diags, smarterr.NewError(err), smerr.ID, d.Id())
+	}
 
 	d.Set(names.AttrARN, service.ServiceArn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)

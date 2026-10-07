@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -303,6 +305,31 @@ func dataSourceService() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monitoring": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_configuration": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_names": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"resolution_seconds": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrNetworkConfiguration: {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -523,6 +550,14 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ECS Service", err))
+	}
+
+	monitoring, err := findServiceMonitoring(ctx, conn, service)
+	if err != nil {
+		return smerr.Append(ctx, diags, err, smerr.ID, aws.ToString(service.ServiceArn))
+	}
+	if err := d.Set("monitoring", flattenServiceMonitoring(monitoring)); err != nil {
+		return smerr.Append(ctx, diags, smarterr.NewError(err))
 	}
 
 	arn := aws.ToString(service.ServiceArn)
