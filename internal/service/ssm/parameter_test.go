@@ -246,6 +246,54 @@ func TestAccSSMParameter_writeOnly(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameter_writeOnlyNoKMSDecrypt(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_writeOnlyNoKMSDecrypt(rName, "test", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExistsNoDecryption(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "value_wo"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccParameterConfig_writeOnlyNoKMSDecrypt(rName, "testUpdated", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExistsNoDecryption(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "value_wo"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
@@ -1455,6 +1503,27 @@ func testAccCheckParameterExists(ctx context.Context, t *testing.T, n string, v 
 	}
 }
 
+func testAccCheckParameterExistsNoDecryption(ctx context.Context, t *testing.T, n string, v *awstypes.Parameter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
+
+		output, err := tfssm.FindParameterByName(ctx, conn, rs.Primary.ID, false)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckParameterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
@@ -1828,6 +1897,49 @@ func testAccParameterConfig_writeOnly(rName string, value string, valueVersion i
 resource "aws_ssm_parameter" "test" {
   name             = %[1]q
   type             = "String"
+  value_wo         = %[2]q
+  value_wo_version = %[3]d
+}
+`, rName, value, valueVersion)
+}
+
+func testAccParameterConfig_writeOnlyNoKMSDecrypt(rName string, value string, valueVersion int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid       = "DenyDecrypt"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "kms:Decrypt"
+        Resource  = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_ssm_parameter" "test" {
+  name             = %[1]q
+  type             = "SecureString"
+  key_id           = aws_kms_key.test.key_id
   value_wo         = %[2]q
   value_wo_version = %[3]d
 }
