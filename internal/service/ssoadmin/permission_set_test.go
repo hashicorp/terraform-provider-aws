@@ -559,7 +559,7 @@ func TestPermissionSetRetryer(t *testing.T) {
 
 			attempts := 0
 			cfg := aws.Config{
-				Region:      "us-east-1",
+				Region:      "us-east-1", //lintignore:AWSAT003
 				Credentials: aws.AnonymousCredentials{},
 				Retryer: func() aws.Retryer {
 					return awsretry.NewStandard(func(o *awsretry.StandardOptions) {
@@ -604,7 +604,7 @@ func TestPermissionSetRetryer(t *testing.T) {
 			}
 
 			_, err = conn.CreatePermissionSet(ctx, &ssoadmin.CreatePermissionSetInput{
-				InstanceArn: aws.String("arn:aws:sso:::instance/ssoins-1234567890123456"),
+				InstanceArn: aws.String("arn:aws:sso:::instance/ssoins-1234567890123456"), //lintignore:AWSAT005
 				Name:        aws.String("test"),
 			})
 
