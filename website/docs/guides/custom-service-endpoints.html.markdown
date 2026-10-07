@@ -118,6 +118,7 @@ provider "aws" {
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
 |Bedrock AgentCore|`bedrockagentcore`|`AWS_ENDPOINT_URL_BEDROCK_AGENTCORE_CONTROL`|`bedrock_agentcore_control`|
+|Bedrock Runtime|`bedrockruntime`|`AWS_ENDPOINT_URL_BEDROCK_RUNTIME`|`bedrock_runtime`|
 |Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
@@ -135,6 +136,7 @@ provider "aws" {
 |CloudSearch|`cloudsearch`|`AWS_ENDPOINT_URL_CLOUDSEARCH`|`cloudsearch`|
 |CloudTrail|`cloudtrail`|`AWS_ENDPOINT_URL_CLOUDTRAIL`|`cloudtrail`|
 |CloudWatch|`cloudwatch`|`AWS_ENDPOINT_URL_CLOUDWATCH`|`cloudwatch`|
+|CloudWatch Omni|`cloudwatchomni`|`AWS_ENDPOINT_URL_CLOUDWATCHOMNI`|`cloudwatchomni`|
 |CodeArtifact|`codeartifact`|`AWS_ENDPOINT_URL_CODEARTIFACT`|`codeartifact`|
 |CodeBuild|`codebuild`|`AWS_ENDPOINT_URL_CODEBUILD`|`codebuild`|
 |CodeCatalyst|`codecatalyst`|`AWS_ENDPOINT_URL_CODECATALYST`|`codecatalyst`|
@@ -192,6 +194,7 @@ provider "aws" {
 |EMR|`emr`|`AWS_ENDPOINT_URL_EMR`|`emr`|
 |EMR Containers|`emrcontainers`|`AWS_ENDPOINT_URL_EMR_CONTAINERS`|`emr_containers`|
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
+|EventBridge V2|`eventbridgev2`|`AWS_ENDPOINT_URL_EVENTBRIDGEV2`|`eventbridgev2`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
 |Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
@@ -233,6 +236,7 @@ provider "aws" {
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
 |Lambda Core|`lambdacore`|`AWS_ENDPOINT_URL_LAMBDA_CORE`|`lambda_core`|
 |Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
+|Lambda Web|`lambdaweb`|`AWS_ENDPOINT_URL_LAMBDA_WEB`|`lambda_web`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -262,6 +266,7 @@ provider "aws" {
 |CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|Network Security Manager|`networksecuritymanager`|`AWS_ENDPOINT_URL_NETWORK_SECURITY_MANAGER`|`network_security_manager`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|

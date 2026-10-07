@@ -313,6 +313,21 @@ func resourceCluster() *schema.Resource {
 									},
 								},
 							},
+							"pod_gc_controller_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"terminated_pod_gc_threshold": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1561,6 +1576,29 @@ func expandKubeControllerManagerConfigRequest(tfList []any) *types.KubeControlle
 		apiObject.HorizontalPodAutoscalerControllerConfig = expandHorizontalPodAutoscalerControllerConfigRequest(v)
 	}
 
+	if v, ok := tfMap["pod_gc_controller_config"].([]any); ok && len(v) > 0 {
+		apiObject.PodGcControllerConfig = expandPodGcControllerConfigRequest(v)
+	}
+
+	return apiObject
+}
+
+func expandPodGcControllerConfigRequest(tfList []any) *types.PodGcControllerConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.PodGcControllerConfigRequest{}
+
+	if v, ok := tfMap["terminated_pod_gc_threshold"].(int); ok && v != 0 {
+		apiObject.TerminatedPodGcThreshold = aws.Int32(int32(v))
+	}
+
 	return apiObject
 }
 
@@ -2150,6 +2188,10 @@ func flattenKubeControllerManagerConfigResponse(apiObject *types.KubeControllerM
 		tfMap["horizontal_pod_autoscaler_controller_config"] = flattenHorizontalPodAutoscalerControllerConfigResponse(apiObject.HorizontalPodAutoscalerControllerConfig)
 	}
 
+	if apiObject.PodGcControllerConfig != nil {
+		tfMap["pod_gc_controller_config"] = flattenPodGcControllerConfigResponse(apiObject.PodGcControllerConfig)
+	}
+
 	return []any{tfMap}
 }
 
@@ -2162,6 +2204,20 @@ func flattenHorizontalPodAutoscalerControllerConfigResponse(apiObject *types.Hor
 
 	if apiObject.HorizontalPodAutoscalerSyncPeriod != nil {
 		tfMap["horizontal_pod_autoscaler_sync_period"] = aws.ToString(apiObject.HorizontalPodAutoscalerSyncPeriod)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenPodGcControllerConfigResponse(apiObject *types.PodGcControllerConfigResponse) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.TerminatedPodGcThreshold != nil {
+		tfMap["terminated_pod_gc_threshold"] = aws.ToInt32(apiObject.TerminatedPodGcThreshold)
 	}
 
 	return []any{tfMap}

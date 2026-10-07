@@ -13,10 +13,20 @@ func TestAccMailManager_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"Archive": {
+			acctest.CtBasic:      testAccMailManagerArchive_basic,
+			acctest.CtDisappears: testAccMailManagerArchive_disappears,
+			"update":             testAccMailManagerArchive_update,
+			"retention":          testAccMailManagerArchive_retention,
+			"Identity":           testAccMailManagerArchive_identitySerial,
+			"Tags":               testAccMailManagerArchive_tagsSerial,
+			"List":               testAccMailManagerArchive_listSerial,
+		},
 		"IngressPoint": {
 			acctest.CtBasic:                testAccMailManagerIngressPoint_basic,
 			acctest.CtDisappears:           testAccMailManagerIngressPoint_disappears,
 			"update":                       testAccMailManagerIngressPoint_update,
+			"statusToUpdate":               testAccMailManagerIngressPoint_statusToUpdate,
 			"tlsPolicy":                    testAccMailManagerIngressPoint_tlsPolicy,
 			"type":                         testAccMailManagerIngressPoint_type,
 			"networkConfiguration_public":  testAccMailManagerIngressPoint_networkConfiguration_public,

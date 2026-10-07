@@ -35,14 +35,6 @@ type listResourceTaskDefinition struct {
 func (l *listResourceTaskDefinition) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ECSClient(ctx)
 
-	var query listTaskDefinitionModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing ECS (Elastic Container) Task Definition")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input ecs.ListTaskDefinitionsInput
@@ -96,10 +88,6 @@ func (l *listResourceTaskDefinition) List(ctx context.Context, request list.List
 			}
 		}
 	}
-}
-
-type listTaskDefinitionModel struct {
-	framework.WithRegionModel
 }
 
 func listTaskDefinitions(ctx context.Context, conn *ecs.Client, input *ecs.ListTaskDefinitionsInput) iter.Seq2[string, error] {

@@ -34,14 +34,6 @@ type trainingJobListResource struct {
 func (l *trainingJobListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SageMakerClient(ctx)
 
-	var query listTrainingJobModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input sagemaker.ListTrainingJobsInput
 
@@ -92,10 +84,6 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 			}
 		}
 	}
-}
-
-type listTrainingJobModel struct {
-	framework.WithRegionModel
 }
 
 func listTrainingJobs(ctx context.Context, conn *sagemaker.Client, input *sagemaker.ListTrainingJobsInput) iter.Seq2[awstypes.TrainingJobSummary, error] {

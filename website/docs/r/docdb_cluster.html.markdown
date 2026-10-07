@@ -49,6 +49,8 @@ This resource supports the following arguments:
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the DB cluster can be created in.
   DocumentDB automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
   We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
+  At most 3 AZs can be configured.
+  **Note:** Do not set `availability_zones` to the output of a data source such as [`aws_availability_zones`](/docs/providers/aws/d/availability_zones.html), as this may be subject to change (for example, when a new AZ is added to a Region). Because changing `availability_zones` forces replacement, any change to the set of values will plan to destroy and recreate the cluster. Always use an explicit, static list of AZs.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
@@ -59,17 +61,13 @@ This resource supports the following arguments:
    The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `docdb`. Valid values: `docdb`.
-* `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
-    when this DB cluster is deleted. If omitted, no final snapshot will be
-    made.
+* `final_snapshot_identifier` - (Optional) The name of your final DB snapshot when this DB cluster is deleted. If omitted, no final snapshot will be made.
 * `global_cluster_identifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `manage_master_user_password` - (Optional) Set to `true` to allow Amazon DocumentDB to manage the master user password in AWS Secrets Manager. Cannot be set if `master_password` or `master_password_wo` is provided.
-* `master_password` - (Optional, required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password_wo` and `manage_master_user_password`.
-* `master_password_wo` - (Optional, Write-Only, required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password` and `manage_master_user_password`.
-* `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
+* `master_password` - (Optional, required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password_wo` and `manage_master_user_password`.
+* `master_password_wo` - (Optional, Write-Only, required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this will show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password` and `manage_master_user_password`. If set, requires `master_password_wo_version` to be set.
+* `master_password_wo_version` - (Optional) Required when `master_password_wo` is set. Changing this value triggers an update to `master_password_wo`.
 * `master_username` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `network_type` - The network type of the DB cluster (`IPV4` or `DUAL`).
 * `port` - (Optional) The port on which the DB accepts connections

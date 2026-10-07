@@ -1,10 +1,12 @@
 resource "aws_dynamodb_table_replica" "test" {
+{{- template "region" }}
   global_table_arn = aws_dynamodb_table.test.arn
 {{- template "tags" . }}
 }
 
 resource "aws_dynamodb_table" "test" {
-  provider         = "awsalternate"
+  region = var.secondary_region
+
   name             = var.rName
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"

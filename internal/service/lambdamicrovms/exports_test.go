@@ -4,6 +4,9 @@
 package lambdamicrovms
 
 var (
-	FindImageByARN = findImageByARN
-	ResourceImage  = newImageResource
+	ResourceImage   = newImageResource
+	ResourceMicroVM = newMicroVMResource
+
+	FindImageByARN  = findImageByARN
+	FindMicroVMByID = findMicroVMByID
 )

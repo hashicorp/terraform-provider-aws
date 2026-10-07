@@ -7,6 +7,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -54,7 +55,6 @@ import (
 // @Testing(generator="testAccRandomAgentRuntimeName(t)")
 // @Testing(importStateIdAttribute="agent_runtime_id")
 // @Testing(preCheck="testAccPreCheckAgentRuntimes")
-// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeResource{}
 
@@ -99,6 +99,16 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				Optional:   true,
 			},
 			"lifecycle_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[lifecycleConfigurationModel](ctx),
+			"platform_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("V1", "V2"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -227,8 +237,8 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					},
 				},
 			},
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
-			"filesystem_configuration": filesystemConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
+			"filesystem_configuration": filesystemConfigurationBlock(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -307,12 +317,12 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
-func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+func authorizerConfigurationBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
-		Validators: []validator.List{
+		Validators: append([]validator.List{
 			listvalidator.SizeAtMost(1),
-		},
+		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
 			Validators: []validator.Object{
 				tfobjectvalidator.ExactlyOneOfChildren(
@@ -448,29 +458,8 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
-							"private_endpoint": privateEndpointSchema(ctx),
-							"private_endpoint_overrides": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
-								Validators: []validator.List{
-									listvalidator.SizeAtMost(5),
-								},
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										names.AttrDomain: schema.StringAttribute{
-											Required: true,
-											Validators: []validator.String{
-												stringvalidator.LengthBetween(1, 253),
-											},
-										},
-									},
-									Blocks: map[string]schema.Block{
-										// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
-										// enforce it offline so a missing private_endpoint fails at plan
-										// instead of a client-side SDK error at apply.
-										"private_endpoint": privateEndpointSchema(ctx, listvalidator.IsRequired()),
-									},
-								},
-							},
+							"private_endpoint":           privateEndpointBlock(ctx),
+							"private_endpoint_overrides": privateEndpointOverrideBlock(ctx),
 						},
 					},
 				},
@@ -479,7 +468,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func privateEndpointSchema(ctx context.Context, extraValidators ...validator.List) schema.ListNestedBlock {
+func privateEndpointBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
 		Validators: append([]validator.List{
@@ -534,9 +523,14 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 						listvalidator.SizeAtMost(1),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("resource_configuration_identifier"),
+							),
+						},
 						Attributes: map[string]schema.Attribute{
 							"resource_configuration_identifier": schema.StringAttribute{
-								Required: true,
+								Optional: true,
 							},
 						},
 					},
@@ -546,12 +540,37 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 	}
 }
 
-func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+func privateEndpointOverrideBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+		Validators: append([]validator.List{
+			listvalidator.SizeAtMost(5),
+		}, extraValidators...),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrDomain: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 253),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
+				// enforce it offline so a missing private_endpoint fails at plan
+				// instead of a client-side SDK error at apply.
+				"private_endpoint": privateEndpointBlock(ctx, listvalidator.IsRequired()),
+			},
+		},
+	}
+}
+
+func filesystemConfigurationBlock(ctx context.Context, extraValidators ...validator.List) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[filesystemConfigurationModel](ctx),
-		Validators: []validator.List{
+		Validators: append([]validator.List{
 			listvalidator.SizeAtMost(5),
-		},
+		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
 			Validators: []validator.Object{
 				tfobjectvalidator.ExactlyOneOfChildren(
@@ -798,9 +817,18 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 		new.AuthorizerConfiguration = authorizerConfiguration
 
-		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		updated, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
+		}
+
+		// UpdateAgentRuntime doesn't return the platform version, so take it from the
+		// runtime the waiter read back rather than trusting the planned value. Leave a
+		// null plan alone: it only comes from state saved before this argument existed,
+		// and Terraform rejects any change to a known planned value.
+		if updated != nil && !new.PlatformVersion.IsNull() {
+			new.PlatformVersion = fwflex.StringToFramework(ctx, updated.PlatformVersion)
 		}
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
@@ -858,6 +886,7 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -875,6 +904,7 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -891,6 +921,7 @@ func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -953,6 +984,7 @@ type agentRuntimeResourceModel struct {
 	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]    `tfsdk:"filesystem_configuration"`
 	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
 	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
+	PlatformVersion            types.String                                                     `tfsdk:"platform_version"`
 	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
 	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`

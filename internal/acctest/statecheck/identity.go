@@ -77,6 +77,8 @@ func (v *identity) Checks() func() map[string]knownvalue.Check {
 					} else {
 						checks[k] = knownvalue.StringExact(v.String())
 					}
+				case bool:
+					checks[k] = knownvalue.Bool(v)
 				default:
 					checks[k] = knownvalue.StringExact(fmt.Sprintf("%v", val))
 				}

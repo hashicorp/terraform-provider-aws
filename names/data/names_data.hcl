@@ -1032,6 +1032,36 @@ service "bedrockagentcore" {
   brand                    = "Amazon"
 }
 
+service "bedrockruntime" {
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-runtime"
+    aws_cli_v2_command_no_dashes = "bedrockruntime"
+  }
+
+  sdk {
+    id            = "Bedrock Runtime"
+    arn_namespace = "bedrock"
+  }
+
+  names {
+    provider_name_upper = "BedrockRuntime"
+    human_friendly      = "Bedrock Runtime"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "InvokeModel"
+    endpoint_api_params = "Body: []byte(\"{}\"), ModelId: aws.String(\"test\")"
+  }
+
+  resource_prefix {
+    correct = "aws_bedrockruntime_"
+  }
+
+  provider_package_correct = "bedrockruntime"
+  doc_prefix               = ["bedrockruntime_"]
+  brand                    = "Amazon"
+}
+
 service "bcmdataexports" {
   sdk {
     id            = "BCM Data Exports"
@@ -1843,6 +1873,30 @@ service "networkflowmonitor" {
 
   provider_package_correct = "networkflowmonitor"
   doc_prefix               = ["networkflowmonitor_"]
+  brand                    = "Amazon"
+}
+
+service "cloudwatchomni" {
+  sdk {
+    id            = "CloudWatchOmni"
+    arn_namespace = "cloudwatch"
+  }
+
+  names {
+    provider_name_upper = "CloudWatchOmni"
+    human_friendly      = "CloudWatch Omni"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListDomains"
+  }
+
+  resource_prefix {
+    correct = "aws_cloudwatchomni_"
+  }
+
+  provider_package_correct = "cloudwatchomni"
+  doc_prefix               = ["cloudwatchomni_"]
   brand                    = "Amazon"
 }
 
@@ -3875,6 +3929,30 @@ service "events" {
   brand                    = "AWS"
 }
 
+service "eventbridgev2" {
+  sdk {
+    id            = "EventBridgeV2"
+    arn_namespace = "events"
+  }
+
+  names {
+    provider_name_upper = "EventBridgeV2"
+    human_friendly      = "EventBridge V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEventBuses"
+  }
+
+  resource_prefix {
+    correct = "aws_eventbridgev2_"
+  }
+
+  provider_package_correct = "eventbridgev2"
+  doc_prefix               = ["eventbridgev2_"]
+  brand                    = "AWS"
+}
+
 service "schemas" {
   sdk {
     id            = "schemas"
@@ -5232,6 +5310,30 @@ service "lambdamicrovms" {
   brand      = "AWS"
 }
 
+service "lambdaweb" {
+  sdk {
+    id             = "Lambda Web"
+    arn_namespace  = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaWeb"
+    human_friendly      = "Lambda Web"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWebFunctions"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdaweb_"
+  }
+
+  provider_package_correct = "lambdaweb"
+  doc_prefix               = ["lambdaweb_"]
+  brand                    = "AWS"
+}
+
 service "launchwizard" {
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"
@@ -6249,6 +6351,35 @@ service "networkmanager" {
   brand                    = "AWS"
 
   is_global = true
+}
+
+service "networksecuritymanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "network-security-manager"
+    aws_cli_v2_command_no_dashes = "networksecuritymanager"
+  }
+
+  sdk {
+    id            = "Network Security Manager"
+    arn_namespace = "network-security-manager"
+  }
+
+  names {
+    provider_name_upper = "NetworkSecurityManager"
+    human_friendly      = "Network Security Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListScopes"
+  }
+
+  resource_prefix {
+    correct = "aws_networksecuritymanager_"
+  }
+
+  provider_package_correct = "networksecuritymanager"
+  doc_prefix               = ["networksecuritymanager_"]
+  brand                    = "AWS"
 }
 
 service "nimble" {

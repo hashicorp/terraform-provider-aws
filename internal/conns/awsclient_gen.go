@@ -40,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -57,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
@@ -116,6 +118,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -156,6 +159,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
+	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -184,6 +188,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
@@ -415,6 +420,10 @@ func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcor
 	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
 }
 
+func (c *AWSClient) BedrockRuntimeClient(ctx context.Context) *bedrockruntime.Client {
+	return errs.Must(client[*bedrockruntime.Client](ctx, c, names.BedrockRuntime, make(map[string]any)))
+}
+
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
 	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
 }
@@ -485,6 +494,10 @@ func (c *AWSClient) CloudTrailClient(ctx context.Context) *cloudtrail.Client {
 
 func (c *AWSClient) CloudWatchClient(ctx context.Context) *cloudwatch.Client {
 	return errs.Must(client[*cloudwatch.Client](ctx, c, names.CloudWatch, make(map[string]any)))
+}
+
+func (c *AWSClient) CloudWatchOmniClient(ctx context.Context) *cloudwatchomni.Client {
+	return errs.Must(client[*cloudwatchomni.Client](ctx, c, names.CloudWatchOmni, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeArtifactClient(ctx context.Context) *codeartifact.Client {
@@ -715,6 +728,10 @@ func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservi
 	return errs.Must(client[*elasticsearchservice.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
+func (c *AWSClient) EventBridgeV2Client(ctx context.Context) *eventbridgev2.Client {
+	return errs.Must(client[*eventbridgev2.Client](ctx, c, names.EventBridgeV2, make(map[string]any)))
+}
+
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge.Client {
 	return errs.Must(client[*eventbridge.Client](ctx, c, names.Events, make(map[string]any)))
 }
@@ -875,6 +892,10 @@ func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Cl
 	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
 }
 
+func (c *AWSClient) LambdaWebClient(ctx context.Context) *lambdaweb.Client {
+	return errs.Must(client[*lambdaweb.Client](ctx, c, names.LambdaWeb, make(map[string]any)))
+}
+
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {
 	return errs.Must(client[*launchwizard.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
@@ -989,6 +1010,10 @@ func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Cl
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Client {
 	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
+}
+
+func (c *AWSClient) NetworkSecurityManagerClient(ctx context.Context) *networksecuritymanager.Client {
+	return errs.Must(client[*networksecuritymanager.Client](ctx, c, names.NetworkSecurityManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {

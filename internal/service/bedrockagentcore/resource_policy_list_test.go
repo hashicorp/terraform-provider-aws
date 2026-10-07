@@ -25,7 +25,6 @@ import (
 func TestAccBedrockAgentCoreResourcePolicy_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName1 := "aws_bedrockagentcore_resource_policy.test[0]"
 	resourceName2 := "aws_bedrockagentcore_resource_policy.test[1]"
 	rName := randomWithPrefixAndUnderscore(t)
@@ -48,7 +47,6 @@ func TestAccBedrockAgentCoreResourcePolicy_List_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
-					"AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -66,7 +64,6 @@ func TestAccBedrockAgentCoreResourcePolicy_List_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
-					"AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_resource_policy.test", identity1.Checks()),
@@ -85,7 +82,6 @@ func TestAccBedrockAgentCoreResourcePolicy_List_basic(t *testing.T) {
 func TestAccBedrockAgentCoreResourcePolicy_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName1 := "aws_bedrockagentcore_resource_policy.test[0]"
 	rName := randomWithPrefixAndUnderscore(t)
 
@@ -106,7 +102,6 @@ func TestAccBedrockAgentCoreResourcePolicy_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					"AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -121,7 +116,6 @@ func TestAccBedrockAgentCoreResourcePolicy_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					"AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_resource_policy.test", identity1.Checks()),

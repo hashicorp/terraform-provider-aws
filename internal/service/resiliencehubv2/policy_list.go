@@ -38,14 +38,6 @@ type policyListResource struct {
 func (l *policyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ResilienceHubV2Client(ctx)
 
-	var query listPolicyModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input resiliencehubv2.ListPoliciesInput
 		for item, err := range listPolicies(ctx, conn, &input) {
@@ -96,10 +88,6 @@ func (l *policyListResource) List(ctx context.Context, request list.ListRequest,
 			}
 		}
 	}
-}
-
-type listPolicyModel struct {
-	framework.WithRegionModel
 }
 
 func listPolicies(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListPoliciesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.PolicySummary, error] {

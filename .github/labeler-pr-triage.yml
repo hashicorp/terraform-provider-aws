@@ -364,6 +364,12 @@ service/bedrockagentcore:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagentcore/**/*'
               - 'website/**/bedrockagentcore_*'
+service/bedrockruntime:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockruntime/**/*'
+              - 'website/**/bedrockruntime_*'
 service/billing:
   - any:
       - changed-files:
@@ -513,6 +519,12 @@ service/cloudwatch:
               - 'website/**/cloudwatch_composite_*'
               - 'website/**/cloudwatch_contributor_*'
               - 'website/**/cloudwatch_otel_*'
+service/cloudwatchomni:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/cloudwatchomni/**/*'
+              - 'website/**/cloudwatchomni_*'
 service/codeartifact:
   - any:
       - changed-files:
@@ -967,6 +979,12 @@ service/emrserverless:
           - any-glob-to-any-file:
               - 'internal/service/emrserverless/**/*'
               - 'website/**/emrserverless_*'
+service/eventbridgev2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/eventbridgev2/**/*'
+              - 'website/**/eventbridgev2_*'
 service/events:
   - any:
       - changed-files:
@@ -1365,6 +1383,12 @@ service/lambdamicrovms:
           - any-glob-to-any-file:
               - 'internal/service/lambdamicrovms/**/*'
               - 'website/**/lambdamicrovms_*'
+service/lambdaweb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/lambdaweb/**/*'
+              - 'website/**/lambdaweb_*'
 service/launchwizard:
   - any:
       - changed-files:
@@ -1673,6 +1697,12 @@ service/networkmonitor:
           - any-glob-to-any-file:
               - 'internal/service/networkmonitor/**/*'
               - 'website/**/networkmonitor_*'
+service/networksecuritymanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networksecuritymanager/**/*'
+              - 'website/**/networksecuritymanager_*'
 service/nimble:
   - any:
       - changed-files:

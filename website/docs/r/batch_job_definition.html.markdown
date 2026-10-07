@@ -342,7 +342,7 @@ The following arguments are optional:
 #### `env` Block
 
 * `name` - (Required) Name of the environment variable.
-* `value` - (Optional) Value of the environment variable.
+* `value` - (Required) Value of the environment variable.
 
 #### `resources` Block
 
@@ -351,8 +351,8 @@ The following arguments are optional:
 
 #### `volume_mounts` Block
 
-* `mount_path` - (Optional) Path on the container where the volume is mounted.
-* `name` - (Optional) Name the volume mount. This must match the name of one of the volumes in the pod.
+* `mount_path` - (Required) Path on the container where the volume is mounted.
+* `name` - (Required) Name the volume mount. This must match the name of one of the volumes in the pod.
 * `read_only` - (Optional) Whether the container has read-only access to the volume. The default value is `false`.
 
 #### `volumes` Block
@@ -365,11 +365,11 @@ The following arguments are optional:
 #### `empty_dir` Block
 
 * `medium` - (Optional) Medium to store the volume. The default value is an empty string, which uses the storage of the node.
-* `size_limit` - (Optional) Maximum size of the volume. By default, there's no maximum size defined.
+* `size_limit` - (Required) Maximum size of the volume. By default, there's no maximum size defined.
 
 #### `host_path` Block
 
-* `path` - (Optional) Path of the file or directory on the host to mount into containers on the pod.
+* `path` - (Required) Path of the file or directory on the host to mount into containers on the pod.
 
 #### `metadata` Block
 
@@ -380,7 +380,7 @@ The following arguments are optional:
 * `optional` - (Optional) Whether the secret or the secret's keys must be defined.
 * `secret_name` - (Required) Name of the secret. The name must be allowed as a DNS subdomain name.
 
-##### `security_context` Block
+#### `security_context` Block
 
 * `allow_privilege_escalation` - (Optional) Whether or not a container or a Kubernetes pod is allowed to gain more privileges than its parent process. The default value is `false`.
 * `privileged` - (Optional) When this parameter is `true`, the container is given elevated permissions on the host container instance. The level of permissions are similar to the root user permissions. The default value is `false`.

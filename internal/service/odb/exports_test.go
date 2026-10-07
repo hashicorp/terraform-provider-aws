@@ -5,14 +5,20 @@ package odb
 
 // Exports for use in tests only.
 var (
-	ResourceCloudAutonomousVMCluster   = newResourceCloudAutonomousVmCluster
-	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
-	ResourceExaDBVMCluster             = newExaDBVMClusterResource
-	ResourceExascaleDBStorageVault     = newExascaleDBStorageVaultResource
+	ListTags = listTags
 
-	FindCloudAutonomousVmClusterByID  = findCloudAutonomousVmClusterByID
-	FindExadataInfraResourceByID      = findExadataInfraResourceByID
-	FindCloudVmClusterForResourceByID = findCloudVmClusterForResourceByID
-	FindExaDBVMClusterByID            = findExaDBVMClusterByID
-	FindExascaleDBStorageVaultByID    = findExascaleDBStorageVaultByID
+	ResourceCloudAutonomousVMCluster                    = newResourceCloudAutonomousVmCluster
+	ResourceAutonomousDatabase                          = newResourceAutonomousDatabase
+	ResourceAutonomousDatabaseSecretsManagerIntegration = newResourceAutonomousDatabaseSecretsManagerIntegration
+	ResourceCloudExadataInfrastructure                  = newResourceCloudExadataInfrastructure
+	ResourceExaDBVMCluster                              = newExaDBVMClusterResource
+	ResourceExascaleDBStorageVault                      = newExascaleDBStorageVaultResource
+
+	FindCloudAutonomousVmClusterByID                = findCloudAutonomousVmClusterByID
+	FindAutonomousDatabaseByID                      = findAutonomousDatabaseByID
+	FindAutonomousDatabaseSecretsManagerIntegration = findAutonomousDatabaseSecretsManagerIntegration
+	FindExadataInfraResourceByID                    = findExadataInfraResourceByID
+	FindCloudVmClusterForResourceByID               = findCloudVmClusterForResourceByID
+	FindExaDBVMClusterByID                          = findExaDBVMClusterByID
+	FindExascaleDBStorageVaultByID                  = findExascaleDBStorageVaultByID
 )

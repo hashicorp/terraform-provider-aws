@@ -319,15 +319,15 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 func PreCheck(ctx context.Context, t *testing.T) {
 	t.Helper()
 
+	envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
+
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
+	}
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
-
-		if os.Getenv(envvar.AccessKeyId) != "" {
-			envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
-		}
-
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
 		// a provider configuration with a region. This defaults to us-west-2 for provider
 		// developer simplicity and has been in the codebase for a very long time.
@@ -1897,6 +1897,10 @@ func PreCheckAssumeRoleARN(t *testing.T) {
 
 type domainName string
 
+func NewDomainName(name string) domainName {
+	return domainName(name)
+}
+
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
 const domainNameTestTopLevelDomain domainName = "test"
@@ -1908,6 +1912,13 @@ const domainNameTestTopLevelDomain domainName = "test"
 func RandomSubdomain(t *testing.T) string {
 	t.Helper()
 	return string(RandomDomain(t).RandomSubdomain(t))
+}
+
+// RandomSubdomainForRoot creates a random subdomain for the given root domain in the form
+// "<random>.<root>"
+func RandomSubdomainForRoot(t *testing.T, root string) string {
+	t.Helper()
+	return string(NewDomainName(root).RandomSubdomain(t))
 }
 
 // RandomDomainName creates a random two-level domain name in the form
@@ -2284,6 +2295,13 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	return envvar.SkipIfEmpty(t, key, "")
 }
 
+// SkipIfEnvVarNotTrue skips the current test if the specified environment variable is not set
+// to a true value.
+func SkipIfEnvVarNotTrue(t *testing.T, key string) {
+	t.Helper()
+	envvar.SkipIfNotTrue(t, key, "")
+}
+
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
 // The absolute path to the executable is returned.
 func SkipIfExeNotOnPath(t *testing.T, file string) string {
@@ -2322,6 +2340,22 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*t
 	for group, m := range testCases {
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
+		})
+	}
+}
+
+// RunLimitedConcurrencyTests1Level runs test cases with concurrency limited via `semaphore`.
+func RunLimitedConcurrencyTests1Level(t *testing.T, semaphore tfsync.Semaphore, testCases map[string]func(*testing.T, tfsync.Semaphore)) {
+	t.Helper()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Cleanup(func() {
+				if os.Getenv(resource.EnvTfAcc) != "" {
+					semaphore.Notify()
+				}
+			})
+			tc(t, semaphore)
 		})
 	}
 }

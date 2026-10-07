@@ -44,7 +44,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the bucket.
-* `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow). [See below](#cors_rule). You can configure up to 100 rules.
+* `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow). [See below](#cors_rule-block). You can configure up to 100 rules.
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated:**) Account ID of the expected bucket owner.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 

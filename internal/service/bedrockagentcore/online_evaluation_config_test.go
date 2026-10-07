@@ -34,6 +34,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		// aws_xray_trace_segment_destination not correctly configured:
 		"X-Ray Delivery Destination is supported with CloudWatch",
 		"log groups do not exist",
+		"Connector integration web-search is not available",
 	)
 }
 

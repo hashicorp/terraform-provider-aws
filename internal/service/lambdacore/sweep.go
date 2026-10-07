@@ -17,7 +17,7 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_lambdacore_network_connector", sweepNetworkConnectors)
+	awsv2.Register("aws_lambdacore_network_connector", sweepNetworkConnectors, "aws_lambdamicrovms_microvm")
 }
 
 func sweepNetworkConnectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

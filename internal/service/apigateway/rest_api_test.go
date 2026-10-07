@@ -1527,6 +1527,49 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	})
 }
 
+// Regression test: a body-only update must not wipe a policy managed by
+// aws_api_gateway_rest_api_policy (regression introduced by #48118).
+func TestAccAPIGatewayRestAPI_Policy_setByPolicyResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_policySetByPolicyResource(rName, "/test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					// aws_api_gateway_rest_api is read before aws_api_gateway_rest_api_policy
+					// runs, so check the policy resource's own attribute here.
+					resource.TestMatchResourceAttr("aws_api_gateway_rest_api_policy.test", names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
+				),
+			},
+			// Body-only update must not wipe the policy set by aws_api_gateway_rest_api_policy.
+			// The inter-step refresh populates aws_api_gateway_rest_api.test.policy from AWS,
+			// which the fix then restores after PutRestApi clears it.
+			{
+				Config: testAccRestAPIConfig_policySetByPolicyResource(rName, "/test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					testAccCheckRestAPIRoutes(ctx, t, &conf, []string{"/", "/test2"}),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_api_gateway_rest_api_policy.test", plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayRestAPI_Description_updateAttributeAndBody(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -2895,6 +2938,67 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName, bodyPolicyEffect)
+}
+
+func testAccRestAPIConfig_policySetByPolicyResource(rName string, bodyPath string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      %[2]q = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://api.example.com/"
+          }
+        }
+      }
+    }
+  })
+}
+
+resource "aws_api_gateway_rest_api_policy" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "execute-api:Invoke"
+        Condition = {
+          IpAddress = {
+            "aws:SourceIp" = "123.123.123.123/32"
+          }
+        }
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Resource = "*"
+      }
+    ]
+  })
+}
+`, rName, bodyPath)
 }
 
 func testAccRestAPIConfig_failOnWarnings(rName string, title string, failOnWarnings string) string {
