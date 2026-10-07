@@ -277,6 +277,34 @@ func TestAccRedshiftServerlessNamespace_manageAdminPassword(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessNamespace_redshiftIDCApplicationARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_namespace.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceConfig_redshiftIDCApplicationARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_idc_application_arn", "aws_redshift_idc_application.test", "redshift_idc_application_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"redshift_idc_application_arn"},
+			},
+		},
+	})
+}
+
 func testAccCheckNamespaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
@@ -439,6 +467,60 @@ func testAccNamespaceConfig_manageAdminPassword(rName string) string {
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name        = %[1]q
   manage_admin_password = true
+}
+`, rName)
+}
+
+func testAccNamespaceConfig_redshiftIDCApplicationARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/service-role/"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "redshift-serverless.amazonaws.com",
+                    "redshift.amazonaws.com"
+                ]
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+EOF
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test1" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSSSOMemberAccountAdministrator"
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonRedshiftFullAccess"
+}
+
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_redshift_idc_application" "test" {
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  identity_namespace            = %[1]q
+  redshift_idc_application_name = %[1]q
+}
+
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name               = %[1]q
+  redshift_idc_application_arn = aws_redshift_idc_application.test.redshift_idc_application_arn
 }
 `, rName)
 }
