@@ -337,7 +337,7 @@ require (
 	go.opentelemetry.io/otel v1.46.0
 	golang.org/x/crypto v0.57.0
 	golang.org/x/text v0.42.0
-	golang.org/x/tools v0.50.0
+	golang.org/x/tools v0.51.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.7
 )
 
