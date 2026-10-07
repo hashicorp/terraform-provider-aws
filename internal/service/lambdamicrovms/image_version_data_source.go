@@ -57,6 +57,8 @@ func (d *imageVersionDataSource) Schema(ctx context.Context, req datasource.Sche
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
 			},
+			"code_artifact":     framework.DataSourceComputedListOfObjectAttribute[codeArtifactModel](ctx),
+			"cpu_configuration": framework.DataSourceComputedListOfObjectAttribute[cpuConfigurationModel](ctx),
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -74,6 +76,7 @@ func (d *imageVersionDataSource) Schema(ctx context.Context, req datasource.Sche
 				ElementType: types.StringType,
 				Computed:    true,
 			},
+			"hooks": framework.DataSourceComputedListOfObjectAttribute[hooksModel](ctx),
 			"image_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
@@ -84,6 +87,8 @@ func (d *imageVersionDataSource) Schema(ctx context.Context, req datasource.Sche
 			"image_version": schema.StringAttribute{
 				Required: true,
 			},
+			"logging":           framework.DataSourceComputedListOfObjectAttribute[imageVersionLoggingModel](ctx),
+			names.AttrResources: framework.DataSourceComputedListOfObjectAttribute[resourcesModel](ctx),
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.MicrovmImageVersionState](),
 				Computed:   true,
@@ -99,130 +104,6 @@ func (d *imageVersionDataSource) Schema(ctx context.Context, req datasource.Sche
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"code_artifact": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[codeArtifactModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrURI: schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
-			"cpu_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[cpuConfigurationModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"architecture": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.Architecture](),
-							Computed:   true,
-						},
-					},
-				},
-			},
-			"hooks": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[hooksModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrPort: schema.Int32Attribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"microvm_hooks": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[microVMHooksModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"resume": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
-										Computed:   true,
-									},
-									"resume_timeout_in_seconds": schema.Int32Attribute{
-										Computed: true,
-									},
-									"run": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
-										Computed:   true,
-									},
-									"run_timeout_in_seconds": schema.Int32Attribute{
-										Computed: true,
-									},
-									"suspend": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
-										Computed:   true,
-									},
-									"suspend_timeout_in_seconds": schema.Int32Attribute{
-										Computed: true,
-									},
-									"terminate": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
-										Computed:   true,
-									},
-									"terminate_timeout_in_seconds": schema.Int32Attribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"microvm_image_hooks": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[microVMImageHooksModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"ready": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
-										Computed:   true,
-									},
-									"ready_timeout_in_seconds": schema.Int32Attribute{
-										Computed: true,
-									},
-									"validate": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
-										Computed:   true,
-									},
-									"validate_timeout_in_seconds": schema.Int32Attribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"logging": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[imageVersionLoggingModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"cloudwatch": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLoggingModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"log_group": schema.StringAttribute{
-										Computed: true,
-									},
-									"log_stream": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-						"disabled": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[loggingDisabledModel](ctx),
-						},
-					},
-				},
-			},
-			names.AttrResources: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"minimum_memory_in_mib": schema.Int32Attribute{
-							Computed: true,
-						},
-					},
-				},
 			},
 		},
 	}
