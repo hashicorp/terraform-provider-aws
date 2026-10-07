@@ -11,7 +11,7 @@ on:
   pull_request:
     paths:
       - "**/*.go"
-      - .github/workflows/smarterr_check.yml
+      - .github/workflows/smarterr.yml
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -27,8 +27,8 @@ jobs:
     name: Check smarterr config
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -51,7 +51,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       # long-running test
-      - uses: YakDriver/check-smarterr-config@afed5350c8ce432ad869983086dc4a582520c22e # v0.4.0
+      - uses: YakDriver/check-smarterr-config@95df6d72d779a31494ca9d35ef264aed66a02ab3 # v0.6.0
         name: Check smarterr config
         with:
           base-dir: './internal'

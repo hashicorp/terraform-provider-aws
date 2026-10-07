@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appstream_stack: Fix `embed_host_domains` not being sent to the AWS API on update, which caused a permanent plan diff when the argument was added or changed on an existing stack
+```

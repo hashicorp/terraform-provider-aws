@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Underlying Terraform Plugin SDK update to ensure data source errors include configuration source (file and line)
-```

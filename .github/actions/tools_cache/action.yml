@@ -1,0 +1,62 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Tools Cache
+description: >-
+  Set up Go for the .ci/tools module and restore the tools cache lane (installed
+  binaries + build cache) read-only. The cache is written by the tools_cache
+  writer job in provider.yml on refs/heads/main. Unless the cache matches the
+  current .ci/tools go.mod and go.sum exactly, the requested tools are
+  installed. See .github/workflows/README.md for the overall caching strategy.
+
+inputs:
+  tools:
+    description: >-
+      Space- or newline-separated list of .ci/tools import paths to install
+      unless the tools cache matches .ci/tools exactly (e.g.
+      github.com/client9/misspell/cmd/misspell).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: .ci/tools/go.mod
+        # Disabled: this action manages the tools cache lane itself.
+        cache: false
+
+    - name: Capture Go cache locations
+      shell: bash
+      run: |
+        echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_ENV"
+        echo "GOBIN_PATH=$(go env GOPATH)/bin" >> "$GITHUB_ENV"
+
+    # Read-only restore (actions/cache/restore never saves). The exact key is
+    # the writer's key for the current .ci/tools; restore-keys falls back to the
+    # newest entry, whose binaries may be older versions.
+    - name: Restore tools cache
+      id: cache-tools
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      continue-on-error: true
+      with:
+        path: |
+          ${{ env.GOBIN_PATH }}
+          ${{ env.GOCACHE }}
+        key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-tools-go-
+
+    # Install unless the restored binaries match .ci/tools exactly. A partial
+    # hit holds a previous toolset (for example, before a tool bump, until the
+    # writer saves the new entry), so its binaries can't be trusted; its build
+    # cache still makes this install fast.
+    - name: Install tools (unless exact cache hit)
+      if: steps.cache-tools.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        TOOLS: ${{ inputs.tools }}
+      run: |
+        cd .ci/tools
+        # shellcheck disable=SC2086
+        go install $TOOLS

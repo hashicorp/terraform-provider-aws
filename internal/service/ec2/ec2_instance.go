@@ -1201,7 +1201,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var output *ec2.RunInstancesOutput
-	for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+	for l := backoff.NewLoop(ctx, iamPropagationTimeout); l.Continue(ctx); {
 		output, err = conn.RunInstances(ctx, &input)
 
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1655,7 +1655,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				UserData: &awstypes.BlobAttributeValue{
+				UserData: &awstypes.SecureBlobAttributeValue{
 					Value: v,
 				},
 			}
@@ -1675,7 +1675,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				UserData: &awstypes.BlobAttributeValue{
+				UserData: &awstypes.SecureBlobAttributeValue{
 					Value: v,
 				},
 			}

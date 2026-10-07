@@ -190,6 +190,12 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
+	resourceInstanceProfileFlatten(ctx, instanceProfile, d)
+
+	return diags
+}
+
+func resourceInstanceProfileFlatten(ctx context.Context, instanceProfile *awstypes.InstanceProfile, d *schema.ResourceData) {
 	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
 	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
@@ -206,8 +212,6 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
 
 	setTagsOut(ctx, instanceProfile.Tags)
-
-	return diags
 }
 
 func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

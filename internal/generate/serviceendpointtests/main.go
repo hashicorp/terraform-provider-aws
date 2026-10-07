@@ -35,6 +35,7 @@ func main() {
 
 		switch packageName {
 		case "acm", // ServiceType is required
+			"agentregistry",           // No FIPS support
 			"arcregionswitch",         // Resolver modifies URL
 			"cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",            // Bearer auth token needs special handling

@@ -71,9 +71,9 @@ func resourceSpotInstanceRequest() *schema.Resource {
 					continue
 				}
 				// Copy-on-write
-				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				x := new(*v)
 				x.ForceNew = true
-				s[k] = &x
+				s[k] = x
 			}
 
 			s["instance_interruption_behavior"] = &schema.Schema{

@@ -9,8 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
@@ -38,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -55,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
@@ -91,6 +95,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -113,6 +118,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -151,6 +157,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
@@ -161,6 +168,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -180,6 +188,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
@@ -210,6 +219,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
+	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -314,6 +324,14 @@ func (c *AWSClient) AccountClient(ctx context.Context) *account.Client {
 	return errs.Must(client[*account.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
+func (c *AWSClient) AccountAccessClient(ctx context.Context) *accountaccess.Client {
+	return errs.Must(client[*accountaccess.Client](ctx, c, names.AccountAccess, make(map[string]any)))
+}
+
+func (c *AWSClient) AgentRegistryClient(ctx context.Context) *agentregistrycontrol.Client {
+	return errs.Must(client[*agentregistrycontrol.Client](ctx, c, names.AgentRegistry, make(map[string]any)))
+}
+
 func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify.Client {
 	return errs.Must(client[*amplify.Client](ctx, c, names.Amplify, make(map[string]any)))
 }
@@ -402,6 +420,10 @@ func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcor
 	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
 }
 
+func (c *AWSClient) BedrockRuntimeClient(ctx context.Context) *bedrockruntime.Client {
+	return errs.Must(client[*bedrockruntime.Client](ctx, c, names.BedrockRuntime, make(map[string]any)))
+}
+
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
 	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
 }
@@ -472,6 +494,10 @@ func (c *AWSClient) CloudTrailClient(ctx context.Context) *cloudtrail.Client {
 
 func (c *AWSClient) CloudWatchClient(ctx context.Context) *cloudwatch.Client {
 	return errs.Must(client[*cloudwatch.Client](ctx, c, names.CloudWatch, make(map[string]any)))
+}
+
+func (c *AWSClient) CloudWatchOmniClient(ctx context.Context) *cloudwatchomni.Client {
+	return errs.Must(client[*cloudwatchomni.Client](ctx, c, names.CloudWatchOmni, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeArtifactClient(ctx context.Context) *codeartifact.Client {
@@ -622,6 +648,10 @@ func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect.Clie
 	return errs.Must(client[*directconnect.Client](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
+func (c *AWSClient) DirectoryServiceDataClient(ctx context.Context) *directoryservicedata.Client {
+	return errs.Must(client[*directoryservicedata.Client](ctx, c, names.DirectoryServiceData, make(map[string]any)))
+}
+
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb.Client {
 	return errs.Must(client[*docdb.Client](ctx, c, names.DocDB, make(map[string]any)))
 }
@@ -696,6 +726,10 @@ func (c *AWSClient) ElasticTranscoderClient(ctx context.Context) *elastictransco
 
 func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservice.Client {
 	return errs.Must(client[*elasticsearchservice.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
+}
+
+func (c *AWSClient) EventBridgeV2Client(ctx context.Context) *eventbridgev2.Client {
+	return errs.Must(client[*eventbridgev2.Client](ctx, c, names.EventBridgeV2, make(map[string]any)))
 }
 
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge.Client {
@@ -850,8 +884,12 @@ func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
 }
 
-func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
-	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicrovms, make(map[string]any)))
+func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
+	return errs.Must(client[*lambdacore.Client](ctx, c, names.LambdaCore, make(map[string]any)))
+}
+
+func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Client {
+	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaWebClient(ctx context.Context) *lambdaweb.Client {
@@ -908,6 +946,10 @@ func (c *AWSClient) MWAAServerlessClient(ctx context.Context) *mwaaserverless.Cl
 
 func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {
 	return errs.Must(client[*macie2.Client](ctx, c, names.Macie2, make(map[string]any)))
+}
+
+func (c *AWSClient) MailManagerClient(ctx context.Context) *mailmanager.Client {
+	return errs.Must(client[*mailmanager.Client](ctx, c, names.MailManager, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect.Client {
@@ -968,6 +1010,10 @@ func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Cl
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Client {
 	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
+}
+
+func (c *AWSClient) NetworkSecurityManagerClient(ctx context.Context) *networksecuritymanager.Client {
+	return errs.Must(client[*networksecuritymanager.Client](ctx, c, names.NetworkSecurityManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {
@@ -1092,6 +1138,10 @@ func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition.Client {
 
 func (c *AWSClient) ResilienceHubClient(ctx context.Context) *resiliencehub.Client {
 	return errs.Must(client[*resiliencehub.Client](ctx, c, names.ResilienceHub, make(map[string]any)))
+}
+
+func (c *AWSClient) ResilienceHubV2Client(ctx context.Context) *resiliencehubv2.Client {
+	return errs.Must(client[*resiliencehubv2.Client](ctx, c, names.ResilienceHubV2, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2.Client {

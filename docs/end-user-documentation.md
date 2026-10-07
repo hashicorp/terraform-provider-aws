@@ -30,7 +30,7 @@ Each resource must include at least one example Terraform configuration.
 
 - Examples must be functional.
 - Examples that includes several resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained; if a user run `terraform plan` on the example, no errors should be returned.
-- Terraform configuration should use `hcl` code fences. Do not use `terraform` code fences.
+- Terraform configuration should use `terraform` code fences. Do not use `hcl` code fences.
 - Examples should not define `terraform` or `provider` blocks.
 - Examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
 - Generally the resource instance name should simply be `example`, e.g. `resource "aws_instance" "example"`.
@@ -63,6 +63,7 @@ Every argument must have a description.
 - Descriptions are concise and follow US English spelling and grammar rules.
 - Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates ".
 - Boolean argument descriptions start with "Whether to ".
+- Don't spell out common abbreviations. See [Abbreviations](#abbreviations) below.
 - Information about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
 - If an argument has validation allowing only specific inputs, these must be documented. For example:
     - `` Allowed values are: `value1`, `value2`, and `value3`. ``.
@@ -119,6 +120,7 @@ Every attribute must have a description.
 
 - Descriptions are concise and follow US English spelling and grammar rules.
 - Valid values and default values are not documented.
+- Don't spell out common abbreviations. See [Abbreviations](#abbreviations) below.
 
 #### Blocks
 
@@ -146,6 +148,49 @@ This resource exports the following attributes in addition to the arguments abov
 * `status_code` - Health status code.
 * `status_message` - Health status message.
 ```
+
+### Abbreviations
+
+Don't spell out an abbreviation in a description if the abbreviation has effectively become a lexical item — a term readers understand directly rather than by expanding it. Spelling it out can make documentation less readable without improving understanding.
+
+For example, a typical reader understands "ARN" directly; expanding it to "Amazon Resource Name" does not help them understand the concept.
+
+**Test for treating an abbreviation this way:** Does spelling it out materially improve the intended reader's understanding? If not, use the abbreviation.
+
+This applies to argument and attribute descriptions, as well as general prose (e.g. the resource description, `Note` blocks). It does not apply to the first use of a term that a typical reader of AWS provider documentation would not already recognize.
+
+Abbreviations to use instead of spelling out (`swissshepherd`'s `banned_glosses` check enforces this list; see `.ci/swissshepherd-weak.hcl`):
+
+| Abbreviation | Do not spell out as |
+| --- | --- |
+| AMI | Amazon Machine Image |
+| ARN | Amazon Resource Name |
+| ARNs | Amazon Resource Names |
+| API | Application Programming Interface |
+| CPU | Central Processing Unit |
+| CLI | Command-Line Interface |
+| DNS | Domain Name System |
+| EC2 | Elastic Compute Cloud |
+| XML | Extensible Markup Language |
+| GPU | Graphics Processing Unit |
+| HTML | HyperText Markup Language |
+| HTTP | Hypertext Transfer Protocol |
+| IP | Internet Protocol |
+| JSON | JavaScript Object Notation |
+| KMS | Key Management Service |
+| RDS | Relational Database Service |
+| S3 | Simple Storage Service |
+| SDK | Software Development Kit |
+| SQL | Structured Query Language |
+| TCP | Transmission Control Protocol |
+| TLS | Transport Layer Security |
+| UTF | Unicode Transformation Format |
+| URI | Uniform Resource Identifier |
+| URL | Uniform Resource Locator |
+| USB | Universal Serial Bus |
+| VPC | Virtual Private Cloud |
+| VPN | Virtual Private Network |
+| YAML | YAML Ain't Markup Language |
 
 ### Notes
 

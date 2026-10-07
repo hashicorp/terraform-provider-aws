@@ -5,18 +5,22 @@ package amp
 
 // Exports for use in tests only.
 var (
-	ResourceAlertManagerDefinition    = resourceAlertManagerDefinition
-	ResourceQueryLoggingConfiguration = newQueryLoggingConfigurationResource
-	ResourceRuleGroupNamespace        = resourceRuleGroupNamespace
-	ResourceScraper                   = newScraperResource
-	ResourceWorkspace                 = resourceWorkspace
-	ResourceResourcePolicy            = newResourcePolicyResource
+	ResourceAlertManagerDefinition      = resourceAlertManagerDefinition
+	ResourceAnomalyDetector             = newAnomalyDetectorResource
+	ResourceQueryLoggingConfiguration   = newQueryLoggingConfigurationResource
+	ResourceRuleGroupNamespace          = resourceRuleGroupNamespace
+	ResourceScraper                     = newScraperResource
+	ResourceScraperLoggingConfiguration = newScraperLoggingConfigurationResource
+	ResourceWorkspace                   = resourceWorkspace
+	ResourceResourcePolicy              = newResourcePolicyResource
 
-	FindAlertManagerDefinitionByID    = findAlertManagerDefinitionByID
-	FindQueryLoggingConfigurationByID = findQueryLoggingConfigurationByID
-	FindResourcePolicyByWorkspaceID   = findResourcePolicyByWorkspaceID
-	FindRuleGroupNamespaceByARN       = findRuleGroupNamespaceByARN
-	FindScraperByID                   = findScraperByID
-	FindWorkspaceByID                 = findWorkspaceByID
-	FindWorkspaceConfigurationByID    = findWorkspaceConfigurationByID
+	FindAlertManagerDefinitionByID      = findAlertManagerDefinitionByID
+	FindAnomalyDetectorByID             = findAnomalyDetectorByID
+	FindQueryLoggingConfigurationByID   = findQueryLoggingConfigurationByID
+	FindResourcePolicyByWorkspaceID     = findResourcePolicyByWorkspaceID
+	FindRuleGroupNamespaceByARN         = findRuleGroupNamespaceByARN
+	FindScraperByID                     = findScraperByID
+	FindScraperLoggingConfigurationByID = findScraperLoggingConfigurationByID
+	FindWorkspaceByID                   = findWorkspaceByID
+	FindWorkspaceConfigurationByID      = findWorkspaceConfigurationByID
 )

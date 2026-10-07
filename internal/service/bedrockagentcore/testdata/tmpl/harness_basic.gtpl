@@ -13,6 +13,8 @@ resource "aws_bedrockagentcore_harness" "test" {
     text = "You are a helpful assistant."
   }
 
+  depends_on = [aws_iam_role_policy.test]
+
 {{- template "tags" . }}
 }
 

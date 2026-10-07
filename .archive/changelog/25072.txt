@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_msk_cluster: Prevent crash on apply when `client_authentication.tls` is empty
-```

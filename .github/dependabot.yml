@@ -12,8 +12,6 @@ updates:
         patterns:
           - "actions/cache"
           - "actions/cache/*"
-    ignore:
-      - dependency-name: "github/gh-aw-actions/*" # Managed by "gh aw compile".
   - package-ecosystem: "gomod"
     directories:
       - "/"
@@ -49,6 +47,11 @@ updates:
       - dependency-name: "google.golang.org/grpc"
       # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
       - dependency-name: "google.golang.org/protobuf"
+
+      # includes a regression in versions > 1.47.0. See:
+      # https://github.com/hashicorp/terraform-provider-aws/issues/50230
+      # https://github.com/aws/aws-sdk-go-v2/issues/3575
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/apigateway"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

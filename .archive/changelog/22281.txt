@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecr_replication_configuration: Increase `MaxItems` for `rule` to `10` and for `destination` to `25`
-```

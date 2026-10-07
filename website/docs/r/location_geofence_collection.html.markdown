@@ -35,7 +35,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `collection_arn` - The Amazon Resource Name (ARN) for the geofence collection resource. Used when you need to specify a resource across all AWS.
+* `collection_arn` - ARN for the geofence collection resource. Used when you need to specify a resource across all AWS.
 * `create_time` - The timestamp for when the geofence collection resource was created in ISO 8601 format.
 * `update_time` - The timestamp for when the geofence collection resource was last updated in ISO 8601 format.
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_codedeploy_deployment_group: Add `termination_hook_enabled` argument
-```

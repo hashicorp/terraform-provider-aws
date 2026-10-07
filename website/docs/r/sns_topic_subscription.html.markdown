@@ -354,7 +354,7 @@ resource "aws_sns_topic_subscription" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the SNS topic subscription.
+- `arn` (String) ARN of the SNS topic subscription.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Topic Subscriptions using the subscription `arn`. For example:
 

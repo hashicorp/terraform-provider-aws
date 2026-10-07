@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsResourcePolicy_Identity_basic(t *testing.T) {
+func TestAccLogsResourcePolicy_Identity_Accountscope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -40,7 +40,7 @@ func TestAccLogsResourcePolicy_Identity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -61,7 +61,7 @@ func TestAccLogsResourcePolicy_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -73,7 +73,7 @@ func TestAccLogsResourcePolicy_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -89,7 +89,7 @@ func TestAccLogsResourcePolicy_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -106,7 +106,7 @@ func TestAccLogsResourcePolicy_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsResourcePolicy_Identity_regionOverride(t *testing.T) {
+func TestAccLogsResourcePolicy_Identity_Accountscope_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
@@ -123,7 +123,7 @@ func TestAccLogsResourcePolicy_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -142,7 +142,7 @@ func TestAccLogsResourcePolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -156,7 +156,7 @@ func TestAccLogsResourcePolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -174,7 +174,7 @@ func TestAccLogsResourcePolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -193,7 +193,7 @@ func TestAccLogsResourcePolicy_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.51.0
-func TestAccLogsResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
+func TestAccLogsResourcePolicy_Identity_Accountscope_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -210,7 +210,7 @@ func TestAccLogsResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic_v6.51.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_v6.51.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -225,7 +225,7 @@ func TestAccLogsResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/accountscope_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -252,7 +252,7 @@ func TestAccLogsResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.51.0
-func TestAccLogsResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func TestAccLogsResourcePolicy_Identity_Accountscope_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -274,7 +274,7 @@ func TestAccLogsResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t *te
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic_v6.51.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/accountscope_v6.51.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -289,7 +289,7 @@ func TestAccLogsResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t *te
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/accountscope_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

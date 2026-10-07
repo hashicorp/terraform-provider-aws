@@ -46,7 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `security_policy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-### `endpoint_configuration`
+### `endpoint_configuration` Block
 
 * `ip_address_type` - IP address types that can invoke a DomainName.
 * `types` - List of endpoint types.

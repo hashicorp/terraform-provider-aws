@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_imagbuilder_component: Add `skip_destroy` argument
-```

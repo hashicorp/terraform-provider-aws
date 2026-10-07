@@ -32,19 +32,8 @@ type groupPolicyAttachmentListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listGroupPolicyAttachmentModel struct {
-}
-
 func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().IAMClient(ctx)
-
-	var query listGroupPolicyAttachmentModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input iam.ListGroupsInput
 	tflog.Info(ctx, "Listing Resources")
@@ -91,25 +80,6 @@ func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request li
 				}
 
 				if !yield(result) {
-					return
-				}
-			}
-		}
-	}
-}
-
-func listGroups(ctx context.Context, conn *iam.Client, input *iam.ListGroupsInput) iter.Seq2[awstypes.Group, error] {
-	return func(yield func(awstypes.Group, error) bool) {
-		pages := iam.NewListGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Group{}, err)
-				return
-			}
-
-			for _, role := range page.Groups {
-				if !yield(role, nil) {
 					return
 				}
 			}

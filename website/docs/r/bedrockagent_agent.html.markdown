@@ -78,16 +78,16 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_collaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customer_encryption_key_arn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.
 * `idle_session_ttl_in_seconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
 * `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. If `prepare_agent` is `true` this argument is required. The valid range is 40 - 20000 characters.
-* `memory_configuration` (Optional) Configurations for the agent's ability to retain the conversational context.
-* `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
-* `prompt_override_configuration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
+* `memory_configuration` - (Optional) Configurations for the agent's ability to retain the conversational context.
+* `prepare_agent` - (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
+* `prompt_override_configuration` - (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the agent.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -102,9 +102,9 @@ The `guardrail_configuration` configuration block supports the following argumen
 
 The `memory_configuration` configuration block supports the following arguments:
 
-* `enabled_memory_types` - (Required) The type of memory being stored by the agent. See [AWS API documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_MemoryConfiguration.html) for possible values.
+* `enabled_memory_types` - (Required) Type of memory being stored by the agent. See [AWS API documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_MemoryConfiguration.html) for possible values.
 * `session_summary_configuration` - (Optional) Configuration block for `SESSION_SUMMARY` memory type enabled for the agent. See [`session_summary_configuration` Block](#session_summary_configuration-block) for details.
-* `storage_days` - (Optional) The number of days the agent is configured to retain the conversational context. Minimum value of 0, maximum value of 30.
+* `storage_days` - (Optional) Number of days the agent is configured to retain the conversational context. Minimum value of 0, maximum value of 30.
 
 ### `session_summary_configuration` Block
 
@@ -116,8 +116,8 @@ The `session_summary_configuration` configuration block supports the following a
 
 The `prompt_override_configuration` configuration block supports the following arguments:
 
-* `prompt_configurations` - (Required) Configurations to override a prompt template in one part of an agent sequence. See [`prompt_configurations` Block](#prompt_configurations-block) for details.
 * `override_lambda` - (Optional) ARN of the Lambda function to use when parsing the raw foundation model output in parts of the agent sequence. If you specify this field, at least one of the `prompt_configurations` block must contain a `parser_mode` value that is set to `OVERRIDDEN`.
+* `prompt_configurations` - (Required) Configurations to override a prompt template in one part of an agent sequence. See [`prompt_configurations` Block](#prompt_configurations-block) for details.
 
 ### `prompt_configurations` Block
 

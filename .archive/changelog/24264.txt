@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_db_proxy: Add `auth.username` argument
-```

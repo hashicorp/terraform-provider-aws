@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_record: Allow creation of records with `ttl=0`
-```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecr_account_setting: Add support for `BLOB_MOUNTING` account setting name with `ENABLED` and `DISABLED` values
-```

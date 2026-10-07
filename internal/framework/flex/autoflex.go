@@ -12,6 +12,7 @@ import (
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
@@ -170,6 +171,7 @@ type valueWithElementsAs interface {
 
 	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
+	Length(basetypes.CollectionLengthOptions) int
 }
 
 func diagConvertingTargetIsNil(targetType reflect.Type) diag.ErrorDiagnostic {

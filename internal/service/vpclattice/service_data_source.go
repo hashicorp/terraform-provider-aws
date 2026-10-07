@@ -63,6 +63,10 @@ func dataSourceService() *schema.Resource {
 						},
 					},
 				},
+				"idle_timeout_seconds": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				names.AttrName: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -131,6 +135,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	} else {
 		d.Set("dns_entry", nil)
 	}
+	d.Set("idle_timeout_seconds", out.IdleTimeoutSeconds)
 	d.Set(names.AttrName, out.Name)
 	d.Set("service_identifier", out.Id)
 	d.Set(names.AttrStatus, out.Status)

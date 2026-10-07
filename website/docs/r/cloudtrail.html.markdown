@@ -399,7 +399,7 @@ resource "aws_cloudtrail" "sample" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CloudTrail trail.
+- `arn` (String) ARN of the CloudTrail trail.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
 

@@ -1,3 +1,0 @@
-```release-note:bug
-list-resource/aws_s3_object: Includes parent bucket in display name.
-```

@@ -132,6 +132,7 @@ The value of `<resource_name>` must match the name of the associated resource ty
 When adding a List Resource for an existing resource type,
 extract the portion of the existing resource type's Read operation that flattens the API response into the resource data model into a new method `flatten`.
 For many resource types, this will simply call `flex.Flatten(...)`.
+The flattening behavior can be modified using AutoFlex options such as `flex.WithFieldNamePrefix(...)`.
 
 Both the List Resource and the resource type's Read operation should call the `flatten` function.
 
@@ -184,6 +185,8 @@ Set the [`count` meta-argument](https://developer.hashicorp.com/terraform/langua
 Other resources in the configuration should have a single instance, unless more than one is needed, for example EC2 Subnets when testing ELB Load Balancers.
 
 For **property entities**, multiple instances of the parent resource must be created and each **property entity** resource must be associated with an instance of the parent resource.
+The `basic` test configuration should also include an instance of the parent resource _without_ the property resource.
+It should validate that this parent resource's identity is _not_ included in the list results using `querycheck.ExpectNoIdentity`.
 
 The `includeResource` test should set the `tags` attribute if the resource type supports tagging.
 Tags should only be applied to the resource that is being tested.

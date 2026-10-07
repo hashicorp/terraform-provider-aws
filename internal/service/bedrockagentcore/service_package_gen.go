@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -32,45 +31,39 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAgentRuntimeResource,
 			TypeName: "aws_bedrockagentcore_agent_runtime",
 			Name:     "Agent Runtime",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_runtime_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("agent_runtime_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentRuntimeEndpointResource,
 			TypeName: "aws_bedrockagentcore_agent_runtime_endpoint",
 			Name:     "Agent Runtime Endpoint",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_runtime_endpoint_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("agent_runtime_endpoint_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAPIKeyCredentialProviderResource,
 			TypeName: "aws_bedrockagentcore_api_key_credential_provider",
-			Name:     "Api Key Credential Provider",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "credential_provider_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Name:     "API Key Credential Provider",
+			Tags:     inttypes.ResourceTagsAttribute("credential_provider_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newBrowserResource,
 			TypeName: "aws_bedrockagentcore_browser",
 			Name:     "Browser",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "browser_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("browser_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newBrowserProfileResource,
 			TypeName: "aws_bedrockagentcore_browser_profile",
 			Name:     "Browser Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "profile_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("profile_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("profile_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -81,19 +74,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCodeInterpreterResource,
 			TypeName: "aws_bedrockagentcore_code_interpreter",
 			Name:     "Code Interpreter",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "code_interpreter_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("code_interpreter_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newEvaluatorResource,
 			TypeName: "aws_bedrockagentcore_evaluator",
 			Name:     "Evaluator",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "evaluator_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("evaluator_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
 				inttypes.WithIdentityDuplicateAttrs("evaluator_id"),
 			),
@@ -105,24 +94,42 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newGatewayResource,
 			TypeName: "aws_bedrockagentcore_gateway",
 			Name:     "Gateway",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "gateway_arn",
+			Tags:     inttypes.ResourceTagsAttribute("gateway_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newGatewayRuleResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      gatewayRuleImportID{},
+			},
 		},
 		{
 			Factory:  newGatewayTargetResource,
 			TypeName: "aws_bedrockagentcore_gateway_target",
 			Name:     "Gateway Target",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      gatewayTargetImportID{},
+			},
 		},
 		{
 			Factory:  newHarnessResource,
 			TypeName: "aws_bedrockagentcore_harness",
 			Name:     "Harness",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("harness_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -133,33 +140,43 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMemoryResource,
 			TypeName: "aws_bedrockagentcore_memory",
 			Name:     "Memory",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newResourceMemoryStrategy,
 			TypeName: "aws_bedrockagentcore_memory_strategy",
 			Name:     "Memory Strategy",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("memory_id", true),
+				inttypes.StringIdentityAttribute("memory_strategy_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      memoryStrategyImportID{},
+			},
 		},
 		{
 			Factory:  newOAuth2CredentialProviderResource,
 			TypeName: "aws_bedrockagentcore_oauth2_credential_provider",
 			Name:     "OAuth2 Credential Provider",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "credential_provider_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("credential_provider_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newOnlineEvaluationConfigResource,
 			TypeName: "aws_bedrockagentcore_online_evaluation_config",
 			Name:     "Online Evaluation Config",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "online_evaluation_config_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("online_evaluation_config_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -184,9 +201,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPolicyEngineResource,
 			TypeName: "aws_bedrockagentcore_policy_engine",
 			Name:     "Policy Engine",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "policy_engine_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("policy_engine_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -223,7 +238,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newWorkloadIdentityResource,
 			TypeName: "aws_bedrockagentcore_workload_identity",
 			Name:     "Workload Identity",
+			Tags:     inttypes.ResourceTagsAttribute("workload_identity_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
 }
@@ -234,9 +254,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newBrowserProfileResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_browser_profile",
 			Name:     "Browser Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "profile_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("profile_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("profile_id", true)),
 		},
@@ -244,20 +262,26 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newEvaluatorResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_evaluator",
 			Name:     "Evaluator",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "evaluator_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("evaluator_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
 				inttypes.WithIdentityDuplicateAttrs("evaluator_id")),
+		},
+		{
+			Factory:  newGatewayRuleResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
+			}),
 		},
 		{
 			Factory:  newHarnessResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_harness",
 			Name:     "Harness",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("harness_id", true)),
 		},
@@ -265,9 +289,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newOnlineEvaluationConfigResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_online_evaluation_config",
 			Name:     "Online Evaluation Config",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "online_evaluation_config_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("online_evaluation_config_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("online_evaluation_config_id", true)),
 		},
@@ -285,9 +307,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newPolicyEngineResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_policy_engine",
 			Name:     "Policy Engine",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "policy_engine_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("policy_engine_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_id", true)),
 		},
@@ -322,7 +342,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrockagentcorecontrol.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*bedrockagentcorecontrol.Options){
 		bedrockagentcorecontrol.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

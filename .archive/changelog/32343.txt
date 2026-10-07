@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_internetmonitor_monitor: Add `health_events_config` configuration block
-```

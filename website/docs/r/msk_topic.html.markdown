@@ -35,7 +35,7 @@ resource "aws_msk_topic" "example" {
 
 The following arguments are required:
 
-* `cluster_arn` - (Required) Amazon Resource Name (ARN) that uniquely identifies MSK Cluster.
+* `cluster_arn` - (Required) ARN that uniquely identifies MSK Cluster.
 * `name` - (Required) Name of Topic.
 * `partition_count` - (Required) Number of partitions for Topic.
 * `replication_factor` - (Required) Replication factor for Topic.
@@ -82,7 +82,7 @@ resource "aws_msk_topic" "example" {
 
 #### Required
 
-* `cluster_arn` (String) Amazon Resource Name (ARN) that uniquely identifies MSK Cluster.
+* `cluster_arn` (String) ARN that uniquely identifies MSK Cluster.
 * `name` (String) Name of Topic.
 
 #### Optional

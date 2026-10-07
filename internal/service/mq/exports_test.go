@@ -8,15 +8,17 @@ var (
 	ResourceBroker        = resourceBroker
 	ResourceConfiguration = resourceConfiguration
 
-	FindBrokerByID        = findBrokerByID
-	FindConfigurationByID = findConfigurationByID
-
-	NormalizeEngineVersion = normalizeEngineVersion
-
+	CanonicalXML             = canonicalXML
+	DiffBrokerUsers          = diffBrokerUsers
+	FindBrokerByID           = findBrokerByID
+	FindConfigurationByID    = findConfigurationByID
 	FlattenResourceShareARNs = flattenResourceShareARNs
+	NormalizeEngineVersion   = normalizeEngineVersion
 
-	SortBrokerInstanceEndpoints = sortBrokerInstanceEndpoints
-
-	WaitBrokerRebooted = waitBrokerRebooted
-	WaitBrokerDeleted  = waitBrokerDeleted
+	SharedResourcesUnavailableInPartition = sharedResourcesUnavailableInPartition
+	SortBrokerInstanceEndpoints           = sortBrokerInstanceEndpoints
+	ValidateBrokerName                    = validateBrokerName
+	ValidBrokerPassword                   = validBrokerPassword
+	WaitBrokerRebooted                    = waitBrokerRebooted
+	WaitBrokerDeleted                     = waitBrokerDeleted
 )

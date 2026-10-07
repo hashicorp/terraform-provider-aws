@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_spot_instance_request: Handle read-after-create eventual consistency
-```

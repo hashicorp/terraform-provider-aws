@@ -271,14 +271,18 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
+	resourceSecretVersionFlatten(d, output)
+
+	return diags
+}
+
+func resourceSecretVersionFlatten(d *schema.ResourceData, output *secretsmanager.GetSecretValueOutput) {
 	d.Set(names.AttrARN, output.ARN)
 	d.Set("secret_arn", output.ARN)
 	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
 	d.Set("version_stages", output.VersionStages)
-
-	return diags
 }
 
 func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

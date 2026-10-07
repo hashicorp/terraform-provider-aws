@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lakeformation_permissions: Properly serialize SELECT permission for `permissions` and `permissions_with_grant_option` fields
-```

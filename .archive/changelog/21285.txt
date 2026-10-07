@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_flow_log: Add `destination_options` argument to support Apache Parquet, Hive-compatible prefixes and hourly partitioned files
-```

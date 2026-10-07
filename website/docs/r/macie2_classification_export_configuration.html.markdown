@@ -40,7 +40,7 @@ The `s3_destination` configuration block supports the following arguments:
 
 * `bucket_name` - (Required) The Amazon S3 bucket name in which Amazon Macie exports the data classification results.
 * `key_prefix` - (Optional) The object key for the bucket in which Amazon Macie exports the data classification results.
-* `kms_key_arn` - (Required) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
+* `kms_key_arn` - (Required) ARN of the KMS key to be used to encrypt the data.
 
 Additional information can be found in the [Storing and retaining sensitive data discovery results with Amazon Macie for AWS Macie documentation](https://docs.aws.amazon.com/macie/latest/user/discovery-results-repository-s3.html).
 

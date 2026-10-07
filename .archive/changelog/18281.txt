@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_pinpoint_sms_channel: Set all params on update
-```

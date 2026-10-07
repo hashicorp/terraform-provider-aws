@@ -61,7 +61,7 @@ The `controls` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the framework.
+* `arn` - ARN of the framework.
 * `control_sets[*].id` - Unique identifier for the framework control set.
 * `id` - Unique identifier for the framework.
 * `framework_type` - Framework type, such as a custom framework or a standard framework.

@@ -695,7 +695,7 @@ func resourceService() *schema.Resource {
 									Schema: map[string]*schema.Schema{
 										"hook_target_arn": {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"lifecycle_stages": {
@@ -708,7 +708,7 @@ func resourceService() *schema.Resource {
 										},
 										names.AttrRoleARN: {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"hook_details": {
@@ -716,6 +716,34 @@ func resourceService() *schema.Resource {
 											Optional:         true,
 											DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 											ValidateFunc:     verify.ValidStringIsJSONOrYAML,
+										},
+										"target_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          string(awstypes.DeploymentLifecycleHookTargetTypeAwsLambda),
+											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookTargetType](),
+										},
+										"timeout_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAction: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
+													},
+													"timeout_in_minutes": {
+														Type:         nullable.TypeNullableInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20160),
+													},
+												},
+											},
 										},
 									},
 								},
@@ -2144,7 +2172,10 @@ func statusService(conn *ecs.Client, serviceName, clusterNameOrARN string) retry
 	}
 }
 
-func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
+// parentCtx is the parent waitServiceStable context. It must not be the per-poll
+// Refresh context: internal/retry wraps each Refresh in WithTimeout + defer
+// cancel(), and sigint_rollback treats context cancel as user SIGINT.
+func statusServiceWaitForStable(parentCtx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
 	var primaryTaskSet *awstypes.Deployment
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
@@ -2191,7 +2222,7 @@ func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN 
 
 			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
-				go rollbackRoutine(ctx, conn, sigintConfig, primaryDeploymentArn)
+				go rollbackRoutine(parentCtx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
 			}
 
@@ -2343,7 +2374,7 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 
 	select {
 	case <-ctx.Done():
-		log.Printf("[INFO] SIGINT detected. Initiating rollback for deployment: %s", *primaryDeploymentArn)
+		log.Printf("[INFO] Wait context cancelled. Checking whether deployment %s should be rolled back", *primaryDeploymentArn)
 		ctx, cancel := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
 		defer cancel()
 
@@ -2359,12 +2390,17 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 }
 
 func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeploymentArn *string) error {
-	// Check if deployment is already in terminal state, meaning rollback is not needed
-	deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
+	// Check raw AWS deployment status. findDeploymentStatus maps SUCCESSFUL to
+	// the non-AWS sentinel "tfSTABLE", so it cannot be used with deploymentTerminalStates.
+	status, err := findRawServiceDeploymentStatus(ctx, conn, *primaryDeploymentArn)
 	if err != nil {
 		return err
 	}
-	if slices.Contains(deploymentTerminalStates, deploymentStatus) {
+	// Empty status means Describe returned no deployment; nothing to roll back.
+	if status == "" || slices.Contains(deploymentTerminalStates, status) {
+		if status != "" {
+			log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
+		}
 		return nil
 	}
 
@@ -2381,6 +2417,23 @@ func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeployment
 	}
 
 	return waitForDeploymentTerminalStatus(ctx, conn, *primaryDeploymentArn)
+}
+
+func findRawServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentARN string) (string, error) {
+	input := ecs.DescribeServiceDeploymentsInput{
+		ServiceDeploymentArns: []string{deploymentARN},
+	}
+
+	output, err := findServiceDeployments(ctx, conn, &input)
+	if err != nil {
+		return "", err
+	}
+	if len(output) == 0 {
+		// Callers treat empty as "no deployment to act on".
+		return "", nil
+	}
+
+	return string(output[0].Status), nil
 }
 
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, primaryDeploymentArn string) error {
@@ -2416,7 +2469,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime), // nosemgrep:ci.semgrep.pluginsdk.internal-retry-statechangeconf-refresh-remove-context
 		Timeout: timeout,
 	}
 
@@ -2661,10 +2714,38 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 			tfMap["lifecycle_stages"] = v
 		}
 
+		if v := apiObject.TargetType; v != "" {
+			tfMap["target_type"] = string(v)
+		}
+
+		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
+			if v := apiObject.TimeoutConfiguration; v != nil {
+				tfMap["timeout_configuration"] = flattenLifecycleHookTimeoutConfiguration(v)
+			}
+		}
+
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
+}
+
+func flattenLifecycleHookTimeoutConfiguration(apiObject *awstypes.DeploymentLifecycleHookTimeoutConfiguration) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Action; v != "" {
+		tfMap[names.AttrAction] = string(v)
+	}
+
+	if v := apiObject.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = flex.Int32ToStringValue(v)
+	}
+
+	return []map[string]any{tfMap}
 }
 
 func flattenCanaryConfiguration(apiObject *awstypes.CanaryConfiguration) []map[string]any {
@@ -2728,7 +2809,34 @@ func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
 			}
 		}
 
+		if v, ok := tfMap["target_type"].(string); ok && v != "" {
+			hook.TargetType = awstypes.DeploymentLifecycleHookTargetType(v)
+		}
+
+		if v, ok := tfMap["timeout_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			hook.TimeoutConfiguration = expandLifecycleHookTimeoutConfiguration(v[0].(map[string]any))
+		}
+
 		apiObject = append(apiObject, hook)
+	}
+
+	return apiObject
+}
+
+func expandLifecycleHookTimeoutConfiguration(tfMap map[string]any) *awstypes.DeploymentLifecycleHookTimeoutConfiguration {
+	apiObject := &awstypes.DeploymentLifecycleHookTimeoutConfiguration{}
+
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		apiObject.Action = awstypes.DeploymentLifecycleHookAction(v)
+	}
+
+	if v, ok := tfMap["timeout_in_minutes"].(string); ok {
+		timeoutMinutes := nullable.Int(v)
+		if !timeoutMinutes.IsNull() {
+			if minutes, _, err := timeoutMinutes.ValueInt32(); err == nil {
+				apiObject.TimeoutInMinutes = aws.Int32(minutes)
+			}
+		}
 	}
 
 	return apiObject
@@ -3333,12 +3441,13 @@ func flattenServiceVolumeConfigurations(ctx context.Context, apiObjects []awstyp
 	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]any{
-			names.AttrName: aws.ToString(apiObject.Name),
+		if apiObject.ManagedEBSVolume == nil {
+			continue
 		}
 
-		if v := apiObject.ManagedEBSVolume; v != nil {
-			tfMap["managed_ebs_volume"] = []any{flattenServiceManagedEBSVolumeConfiguration(ctx, v)}
+		tfMap := map[string]any{
+			names.AttrName:       aws.ToString(apiObject.Name),
+			"managed_ebs_volume": []any{flattenServiceManagedEBSVolumeConfiguration(ctx, apiObject.ManagedEBSVolume)},
 		}
 
 		tfList = append(tfList, tfMap)
