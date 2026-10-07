@@ -1140,6 +1140,51 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_attributes_gwlb_SendTCPResetOnIdleTimeoutEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	lbResourceName := "aws_lb.test"
+	resourceName := "aws_lb_listener.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_attributes_gwlbSendTCPResetOnIdleTimeoutEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, ""),
+					resource.TestCheckResourceAttr(resourceName, "send_tcp_reset_on_idle_timeout_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_attributes_gwlbSendTCPResetOnIdleTimeoutEnabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "send_tcp_reset_on_idle_timeout_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2Listener_attributes_nlb_TCPIdleTimeoutSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -3553,6 +3598,66 @@ resource "aws_lb_listener" "test" {
   tcp_idle_timeout_seconds = %[2]d
 }
 `, rName, seconds))
+}
+
+func testAccListenerConfig_attributes_gwlbSendTCPResetOnIdleTimeoutEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  load_balancer_type = "gateway"
+  name               = %[1]q
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    port     = 80
+    protocol = "HTTP"
+  }
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  send_tcp_reset_on_idle_timeout_enabled = %[2]t
+}
+`, rName, enabled))
 }
 
 func testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName string, seconds int) string {
