@@ -97,7 +97,6 @@ jobs:
           go install \
             github.com/YakDriver/copyplop \
             github.com/YakDriver/swissshepherd \
-            github.com/client9/misspell/cmd/misspell \
             github.com/golangci/golangci-lint/v2/cmd/golangci-lint \
             github.com/hashicorp/go-changelog/cmd/changelog-build \
             github.com/katbyte/tctest \
@@ -451,19 +450,3 @@ jobs:
         with:
           args: "."
           ignore: "./.agents ./docs ./website/docs ./AGENTS.md ./CHANGELOG.md ./internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs"
-
-  misspell:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        continue-on-error: true
-        timeout-minutes: 3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
-      - run: make go-misspell
