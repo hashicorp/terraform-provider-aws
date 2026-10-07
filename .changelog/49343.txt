@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `upgrade_target_storage_config` argument to the `blue_green_update` configuration block and support storage changes (allocated storage, IOPS, storage throughput, and storage type) via RDS Blue/Green Deployments
+```
