@@ -10,6 +10,7 @@ FEATURES:
 * **New Data Source:** `aws_lambdamicrovms_image_version` ([#50299](https://github.com/hashicorp/terraform-provider-aws/issues/50299))
 * **New Data Source:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * **New List Resource:** `aws_ec2_transit_gateway_route` ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* **New List Resource:** `aws_ram_resource_association` ([#49901](https://github.com/hashicorp/terraform-provider-aws/issues/49901))
 * **New Resource:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * **New Resource:** `aws_odb_autonomous_database_secrets_manager_integration` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 
@@ -19,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
 * resource/aws_ec2_transit_gateway_route: Add resource identity support ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
 * resource/aws_network_interface: Add `connection_tracking_specification` argument ([#50119](https://github.com/hashicorp/terraform-provider-aws/issues/50119))
+* resource/aws_ram_resource_association: Add resource identity support ([#49901](https://github.com/hashicorp/terraform-provider-aws/issues/49901))
 * resource/aws_rds_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50014](https://github.com/hashicorp/terraform-provider-aws/issues/50014))
 
 BUG FIXES:
