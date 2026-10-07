@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_guardduty_detector_feature: Add resource identity support
+```
