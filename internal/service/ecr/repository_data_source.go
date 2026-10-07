@@ -145,6 +145,8 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 
+	// Populating most_recent_image_tags requires paginating DescribeImages over every image in the
+	// repository, which can take minutes for large repositories. Skip it when the caller opts out.
 	if !d.Get("fetch_most_recent_image_tags").(bool) {
 		d.Set("most_recent_image_tags", nil)
 

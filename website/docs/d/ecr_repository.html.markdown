@@ -25,7 +25,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the ECR Repository.
 * `registry_id` - (Optional) Registry ID where the repository was created.
-* `fetch_most_recent_image_tags` - (Optional) Whether to populate `most_recent_image_tags`. Doing so requires listing every image in the repository, which can be slow for repositories with many images. Defaults to `true`.
+* `fetch_most_recent_image_tags` - (Optional) Whether to populate `most_recent_image_tags`. Defaults to `true`. Populating this attribute requires paginating through every image in the repository, which can significantly slow down reads for repositories with many images. Set to `false` if you only need repository metadata (such as `arn` or `repository_url`) to skip these API calls.
 
 ## Attribute Reference
 
