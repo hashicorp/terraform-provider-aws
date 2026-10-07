@@ -1,26 +1,34 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
-  }
-  ignore_tags {
-    keys = var.ignore_tag_keys
-  }
+resource "aws_bedrockagentcore_resource_policy" "test" {
+  region = var.region
+
+  resource_arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+  policy       = data.aws_iam_policy_document.resource_policy.json
 }
 
-resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
-  name                  = var.rName
-  agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.agent_runtime_id
-  agent_runtime_version = aws_bedrockagentcore_agent_runtime.test.agent_runtime_version
-
-  tags = var.resource_tags
+data "aws_iam_policy_document" "resource_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "bedrock-agentcore:InvokeAgentRuntime",
+    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    resources = [
+      aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+    ]
+  }
 }
 
 # testAccAgentRuntimeConfig_codeConfiguration
 
 resource "aws_bedrockagentcore_agent_runtime" "test" {
+  region = var.region
+
   agent_runtime_name = var.rName
   role_arn           = aws_iam_role.test.arn
 
@@ -42,8 +50,6 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 
   depends_on = [aws_iam_role_policy.bucket]
-
-  tags = var.resource_tags
 }
 
 # testAccAgentRuntimeConfig_baseIAMRole
@@ -67,11 +73,15 @@ data "aws_iam_policy_document" "assume_role" {
 # testAccAgentRuntimeConfig_baseS3Bucket
 
 resource "aws_s3_bucket" "test" {
+  region = var.region
+
   bucket        = replace(var.rName, "_", "-")
   force_destroy = true
 }
 
 resource "aws_s3_object" "test" {
+  region = var.region
+
   bucket = aws_s3_bucket.test.bucket
   key    = "agent-runtime-codezip.zip"
   source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
@@ -96,20 +106,8 @@ variable "rName" {
   nullable    = false
 }
 
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
-}
-
-variable "provider_tags" {
-  type     = map(string)
-  nullable = true
-  default  = null
-}
-
-variable "ignore_tag_keys" {
-  type     = set(string)
-  nullable = false
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
