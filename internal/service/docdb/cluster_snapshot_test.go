@@ -157,3 +157,110 @@ resource "aws_docdb_cluster_snapshot" "test" {
 }
 `, rName))
 }
+
+func TestAccDocDBClusterSnapshot_sharedAccounts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster_snapshot.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBClusterSnapshot_sharedAccountsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster_snapshot.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+			{
+				Config: testAccClusterSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBClusterSnapshot_sharedAccountsImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster_snapshot.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccClusterSnapshotConfig_sharedAccounts(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = aws_docdb_subnet_group.test.name
+  master_password      = "avoid-plaintext-passwords"
+  master_username      = "tfacctest"
+  skip_final_snapshot  = true
+}
+
+resource "aws_docdb_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_docdb_cluster.test.id
+  db_cluster_snapshot_identifier = %[1]q
+  shared_accounts                = ["all"]
+}
+`, rName))
+}
