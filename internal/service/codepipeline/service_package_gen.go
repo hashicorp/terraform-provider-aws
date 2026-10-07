@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline"
@@ -40,9 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePipeline,
 			TypeName: "aws_codepipeline",
 			Name:     "Pipeline",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -53,19 +50,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCustomActionType,
 			TypeName: "aws_codepipeline_custom_action_type",
 			Name:     "Custom Action Type",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceWebhook,
 			TypeName: "aws_codepipeline_webhook",
 			Name:     "Webhook",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -84,9 +77,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_codepipeline",
 			Name:     "Pipeline",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})

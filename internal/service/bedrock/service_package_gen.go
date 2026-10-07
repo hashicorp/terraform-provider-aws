@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -81,9 +80,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCustomModelResource,
 			TypeName: "aws_bedrock_custom_model",
 			Name:     "Custom Model",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "job_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
@@ -94,9 +91,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newEvaluationJobResource,
 			TypeName: "aws_bedrock_evaluation_job",
 			Name:     "Evaluation Job",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "job_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
 			Import: inttypes.FrameworkImport{
@@ -117,10 +112,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newGuardrailResource,
 			TypeName: "aws_bedrock_guardrail",
 			Name:     "Guardrail",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "guardrail_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("guardrail_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newGuardrailVersionResource,
@@ -132,10 +125,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newInferenceProfileResource,
 			TypeName: "aws_bedrock_inference_profile",
 			Name:     "Inference Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newModelInvocationJobResource,
@@ -161,9 +152,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newProvisionedModelThroughputResource,
 			TypeName: "aws_bedrock_provisioned_model_throughput",
 			Name:     "Provisioned Model Throughput",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "provisioned_model_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("provisioned_model_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("provisioned_model_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
@@ -189,9 +178,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newEvaluationJobResourceAsListResource,
 			TypeName: "aws_bedrock_evaluation_job",
 			Name:     "Evaluation Job",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "job_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
 		},

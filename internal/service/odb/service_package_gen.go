@@ -7,7 +7,6 @@ package odb
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
@@ -23,13 +22,18 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newDataSourceAutonomousDatabase,
+			TypeName: "aws_odb_autonomous_database",
+			Name:     "Autonomous Database",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudAutonomousVmClustersList,
@@ -41,10 +45,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceCloudExadataInfrastructure,
 			TypeName: "aws_odb_cloud_exadata_infrastructure",
 			Name:     "Cloud Exadata Infrastructure",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudExadataInfrastructuresList,
@@ -56,10 +58,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceCloudVmCluster,
 			TypeName: "aws_odb_cloud_vm_cluster",
 			Name:     "Cloud Vm Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudVmClustersList,
@@ -113,10 +113,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceNetworkPeeringConnection,
@@ -142,31 +140,46 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceAutonomousDatabase,
+			TypeName: "aws_odb_autonomous_database",
+			Name:     "Autonomous Database",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourceAutonomousDatabaseSecretsManagerIntegration,
+			TypeName: "aws_odb_autonomous_database_secrets_manager_integration",
+			Name:     "Autonomous Database Secrets Manager Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceCloudExadataInfrastructure,
 			TypeName: "aws_odb_cloud_exadata_infrastructure",
 			Name:     "Cloud Exadata Infrastructure",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceCloudVmCluster,
 			TypeName: "aws_odb_cloud_vm_cluster",
 			Name:     "Cloud Vm Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceAssociateDisassociateIAMRole,
@@ -178,19 +191,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceNetworkPeeringConnection,
 			TypeName: "aws_odb_network_peering_connection",
 			Name:     "Network Peering Connection",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

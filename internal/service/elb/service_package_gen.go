@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
@@ -65,9 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceLoadBalancer,
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -126,9 +123,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})

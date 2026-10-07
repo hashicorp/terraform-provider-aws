@@ -270,7 +270,7 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 
 For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
 
-* `authorization_config` - (Optional) Configuration block for [authorization](#efs_volume_configuration.authorization_config) for the Amazon EFS file system. Detailed below.
+* `authorization_config` - (Optional) Configuration block for [authorization](#efs_volume_configurationauthorization_config-block) for the Amazon EFS file system. Detailed below.
 * `file_system_id` - (Required) ID of the EFS File System.
 * `root_directory` - (Optional) Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorization_config`.
 * `transit_encryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
@@ -290,7 +290,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
 
-* `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configuration.authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
+* `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configurationauthorization_config-block) for the Amazon FSx for Windows File Server file system detailed below.
 * `file_system_id` - (Required) Amazon FSx for Windows File Server file system ID to use.
 * `root_directory` - (Required) Directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
 
@@ -303,7 +303,7 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 
 For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-mounting-ecs.html).
 
-* `access_point_arn` - (Required) Full ARN of the S3 Files access point to use. If configured, `root_directory` must either be omitted or set to `"/"`.
+* `access_point_arn` - (Optional) Full ARN of the S3 Files access point to use. If configured, `root_directory` must either be omitted or set to `"/"`.
 * `file_system_arn` - (Required) Full ARN of the S3 Files file system to mount.
 * `root_directory` - (Optional) Directory within the Amazon S3 Files file system to mount as the root directory.
 * `transit_encryption_port` - (Optional) Port to use for sending encrypted data between the ECS host and the S3 Files file system.
@@ -316,7 +316,7 @@ For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.
 ### `proxy_configuration` Block
 
 * `container_name` - (Required) Name of the container that will serve as the App Mesh proxy.
-* `properties` - (Required) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
+* `properties` - (Optional) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 * `type` - (Optional) Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
 
 ### `ephemeral_storage` Block

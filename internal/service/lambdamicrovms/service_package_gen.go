@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
@@ -23,7 +22,15 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newImageVersionDataSource,
+			TypeName: "aws_lambdamicrovms_image_version",
+			Name:     "Image Version",
+			Tags:     inttypes.ResourceTagsInline(),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
@@ -32,9 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newImageResource,
 			TypeName: "aws_lambdamicrovms_image",
 			Name:     "Image",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -60,9 +65,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newImageResourceAsListResource,
 			TypeName: "aws_lambdamicrovms_image",
 			Name:     "Image",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},

@@ -7,7 +7,6 @@ package docdb
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
@@ -51,28 +50,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_docdb_cluster",
 			Name:     "Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceClusterInstance,
 			TypeName: "aws_docdb_cluster_instance",
 			Name:     "Cluster Instance",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceClusterParameterGroup,
 			TypeName: "aws_docdb_cluster_parameter_group",
 			Name:     "Cluster Parameter Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceClusterSnapshot,
@@ -84,10 +77,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceEventSubscription,
 			TypeName: "aws_docdb_event_subscription",
 			Name:     "Event Subscription",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceGlobalCluster,
@@ -99,10 +90,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSubnetGroup,
 			TypeName: "aws_docdb_subnet_group",
 			Name:     "Subnet Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

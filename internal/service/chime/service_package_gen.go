@@ -7,7 +7,6 @@ package chime
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chime"
@@ -38,10 +37,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceVoiceConnector,
 			TypeName: "aws_chime_voice_connector",
 			Name:     "Voice Connector",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourceVoiceConnectorGroup,

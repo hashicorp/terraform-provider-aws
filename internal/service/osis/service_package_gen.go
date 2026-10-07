@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
@@ -32,10 +31,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPipelineResource,
 			TypeName: "aws_osis_pipeline",
 			Name:     "Pipeline",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "pipeline_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("pipeline_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "pipeline_name"),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -72,10 +69,8 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newPipelineResourceAsListResource,
 			TypeName: "aws_osis_pipeline",
 			Name:     "Pipeline",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "pipeline_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("pipeline_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "pipeline_name"),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},

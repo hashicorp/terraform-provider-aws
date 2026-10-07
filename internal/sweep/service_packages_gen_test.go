@@ -61,6 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
@@ -118,6 +119,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/eventbridgev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
@@ -159,6 +161,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -189,6 +192,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
@@ -339,6 +343,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cloudsearch.ServicePackage(ctx),
 		cloudtrail.ServicePackage(ctx),
 		cloudwatch.ServicePackage(ctx),
+		cloudwatchomni.ServicePackage(ctx),
 		codeartifact.ServicePackage(ctx),
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
@@ -396,6 +401,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		emr.ServicePackage(ctx),
 		emrcontainers.ServicePackage(ctx),
 		emrserverless.ServicePackage(ctx),
+		eventbridgev2.ServicePackage(ctx),
 		events.ServicePackage(ctx),
 		evidently.ServicePackage(ctx),
 		evs.ServicePackage(ctx),
@@ -437,6 +443,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		lambda.ServicePackage(ctx),
 		lambdacore.ServicePackage(ctx),
 		lambdamicrovms.ServicePackage(ctx),
+		lambdaweb.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
 		lexv2models.ServicePackage(ctx),
@@ -467,6 +474,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		networkflowmonitor.ServicePackage(ctx),
 		networkmanager.ServicePackage(ctx),
 		networkmonitor.ServicePackage(ctx),
+		networksecuritymanager.ServicePackage(ctx),
 		notifications.ServicePackage(ctx),
 		notificationscontacts.ServicePackage(ctx),
 		oam.ServicePackage(ctx),

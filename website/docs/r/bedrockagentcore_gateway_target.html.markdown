@@ -518,7 +518,7 @@ The `oauth` block supports the following:
 * `default_return_url` - (Optional) URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
 * `grant_type` - (Optional) OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
 * `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
-* `scopes` - (Optional) Set of OAuth scopes to request.
+* `scopes` - (Required) Set of OAuth scopes to request.
 
 ### `gateway_iam_role` Block
 
@@ -563,7 +563,7 @@ The `managed_vpc_resource` block supports the following:
 
 The `self_managed_lattice_resource` block supports the following:
 
-* `resource_configuration_identifier` - (Required) ARN or ID of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) ARN or ID of the VPC Lattice resource configuration.
 
 ### `target_configuration` Block
 
@@ -594,7 +594,7 @@ The `agentcore_runtime` block supports:
 
 The `schema` block supports the following:
 
-* `source` - (Required) Configuration for the API schema. Supports exactly one of `inline_payload` or `s3` (see [`s3` Block](#s3-block)). For HTTP targets, the `inline_payload` block is documented under its full path (for example, [`target_configuration.http.agentcore_runtime.schema.source.inline_payload` Block](#target_configurationhttpagentcore_runtimeschemasourceinline_payload-block)).
+* `source` - (Required) Configuration for the API schema. Supports exactly one of `inline_payload` or `s3`. For HTTP targets, these blocks are documented under their full paths (for example, [`target_configuration.http.agentcore_runtime.schema.source.inline_payload` Block](#target_configurationhttpagentcore_runtimeschemasourceinline_payload-block) and [`target_configuration.http.agentcore_runtime.schema.source.s3` Block](#target_configurationhttpagentcore_runtimeschemasources3-block)).
 
 ### `passthrough` Block
 
@@ -677,8 +677,8 @@ The `mcp` block supports exactly one of the following:
 * `connector` - (Optional) Connector integration target configuration. Connectors provide pre-built integrations with AWS services and third-party tools. See [`target_configuration.mcp.connector` Block](#target_configurationmcpconnector-block) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda` Block](#lambda-block) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server` Block](#mcp_server-block) below.
-* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. Supports exactly one of `inline_payload` (see [`target_configuration.mcp.open_api_schema.inline_payload` Block](#target_configurationmcpopen_api_schemainline_payload-block)) or `s3` (see [`s3` Block](#s3-block)).
-* `smithy_model` - (Optional) Smithy model-based target configuration. Supports exactly one of `inline_payload` (see [`target_configuration.mcp.smithy_model.inline_payload` Block](#target_configurationmcpsmithy_modelinline_payload-block)) or `s3` (see [`s3` Block](#s3-block)).
+* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. Supports exactly one of `inline_payload` (see [`target_configuration.mcp.open_api_schema.inline_payload` Block](#target_configurationmcpopen_api_schemainline_payload-block)) or `s3` (see [`target_configuration.mcp.open_api_schema.s3` Block](#target_configurationmcpopen_api_schemas3-block)).
+* `smithy_model` - (Optional) Smithy model-based target configuration. Supports exactly one of `inline_payload` (see [`target_configuration.mcp.smithy_model.inline_payload` Block](#target_configurationmcpsmithy_modelinline_payload-block)) or `s3` (see [`target_configuration.mcp.smithy_model.s3` Block](#target_configurationmcpsmithy_models3-block)).
 
 ### `api_gateway` Block
 
@@ -708,7 +708,7 @@ The `tool_override` block supports the following:
 
 * `description` - (Optional) Description of the tool. Provides information about the purpose and usage of the tool. If not provided, uses the description from the API's OpenAPI specification.
 * `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
-* `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
+* `name` - (Required) Name of tool. Identifies the tool in the Model Context Protocol.
 * `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
 ### `target_configuration.mcp.connector` Block
@@ -755,7 +755,7 @@ The `lambda` block supports the following:
 The `tool_schema` block supports exactly one of the following:
 
 * `inline_payload` - (Optional) Inline tool definition. See [`target_configuration.mcp.lambda.tool_schema.inline_payload` Block](#target_configurationmcplambdatool_schemainline_payload-block) below.
-* `s3` - (Optional) S3-based tool definition. See [`s3` Block](#s3-block) below.
+* `s3` - (Optional) S3-based tool definition. See [`target_configuration.mcp.lambda.tool_schema.s3` Block](#target_configurationmcplambdatool_schemas3-block) below.
 
 ### `target_configuration.mcp.lambda.tool_schema.inline_payload` Block
 
@@ -780,7 +780,7 @@ The `mcp_server` block supports the following:
 The `mcp_tool_schema` block supports exactly one of the following:
 
 * `inline_payload` - (Optional) Inline tool schema payload. The `inline_payload` block requires a `payload` (string) containing the MCP tool schema definition.
-* `s3` - (Optional) S3 location of the tool schema. See [`s3` Block](#s3-block) below.
+* `s3` - (Optional) S3 location of the tool schema. See [`target_configuration.mcp.mcp_server.mcp_tool_schema.s3` Block](#target_configurationmcpmcp_servermcp_tool_schemas3-block) below.
 
 ### `target_configuration.http.agentcore_runtime.schema.source.inline_payload` Block
 
@@ -812,7 +812,42 @@ The `inline_payload` block supports the following:
 
 * `payload` - (Required) Inline schema payload content.
 
-### `s3` Block
+### `target_configuration.http.agentcore_runtime.schema.source.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.http.passthrough.schema.source.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.lambda.tool_schema.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.mcp_server.mcp_tool_schema.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Required) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.open_api_schema.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.smithy_model.s3` Block
 
 The `s3` block supports the following:
 

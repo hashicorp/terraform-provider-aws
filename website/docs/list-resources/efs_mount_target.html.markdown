@@ -24,8 +24,9 @@ list "aws_efs_mount_target" "example" {
 
 ## Argument Reference
 
-One of `access_point_id` or `file_system_id` must be configured.
 This list resource supports the following arguments:
+
+~> **Note:** One of `access_point_id` or `file_system_id` must be configured.
 
 * `access_point_id` - (Optional) ID of the access point whose mount targets that you want to list.
 * `file_system_id` - (Optional) ID of the file system whose mount targets you want to list.

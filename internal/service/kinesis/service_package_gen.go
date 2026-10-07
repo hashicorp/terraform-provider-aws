@@ -7,7 +7,6 @@ package kinesis
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
@@ -55,21 +54,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceStream,
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrName,
-				ResourceType:        "Stream",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Stream", names.AttrName),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
 			Name:     "Stream Consumer",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "StreamConsumer",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("StreamConsumer", names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -80,10 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceStream,
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrName,
-				ResourceType:        "Stream",
-			}),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Stream", names.AttrName),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -94,11 +84,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
 			Name:     "Stream Consumer",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "StreamConsumer",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("StreamConsumer", names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),

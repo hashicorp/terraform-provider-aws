@@ -405,6 +405,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// cloudwatchomni
+
+				"cloudwatchomni": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// codeartifact
 
 				"codeartifact": schema.StringAttribute{
@@ -869,6 +876,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// eventbridgev2
+
+				"eventbridgev2": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// events
 
 				"events": schema.StringAttribute{
@@ -1191,6 +1205,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// lambdaweb
+
+				"lambdaweb": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// launchwizard
 
 				"launchwizard": schema.StringAttribute{
@@ -1425,6 +1446,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// networkmonitor
 
 				"networkmonitor": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// networksecuritymanager
+
+				"networksecuritymanager": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

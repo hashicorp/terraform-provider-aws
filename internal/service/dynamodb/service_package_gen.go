@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -100,10 +99,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceTable,
 			TypeName: "aws_dynamodb_table",
 			Name:     "Table",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceTableItem,
@@ -138,9 +135,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTable,
 			TypeName: "aws_dynamodb_table",
 			Name:     "Table",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -181,10 +176,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTableReplica,
 			TypeName: "aws_dynamodb_table_replica",
 			Name:     "Table Replica",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceTag,
@@ -202,9 +195,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_dynamodb_table",
 			Name:     "Table",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{

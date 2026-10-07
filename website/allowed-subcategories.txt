@@ -58,6 +58,7 @@ CloudWatch Network Monitor
 CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
 CloudWatch Observability Admin
+CloudWatch Omni
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -132,6 +133,7 @@ EventBridge
 EventBridge Pipes
 EventBridge Scheduler
 EventBridge Schemas
+EventBridge V2
 FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
 FSx
@@ -165,6 +167,7 @@ Lake Formation
 Lambda
 Lambda Core
 Lambda MicroVMs
+Lambda Web
 Launch Wizard
 Lex Model Building
 Lex V2 Models
@@ -186,6 +189,7 @@ Neptune
 Neptune Analytics
 Network Firewall
 Network Manager
+Network Security Manager
 OpenSearch
 OpenSearch Ingestion (OSIS)
 OpenSearch Serverless

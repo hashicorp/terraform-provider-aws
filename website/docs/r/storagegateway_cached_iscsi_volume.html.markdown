@@ -16,7 +16,7 @@ Manages an AWS Storage Gateway cached iSCSI volume.
 
 ## Example Usage
 
-~> **NOTE:** These examples are referencing the [`aws_storagegateway_cache`](/docs/providers/aws/r/storagegateway_cache.html) resource `gateway_arn` attribute to ensure Terraform properly adds cache before creating the volume. If you are not using this method, you may need to declare an expicit dependency (e.g., via `depends_on = [aws_storagegateway_cache.example]`) to ensure proper ordering.
+~> **NOTE:** These examples are referencing the [`aws_storagegateway_cache`](/docs/providers/aws/r/storagegateway_cache.html) resource `gateway_arn` attribute to ensure Terraform properly adds cache before creating the volume. If you are not using this method, you may need to declare an explicit dependency (e.g., via `depends_on = [aws_storagegateway_cache.example]`) to ensure proper ordering.
 
 ### Create Empty Cached iSCSI Volume
 
