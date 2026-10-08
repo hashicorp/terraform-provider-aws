@@ -175,10 +175,7 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
-// findSecretVersionForExistence reports whether a secret version exists using
-// ListSecretVersionIds, which never decrypts the value. Existence checks must
-// not depend on GetSecretValue: a version encrypted with a since-deleted KMS
-// key still exists but can no longer be decrypted (issue #50368).
+// findSecretVersionForExistence avoids GetSecretValue, which fails for versions whose KMS key is unavailable.
 func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretVersionExistsOutput, error) {
 	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
@@ -265,19 +262,9 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	if err != nil {
-		// A version encrypted with a since-deleted or disabled KMS key can no
-		// longer be decrypted, so GetSecretValue returns DecryptionFailure. The
-		// version itself still exists; confirm via ListSecretVersionIds (which
-		// needs no decrypt), refresh the metadata we can, and preserve the
-		// last-known secret value in state rather than failing the read. This
-		// keeps plans and CI/CD stable through normal KMS key lifecycle events
-		// (issue #50368). Changing the configured value still forces a new
-		// version via CustomizeDiff, which re-encrypts with the current key.
-		//
-		// Only tolerate the failure when there is a value to preserve. Without
-		// one (e.g. importing an undecryptable version) state would hold a null
-		// value, CustomizeDiff would not force replacement when a value is later
-		// configured, and Update would record it without calling PutSecretValue.
+		// The KMS key is unavailable. Keep the version and its last-known value, but
+		// not when state has no value (e.g. import), or a later configured value
+		// would be recorded by Update without calling PutSecretValue.
 		_, hasSecretString := d.GetOk("secret_string")
 		_, hasSecretBinary := d.GetOk("secret_binary")
 		if errs.IsA[*types.DecryptionFailure](err) && (hasSecretString || hasSecretBinary) {

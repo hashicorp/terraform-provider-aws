@@ -539,10 +539,6 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 	})
 }
 
-// TestAccSecretsManagerSecretVersion_kmsKeyUnavailable verifies that a version
-// whose KMS key can no longer decrypt it (here, the key is disabled) does not
-// fail plan/apply. Read should preserve the last-known secret value in state
-// rather than surfacing the DecryptionFailure. Ref: issue #50368.
 func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
@@ -565,10 +561,6 @@ func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
 				),
 			},
 			{
-				// Disabling the KMS key makes GetSecretValue return a
-				// DecryptionFailure for the existing version. The post-apply
-				// refresh exercises Read against the undecryptable version; it
-				// must not error, and the secret value must be preserved.
 				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
@@ -583,9 +575,6 @@ func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
 				},
 			},
 			{
-				// With no prior state there is no value to preserve, so import
-				// of an undecryptable version must still fail rather than leave
-				// a null secret_string in state.
 				Config:            testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
 				ResourceName:      resourceName,
 				ImportState:       true,
