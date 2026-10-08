@@ -113,10 +113,6 @@ func validUserPoolInviteTemplateEmailMessage(v any, k string) (ws []string, es [
 		es = append(es, fmt.Errorf("%q cannot be longer than 20000 UTF-8 characters", k))
 	}
 
-	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q does not contain {####}", k))
-	}
-
 	if !regexache.MustCompile(`.*\{username\}.*`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q does not contain {username}", k))
 	}
@@ -132,10 +128,6 @@ func validUserPoolInviteTemplateSMSMessage(v any, k string) (ws []string, es []e
 
 	if count > 140 {
 		es = append(es, fmt.Errorf("%q cannot be longer than 140 UTF-8 characters", k))
-	}
-
-	if !regexache.MustCompile(`.*\{####\}.*`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q does not contain {####}", k))
 	}
 
 	if !regexache.MustCompile(`.*\{username\}.*`).MatchString(value) {
