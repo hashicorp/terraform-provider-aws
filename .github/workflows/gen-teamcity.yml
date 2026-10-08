@@ -9,6 +9,7 @@ on:
       - "release/**"
   pull_request:
     paths:
+      - .github/workflows/gen-teamcity.yml
       - .teamcity/**
 
 permissions:
@@ -25,8 +26,25 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      # Pin Maven 3.9.x. Under Maven 3.10 (ubuntu-24.04 image 20261004.327+),
+      # teamcity-configs-maven-plugin 2026.2 fails with
+      # NoSuchMethodError: org.jdom.Element.<init>(String): the stripped
+      # org.jdom.Element bundled in kotlin-compiler shadows jdom-1.1.3.
+      # Remove once the plugin supports Maven 3.10.
+      - name: Install Maven 3.9
+        env:
+          MAVEN_VERSION: 3.9.16
+          MAVEN_SHA512: 831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6
+        run: |
+          archive="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+          curl -sSfL -o "${RUNNER_TEMP}/${archive}" \
+            "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/${archive}"
+          echo "${MAVEN_SHA512}  ${RUNNER_TEMP}/${archive}" | sha512sum --check --strict
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}"
+          echo "${RUNNER_TEMP}/apache-maven-${MAVEN_VERSION}/bin" >> "$GITHUB_PATH"
       - name: Build TeamCity Configuration
         run: |
+          mvn -v
           cd .teamcity
           make tools
           make validate

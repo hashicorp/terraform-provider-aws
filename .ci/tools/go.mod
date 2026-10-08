@@ -13,7 +13,7 @@ require (
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.12
 	github.com/terraform-linters/tflint v0.64.0
-	golang.org/x/tools v0.50.0
+	golang.org/x/tools v0.51.0
 	mvdan.cc/gofumpt v0.12.0
 )
 

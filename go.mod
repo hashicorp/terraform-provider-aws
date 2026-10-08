@@ -7,7 +7,7 @@ go 1.26.8
 godebug tlsmlkem=0
 
 require (
-	github.com/ProtonMail/go-crypto v1.5.1
+	github.com/ProtonMail/go-crypto v1.5.2
 	github.com/YakDriver/go-version v0.2.0
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.10.0
@@ -216,6 +216,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/polly v1.65.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.49.1
+	github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.134.0
@@ -325,7 +326,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.23.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
-	github.com/jaswdr/faker/v2 v2.9.1
+	github.com/jaswdr/faker/v2 v2.10.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
 	github.com/mitchellh/copystructure v1.2.0
@@ -335,7 +336,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/shopspring/decimal v1.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.71.0
-	go.opentelemetry.io/otel v1.46.0
+	go.opentelemetry.io/otel v1.47.0
 	golang.org/x/crypto v0.57.0
 	golang.org/x/text v0.42.0
 	golang.org/x/tools v0.51.0
@@ -397,8 +398,9 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.19.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel/metric v1.46.0 // indirect
-	go.opentelemetry.io/otel/trace v1.46.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
+	go.opentelemetry.io/otel/metric v1.47.0 // indirect
+	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/mod v0.41.0 // indirect

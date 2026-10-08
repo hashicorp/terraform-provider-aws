@@ -28,16 +28,17 @@ import (
 )
 
 // @SDKResource("aws_ssm_service_setting", name="Service Setting")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.ServiceSetting")
+// @Testing(generator=false)
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.67.0")
 func resourceServiceSetting() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSettingUpdate,
 		ReadWithoutTimeout:   resourceServiceSettingRead,
 		UpdateWithoutTimeout: resourceServiceSettingUpdate,
 		DeleteWithoutTimeout: resourceServiceSettingDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -113,6 +114,12 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading SSM Service Setting (%s): %s", d.Id(), err)
 	}
 
+	resourceServiceSettingFlatten(d, output)
+
+	return diags
+}
+
+func resourceServiceSettingFlatten(d *schema.ResourceData, output *awstypes.ServiceSetting) {
 	d.Set(names.AttrARN, output.ARN)
 	// setting_id begins with "/ssm/" prefix, according to the AWS documentation
 	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetServiceSetting.html#API_GetServiceSetting_RequestSyntax
@@ -125,8 +132,6 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("setting_value", output.SettingValue)
 	d.Set(names.AttrStatus, output.Status)
-
-	return diags
 }
 
 func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
