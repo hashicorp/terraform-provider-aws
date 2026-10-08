@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,8 +30,10 @@ import (
 )
 
 // @FrameworkResource("aws_devopsagent_agent_space", name="Agent Space")
+// @IdentityAttribute("agent_space_id")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsagent;devopsagent.GetAgentSpaceOutput")
+// @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="agent_space_id")
 // @Testing(generator=false)
 func newAgentSpaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -41,6 +42,7 @@ func newAgentSpaceResource(_ context.Context) (resource.ResourceWithConfigure, e
 
 type agentSpaceResource struct {
 	framework.ResourceWithModel[agentSpaceResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *agentSpaceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -225,10 +227,6 @@ func (r *agentSpaceResource) Delete(ctx context.Context, request resource.Delete
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.AgentSpaceID.ValueString())
 	}
-}
-
-func (r *agentSpaceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("agent_space_id"), request, response)
 }
 
 func findAgentSpaceByID(ctx context.Context, conn *devopsagent.Client, id string) (*devopsagent.GetAgentSpaceOutput, error) {

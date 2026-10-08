@@ -63,23 +63,48 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_space_id` - Unique identifier of the Agent Space.
 * `arn` - ARN of the Agent Space.
 * `created_at` - Timestamp when the Agent Space was created.
-* `id` - Unique identifier of the Agent Space.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updated_at` - Timestamp when the Agent Space was last updated.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devopsagent_agent_space.example
+  identity = {
+    agent_space_id = "08975e27-f587-49ca-b7b8-2e1019783803"
+  }
+}
+
+resource "aws_devopsagent_agent_space" "example" {
+  name = "my-agent-space"
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `agent_space_id` (String) Unique identifier of the Agent Space.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DevOps Agent Space using the `agent_space_id`. For example:
 
 ```terraform
 import {
   to = aws_devopsagent_agent_space.example
-  id = "space-12345678"
+  id = "08975e27-f587-49ca-b7b8-2e1019783803"
 }
 ```
 
 Using `terraform import`, import DevOps Agent Space using the `agent_space_id`. For example:
 
 ```console
-% terraform import aws_devopsagent_agent_space.example space-12345678
+% terraform import aws_devopsagent_agent_space.example 08975e27-f587-49ca-b7b8-2e1019783803
 ```
