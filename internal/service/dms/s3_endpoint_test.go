@@ -299,10 +299,77 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value", "glue_catalog_generation"},
+				ImportStateVerifyIgnore: []string{"date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value", "glue_catalog_generation"},
 			},
 		},
 	})
+}
+
+func TestAccDMSS3Endpoint_sourceDataFormat(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_s3_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3EndpointConfig_sourceDataFormat(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrSource),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "parquet"),
+					resource.TestCheckResourceAttr(resourceName, "compression_type", "GZIP"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Remaining target-only attributes that the read path still skips for
+				// source endpoints. Unrelated to this fix; compression_type and
+				// data_format are deliberately absent from this list.
+				ImportStateVerifyIgnore: []string{"date_partition_enabled", "glue_catalog_generation", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value"},
+			},
+		},
+	})
+}
+
+func testAccS3EndpointConfig_sourceDataFormat(rName string) string {
+	return acctest.ConfigCompose(
+		testAccS3EndpointConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_dms_s3_endpoint" "test" {
+  bucket_name             = "beckut_name"
+  endpoint_id             = %[1]q
+  endpoint_type           = "source"
+  service_access_role_arn = aws_iam_role.test.arn
+
+  data_format      = "parquet"
+  compression_type = "GZIP"
+
+  external_table_definition = jsonencode({
+    TableCount = 1
+    Tables = [{
+      TableName  = "employee"
+      TablePath  = "hr/employee/"
+      TableOwner = "hr"
+      TableColumns = [{
+        ColumnName     = "ID"
+        ColumnType     = "INT8"
+        ColumnNullable = "false"
+        ColumnIsPk     = "true"
+      }]
+      TableColumnsTotal = "1"
+    }]
+  })
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
 }
 
 func TestAccDMSS3Endpoint_source(t *testing.T) {
