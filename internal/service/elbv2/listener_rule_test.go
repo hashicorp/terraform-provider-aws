@@ -1310,7 +1310,7 @@ func TestAccELBV2ListenerRule_oidcClientSecretWO(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "authenticate-oidc"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_id", "s6BhdRkqt3"),
-					resource.TestCheckNoResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.session_timeout", "604800"),
