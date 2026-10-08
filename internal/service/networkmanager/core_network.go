@@ -39,8 +39,6 @@ const (
 	minimumValidPolicyVersionID = 1
 	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
 	latestPolicyVersionID = -1
-	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
-	waitCoreNetworkPolicyCreatedTimeInMinutes = 5
 )
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
@@ -295,7 +293,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "Formatting Core Network Base Policy: %s", err)
 			}
 
-			err = putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
+			err = putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget, d.Timeout(schema.TimeoutUpdate))
 
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -528,7 +526,7 @@ func flattenCoreNetworkSegments(apiObjects []awstypes.CoreNetworkSegment) []any 
 	return tfList
 }
 
-func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, coreNetworkID, policyDocument string) error {
+func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, coreNetworkID, policyDocument string, timeout time.Duration) error {
 	document, err := structure.NormalizeJsonString(policyDocument)
 
 	if err != nil {
@@ -547,7 +545,7 @@ func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Cl
 	}
 
 	policyVersionID := aws.ToInt32(output.CoreNetworkPolicy.PolicyVersionId)
-	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkID, policyVersionID, waitCoreNetworkPolicyCreatedTimeInMinutes*time.Minute); err != nil {
+	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkID, policyVersionID, timeout); err != nil {
 		return fmt.Errorf("waiting for Network Manager Core Network Policy from Core Network (%s) create: %w", coreNetworkID, err)
 	}
 
