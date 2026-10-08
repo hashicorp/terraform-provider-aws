@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_resiliencehubv2_policy: Add `sharing_enabled` attribute ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+* resource/aws_quicksight_custom_permissions: Add `action`, `analysis`, `automate`, `chat_agent`, `create_chat_agents`, `dashboard`, `flow`, `knowledge_base`, `perform_flow_ui_task`, `publish_without_approval`, `research`, `space`, `use_agent_web_search`, and `use_bedrock_models` to `capabilities` configuration block ([#47135](https://github.com/hashicorp/terraform-provider-aws/issues/47135))
 * resource/aws_resiliencehubv2_input_source: Add `resource_configuration.eks.label_selector` argument ([#50075](https://github.com/hashicorp/terraform-provider-aws/issues/50075))
 * resource/aws_resiliencehubv2_policy: Add `sharing_enabled` argument ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
 
