@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/pricingplanmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pricingplanmanager/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -23,6 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpricingplanmanager "github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+var (
+	checkSubscriptionARN = tfknownvalue.GlobalARNRegexp("pricingplanmanager", regexache.MustCompile(`subscription:.+`))
 )
 
 func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
@@ -54,7 +59,7 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkSubscriptionARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("etag"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_family"), knownvalue.StringExact("CloudFront")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("FREE")),
