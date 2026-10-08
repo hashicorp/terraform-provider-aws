@@ -26,6 +26,13 @@ import (
 )
 
 // @SDKResource("aws_acm_certificate_validation", name="Certificate Validation")
+// @ArnIdentity("certificate_arn")
+// @NoImport
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(checkDestroyNoop=true)
+// @Testing(acmRootDomainTfVar="rootDomain")
+// @Testing(acmSubdomainTfVar="rootDomain;domainName")
+// @Testing(identityTest=false)
 func resourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,
@@ -36,18 +43,20 @@ func resourceCertificateValidation() *schema.Resource {
 			Create: schema.DefaultTimeout(75 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"validation_record_fqdns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"validation_record_fqdns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

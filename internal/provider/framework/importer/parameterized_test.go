@@ -44,15 +44,15 @@ var regionalSingleParameterizedWithIDSchema = schema.Schema{
 }
 
 func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name)
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func regionalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name,
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true),
 		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
 	)
 }
@@ -162,7 +162,7 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := regionalSingleParameterizedSchema
@@ -403,7 +403,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 				identitySpec = regionalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
 			}
 
-			identitySchema := ptr(identity.NewIdentitySchema(identitySpec))
+			identitySchema := new(identity.NewIdentitySchema(identitySpec))
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -487,15 +487,15 @@ var globalSingleParameterizedWithIDSchema = schema.Schema{
 }
 
 func globalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(name)
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func globalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func globalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func globalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(name,
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true),
 		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
 	)
 }
@@ -575,7 +575,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := globalSingleParameterizedSchema
@@ -762,7 +762,7 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 				identitySpec = globalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
 			}
 
-			identitySchema := ptr(identity.NewIdentitySchema(identitySpec))
+			identitySchema := new(identity.NewIdentitySchema(identitySpec))
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -862,6 +862,14 @@ func regionalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[strin
 		} else {
 			attrs = append(attrs, inttypes.StringIdentityAttributeWithMappedName(identityAttrName, true, resourceAttrName))
 		}
+	}
+	return inttypes.RegionalParameterizedIdentity(attrs)
+}
+
+func regionalMultipleParameterizedIdentitySpecWithOptionalValue(attrNames map[string]bool) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for attrName, required := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, required))
 	}
 	return inttypes.RegionalParameterizedIdentity(attrs)
 }
@@ -1004,7 +1012,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(tc.identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(tc.identitySpec))
 			}
 
 			schema := regionalMultipleParameterizedSchema
@@ -1249,7 +1257,26 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name": "a_name",
 				"type": "a_type",
 			},
-			expectedID:     "a_name,a_type",
+			expectedRegion: region,
+			expectError:    false,
+		},
+
+		"null value": {
+			identityAttrValues: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: regionalMultipleParameterizedIdentitySpecWithOptionalValue(map[string]bool{
+				"name": true,
+				"type": false,
+			}),
+			expectedIdentityAttrs: map[string]string{
+				"account_id": accountID,
+				"region":     region,
+				"name":       "a_name",
+			},
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+			},
 			expectedRegion: region,
 			expectError:    false,
 		},
@@ -1265,7 +1292,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySchema := ptr(identity.NewIdentitySchema(tc.identitySpec))
+			identitySchema := new(identity.NewIdentitySchema(tc.identitySpec))
 
 			schema := regionalMultipleParameterizedSchema
 			if tc.useSchemaWithID {
@@ -1378,6 +1405,14 @@ func globalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[string]
 	return inttypes.GlobalParameterizedIdentity(attrs)
 }
 
+func globalMultipleParameterizedIdentitySpecWithOptionalValue(attrNames map[string]bool) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for attrName, required := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, required))
+	}
+	return inttypes.GlobalParameterizedIdentity(attrs)
+}
+
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -1482,7 +1517,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(tc.identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(tc.identitySpec))
 			}
 
 			schema := globalMultipleParameterizedSchema
@@ -1595,7 +1630,6 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				"type": "a_type",
 			},
 			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
-			expectedID:   "a_name,a_type",
 			expectedIdentityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -1614,7 +1648,6 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				"type":       "a_type",
 			},
 			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
-			expectedID:   "a_name,a_type",
 			expectedIdentityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -1685,7 +1718,24 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name": "a_name",
 				"type": "a_type",
 			},
-			expectedID:  "a_name,a_type",
+			expectError: false,
+		},
+
+		"null value": {
+			identityAttrValues: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: globalMultipleParameterizedIdentitySpecWithOptionalValue(map[string]bool{
+				"name": true,
+				"type": false,
+			}),
+			expectedIdentityAttrs: map[string]string{
+				"account_id": accountID,
+				"name":       "a_name",
+			},
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+			},
 			expectError: false,
 		},
 	}
@@ -1699,7 +1749,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				accountID: accountID,
 			}
 
-			identitySchema := ptr(identity.NewIdentitySchema(tc.identitySpec))
+			identitySchema := new(identity.NewIdentitySchema(tc.identitySpec))
 
 			importSpec := inttypes.FrameworkImport{
 				WrappedImport: true,

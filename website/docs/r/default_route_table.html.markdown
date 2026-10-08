@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage a default route table of a VPC. This resource can manage the default route table of the default or a non-default VPC.
 
-~> **NOTE:** This is an advanced resource with special caveats. Please read this document in its entirety before using this resource. The `aws_default_route_table` resource behaves differently from normal resources. Terraform does not _create_ this resource but instead attempts to "adopt" it into management. **Do not** use both `aws_default_route_table` to manage a default route table **and** `aws_main_route_table_association` with the same VPC due to possible route conflicts. See [aws_main_route_table_association][tf-main-route-table-association] documentation for more details.
+~> **NOTE:** This is an advanced resource with special caveats. Please read this document in its entirety before using this resource. The `aws_default_route_table` resource behaves differently from normal resources. Terraform does not _create_ this resource but instead attempts to "adopt" it into management. **Do not** use both `aws_default_route_table` to manage a default route table **and** `aws_main_route_table_association` with the same VPC due to possible route conflicts. See [aws_main_route_table_association](/docs/providers/aws/r/main_route_table_association.html) documentation for more details.
 
 Every VPC has a default route table that can be managed but not destroyed. When Terraform first adopts a default route table, it **immediately removes all defined routes**. It then proceeds to create any routes specified in the configuration. This step is required so that only the routes specified in the configuration exist in the default route table.
 
@@ -77,7 +77,7 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
-* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
+* `core_network_arn` - (Optional) ARN of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
@@ -122,5 +122,3 @@ Using `terraform import`, import Default VPC route tables using the `vpc_id`. Fo
 ```console
 % terraform import aws_default_route_table.example vpc-33cc44dd
 ```
-
-[tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html

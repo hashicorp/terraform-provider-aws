@@ -38,120 +38,122 @@ func resourceScheduledAction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"end_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			"iam_role": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), ""),
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrStartTime: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			"target_action": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pause_cluster": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrClusterIdentifier: {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"enable": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"end_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				"iam_role": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), ""),
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrStartTime: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				"target_action": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"pause_cluster": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrClusterIdentifier: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
-							},
-							ExactlyOneOf: []string{
-								"target_action.0.pause_cluster",
-								"target_action.0.resize_cluster",
-								"target_action.0.resume_cluster",
-							},
-						},
-						"resize_cluster": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"classic": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									names.AttrClusterIdentifier: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"cluster_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"node_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"number_of_nodes": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
+								ExactlyOneOf: []string{
+									"target_action.0.pause_cluster",
+									"target_action.0.resize_cluster",
+									"target_action.0.resume_cluster",
 								},
 							},
-							ExactlyOneOf: []string{
-								"target_action.0.pause_cluster",
-								"target_action.0.resize_cluster",
-								"target_action.0.resume_cluster",
-							},
-						},
-						"resume_cluster": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrClusterIdentifier: {
-										Type:     schema.TypeString,
-										Required: true,
+							"resize_cluster": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"classic": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										names.AttrClusterIdentifier: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"cluster_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"node_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"number_of_nodes": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
 									},
 								},
+								ExactlyOneOf: []string{
+									"target_action.0.pause_cluster",
+									"target_action.0.resize_cluster",
+									"target_action.0.resume_cluster",
+								},
 							},
-							ExactlyOneOf: []string{
-								"target_action.0.pause_cluster",
-								"target_action.0.resize_cluster",
-								"target_action.0.resume_cluster",
+							"resume_cluster": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrClusterIdentifier: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: []string{
+									"target_action.0.pause_cluster",
+									"target_action.0.resize_cluster",
+									"target_action.0.resume_cluster",
+								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -267,6 +268,14 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceConfigurationSetEventDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_configuration_set_event_destination.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_configuration_set_event_destination.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

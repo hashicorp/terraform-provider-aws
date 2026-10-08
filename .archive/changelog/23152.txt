@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_launch_configuration: Add `ephemeral_block_device.no_device` argument
-```

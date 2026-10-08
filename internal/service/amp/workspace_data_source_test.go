@@ -21,7 +21,7 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)

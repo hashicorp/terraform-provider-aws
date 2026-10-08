@@ -7,11 +7,13 @@ package apprunner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
@@ -22,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,58 +40,65 @@ func resourceCustomDomainAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"certificate_validation_records": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"certificate_validation_records": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"dns_target": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"enable_www_subdomain": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
-			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"dns_target": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					),
+				},
+				"enable_www_subdomain": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+					ForceNew: true,
+				},
+				"service_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
+
+		CustomizeDiff: validateCustomDomainAssociationCustomDiff,
 	}
 }
 
@@ -134,7 +142,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceArn)
+	output, customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceArn)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
@@ -149,9 +157,12 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_validation_records: %s", err)
 	}
+
+	d.Set("dns_target", output.DNSTarget)
+	d.Set("service_arn", output.ServiceArn)
+
 	d.Set(names.AttrDomainName, customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
-	d.Set("service_arn", serviceArn)
 	d.Set(names.AttrStatus, customDomain.Status)
 
 	return diags
@@ -208,42 +219,41 @@ func customDomainAssociationParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func findCustomDomainByTwoPartKey(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) (*types.CustomDomain, error) {
+func findCustomDomainByTwoPartKey(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) (*apprunner.DescribeCustomDomainsOutput, *types.CustomDomain, error) {
 	input := &apprunner.DescribeCustomDomainsInput{
 		ServiceArn: aws.String(serviceARN),
 	}
 
-	return findCustomDomain(ctx, conn, input, func(v *types.CustomDomain) bool {
-		return aws.ToString(v.DomainName) == domainName
-	})
-}
-
-func findCustomDomain(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) (*types.CustomDomain, error) {
-	output, err := findCustomDomains(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findCustomDomains(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) ([]types.CustomDomain, error) {
-	var output []types.CustomDomain
+	output := &apprunner.DescribeCustomDomainsOutput{}
+	var customDomains []types.CustomDomain
 
 	err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
-		for _, v := range page.CustomDomains {
-			if filter(&v) {
-				output = append(output, v)
+		output.CustomDomains = append(output.CustomDomains, page.CustomDomains...)
+		if output.DNSTarget == nil {
+			output.DNSTarget = page.DNSTarget
+		}
+		if output.ServiceArn == nil {
+			output.ServiceArn = page.ServiceArn
+		}
+		output.VpcDNSTargets = append(output.VpcDNSTargets, page.VpcDNSTargets...)
+
+		for _, customDomain := range page.CustomDomains {
+			if aws.ToString(customDomain.DomainName) == domainName {
+				customDomains = append(customDomains, customDomain)
 			}
 		}
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return output, nil
+	customDomain, err := tfresource.AssertSingleValueResult(customDomains)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return output, customDomain, nil
 }
 
 func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, fn func(page *apprunner.DescribeCustomDomainsOutput)) error {
@@ -277,7 +287,7 @@ const (
 
 func statusCustomDomain(conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
+		_, customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -287,7 +297,7 @@ func statusCustomDomain(conn *apprunner.Client, domainName, serviceARN string) r
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return customDomain, string(customDomain.Status), nil
 	}
 }
 
@@ -346,4 +356,22 @@ func flattenCustomDomainCertificateValidationRecords(records []types.Certificate
 	}
 
 	return results
+}
+
+func validateCustomDomainAssociationCustomDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown(names.AttrDomainName) || !d.NewValueKnown("enable_www_subdomain") {
+		return nil
+	}
+
+	domainName := d.Get(names.AttrDomainName).(string)
+	if !strings.HasPrefix(domainName, "*.") {
+		return nil
+	}
+
+	enableWWW := d.Get("enable_www_subdomain").(bool)
+	if enableWWW {
+		return errors.New("enable_www_subdomain must be false for wildcard domains")
+	}
+
+	return nil
 }

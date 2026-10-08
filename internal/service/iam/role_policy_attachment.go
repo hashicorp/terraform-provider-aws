@@ -38,18 +38,20 @@ func resourceRolePolicyAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceRolePolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceRolePolicyAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRole: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrRole: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

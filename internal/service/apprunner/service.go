@@ -40,391 +40,393 @@ func resourceService() *schema.Resource {
 		UpdateWithoutTimeout: resourceServiceUpdate,
 		DeleteWithoutTimeout: resourceServiceDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_scaling_configuration_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"health_check_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"healthy_threshold": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1,
-							ValidateFunc: validation.IntBetween(1, 20),
-						},
-						names.AttrInterval: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      5,
-							ValidateFunc: validation.IntBetween(1, 20),
-						},
-						names.AttrPath: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "/",
-							ValidateFunc: validation.StringLenBetween(0, 51200),
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.HealthCheckProtocolTcp,
-							ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
-						},
-						names.AttrTimeout: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      2,
-							ValidateFunc: validation.IntBetween(1, 20),
-						},
-						"unhealthy_threshold": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      5,
-							ValidateFunc: validation.IntBetween(1, 20),
-						},
-					},
+				"auto_scaling_configuration_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"instance_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cpu": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "1024",
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`256|512|1024|2048|4096|(0.25|0.5|1|2|4) vCPU`), ""),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// App Runner API always returns the amount in multiples of 1024 units
-								return (old == "256" && new == "0.25 vCPU") || (old == "512" && new == "0.5 vCPU") || (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU") || (old == "4096" && new == "4 vCPU")
-							},
-						},
-						"instance_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"memory": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "2048",
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`512|1024|2048|3072|4096|6144|8192|10240|12288|(0.5|1|2|3|4|6|8|10|12) GB`), ""),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// App Runner API always returns the amount in MB
-								return (old == "512" && new == "0.5 GB") || (old == "1024" && new == "1 GB") || (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB") || (old == "6144" && new == "6 GB") || (old == "8192" && new == "8 GB") || (old == "10240" && new == "10 GB") || (old == "12288" && new == "12 GB")
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			names.AttrNetworkConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"egress_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"egress_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[types.EgressType](),
-									},
-									"vpc_connector_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
+				"health_check_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"healthy_threshold": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      1,
+								ValidateFunc: validation.IntBetween(1, 20),
+							},
+							names.AttrInterval: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 20),
+							},
+							names.AttrPath: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "/",
+								ValidateFunc: validation.StringLenBetween(0, 51200),
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.HealthCheckProtocolTcp,
+								ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
+							},
+							names.AttrTimeout: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      2,
+								ValidateFunc: validation.IntBetween(1, 20),
+							},
+							"unhealthy_threshold": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 20),
+							},
+						},
+					},
+				},
+				"instance_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cpu": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "1024",
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`256|512|1024|2048|4096|(0.25|0.5|1|2|4) vCPU`), ""),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// App Runner API always returns the amount in multiples of 1024 units
+									return (old == "256" && new == "0.25 vCPU") || (old == "512" && new == "0.5 vCPU") || (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU") || (old == "4096" && new == "4 vCPU")
+								},
+							},
+							"instance_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"memory": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "2048",
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`512|1024|2048|3072|4096|6144|8192|10240|12288|(0.5|1|2|3|4|6|8|10|12) GB`), ""),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// App Runner API always returns the amount in MB
+									return (old == "512" && new == "0.5 GB") || (old == "1024" && new == "1 GB") || (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB") || (old == "6144" && new == "6 GB") || (old == "8192" && new == "8 GB") || (old == "10240" && new == "10 GB") || (old == "12288" && new == "12 GB")
 								},
 							},
 						},
-						"ingress_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_publicly_accessible": {
-										Type:     schema.TypeBool,
-										Optional: true,
+					},
+				},
+				names.AttrNetworkConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"egress_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"egress_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.EgressType](),
+										},
+										"vpc_connector_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						names.AttrIPAddressType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.IpAddressTypeIpv4,
-							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
-						},
-					},
-				},
-			},
-			"observability_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"observability_configuration_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"observability_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"service_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"access_role_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"connection_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+							"ingress_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"is_publicly_accessible": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
 									},
 								},
 							},
+							names.AttrIPAddressType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.IpAddressTypeIpv4,
+								ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+							},
 						},
-						"auto_deployments_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
+					},
+				},
+				"observability_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"observability_configuration_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"observability_enabled": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
 						},
-						"code_repository": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"code_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"code_configuration_values": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"build_command": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(0, 51200),
-															},
-															names.AttrPort: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      "8080",
-																ValidateFunc: validation.StringLenBetween(0, 51200),
-															},
-															"runtime": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[types.Runtime](),
-															},
-															"runtime_environment_secrets": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem: &schema.Schema{
+					},
+				},
+				"service_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"service_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_role_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"connection_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"auto_deployments_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"code_repository": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"code_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"code_configuration_values": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"build_command": {
 																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringLenBetween(0, 2048),
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(0, 51200),
 																},
-															},
-															"runtime_environment_variables": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem: &schema.Schema{
+																names.AttrPort: {
 																	Type:         schema.TypeString,
+																	Optional:     true,
+																	Default:      "8080",
+																	ValidateFunc: validation.StringLenBetween(0, 51200),
+																},
+																"runtime": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.Runtime](),
+																},
+																"runtime_environment_secrets": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(0, 2048),
+																	},
+																},
+																"runtime_environment_variables": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:         schema.TypeString,
+																		ValidateFunc: validation.StringLenBetween(0, 51200),
+																	},
+																},
+																"start_command": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(0, 51200),
 																},
 															},
-															"start_command": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(0, 51200),
-															},
 														},
 													},
-												},
-												"configuration_source": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ConfigurationSource](),
-												},
-											},
-										},
-									},
-									"repository_url": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 51200),
-									},
-									"source_code_version": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.SourceCodeVersionType](),
-												},
-												names.AttrValue: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(0, 51200),
-												},
-											},
-										},
-									},
-									"source_directory": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringLenBetween(0, 4096),
-									},
-								},
-							},
-							ExactlyOneOf: []string{"source_configuration.0.code_repository", "source_configuration.0.image_repository"},
-						},
-						"image_repository": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"image_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrPort: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													Default:      "8080",
-													ValidateFunc: validation.StringLenBetween(0, 51200),
-												},
-												"runtime_environment_secrets": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringLenBetween(0, 2048),
+													"configuration_source": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ConfigurationSource](),
 													},
 												},
-												"runtime_environment_variables": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem: &schema.Schema{
+											},
+										},
+										"repository_url": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 51200),
+										},
+										"source_code_version": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.SourceCodeVersionType](),
+													},
+													names.AttrValue: {
 														Type:         schema.TypeString,
+														Required:     true,
 														ValidateFunc: validation.StringLenBetween(0, 51200),
 													},
 												},
-												"start_command": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 51200),
+											},
+										},
+										"source_directory": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(0, 4096),
+										},
+									},
+								},
+								ExactlyOneOf: []string{"source_configuration.0.code_repository", "source_configuration.0.image_repository"},
+							},
+							"image_repository": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"image_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrPort: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														Default:      "8080",
+														ValidateFunc: validation.StringLenBetween(0, 51200),
+													},
+													"runtime_environment_secrets": {
+														Type:     schema.TypeMap,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(0, 2048),
+														},
+													},
+													"runtime_environment_variables": {
+														Type:     schema.TypeMap,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(0, 51200),
+														},
+													},
+													"start_command": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(0, 51200),
+													},
 												},
 											},
 										},
-									},
-									"image_identifier": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1,2}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
-									},
-									"image_repository_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ImageRepositoryType](),
+										"image_identifier": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1,2}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										},
+										"image_repository_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ImageRepositoryType](),
+										},
 									},
 								},
+								ExactlyOneOf: []string{"source_configuration.0.image_repository", "source_configuration.0.code_repository"},
 							},
-							ExactlyOneOf: []string{"source_configuration.0.image_repository", "source_configuration.0.code_repository"},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

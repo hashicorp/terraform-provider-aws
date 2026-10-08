@@ -1,0 +1,22 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: list-iterator-calls-stopped-yield
+    message: >-
+      List iterator function uses callback-based paginated finder (lastPage pattern)
+      without ensuring that a stopped yield isn't called on error.
+    languages: [go]
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $ERR := $PAGES_FN($...PARGS, func($PAGE $PTYPE, lastPage bool) bool {
+            $...BODY
+          })
+      - pattern-inside: |
+          return func(yield func($T, error) bool) {
+            $...ALL
+          }
+      - pattern-not-inside: |
+          var stopped bool
+          $...REST

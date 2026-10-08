@@ -37,14 +37,6 @@ type listResourceSecret struct {
 func (l *listResourceSecret) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SecretsManagerClient(ctx)
 
-	var query listSecretModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Secrets Manager Secret")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input secretsmanager.ListSecretsInput
@@ -61,19 +53,24 @@ func (l *listResourceSecret) List(ctx context.Context, request list.ListRequest,
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(arn)
+			rd.Set(names.AttrARN, arn)
 
-			tflog.Info(ctx, "Reading Secrets Manager Secret")
-			diags := resourceSecretRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading Secrets Manager Secret", map[string]any{
-					names.AttrID: arn,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				output, err := findSecretByID(ctx, conn, arn)
+				if err != nil {
+					tflog.Error(ctx, "Reading Secrets Manager Secret", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+
+				diags := resourceSecretFlatten(ctx, conn, rd, output)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading Secrets Manager Secret", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = aws.ToString(item.Name)
@@ -89,10 +86,6 @@ func (l *listResourceSecret) List(ctx context.Context, request list.ListRequest,
 			}
 		}
 	}
-}
-
-type listSecretModel struct {
-	framework.WithRegionModel
 }
 
 func listSecrets(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.ListSecretsInput) iter.Seq2[awstypes.SecretListEntry, error] {

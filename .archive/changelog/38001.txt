@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_osis_pipeline: Add `vpc_options.vpc_endpoint_management` argument
-```

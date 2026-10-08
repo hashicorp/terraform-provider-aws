@@ -53,25 +53,27 @@ func ResourceEnabler() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account_ids": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_ids": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
-			"resource_types": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.ResourceScanType](),
+				"resource_types": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.ResourceScanType](),
+					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(

@@ -103,42 +103,35 @@ resource "aws_bedrockagent_agent_action_group" "example" {
 
 The following arguments are required:
 
-* `action_group_name` - (Required) Name of the action group.
-* `agent_id` - (Required) The unique identifier of the agent for which to create the action group.
-* `agent_version` - (Required) Version of the agent for which to create the action group. Valid values: `DRAFT`.
 * `action_group_executor` - (Required) ARN of the Lambda function containing the business logic that is carried out upon invoking the action or custom control method for handling the information elicited from the user. See [`action_group_executor` Block](#action_group_executor-block) for details.
+* `action_group_name` - (Required) Name of the action group.
+* `agent_id` - (Required) Unique identifier of the agent for which to create the action group.
+* `agent_version` - (Required) Version of the agent for which to create the action group. Valid values: `DRAFT`.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action_group_state` - (Optional) Whether the action group is available for the agent to invoke or not when sending an [InvokeAgent](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_InvokeAgent.html) request. Valid values: `ENABLED`, `DISABLED`.
 * `api_schema` - (Optional) Either details about the S3 object containing the OpenAPI schema for the action group or the JSON or YAML-formatted payload defining the schema. For more information, see [Action group OpenAPI schemas](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-api-schema.html). See [`api_schema` Block](#api_schema-block) for details.
 * `description` - (Optional) Description of the action group.
-* `function_schema` - (Optional) Describes the function schema for the action group.
-  Each function represents an action in an action group.
-  See [`function_schema` Block](#function_schema-block) for details.
+* `function_schema` - (Optional) Function schema for the action group. Each function represents an action in an action group. See [`function_schema` Block](#function_schema-block) for details.
 * `parent_action_group_signature` - (Optional) To allow your agent to request the user for additional information when trying to complete a task, set this argument to `AMAZON.UserInput`. You must leave the `description`, `api_schema`, and `action_group_executor` arguments blank for this action group. Valid values: `AMAZON.UserInput`.
 * `prepare_agent` - (Optional) Whether or not to prepare the agent after creation or modification. Defaults to `true`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the action group.
 
 ### `action_group_executor` Block
 
 The `action_group_executor` configuration block supports the following arguments:
 
-* `custom_control` - (Optional) Custom control method for handling the information elicited from the user. Valid values: `RETURN_CONTROL`.
-  To skip using a Lambda function and instead return the predicted action group, in addition to the parameters and information required for it, in the `InvokeAgent` response, specify `RETURN_CONTROL`.
-  Only one of `custom_control` or `lambda` can be specified.
-* `lambda` - (Optional) ARN of the Lambda function containing the business logic that is carried out upon invoking the action.
-  Only one of `lambda` or `custom_control` can be specified.
+* `custom_control` - (Optional) Custom control method for handling the information elicited from the user. Valid values: `RETURN_CONTROL`. To skip using a Lambda function and instead return the predicted action group, in addition to the parameters and information required for it, in the `InvokeAgent` response, specify `RETURN_CONTROL`. Only one of `custom_control` or `lambda` can be specified.
+* `lambda` - (Optional) ARN of the Lambda function containing the business logic that is carried out upon invoking the action. Only one of `lambda` or `custom_control` can be specified.
 
 ### `api_schema` Block
 
 The `api_schema` configuration block supports the following arguments:
 
-* `payload` - (Optional) JSON or YAML-formatted payload defining the OpenAPI schema for the action group.
-  Only one of `payload` or `s3` can be specified.
-* `s3` - (Optional) Details about the S3 object containing the OpenAPI schema for the action group. See [`s3` Block](#s3-block) for details.
-  Only one of `s3` or `payload` can be specified.
+* `payload` - (Optional) JSON or YAML-formatted payload defining the OpenAPI schema for the action group. Only one of `payload` or `s3` can be specified.
+* `s3` - (Optional) Details about the S3 object containing the OpenAPI schema for the action group. Only one of `s3` or `payload` can be specified. See [`s3` Block](#s3-block) for details.
 
 ### `s3` Block
 
@@ -151,9 +144,7 @@ The `s3` configuration block supports the following arguments:
 
 The `function_schema` configuration block supports the following arguments:
 
-* `member_functions` - (Optional) Contains a list of functions.
-  Each function describes and action in the action group.
-  See [`member_functions` Block](#member_functions-block) for details.
+* `member_functions` - (Optional) List of functions. Each function describes an action in the action group. See [`member_functions` Block](#member_functions-block) for details.
 
 ### `member_functions` Block
 
@@ -165,20 +156,20 @@ The `member_functions` configuration block supports the following arguments:
 
 The `functions` configuration block supports the following arguments:
 
-* `name` - (Required) Name for the function.
 * `description` - (Optional) Description of the function and its purpose.
+* `name` - (Required) Name for the function.
 * `parameters` - (Optional) Parameters that the agent elicits from the user to fulfill the function. See [`parameters` Block](#parameters-block) for details.
 
 ### `parameters` Block
 
 The `parameters` configuration block supports the following arguments:
 
+* `description` - (Optional) Description of the parameter. Helps the foundation model determine how to elicit the parameters from the user.
 * `map_block_key` - (Required) Name of the parameter.
 
   **Note:** The argument name `map_block_key` may seem out of context, but is necessary for backward compatibility reasons in the provider.
-* `type` - (Required) Data type of the parameter. Valid values: `string`, `number`, `integer`, `boolean`, `array`.
-* `description` - (Optional) Description of the parameter. Helps the foundation model determine how to elicit the parameters from the user.
 * `required` - (Optional) Whether the parameter is required for the agent to complete the function for action group invocation.
+* `type` - (Required) Data type of the parameter. Valid values: `string`, `number`, `integer`, `boolean`, `array`.
 
 ## Attribute Reference
 
@@ -193,7 +184,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
-* `delete` - (Default `30m`)
 
 ## Import
 

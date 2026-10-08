@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 const fieldSortOptionsMaxItems100 = 100
@@ -28,6 +29,19 @@ var fieldSortOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var fieldSortOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_sort": columnSortDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+				"field_sort":  fieldSortDataSourceSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+			},
+		},
+	}
+})
+
 var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
 		Type:     schema.TypeList,
@@ -36,9 +50,23 @@ var columnSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringEnumSchema[awstypes.SortDirection](attrRequired),
+				"direction":            sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+			},
+		},
+	}
+})
+
+var columnSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction":            sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				"sort_by":              columnDataSourceSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+				"aggregation_function": aggregationFunctionDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
 		},
 	}
@@ -52,8 +80,21 @@ var fieldSortSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringEnumSchema[awstypes.SortDirection](attrRequired),
-				"field_id":  stringLenBetweenSchema(attrRequired, 1, 512),
+				"direction": sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
+				attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+			},
+		},
+	}
+})
+
+var fieldSortDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"direction": sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
+				attrFieldID: stringComputedOnly(),
 			},
 		},
 	}

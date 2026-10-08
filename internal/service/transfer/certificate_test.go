@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +22,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
@@ -101,7 +102,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -143,7 +144,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -180,7 +181,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -199,6 +200,14 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -209,7 +218,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -261,7 +270,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

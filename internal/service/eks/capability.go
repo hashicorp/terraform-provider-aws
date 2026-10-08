@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -37,11 +37,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_eks_capability", name="Capability")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("capability_name")
+// @ImportIDHandler("capabilityImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Capability")
+// @Testing(importStateIdFunc=testAccCapabilityImportStateIDFunc)
+// @Testing(importStateIdAttribute="arn")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func newCapabilityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capabilityResource{}
 
@@ -55,6 +64,7 @@ func newCapabilityResource(_ context.Context) (resource.ResourceWithConfigure, e
 type capabilityResource struct {
 	framework.ResourceWithModel[capabilityResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *capabilityResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -426,22 +436,6 @@ func (r *capabilityResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *capabilityResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const (
-		capability = 2
-	)
-	parts, err := intflex.ExpandResourceId(request.ID, capability, true)
-
-	if err != nil {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])
-	response.State.SetAttribute(ctx, path.Root("capability_name"), parts[1])
-}
-
 func findCapabilityByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) (*awstypes.Capability, error) {
 	input := eks.DescribeCapabilityInput{
 		CapabilityName: aws.String(capabilityName),
@@ -635,4 +629,34 @@ type argoCDRoleMappingModel struct {
 type SSOIdentity struct {
 	ID   types.String                                 `tfsdk:"id"`
 	Type fwtypes.StringEnum[awstypes.SsoIdentityType] `tfsdk:"type"`
+}
+
+const capabilityImportIDSeparator = intflex.ResourceIdSeparator
+
+func capabilityParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, capabilityImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]scapability-name", id, capabilityImportIDSeparator)
+}
+
+var _ inttypes.ImportIDParser = capabilityImportID{}
+
+type capabilityImportID struct{}
+
+func (capabilityImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, capabilityName, err := capabilityParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"capability_name":     capabilityName,
+		names.AttrClusterName: clusterName,
+	}
+
+	return id, result, nil
 }

@@ -10,10 +10,10 @@ resource "aws_bedrock_custom_model" "test" {
   role_arn              = aws_iam_role.test.arn
 
   hyperparameters = {
-    "epochCount"              = "1"
+    "epochCount"              = "2"
     "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
+    "learningRate"            = "0.00005"
+    "learningRateWarmupSteps" = "10"
   }
 
   output_data_config {
@@ -140,7 +140,7 @@ resource "aws_iam_role_policy_attachment" "output" {
 }
 
 data "aws_bedrock_foundation_model" "test" {
-  model_id = "amazon.titan-text-express-v1"
+  model_id = "amazon.nova-micro-v1:0:128k"
 }
 
 resource "null_resource" "test" {}

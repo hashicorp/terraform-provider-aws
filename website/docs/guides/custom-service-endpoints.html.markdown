@@ -87,8 +87,10 @@ provider "aws" {
 |-------|------------------|-------------------------------|------------------------------------|
 |IAM Access Analyzer|`accessanalyzer`|`AWS_ENDPOINT_URL_ACCESSANALYZER`|`accessanalyzer`|
 |Account Management|`account`|`AWS_ENDPOINT_URL_ACCOUNT`|`account`|
+|Account Access|`accountaccess`|`AWS_ENDPOINT_URL_ACCOUNT_ACCESS`|`account_access`|
 |ACM (Certificate Manager)|`acm`|`AWS_ENDPOINT_URL_ACM`|`acm`|
 |ACM PCA (Certificate Manager Private Certificate Authority)|`acmpca`|`AWS_ENDPOINT_URL_ACM_PCA`|`acm_pca`|
+|Agent Registry|`agentregistry`|`AWS_ENDPOINT_URL_AGENT_REGISTRY_CONTROL`|`agent_registry_control`|
 |AMP (Managed Prometheus)|`amp`(or `prometheus` or `prometheusservice`)|`AWS_ENDPOINT_URL_AMP`|`amp`|
 |Amplify|`amplify`|`AWS_ENDPOINT_URL_AMPLIFY`|`amplify`|
 |API Gateway|`apigateway`|`AWS_ENDPOINT_URL_API_GATEWAY`|`api_gateway`|
@@ -116,6 +118,7 @@ provider "aws" {
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
 |Bedrock AgentCore|`bedrockagentcore`|`AWS_ENDPOINT_URL_BEDROCK_AGENTCORE_CONTROL`|`bedrock_agentcore_control`|
+|Bedrock Runtime|`bedrockruntime`|`AWS_ENDPOINT_URL_BEDROCK_RUNTIME`|`bedrock_runtime`|
 |Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
@@ -133,6 +136,7 @@ provider "aws" {
 |CloudSearch|`cloudsearch`|`AWS_ENDPOINT_URL_CLOUDSEARCH`|`cloudsearch`|
 |CloudTrail|`cloudtrail`|`AWS_ENDPOINT_URL_CLOUDTRAIL`|`cloudtrail`|
 |CloudWatch|`cloudwatch`|`AWS_ENDPOINT_URL_CLOUDWATCH`|`cloudwatch`|
+|CloudWatch Omni|`cloudwatchomni`|`AWS_ENDPOINT_URL_CLOUDWATCHOMNI`|`cloudwatchomni`|
 |CodeArtifact|`codeartifact`|`AWS_ENDPOINT_URL_CODEARTIFACT`|`codeartifact`|
 |CodeBuild|`codebuild`|`AWS_ENDPOINT_URL_CODEBUILD`|`codebuild`|
 |CodeCatalyst|`codecatalyst`|`AWS_ENDPOINT_URL_CODECATALYST`|`codecatalyst`|
@@ -163,8 +167,10 @@ provider "aws" {
 |CodeDeploy|`deploy`(or `codedeploy`)|`AWS_ENDPOINT_URL_CODEDEPLOY`|`codedeploy`|
 |Detective|`detective`|`AWS_ENDPOINT_URL_DETECTIVE`|`detective`|
 |Device Farm|`devicefarm`|`AWS_ENDPOINT_URL_DEVICE_FARM`|`device_farm`|
+|DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
+|Directory Service Data|`directoryservicedata`|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE_DATA`|`directory_service_data`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
 |DMS (Database Migration)|`dms`(or `databasemigration` or `databasemigrationservice`)|`AWS_ENDPOINT_URL_DATABASE_MIGRATION_SERVICE`|`database_migration_service`|
 |DocumentDB|`docdb`|`AWS_ENDPOINT_URL_DOCDB`|`docdb`|
@@ -188,6 +194,7 @@ provider "aws" {
 |EMR|`emr`|`AWS_ENDPOINT_URL_EMR`|`emr`|
 |EMR Containers|`emrcontainers`|`AWS_ENDPOINT_URL_EMR_CONTAINERS`|`emr_containers`|
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
+|EventBridge V2|`eventbridgev2`|`AWS_ENDPOINT_URL_EVENTBRIDGEV2`|`eventbridgev2`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
 |Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
@@ -210,6 +217,7 @@ provider "aws" {
 |EC2 Image Builder|`imagebuilder`|`AWS_ENDPOINT_URL_IMAGEBUILDER`|`imagebuilder`|
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
+|Interconnect|`interconnect`|`AWS_ENDPOINT_URL_INTERCONNECT`|`interconnect`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
@@ -226,6 +234,9 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda Core|`lambdacore`|`AWS_ENDPOINT_URL_LAMBDA_CORE`|`lambda_core`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
+|Lambda Web|`lambdaweb`|`AWS_ENDPOINT_URL_LAMBDA_WEB`|`lambda_web`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -235,6 +246,7 @@ provider "aws" {
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
+|SES Mail Manager|`mailmanager`|`AWS_ENDPOINT_URL_MAILMANAGER`|`mailmanager`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
 |Elemental MediaConvert|`mediaconvert`|`AWS_ENDPOINT_URL_MEDIACONVERT`|`mediaconvert`|
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
@@ -254,6 +266,7 @@ provider "aws" {
 |CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|Network Security Manager|`networksecuritymanager`|`AWS_ENDPOINT_URL_NETWORK_SECURITY_MANAGER`|`network_security_manager`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
@@ -262,12 +275,12 @@ provider "aws" {
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
-|OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
+|OpenSearch Ingestion (OSIS)|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|
 |Parallel Computing Service|`pcs`|`AWS_ENDPOINT_URL_PCS`|`pcs`|
-|Pinpoint|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
+|End User Messaging|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
 |End User Messaging SMS|`pinpointsmsvoicev2`|`AWS_ENDPOINT_URL_PINPOINT_SMS_VOICE_V2`|`pinpoint_sms_voice_v2`|
 |EventBridge Pipes|`pipes`|`AWS_ENDPOINT_URL_PIPES`|`pipes`|
 |Polly|`polly`|`AWS_ENDPOINT_URL_POLLY`|`polly`|
@@ -284,6 +297,7 @@ provider "aws" {
 |Redshift Serverless|`redshiftserverless`|`AWS_ENDPOINT_URL_REDSHIFT_SERVERLESS`|`redshift_serverless`|
 |Rekognition|`rekognition`|`AWS_ENDPOINT_URL_REKOGNITION`|`rekognition`|
 |Resilience Hub|`resiliencehub`|`AWS_ENDPOINT_URL_RESILIENCEHUB`|`resiliencehub`|
+|Resilience Hub V2|`resiliencehubv2`|`AWS_ENDPOINT_URL_RESILIENCEHUBV2`|`resiliencehubv2`|
 |Resource Explorer|`resourceexplorer2`|`AWS_ENDPOINT_URL_RESOURCE_EXPLORER_2`|`resource_explorer_2`|
 |Resource Groups|`resourcegroups`|`AWS_ENDPOINT_URL_RESOURCE_GROUPS`|`resource_groups`|
 |Resource Groups Tagging|`resourcegroupstaggingapi`(or `resourcegroupstagging`)|`AWS_ENDPOINT_URL_RESOURCE_GROUPS_TAGGING_API`|`resource_groups_tagging_api`|
@@ -297,6 +311,7 @@ provider "aws" {
 |CloudWatch RUM|`rum`(or `cloudwatchrum`)|`AWS_ENDPOINT_URL_RUM`|`rum`|
 |S3 (Simple Storage)|`s3`(or `s3api`)|`AWS_ENDPOINT_URL_S3`|`s3`|
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
+|S3 Files|`s3files`|`AWS_ENDPOINT_URL_S3FILES`|`s3files`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
 |S3 Vectors|`s3vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3vectors`|

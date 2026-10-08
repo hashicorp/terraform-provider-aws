@@ -33,225 +33,231 @@ func dataSourceLoadBalancer() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_logs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"client_keep_alive": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"connection_logs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_logs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_record_client_routing_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"drop_invalid_header_fields": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_deletion_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_http2": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_tls_version_and_cipher_suite_headers": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_waf_fail_open": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_xff_client_port": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_zonal_shift": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enforce_security_group_inbound_rules_on_private_link_traffic": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"health_check_logs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"arn_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"client_keep_alive": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"connection_logs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"idle_timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_pools": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4_ipam_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"customer_owned_ipv4_pool": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"desync_mitigation_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_record_client_routing_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"drop_invalid_header_fields": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_cross_zone_load_balancing": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_deletion_protection": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_http2": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_prefix_for_ipv6_source_nat": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_tls_version_and_cipher_suite_headers": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_waf_fail_open": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_xff_client_port": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_zonal_shift": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enforce_security_group_inbound_rules_on_private_link_traffic": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"health_check_logs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"load_balancer_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"preserve_host_header": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"secondary_ips_auto_assigned_per_subnet": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"subnet_mapping": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allocation_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipv6_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"outpost_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ipv4_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"idle_timeout": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"internal": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_pools": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv4_ipam_pool_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSubnets: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"xff_header_processing_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"load_balancer_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"preserve_host_header": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"secondary_ips_auto_assigned_per_subnet": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"subnet_mapping": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipv6_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"outpost_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_ipv4_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrSubnets: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"xff_header_processing_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -263,7 +269,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
+	var input elasticloadbalancingv2.DescribeLoadBalancersInput
 
 	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.LoadBalancerArns = []string{v.(string)}
@@ -271,7 +277,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		input.Names = []string{v.(string)}
 	}
 
-	results, err := findLoadBalancers(ctx, conn, input)
+	results, err := findLoadBalancers(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancers: %s", err)
@@ -312,6 +318,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("arn_suffix", suffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDNSName, lb.DNSName)
+	d.Set("enable_prefix_for_ipv6_source_nat", lb.EnablePrefixForIpv6SourceNat)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	if err := d.Set("ipam_pools", flattenIPAMPools(lb.IpamPools)); err != nil {

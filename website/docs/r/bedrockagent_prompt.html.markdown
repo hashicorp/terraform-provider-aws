@@ -63,129 +63,129 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) Description of the prompt.
+* `customer_encryption_key_arn` - (Optional) ARN of the KMS key that you encrypted the prompt with.
 * `default_variant` - (Optional) Name of the default variant for your prompt.
-* `customer_encryption_key_arn` - (Optional) Amazon Resource Name (ARN) of the KMS key that you encrypted the prompt with.
-* `variant` - (Optional) A list of objects, each containing details about a variant of the prompt. See [Variant](#variant) for more information.
-* `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `description` - (Optional) Description of the prompt.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `variant` - (Optional) List of objects, each containing details about a variant of the prompt. See [`variant` Block](#variant-block) for more information.
 
-### Variant
+### `variant` Block
 
-* `name` - (Required) Name of the prompt variant.
+* `additional_model_request_fields` - (Optional) Model-specific inference configurations that aren’t in the inferenceConfiguration field. To see model-specific inference parameters, see [Inference request parameters and response fields for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html).
+* `gen_ai_resource` - (Optional) Generative AI resource with which to use the prompt. If this is not supplied, then a `model_id` must be defined. See [`gen_ai_resource` Block](#gen_ai_resource-block) for more information.
+* `inference_configuration` - (Optional) Inference configurations for the prompt variant. See [`inference_configuration` Block](#inference_configuration-block) for more information.
+* `metadata` - (Optional) List of objects, each containing a key-value pair that defines a metadata tag and value to attach to a prompt variant. See [`metadata` Block](#metadata-block) for more information.
 * `model_id` - (Optional) Unique identifier of the model or [inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) with which to run inference on the prompt. If this is not supplied, then a `gen_ai_resource` must be defined.
+* `name` - (Required) Name of the prompt variant.
+* `template_configuration` - (Optional) Configurations for the prompt template. See [`template_configuration` Block](#template_configuration-block) for more information.
 * `template_type` - (Required) Type of prompt template to use. Valid values: `CHAT`, `TEXT`.
-* `additional_model_request_fields` - (Optional) Contains model-specific inference configurations that aren’t in the inferenceConfiguration field. To see model-specific inference parameters, see [Inference request parameters and response fields for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html).
-* `metadata` - (Optional) A list of objects, each containing a key-value pair that defines a metadata tag and value to attach to a prompt variant. See [Metadata](#metadata) for more information.
-* `inference_configuration` - (Optional) Contains inference configurations for the prompt variant. See [Inference Configuration](#inference-configuration) for more information.
-* `gen_ai_resource` - (Optional) Specifies a generative AI resource with which to use the prompt. If this is not supplied, then a `gen_ai_resource` must be defined. See [Generative AI Resource](#generative-ai-resource) for more information.
-* `template_configuration` - (Optional) Contains configurations for the prompt template. See [Template Configuration](#template-configuration) for more information.
 
-### Metadata
+### `gen_ai_resource` Block
 
-* `key` - (Required) Key of a metadata tag for a prompt variant.
-* `value` - (Required) Value of a metadata tag for a prompt variant.
+* `agent` - (Optional) Amazon Bedrock agent with which to use the prompt. See [`agent` Block](#agent-block) for more information.
 
-### Inference Configuration
+### `agent` Block
 
-* `text` - (Optional) Contains inference configurations for the prompt variant. See [Text Inference Configuration](#text-inference-configuration) for more information.
+* `agent_identifier` - (Required) ARN of the agent with which to use the prompt.
 
-#### Text Inference Configuration
+### `inference_configuration` Block
+
+* `text` - (Optional) Inference configurations for the prompt variant. See [`variant.inference_configuration.text` Block](#variantinference_configurationtext-block) for more information.
+
+### `variant.inference_configuration.text` Block
 
 * `max_tokens` - (Optional) Maximum number of tokens to return in the response.
 * `stop_sequences` - (Optional) List of strings that define sequences after which the model will stop generating.
 * `temperature` - (Optional) Controls the randomness of the response. Choose a lower value for more predictable outputs and a higher value for more surprising outputs.
 * `top_p` - (Optional) Percentage of most-likely candidates that the model considers for the next token.
 
-### Generative AI Resource
+### `metadata` Block
 
-* `agent` - (Optional) Specifies an Amazon Bedrock agent with which to use the prompt. See [Agent Configuration](#agent-configuration) for more information.
+* `key` - (Required) Key of a metadata tag for a prompt variant.
+* `value` - (Required) Value of a metadata tag for a prompt variant.
 
-#### Agent Configuration
+### `template_configuration` Block
 
-* `agent_identifier` - (Required) ARN of the agent with which to use the prompt.
+* `chat` - (Optional) Configurations to use the prompt in a conversational format. See [`chat` Block](#chat-block) for more information.
+* `text` - (Optional) Configurations for the text in a message for a prompt. See [`variant.template_configuration.text` Block](#varianttemplate_configurationtext-block) for more information.
 
-### Template Configuration
+### `chat` Block
 
-* `text` - (Optional) Contains configurations for the text in a message for a prompt. See [Text Template Configuration](#text-template-configuration)
-* `chat` - (Optional) Contains configurations to use the prompt in a conversational format. See [Chat Template Configuration](#chat-template-configuration) for more information.
+* `input_variable` - (Optional) List of variables in the prompt template. See [`input_variable` Block](#input_variable-block) for more information.
+* `message` - (Optional) List of messages in the chat for the prompt. See [`message` Block](#message-block) for more information.
+* `system` - (Optional) List of system prompts to provide context to the model or to describe how it should behave. See [`system` Block](#system-block) for more information.
+* `tool_configuration` - (Optional) Configuration information for the tools that the model can use when generating a response. See [`tool_configuration` Block](#tool_configuration-block) for more information.
 
-#### Text Template Configuration
+### `message` Block
 
-* `text` - (Required) The message for the prompt.
-* `input_variable` - (Optional) A list of variables in the prompt template. See [Input Variable](#input-variable) for more information.
-* `cache_point` - (Optional) A cache checkpoint within a template configuration. See [Cache Point](#cache-point) for more information.
+* `content` - (Required) Content for the message you pass to, or receive from a model. See [`content` Block](#content-block) for more information.
+* `role` - (Required) Role that the message belongs to.
 
-#### Chat Template Configuration
+### `content` Block
 
-* `input_variable` - (Optional) A list of variables in the prompt template. See [Input Variable](#input-variable) for more information.
-* `message` - (Optional) A list of messages in the chat for the prompt. See [Message](#message) for more information.
-* `system` - (Optional) A list of system prompts to provide context to the model or to describe how it should behave. See [System](#system) for more information.
-* `tool_configuration` - (Optional) Configuration information for the tools that the model can use when generating a response. See [Tool Configuration](#tool-configuration) for more information.
+* `cache_point` - (Optional) Cache checkpoint within a message. See [`cache_point` Block](#cache_point-block) for more information.
+* `text` - (Optional) Text in the message.
 
-#### Message
+### `system` Block
 
-* `role` - (Required) The role that the message belongs to.
-* `content` - (Required) Contains the content for the message you pass to, or receive from a model. See [Message Content] for more information.
+* `cache_point` - (Optional) Cache checkpoint within the system prompt. See [`cache_point` Block](#cache_point-block) for more information.
+* `text` - (Optional) Text in the system prompt.
 
-#### Message Content
+### `tool_configuration` Block
 
-* `cache_point` - (Optional) Creates a cache checkpoint within a message. See [Cache Point](#cache-point) for more information.
-* `text` - (Optional) The text in the message.
+* `tool` - (Optional) List of tools to pass to a model. See [`variant.template_configuration.chat.tool_configuration.tool` Block](#varianttemplate_configurationchattool_configurationtool-block) for more information.
+* `tool_choice` - (Optional) Configuration for which tools the model should request when invoked. See [`tool_choice` Block](#tool_choice-block) for more information.
 
-#### System
+### `variant.template_configuration.chat.tool_configuration.tool` Block
 
-* `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
-* `text` - (Optional) The text in the system prompt.
+* `cache_point` - (Optional) Cache checkpoint within a tool designation. See [`cache_point` Block](#cache_point-block) for more information.
+* `tool_spec` - (Optional) Specification for the tool. See [`tool_spec` Block](#tool_spec-block) for more information.
 
-#### Tool Configuration
+### `tool_spec` Block
 
-* `tool_choice` - (Optional) Defines which tools the model should request when invoked. See [Tool Choice](#tool-choice) for more information.
-* `tool` - (Optional) A list of tools to pass to a model. See [Tool](#tool) for more information.
+* `description` - (Optional) Description of the tool.
+* `input_schema` - (Optional) Input schema of the tool. See [`input_schema` Block](#input_schema-block) for more information.
+* `name` - (Required) Name of the tool.
 
-#### Tool Choice
+### `input_schema` Block
 
-* `any` - (Optional) Defines tools, at least one of which must be requested by the model. No text is generated but the results of tool use are sent back to the model to help generate a response. This object has no fields.
-* `auto` - (Optional) Defines tools. The model automatically decides whether to call a tool or to generate text instead. This object has no fields.
-* `tool` - (Optional) Defines a specific tool that the model must request. No text is generated but the results of tool use are sent back to the model to help generate a response. See [Named Tool](#named-tool) for more information.
+* `json` - (Optional) JSON object defining the input schema for the tool.
 
-#### Named Tool
+### `tool_choice` Block
 
-* `name` - (Required) The name of the tool.
+* `any` - (Optional) Tools, at least one of which must be requested by the model. No text is generated but the results of tool use are sent back to the model to help generate a response. This object has no fields.
+* `auto` - (Optional) Tools from which the model automatically decides whether to call a tool or to generate text instead. This object has no fields.
+* `tool` - (Optional) Specific tool that the model must request. No text is generated but the results of tool use are sent back to the model to help generate a response. See [`variant.template_configuration.chat.tool_configuration.tool_choice.tool` Block](#varianttemplate_configurationchattool_configurationtool_choicetool-block) for more information.
 
-#### Tool
+### `variant.template_configuration.chat.tool_configuration.tool_choice.tool` Block
 
-* `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
-* `tool_spec` - (Optional) The specification for the tool. See [Tool Specification](#tool-specification) for more information.
+* `name` - (Required) Name of the tool.
 
-#### Tool Specification
+### `variant.template_configuration.text` Block
 
-* `name` - (Required) The name of the tool.
-* `description` - (Optional) The description of the tool.
-* `input_schema` - (Optional) The input schema of the tool. See [Tool Input Schema](#tool-input-schema) for more information.
+* `cache_point` - (Optional) Cache checkpoint within a template configuration. See [`cache_point` Block](#cache_point-block) for more information.
+* `input_variable` - (Optional) List of variables in the prompt template. See [`input_variable` Block](#input_variable-block) for more information.
+* `text` - (Required) Message for the prompt.
 
-#### Tool Input Schema
+### `input_variable` Block
 
-* `json` - (Optional) A JSON object defining the input schema for the tool.
+* `name` - (Required) Name of the variable.
 
-#### Input Variable
+### `cache_point` Block
 
-* `name` - (Required) The name of the variable.
-
-#### Cache Point
-
-* `type` - (Required) Indicates that the CachePointBlock is of the default type. Valid values: `default`.
+* `type` - (Required) Cache point type. Valid values: `default`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the prompt.
-* `id` - Unique identifier of the prompt.
-* `version` - Version of the prompt. When you create a prompt, the version created is the `DRAFT` version.
+* `arn` - ARN of the prompt.
 * `created_at` - Time at which the prompt was created.
-* `updated_at` -  Time at which the prompt was last updated.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Unique identifier of the prompt.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `updated_at` - Time at which the prompt was last updated.
+* `version` - Version of the prompt. When you create a prompt, the version created is the `DRAFT` version.
 
 ## Import
 

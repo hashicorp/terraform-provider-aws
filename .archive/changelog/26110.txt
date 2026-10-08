@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_dx_location: Add `available_macsec_port_speeds` attribute
-```

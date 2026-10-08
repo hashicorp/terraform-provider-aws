@@ -98,6 +98,7 @@ This action supports the following arguments:
 * `assessment_run_name` - (Required) Unique name for the DMS premigration assessment run.
 * `exclude` - (Optional) List of individual assessment names to exclude from the run. Cannot be set with `include_only`.
 * `include_only` - (Optional) List of individual assessment names to include in the run. Cannot be set with `exclude`.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_task_arn` - (Required) ARN of the DMS replication task to assess.
 * `result_encryption_mode` - (Optional) Encryption mode for assessment results. Valid values are `SSE_KMS` and `SSE_S3`.
 * `result_kms_key_arn` - (Optional) ARN of the KMS key used to encrypt assessment results when `result_encryption_mode` is `SSE_KMS`.

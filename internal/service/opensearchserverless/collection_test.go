@@ -9,11 +9,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
@@ -40,11 +46,23 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
-					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "aoss", "collection/{id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collection_endpoint"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("collection_group_name"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_endpoint"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_config"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("standby_replicas"), knownvalue.StringExact("ENABLED")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_options"), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -173,6 +191,47 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchServerlessCollection_vectorOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection1, collection2 types.CollectionDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_vectorOptions(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "VECTORSEARCH"),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.0.serverless_vector_acceleration", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccCollectionConfig_vectorOptions(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection2),
+					testAccCheckCollectionNotRecreated(&collection1, &collection2),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.0.serverless_vector_acceleration", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchServerlessCollection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -197,6 +256,112 @@ func TestAccOpenSearchServerlessCollection_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_collectionGroupName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_collectionGroupName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+					resource.TestCheckResourceAttrSet(resourceName, "collection_group_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_encryptionConfig_owned(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_encryptionConfig_owned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.aws_owned_key", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"encryption_config"},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_encryptionConfigKMS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_encryptionConfigKMS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+					resource.TestCheckResourceAttrSet(resourceName, "encryption_config.0.kms_key_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"encryption_config"},
 			},
 		},
 	})
@@ -247,6 +412,16 @@ func testAccCheckCollectionExists(ctx context.Context, t *testing.T, name string
 		}
 
 		*collection = *resp
+
+		return nil
+	}
+}
+
+func testAccCheckCollectionNotRecreated(before, after *types.CollectionDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
+			return fmt.Errorf("OpenSearch Serverless Collection %s recreated", before)
+		}
 
 		return nil
 	}
@@ -360,5 +535,86 @@ resource "aws_opensearchserverless_collection" "test" {
   depends_on = [aws_opensearchserverless_security_policy.test]
 }
 `, rName, key1, value1, key2, value2),
+	)
+}
+
+func testAccCollectionConfig_collectionGroupName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_collection_group" "test" {
+  name             = %[1]q
+  standby_replicas = "ENABLED"
+}
+
+resource "aws_opensearchserverless_security_policy" "test" {
+  name = %[1]q
+  type = "encryption"
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/%[1]s"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
+}
+
+resource "aws_opensearchserverless_collection" "test" {
+  name                  = %[1]q
+  collection_group_name = aws_opensearchserverless_collection_group.test.name
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName)
+}
+
+func testAccCollectionConfig_encryptionConfig_owned(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  encryption_config = [{
+    aws_owned_key = true
+    kms_key_arn   = null
+  }]
+}
+`, rName)
+}
+
+func testAccCollectionConfig_encryptionConfigKMS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  encryption_config = [{
+    aws_owned_key = null
+    kms_key_arn   = aws_kms_key.test.arn
+  }]
+}
+`, rName)
+}
+
+func testAccCollectionConfig_vectorOptions(rName, acceleration string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+  type = "VECTORSEARCH"
+
+  vector_options {
+    serverless_vector_acceleration = %[2]q
+  }
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName, acceleration),
 	)
 }

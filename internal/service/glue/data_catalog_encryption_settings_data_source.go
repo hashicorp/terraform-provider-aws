@@ -22,55 +22,57 @@ func dataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"data_catalog_encryption_settings": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_password_encryption": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"aws_kms_key_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"return_connection_password_encrypted": {
-										Type:     schema.TypeBool,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"data_catalog_encryption_settings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"connection_password_encryption": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"aws_kms_key_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"return_connection_password_encrypted": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"encryption_at_rest": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"catalog_encryption_mode": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"catalog_encryption_service_role": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"sse_aws_kms_key_id": {
-										Type:     schema.TypeString,
-										Computed: true,
+							"encryption_at_rest": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"catalog_encryption_mode": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"catalog_encryption_service_role": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"sse_aws_kms_key_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

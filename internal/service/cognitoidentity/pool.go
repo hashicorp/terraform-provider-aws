@@ -38,91 +38,93 @@ func resourcePool() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity_pool_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentityPoolName,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity_pool_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentityPoolName,
+				},
 
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"cognito_identity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validIdentityProvidersClientID,
-						},
-						names.AttrProviderName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validIdentityProvidersProviderName,
-						},
-						"server_side_token_check": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+				"cognito_identity_providers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validIdentityProvidersClientID,
+							},
+							names.AttrProviderName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validIdentityProvidersProviderName,
+							},
+							"server_side_token_check": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
 
-			"developer_provider_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true, // Forcing a new resource since it cannot be edited afterwards
-				ValidateFunc: validProviderDeveloperName,
-			},
-
-			"allow_unauthenticated_identities": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"allow_classic_flow": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"openid_connect_provider_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"developer_provider_name": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ForceNew:     true, // Forcing a new resource since it cannot be edited afterwards
+					ValidateFunc: validProviderDeveloperName,
 				},
-			},
 
-			"saml_provider_arns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"allow_unauthenticated_identities": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
 
-			"supported_login_providers": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validSupportedLoginProviders,
+				"allow_classic_flow": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
 
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"openid_connect_provider_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+
+				"saml_provider_arns": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+
+				"supported_login_providers": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validSupportedLoginProviders,
+					},
+				},
+
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

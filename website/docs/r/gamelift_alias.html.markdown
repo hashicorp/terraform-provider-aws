@@ -34,8 +34,6 @@ This resource supports the following arguments:
 * `routing_strategy` - (Required) Specifies the fleet and/or routing type to use for the alias.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested Fields
-
 #### `routing_strategy`
 
 * `fleet_id` - (Optional) ID of the GameLift Fleet to point the alias to.

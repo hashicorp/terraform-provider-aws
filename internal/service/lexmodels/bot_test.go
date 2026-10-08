@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -91,6 +92,7 @@ func TestAccLexModelsBot_Version_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		"LexBot_createVersion":         testAccBot_createVersion,
+		"LexBot_computeVersion":        testAccBot_computeVersion,
 		"LexBotAlias_botVersion":       testAccBotAlias_botVersion,
 		"DataSourceLexBot_withVersion": testAccBotDataSource_withVersion,
 		"DataSourceLexBotAlias_basic":  testAccBotAliasDataSource_basic,
@@ -577,7 +579,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 	})
 }
 
-func TestAccLexModelsBot_computeVersion(t *testing.T) {
+func testAccBot_computeVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 lexmodelbuildingservice.GetBotOutput
 	var v2 lexmodelbuildingservice.GetBotAliasOutput
@@ -760,6 +762,14 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceBot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

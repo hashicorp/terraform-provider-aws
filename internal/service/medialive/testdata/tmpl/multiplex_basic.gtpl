@@ -1,4 +1,5 @@
 resource "aws_medialive_multiplex" "test" {
+{{- template "region" }}
   name               = var.rName
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
@@ -14,6 +15,7 @@ resource "aws_medialive_multiplex" "test" {
 # acctest.ConfigAvailableAZsNoOptInExclude
 
 data "aws_availability_zones" "available" {
+{{- template "region" }}
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 

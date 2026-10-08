@@ -7,7 +7,6 @@ package arcregionswitch
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
@@ -26,16 +25,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newPlanDataSource,
 			TypeName: "aws_arcregionswitch_plan",
 			Name:     "Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDeprecatedOverride(),
 		},
 		{
 			Factory:  newRoute53HealthChecksDataSource,
 			TypeName: "aws_arcregionswitch_route53_health_checks",
 			Name:     "Route53 Health Checks",
-			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+			Region:   inttypes.ResourceRegionDeprecatedOverride(),
 		},
 	}
 }
@@ -46,10 +43,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourcePlan,
 			TypeName: "aws_arcregionswitch_plan",
 			Name:     "Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDeprecatedOverride(),
 			Identity: inttypes.GlobalARNIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -72,7 +67,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*arcregionswitch.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*arcregionswitch.Options){
 		arcregionswitch.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iam_user: Retry `ConcurrentModificationException`s during user creation
-```

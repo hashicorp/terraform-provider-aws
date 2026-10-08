@@ -71,6 +71,10 @@ func testAccCheckStandardsControlAssociationExists(ctx context.Context, t *testi
 	}
 }
 
+func testAccCheckStandardsControlAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "security_control_id", "standards_arn")
+}
+
 const testAccStandardsControlAssociation_base = `
 data "aws_partition" "current" {}
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -39,6 +40,7 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, "{\"foo\":\"bar\"}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "version_label", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
@@ -46,6 +48,49 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppConfigHostedConfigurationVersion_versionLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_appconfig_hosted_configuration_version.test"
+	versionLabel := "v1.2.3"
+	versionLabelUpdated := "v1.2.4"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostedConfigurationVersionConfig_versionLabel(rName, versionLabel),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostedConfigurationVersionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_label", versionLabel),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHostedConfigurationVersionConfig_versionLabel(rName, versionLabelUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostedConfigurationVersionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_label", versionLabelUpdated),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})
@@ -69,6 +114,14 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -131,4 +184,23 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
   description = %q
 }
 `, rName))
+}
+
+func testAccHostedConfigurationVersionConfig_versionLabel(rName, versionLabel string) string {
+	return acctest.ConfigCompose(
+		testAccConfigurationProfileConfig_name(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_hosted_configuration_version" "test" {
+  application_id           = aws_appconfig_application.test.id
+  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
+  content_type             = "application/json"
+
+  content = jsonencode({
+    foo = "bar"
+  })
+
+  description   = %[1]q
+  version_label = %[2]q
+}
+`, rName, versionLabel))
 }

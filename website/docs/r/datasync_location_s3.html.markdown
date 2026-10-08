@@ -45,8 +45,8 @@ resource "aws_datasync_location_s3" "destination" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `agent_arns` - (Optional) (Amazon S3 on Outposts only) Amazon Resource Name (ARN) of the DataSync agent on the Outpost.
-* `s3_bucket_arn` - (Required) Amazon Resource Name (ARN) of the S3 bucket, or the Amazon S3 access point if the S3 bucket is located on an AWS Outposts resource.
+* `agent_arns` - (Optional) (Amazon S3 on Outposts only) ARN of the DataSync agent on the Outpost.
+* `s3_bucket_arn` - (Required) ARN of the S3 bucket, or the Amazon S3 access point if the S3 bucket is located on an AWS Outposts resource.
 * `s3_config` - (Required) Configuration block containing information for connecting to S3.
 * `s3_storage_class` - (Optional) Amazon S3 storage class that you want to store your files in when this location is used as a task destination. [Valid values](https://docs.aws.amazon.com/datasync/latest/userguide/create-s3-location.html#using-storage-classes)  
 * `subdirectory` - (Required) Prefix to perform actions as source or destination.
@@ -62,8 +62,8 @@ The `s3_config` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the DataSync Location.
-* `arn` - Amazon Resource Name (ARN) of the DataSync Location.
+* `id` - ARN of the DataSync Location.
+* `arn` - ARN of the DataSync Location.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -87,9 +87,9 @@ resource "aws_datasync_location_s3" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the DataSync S3 location.
+- `arn` (String) ARN of the DataSync S3 location.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_s3` using the DataSync Task Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_s3` using the DataSync Task ARN. For example:
 
 ```terraform
 import {
@@ -98,7 +98,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datasync_location_s3` using the DataSync Task Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_datasync_location_s3` using the DataSync Task ARN. For example:
 
 ```console
 % terraform import aws_datasync_location_s3.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambda_function: Prevents perpetual diff in `vpc_config`
-```

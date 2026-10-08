@@ -27,70 +27,72 @@ func dataSourcePool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoolRead,
 
-		Schema: map[string]*schema.Schema{
-			"allow_classic_flow": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"allow_unauthenticated_identities": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cognito_identity_providers": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrProviderName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"server_side_token_check": {
-							Type:     schema.TypeBool,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_classic_flow": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"allow_unauthenticated_identities": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cognito_identity_providers": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrProviderName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"server_side_token_check": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"developer_provider_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_pool_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validIdentityPoolName,
-			},
-			"openid_connect_provider_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"developer_provider_name": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"saml_provider_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"identity_pool_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validIdentityPoolName,
 				},
-			},
-			"supported_login_providers": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"openid_connect_provider_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"saml_provider_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"supported_login_providers": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -130,20 +130,20 @@ resource "aws_lambda_code_signing_config" "dev" {
 
 The following arguments are required:
 
-* `allowed_publishers` - (Required) Configuration block of allowed publishers as signing profiles for this code signing configuration. [See below](#allowed_publishers-configuration-block).
+* `allowed_publishers` - (Required) Configuration block of allowed publishers as signing profiles for this code signing configuration. [See below](#allowed_publishers-block).
 
 The following arguments are optional:
 
 * `description` - (Optional) Descriptive name for this code signing configuration.
-* `policies` - (Optional) Configuration block of code signing policies that define the actions to take if the validation checks fail. [See below](#policies-configuration-block).
+* `policies` - (Optional) Configuration block of code signing policies that define the actions to take if the validation checks fail. [See below](#policies-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### allowed_publishers Configuration Block
+### `allowed_publishers` Block
 
 * `signing_profile_version_arns` - (Required) Set of ARNs for each of the signing profiles. A signing profile defines a trusted user who can sign a code package. Maximum of 20 signing profiles.
 
-### policies Configuration Block
+### `policies` Block
 
 * `untrusted_artifact_on_deployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to `Enforce`, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to `Warn`, Lambda allows the deployment and creates a CloudWatch log. Valid values: `Warn`, `Enforce`. Default value: `Warn`.
 

@@ -58,7 +58,7 @@ The `location` configuration block supports the following arguments:
 
 The `s3` configuration Block supports the following arguments:
 
-* `bucket_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of an S3 bucket.
+* `bucket_arn` - (Required, Forces new resource) ARN of an S3 bucket.
 * `file_key` - (Required, Forces new resource) The file key for an object in an S3 bucket.
 * `object_version` - (Optional, Forces new resource) The version of an object in an S3 bucket.
 
@@ -66,7 +66,7 @@ The `s3` configuration Block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - the Amazon Resource Name (ARN) of the custom plugin.
+* `arn` - the ARN of the custom plugin.
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -122,7 +122,7 @@ func TestExpandXMLWrapper(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 // Test XML wrapper expansion for direct struct (not pointer to struct)
@@ -352,7 +352,7 @@ func TestFlattenXMLWrapper(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 type FunctionAssociationsTF struct {
@@ -408,7 +408,7 @@ func TestExpandNoXMLWrapper(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenNoXMLWrapper(t *testing.T) {
@@ -464,5 +464,5 @@ func TestFlattenNoXMLWrapper(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }

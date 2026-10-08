@@ -54,3 +54,41 @@ This resource exports the following attributes in addition to the arguments abov
 * `remediation_url` - A link to remediation information for the control in the Security Hub user documentation.
 * `severity_rating` - The severity of findings generated from this security standard control.
 * `title` - The standard control title.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control.example
+  identity = {
+    standards_control_arn = "arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+  }
+}
+
+resource "aws_securityhub_standards_control" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `standards_control_arn` (String) Standards control ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards controls using `standards_control_arn`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_control.example
+  id = "arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
+}
+```
+
+Using `terraform import`, import Security Hub standards controls using `standards_control_arn`. For example:
+
+```console
+% terraform import aws_securityhub_standards_control.example arn:aws:securityhub:us-east-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.10
+```

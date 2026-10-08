@@ -8,23 +8,26 @@ package rekognition
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +35,8 @@ import (
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
+// @Testing(preIdentityVersion="v6.56.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
 
@@ -44,7 +49,7 @@ func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type projectResource struct {
 	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 const (
@@ -67,8 +72,10 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"feature": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.CustomizationFeature](),
 				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -94,7 +101,7 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 	conn := r.Meta().RekognitionClient(ctx)
 
 	var plan projectResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -103,54 +110,52 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		Tags: getTagsIn(ctx),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &in, flex.WithFieldNamePrefix("Project")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in.ProjectName = flex.StringFromFramework(ctx, plan.Name)
-
-	if plan.Feature.ValueEnum() == awstypes.CustomizationFeatureCustomLabels {
+	if plan.Feature.IsNull() || plan.Feature.ValueEnum() == awstypes.CustomizationFeatureCustomLabels {
 		in.AutoUpdate = ""
 	}
 
 	out, err := conn.CreateProject(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameProject, plan.Name.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	if out == nil || out.ProjectArn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameProject, plan.Name.ValueString(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	state := plan
-	state.ARN = flex.StringToFramework(ctx, out.ProjectArn)
-	state.ID = state.Name
+	plan.setID()
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	output, err := waitProjectCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.State.SetAttribute(ctx, path.Root(names.AttrName), plan.Name.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan, flex.WithFieldNamePrefix("Project")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// set default since API does not return it
+	if plan.Feature.IsNull() {
+		plan.Feature = fwtypes.StringEnumValue(awstypes.CustomizationFeatureCustomLabels)
+	}
 
 	// API  returns empty string so we set a null
-	if state.Feature.ValueEnum() == awstypes.CustomizationFeatureCustomLabels {
-		state.AutoUpdate = fwtypes.StringEnumNull[awstypes.ProjectAutoUpdate]()
+	if plan.Feature.ValueEnum() == awstypes.CustomizationFeatureCustomLabels {
+		plan.AutoUpdate = fwtypes.StringEnumNull[awstypes.ProjectAutoUpdate]()
 	}
 
-	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, state.ID.ValueString(), in.Feature, createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -158,33 +163,29 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	var state projectResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findProjectByName(ctx, conn, state.ID.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
+	state.setID()
 
+	out, err := findProjectByName(ctx, conn, state.ID.ValueString())
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Project")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.Name = state.ID
-	state.ARN = flex.StringToFramework(ctx, out.ProjectArn)
 
 	if state.Feature.ValueString() == "" {
 		// API returns empty string for default CUSTOM_LABELS value, so we have to set it forcibly to avoid drift
@@ -200,25 +201,14 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan projectResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
 	var state projectResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -229,33 +219,48 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	_, err := conn.DeleteProject(ctx, in)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
-
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), state.Feature.ValueEnum(), deleteTimeout)
+	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
 
-func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
+func (r *projectResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var feature fwtypes.StringEnum[awstypes.CustomizationFeature]
+	var autoUpdate fwtypes.StringEnum[awstypes.ProjectAutoUpdate]
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root("feature"), &feature))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root("auto_update"), &autoUpdate))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if feature.ValueEnum() == awstypes.CustomizationFeatureContentModeration && (autoUpdate.IsNull() || autoUpdate.IsUnknown()) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("auto_update"),
+			"Invalid Auto Update value",
+			fmt.Sprintf("`auto_update` must be set when `feature` is %q.", feature),
+		)
+
+		return
+	}
+}
+
+func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),
 		Target:                    enum.Slice(awstypes.ProjectStatusCreated),
-		Refresh:                   statusProject(conn, name, feature),
+		Refresh:                   statusProject(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -269,11 +274,11 @@ func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name stri
 	return nil, err
 }
 
-func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
+func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusDeleting),
 		Target:                    []string{},
-		Refresh:                   statusProject(conn, name, feature),
+		Refresh:                   statusProject(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -287,23 +292,15 @@ func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name stri
 	return nil, err
 }
 
-func findProjectByName(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) (*awstypes.ProjectDescription, error) {
-	features := []awstypes.CustomizationFeature{}
-	if len((string)(feature)) == 0 {
-		// we don't know the type on import, so we lookup both
-		features = append(features, awstypes.CustomizationFeatureContentModeration, awstypes.CustomizationFeatureCustomLabels)
-	} else {
-		features = append(features, feature)
-	}
-
-	in := &rekognition.DescribeProjectsInput{
+func findProjectByName(ctx context.Context, conn *rekognition.Client, name string) (*awstypes.ProjectDescription, error) {
+	input := rekognition.DescribeProjectsInput{
 		ProjectNames: []string{
 			name,
 		},
-		Features: features,
+		Features: awstypes.CustomizationFeature("").Values(), // pass all possible to values to filter since it defaults to CUSTOM_LABELS
 	}
 
-	out, err := conn.DescribeProjects(ctx, in)
+	out, err := conn.DescribeProjects(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -315,16 +312,12 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 		return nil, err
 	}
 
-	if out == nil || len(out.ProjectDescriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return &out.ProjectDescriptions[0], nil
+	return tfresource.AssertSingleValueResult(out.ProjectDescriptions)
 }
 
-func statusProject(conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
+func statusProject(conn *rekognition.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findProjectByName(ctx, conn, name, feature)
+		out, err := findProjectByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -337,11 +330,15 @@ func statusProject(conn *rekognition.Client, name string, feature awstypes.Custo
 	}
 }
 
+func (p *projectResourceModel) setID() {
+	p.ID = p.Name
+}
+
 type projectResourceModel struct {
 	framework.WithRegionModel
 	ARN        types.String                                      `tfsdk:"arn"`
 	AutoUpdate fwtypes.StringEnum[awstypes.ProjectAutoUpdate]    `tfsdk:"auto_update"`
-	Feature    fwtypes.StringEnum[awstypes.CustomizationFeature] `tfsdk:"feature"`
+	Feature    fwtypes.StringEnum[awstypes.CustomizationFeature] `tfsdk:"feature" autoflex:"noflatten"`
 	ID         types.String                                      `tfsdk:"id"`
 	Name       types.String                                      `tfsdk:"name"`
 	Tags       tftags.Map                                        `tfsdk:"tags"`

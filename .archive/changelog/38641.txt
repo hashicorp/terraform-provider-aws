@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_ebs_snapshot_block_public_access
-```

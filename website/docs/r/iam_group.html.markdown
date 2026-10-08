@@ -25,22 +25,45 @@ resource "aws_iam_group" "developers" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The group's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: `=,.@-_.`. Group names are not distinguished by case. For example, you cannot create groups named both "ADMINS" and "admins".
+* `name` - (Required) Group's name. Must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: `=,.@-_.`. Group names are not distinguished by case. For example, you cannot create groups named both "ADMINS" and "admins".
 * `path` - (Optional, default "/") Path in which to create the group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The group's name.
-* `arn` - The ARN assigned by AWS for this group.
-* `name` - The group's name.
-* `path` - The path of the group in IAM.
-* `unique_id` - The [unique ID][1] assigned by AWS.
-
-  [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
+* `arn` - ARN assigned by AWS for this group.
+* `id` - Group's name.
+* `name` - Group's name.
+* `path` - Path of the group in IAM.
+* `unique_id` - [Unique ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs) assigned by AWS.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_group.developers
+  identity = {
+    name = "developers"
+  }
+}
+
+resource "aws_iam_group" "developers" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the IAM group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Groups using the `name`. For example:
 

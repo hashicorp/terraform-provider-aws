@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ami_copy
 
-The "AMI copy" resource allows duplication of an Amazon Machine Image (AMI),
+The "AMI copy" resource allows duplication of an AMI,
 including cross-region copies.
 
 If the source AMI has associated EBS snapshots, those will also be duplicated

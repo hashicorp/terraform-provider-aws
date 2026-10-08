@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -52,58 +53,6 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
-			},
-		},
-	})
-}
-
-func TestAccEC2KeyPair_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var keyPair awstypes.KeyPairInfo
-	resourceName := "aws_key_pair.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	if err != nil {
-		t.Fatalf("error generating random SSH key: %s", err)
-	}
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeyPairConfig_tags1(rName, publicKey, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, t, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
-			},
-			{
-				Config: testAccKeyPairConfig_tags2(rName, publicKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, t, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccKeyPairConfig_tags1(rName, publicKey, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, t, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -201,6 +150,14 @@ func TestAccEC2KeyPair_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -260,33 +217,6 @@ resource "aws_key_pair" "test" {
   public_key = %[2]q
 }
 `, rName, publicKey)
-}
-
-func testAccKeyPairConfig_tags1(rName, publicKey, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_key_pair" "test" {
-  key_name   = %[1]q
-  public_key = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rName, publicKey, tagKey1, tagValue1)
-}
-
-func testAccKeyPairConfig_tags2(rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_key_pair" "test" {
-  key_name   = %[1]q
-  public_key = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccKeyPairConfig_nameGenerated(publicKey string) string {

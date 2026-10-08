@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -34,13 +33,16 @@ import (
 
 // @FrameworkResource("aws_auditmanager_control", name="Control")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/auditmanager/types;awstypes;awstypes.Control")
 func newControlResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &controlResource{}, nil
 }
 
 type controlResource struct {
 	framework.ResourceWithModel[controlResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *controlResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -88,7 +90,7 @@ func (r *controlResource) Schema(ctx context.Context, request resource.SchemaReq
 							Optional:   true,
 						},
 						"source_id":      framework.IDAttribute(),
-						"source_keyword": framework.ResourceOptionalComputedListOfObjectsAttribute[sourceKeywordModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+						"source_keyword": framework.ResourceOptionalComputedSingleNestedObjectAttribute[sourceKeywordModel](ctx),
 						"source_name": schema.StringAttribute{
 							Required: true,
 						},

@@ -285,7 +285,7 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 									"semantic_version": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`), ""),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^(?:[0-9]+|x)\.(?:[0-9]+|x)\.(?:[0-9]+|x)$`), ""),
 										},
 									},
 								},

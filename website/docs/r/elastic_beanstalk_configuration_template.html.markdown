@@ -40,9 +40,9 @@ This resource supports the following arguments:
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
 * `solution_stack_name` - (Optional) A solution stack to base your Template
-off of. Example stacks can be found in the [Amazon API documentation][1]
+off of. Example stacks can be found in the [Amazon API documentation](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)
 
-## Option Settings
+### Option Settings
 
 The `setting` field supports the following format:
 
@@ -54,5 +54,3 @@ The `setting` field supports the following format:
 ## Attribute Reference
 
 This resource exports no additional attributes.
-
-[1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html

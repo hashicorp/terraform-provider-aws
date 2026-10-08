@@ -14,7 +14,7 @@ import (
 
 func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	dataSourceName := "data.aws_ses_domain_identity.test"
 	resourceName := "aws_ses_domain_identity.test"

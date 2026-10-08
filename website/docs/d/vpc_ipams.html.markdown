@@ -46,20 +46,18 @@ data "aws_vpc_ipams" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `ipam_ids` - (Optional) IDs of the IPAM resources to query for.
-* `filter` - (Optional) Custom filter block as described below.
-
 The arguments of this data source act as filters for querying the available IPAMs.
 
-### `filter`
+* `filter` - (Optional) Custom filter block as described below.
+* `ipam_ids` - (Optional) IDs of the IPAM resources to query for.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `filter` Block
 
 More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
-* `name` - (Required) Name of the field to filter by, as defined by
-  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeIpams.html).
-* `values` - (Required) Set of values that are accepted for the given field.
-  An IPAM resource will be selected if any one of the given values matches.
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeIpams.html).
+* `values` - (Required) Set of values that are accepted for the given field. An IPAM resource will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
@@ -67,16 +65,17 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ipams` - List of IPAM resources matching the provided arguments.
 
-### ipams
+### `ipams` Block
 
 * `arn` - ARN of the IPAM.
-* `default_resource_discovery_association_id` - The default resource discovery association ID.
-* `default_resource_discovery_id` - The default resource discovery ID.
+* `default_resource_discovery_association_id` - Default resource discovery association ID.
+* `default_resource_discovery_id` - Default resource discovery ID.
 * `description` - Description for the IPAM.
 * `enable_private_gua` - If private GUA is enabled.
 * `id` - ID of the IPAM resource.
 * `ipam_region` - Region that the IPAM exists in.
-* `operating_regions` - Regions that the IPAM is configured to operate in.
+* `metered_account` - AWS account that is charged for active IP addresses managed in IPAM.
+* `operating_regions` - Regions that the IPAM is configured to operate in. [See below](#ipamsoperating_regions-block).
 * `owner_id` - ID of the account that owns this IPAM.
 * `private_default_scope_id` - ID of the default private scope.
 * `public_default_scope_id` - ID of the default public scope.
@@ -85,3 +84,7 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Current state of the IPAM.
 * `state_message` - State message of the IPAM.
 * `tier` - IPAM Tier.
+
+#### `ipams.operating_regions` Block
+
+* `region_name` - Name of the Region.

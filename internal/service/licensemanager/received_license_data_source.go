@@ -26,191 +26,193 @@ import (
 func dataSourceReceivedLicense() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReceivedLicenseRead,
-		Schema: map[string]*schema.Schema{
-			"beneficiary": {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			"consumption_configuration": {
-				Computed: true,
-				Type:     schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"borrow_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow_early_check_in": {
-										Computed: true,
-										Type:     schema.TypeBool,
-									},
-									"max_time_to_live_in_minutes": {
-										Computed: true,
-										Type:     schema.TypeInt,
-									},
-								},
-							},
-						},
-						"provisional_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_time_to_live_in_minutes": {
-										Computed: true,
-										Type:     schema.TypeInt,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"beneficiary": {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				"consumption_configuration": {
+					Computed: true,
+					Type:     schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"borrow_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allow_early_check_in": {
+											Computed: true,
+											Type:     schema.TypeBool,
+										},
+										"max_time_to_live_in_minutes": {
+											Computed: true,
+											Type:     schema.TypeInt,
+										},
 									},
 								},
 							},
-						},
-						"renew_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrCreateTime: {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			"entitlements": {
-				Computed: true,
-				Type:     schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_check_in": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"max_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"overage": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrUnit: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"home_region": {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			names.AttrIssuer: {
-				Computed: true,
-				Type:     schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key_fingerprint": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"sign_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"license_arn": {
-				Required:     true,
-				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidARN,
-			},
-			"license_metadata": {
-				Computed: true,
-				Type:     schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"license_name": {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			"product_name": {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			"product_sku": {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			"received_metadata": {
-				Computed: true,
-				Type:     schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_operations": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"provisional_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_time_to_live_in_minutes": {
+											Computed: true,
+											Type:     schema.TypeInt,
+										},
+									},
+								},
+							},
+							"renew_type": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						"received_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"received_status_reason": {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+				},
+				names.AttrCreateTime: {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				"entitlements": {
+					Computed: true,
+					Type:     schema.TypeSet,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_check_in": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"max_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"overage": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrUnit: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
-			"validity": {
-				Computed: true,
-				Type:     schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"begin": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"end": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"home_region": {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				names.AttrIssuer: {
+					Computed: true,
+					Type:     schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key_fingerprint": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"sign_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVersion: {
-				Computed: true,
-				Type:     schema.TypeString,
-			},
+				"license_arn": {
+					Required:     true,
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+				"license_metadata": {
+					Computed: true,
+					Type:     schema.TypeSet,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"license_name": {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				"product_name": {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				"product_sku": {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				"received_metadata": {
+					Computed: true,
+					Type:     schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_operations": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"received_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"received_status_reason": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrStatus: {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+				"validity": {
+					Computed: true,
+					Type:     schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"begin": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"end": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrVersion: {
+					Computed: true,
+					Type:     schema.TypeString,
+				},
+			}
 		},
 	}
 }

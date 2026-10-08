@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -119,7 +120,7 @@ func resourcePlatformApplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: platformApplicationSchema,
+		Schema: maps.Clone(platformApplicationSchema),
 	}
 }
 

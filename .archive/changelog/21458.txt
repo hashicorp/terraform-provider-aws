@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_codebuild_project: Fix plan validation to take into account computed values for `cache.location`
-```

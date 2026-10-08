@@ -22,3 +22,33 @@ rules:
     pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, $RES, $NAME, $F)
     fix: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, $RES, $NAME, $F)
     severity: ERROR
+
+  - id: disappears-expect-resource-action
+    languages: [go]
+    message: |
+      Disappears acceptance tests should include `ConfigPlanChecks` with a `PostApplyPostRefresh` plan check
+      using `plancheck.ExpectResourceAction` to verify the resource is planned for re-creation.
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: acctest.CheckSDKResourceDisappears(...)
+          - pattern: acctest.CheckFrameworkResourceDisappears(...)
+          - pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(...)
+      - pattern-inside: |
+          Steps: []resource.TestStep{
+            ...,
+          }
+      - pattern-not-inside: |
+          {
+            ...,
+            ConfigPlanChecks: resource.ConfigPlanChecks{
+              ...,
+              PostApplyPostRefresh: []plancheck.PlanCheck{
+                ...,
+                plancheck.ExpectResourceAction($NAME, plancheck.ResourceActionCreate),
+                ...,
+              },
+              ...,
+            },
+            ...,
+          }

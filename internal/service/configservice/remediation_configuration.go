@@ -7,6 +7,7 @@ package configservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"time"
@@ -28,6 +29,10 @@ import (
 )
 
 // @SDKResource("aws_config_remediation_configuration", name="Remediation Configuration")
+// @IdentityAttribute("config_rule_name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.RemediationConfiguration")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRemediationConfigurationPut,
@@ -35,109 +40,107 @@ func resourceRemediationConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceRemediationConfigurationPut,
 		DeleteWithoutTimeout: resourceRemediationConfigurationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"config_rule_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"execution_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ssm_controls": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"concurrent_execution_rate_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 100),
-									},
-									"error_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automatic": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"config_rule_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"execution_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ssm_controls": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"concurrent_execution_rate_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 100),
+										},
+										"error_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 100),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"maximum_automatic_attempts": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
-			},
-			names.AttrParameter: {
-				Type:     schema.TypeList,
-				MaxItems: 25,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"resource_value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"static_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"static_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"maximum_automatic_attempts": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 25),
+				},
+				names.AttrParameter: {
+					Type:     schema.TypeList,
+					MaxItems: 25,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"resource_value": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+							"static_value": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"static_values": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"retry_attempt_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 2678000),
-			},
-			"target_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"target_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.RemediationTargetType](),
-			},
-			"target_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"retry_attempt_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 2678000),
+				},
+				"target_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"target_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.RemediationTargetType](),
+				},
+				"target_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -219,21 +222,9 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, remediationConfiguration.Arn)
-	d.Set("automatic", remediationConfiguration.Automatic)
-	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
-	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting execution_controls: %s", err)
+	if err := resourceRemediationConfigurationFlatten(ctx, remediationConfiguration, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
-	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
-	d.Set("target_id", remediationConfiguration.TargetId)
-	d.Set("target_type", remediationConfiguration.TargetType)
-	d.Set("target_version", remediationConfiguration.TargetVersion)
 
 	return diags
 }
@@ -242,7 +233,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.DeleteRemediationConfigurationInput{
+	input := configservice.DeleteRemediationConfigurationInput{
 		ConfigRuleName: aws.String(d.Id()),
 	}
 
@@ -255,7 +246,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Remediation Configuration: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteRemediationConfiguration(ctx, input)
+		return conn.DeleteRemediationConfiguration(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchRemediationConfigurationException](err) {
@@ -269,12 +260,32 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
+func resourceRemediationConfigurationFlatten(_ context.Context, remediationConfiguration *types.RemediationConfiguration, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, remediationConfiguration.Arn)
+	d.Set("automatic", remediationConfiguration.Automatic)
+	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
+	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
+		return fmt.Errorf("setting execution_controls: %w", err)
+	}
+	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
+	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
+		return fmt.Errorf("setting parameter: %w", err)
+	}
+	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
+	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
+	d.Set("target_id", remediationConfiguration.TargetId)
+	d.Set("target_type", remediationConfiguration.TargetType)
+	d.Set("target_version", remediationConfiguration.TargetVersion)
+
+	return nil
+}
+
 func findRemediationConfigurationByConfigRuleName(ctx context.Context, conn *configservice.Client, name string) (*types.RemediationConfiguration, error) {
-	input := &configservice.DescribeRemediationConfigurationsInput{
+	input := configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []string{name},
 	}
 
-	return findRemediationConfiguration(ctx, conn, input)
+	return findRemediationConfiguration(ctx, conn, &input)
 }
 
 func findRemediationConfiguration(ctx context.Context, conn *configservice.Client, input *configservice.DescribeRemediationConfigurationsInput) (*types.RemediationConfiguration, error) {

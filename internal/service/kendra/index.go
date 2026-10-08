@@ -58,325 +58,327 @@ func ResourceIndex() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity_units": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"query_capacity_units": {
-							Type:         schema.TypeInt,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"storage_capacity_units": {
-							Type:         schema.TypeInt,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity_units": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"query_capacity_units": {
+								Type:         schema.TypeInt,
+								Computed:     true,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"storage_capacity_units": {
+								Type:         schema.TypeInt,
+								Computed:     true,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"document_metadata_configuration_updates": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 500,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 30),
-						},
-						"relevance": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDuration: {
-										Type:     schema.TypeString,
-										Computed: true,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 10),
-											validation.StringMatch(
-												regexache.MustCompile(`[0-9]+[s]`),
-												"numeric string followed by the character \"s\"",
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"document_metadata_configuration_updates": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 500,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 30),
+							},
+							"relevance": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDuration: {
+											Type:     schema.TypeString,
+											Computed: true,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 10),
+												validation.StringMatch(
+													regexache.MustCompile(`[0-9]+[s]`),
+													"numeric string followed by the character \"s\"",
+												),
 											),
-										),
-									},
-									"freshness": {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
-									},
-									"importance": {
-										Type:         schema.TypeInt,
-										Computed:     true,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 10),
-									},
-									"rank_order": {
-										Type:             schema.TypeString,
-										Computed:         true,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.Order](),
-									},
-									"values_importance_map": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeInt},
-									},
-								},
-							},
-						},
-						"search": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"displayable": {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
-									},
-									"facetable": {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
-									},
-									"searchable": {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
-									},
-									"sortable": {
-										Type:     schema.TypeBool,
-										Computed: true,
-										Optional: true,
+										},
+										"freshness": {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+										"importance": {
+											Type:         schema.TypeInt,
+											Computed:     true,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 10),
+										},
+										"rank_order": {
+											Type:             schema.TypeString,
+											Computed:         true,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Order](),
+										},
+										"values_importance_map": {
+											Type:     schema.TypeMap,
+											Computed: true,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeInt},
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.DocumentAttributeValueType](),
-						},
-					},
-				},
-			},
-			"edition": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          string(types.IndexEditionEnterpriseEdition),
-				ValidateDiagFunc: enum.Validate[types.IndexEdition](),
-			},
-			"error_message": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_statistics": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"faq_statistics": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"indexed_question_answers_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
+							"search": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"displayable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+										"facetable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+										"searchable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+										"sortable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"text_document_statistics": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"indexed_text_bytes": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"indexed_text_documents_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.DocumentAttributeValueType](),
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-						"The name must consist of alphanumerics, hyphens or underscores.",
+				"edition": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          string(types.IndexEditionEnterpriseEdition),
+					ValidateDiagFunc: enum.Validate[types.IndexEdition](),
+				},
+				"error_message": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_statistics": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"faq_statistics": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"indexed_question_answers_count": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"text_document_statistics": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"indexed_text_bytes": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"indexed_text_documents_count": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1000),
+						validation.StringMatch(
+							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
+							"The name must consist of alphanumerics, hyphens or underscores.",
+						),
 					),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"server_side_encryption_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"server_side_encryption_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_context_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          string(types.UserContextPolicyAttributeFilter),
-				ValidateDiagFunc: enum.Validate[types.UserContextPolicy](),
-			},
-			"user_group_resolution_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"user_group_resolution_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.UserGroupResolutionMode](),
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user_context_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          string(types.UserContextPolicyAttributeFilter),
+					ValidateDiagFunc: enum.Validate[types.UserContextPolicy](),
+				},
+				"user_group_resolution_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"user_group_resolution_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.UserGroupResolutionMode](),
+							},
 						},
 					},
 				},
-			},
-			"user_token_configurations": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"json_token_type_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"group_attribute_field": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2048),
-									},
-									"user_name_attribute_field": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2048),
+				"user_token_configurations": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"json_token_type_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"group_attribute_field": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+										"user_name_attribute_field": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
 									},
 								},
 							},
-						},
-						"jwt_token_type_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"claim_regex": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 100),
-									},
-									"group_attribute_field": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 100),
-									},
-									names.AttrIssuer: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 65),
-									},
-									"key_location": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.KeyLocation](),
-									},
-									"secrets_manager_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrURL: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 2048),
-											validation.StringMatch(
-												regexache.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
-												"Must be valid URL",
+							"jwt_token_type_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"claim_regex": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 100),
+										},
+										"group_attribute_field": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 100),
+										},
+										names.AttrIssuer: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 65),
+										},
+										"key_location": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.KeyLocation](),
+										},
+										"secrets_manager_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrURL: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 2048),
+												validation.StringMatch(
+													regexache.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
+													"Must be valid URL",
+												),
 											),
-										),
-									},
-									"user_name_attribute_field": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 100),
+										},
+										"user_name_attribute_field": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 100),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

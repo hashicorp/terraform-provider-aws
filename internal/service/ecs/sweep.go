@@ -4,14 +4,17 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,9 +32,12 @@ func RegisterSweepers() {
 		Name: "aws_ecs_cluster",
 		F:    sweepClusters,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_ecs_service",
 		},
 	})
+
+	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
 
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
@@ -42,6 +48,7 @@ func RegisterSweepers() {
 		Name: "aws_ecs_task_definition",
 		F:    sweepTaskDefinitions,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_ecs_service",
 		},
 	})
@@ -139,6 +146,41 @@ func sweepClusters(region string) error {
 	return nil
 }
 
+func sweepExpressGatewayServices(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListClustersInput
+	pages := ecs.NewListClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, clusterARN := range page.ClusterArns {
+			input := ecs.ListServicesInput{
+				Cluster: aws.String(clusterARN),
+			}
+			pages := newListExpressGatewayServicesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.ServiceArns {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newExpressGatewayServiceResource, client,
+						framework.NewAttribute("service_arn", v)),
+					)
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
 func sweepServices(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -147,7 +189,7 @@ func sweepServices(region string) error {
 	}
 	conn := client.ECSClient(ctx)
 	input := &ecs.ListClustersInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
 	pages := ecs.NewListClustersPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -167,7 +209,7 @@ func sweepServices(region string) error {
 				Cluster: aws.String(clusterARN),
 			}
 
-			pages := ecs.NewListServicesPaginator(conn, input)
+			pages := newListRegularServicesPaginator(conn, input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 

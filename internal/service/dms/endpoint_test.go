@@ -463,7 +463,7 @@ func TestAccDMSEndpoint_OpenSearch_fullLoadErrorPercentage(t *testing.T) {
 
 func TestAccDMSEndpoint_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomSubdomain()
+	domainName := acctest.RandomSubdomain(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_endpoint.test"
 

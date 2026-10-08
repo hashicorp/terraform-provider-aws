@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudformation_stack_set: Prevent `Validation` errors when `operation_preferences.failure_tolerance_count` is zero
-```

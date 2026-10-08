@@ -27,7 +27,7 @@ func TestAccRoute53ResolverRule_Identity_basic(t *testing.T) {
 
 	var v awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -111,7 +111,7 @@ func TestAccRoute53ResolverRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -200,7 +200,7 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource_basic(t *testing.T) {
 
 	var v awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -258,7 +258,7 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource_noRefreshNoChange(t *t
 
 	var v awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

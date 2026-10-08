@@ -43,75 +43,77 @@ func resourceLocationAzureBlob() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationAzureBlobUpdate,
 		DeleteWithoutTimeout: resourceLocationAzureBlobDelete,
 
-		Schema: map[string]*schema.Schema{
-			"access_tier": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AzureAccessTierHot,
-				ValidateDiagFunc: enum.Validate[awstypes.AzureAccessTier](),
-			},
-			"agent_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_tier": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AzureAccessTierHot,
+					ValidateDiagFunc: enum.Validate[awstypes.AzureAccessTier](),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AzureBlobAuthenticationType](),
-			},
-			"blob_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AzureBlobTypeBlock,
-				ValidateDiagFunc: enum.Validate[awstypes.AzureBlobType](),
-			},
-			"container_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sas_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"token": {
-							Type:     schema.TypeString,
-							Required: true,
+				"agent_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AzureBlobAuthenticationType](),
+				},
+				"blob_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AzureBlobTypeBlock,
+					ValidateDiagFunc: enum.Validate[awstypes.AzureBlobType](),
+				},
+				"container_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"sas_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"token": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"subdirectory": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Ignore missing trailing slash
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "/" {
+				"subdirectory": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Ignore missing trailing slash
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if new == "/" {
+							return false
+						}
+						if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
+							return true
+						}
 						return false
-					}
-					if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
-						return true
-					}
-					return false
+					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

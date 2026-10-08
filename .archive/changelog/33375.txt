@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_subnet: Fix destroy error when there is a lingering ENI for DMS
-```

@@ -33,6 +33,12 @@ func TestAccAutoScalingTrafficSourceAttachment_elb(t *testing.T) {
 					testAccCheckTrafficSourceAttachmentExists(ctx, t, resourceName),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrafficSourceAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -54,6 +60,12 @@ func TestAccAutoScalingTrafficSourceAttachment_albTargetGroup(t *testing.T) {
 					testAccCheckTrafficSourceAttachmentExists(ctx, t, resourceName),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrafficSourceAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -74,6 +86,12 @@ func TestAccAutoScalingTrafficSourceAttachment_vpcLatticeTargetGroup(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficSourceAttachmentExists(ctx, t, resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrafficSourceAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -207,6 +225,10 @@ func testAccCheckTrafficSourceAttachmentDestroy(ctx context.Context, t *testing.
 
 		return nil
 	}
+}
+
+func testAccTrafficSourceAttachmentImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "autoscaling_group_name", "traffic_source.0.type", "traffic_source.0.identifier")
 }
 
 func testAccTrafficSourceAttachmentConfig_elbBase(rName string, elbCount int) string {

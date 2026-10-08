@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_backup_plan: Fix `InvalidParameterValueException: Invalid lifecycle. EBS Cold Tier is not yet supported` errors on resource Create in AWS GovCloud (US)
-```

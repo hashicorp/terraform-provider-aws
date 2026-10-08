@@ -7,7 +7,9 @@ package eks
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -25,11 +27,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_identity_provider_config", name="Identity Provider Config")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("identity_provider_config_name")
+// @ImportIDHandler("identityProviderConfigImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.OidcIdentityProviderConfig")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdentityProviderConfigCreate,
@@ -37,94 +46,96 @@ func resourceIdentityProviderConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceIdentityProviderConfigUpdate,
 		DeleteWithoutTimeout: resourceIdentityProviderConfigDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"oidc": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"groups_claim": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"groups_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"identity_provider_config_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"issuer_url": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						"required_claims": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							ValidateDiagFunc: validation.AllDiag(
-								validation.MapKeyLenBetween(1, 63),
-								validation.MapValueLenBetween(1, 253),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"username_claim": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"username_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"identity_provider_config_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"oidc": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"groups_claim": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"groups_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"identity_provider_config_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"issuer_url": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"required_claims": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								ValidateDiagFunc: validation.AllDiag(
+									validation.MapKeyLenBetween(1, 63),
+									validation.MapValueLenBetween(1, 253),
+								),
+								Elem: &schema.Schema{Type: schema.TypeString},
+							},
+							"username_claim": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"username_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -136,15 +147,15 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]any)[0].(map[string]any))
-	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
-	input := &eks.AssociateIdentityProviderConfigInput{
+	idpID := identityProviderConfigCreateResourceID(clusterName, configName)
+	input := eks.AssociateIdentityProviderConfigInput{
 		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ClusterName:        aws.String(clusterName),
 		Oidc:               oidc,
 		Tags:               getTagsIn(ctx),
 	}
 
-	_, err := conn.AssociateIdentityProviderConfig(ctx, input)
+	_, err := conn.AssociateIdentityProviderConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "associating EKS Identity Provider Config (%s): %s", idpID, err)
@@ -164,7 +175,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
+	clusterName, configName, err := identityProviderConfigParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -183,6 +194,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
 	d.Set(names.AttrClusterName, oidc.ClusterName)
+	d.Set("identity_provider_config_name", oidc.IdentityProviderConfigName)
 	if err := d.Set("oidc", []any{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}
@@ -203,19 +215,20 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
+	clusterName, configName, err := identityProviderConfigParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Disassociating EKS Identity Provider Config: %s", d.Id())
-	_, err = conn.DisassociateIdentityProviderConfig(ctx, &eks.DisassociateIdentityProviderConfigInput{
+	input := eks.DisassociateIdentityProviderConfigInput{
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
 			Type: aws.String(identityProviderConfigTypeOIDC),
 		},
-	})
+	}
+	_, err = conn.DisassociateIdentityProviderConfig(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -237,7 +250,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 }
 
 func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, configName string) (*types.OidcIdentityProviderConfig, error) {
-	input := &eks.DescribeIdentityProviderConfigInput{
+	input := eks.DescribeIdentityProviderConfigInput{
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
@@ -245,6 +258,24 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 		},
 	}
 
+	return findOIDCIdentityProviderConfig(ctx, conn, &input)
+}
+
+func findOIDCIdentityProviderConfig(ctx context.Context, conn *eks.Client, input *eks.DescribeIdentityProviderConfigInput) (*types.OidcIdentityProviderConfig, error) {
+	output, err := findIdentityProviderConfig(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Oidc == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.Oidc, nil
+}
+
+func findIdentityProviderConfig(ctx context.Context, conn *eks.Client, input *eks.DescribeIdentityProviderConfigInput) (*types.IdentityProviderConfigResponse, error) {
 	output, err := conn.DescribeIdentityProviderConfig(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -257,11 +288,11 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 		return nil, err
 	}
 
-	if output == nil || output.IdentityProviderConfig == nil || output.IdentityProviderConfig.Oidc == nil {
+	if output == nil || output.IdentityProviderConfig == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.IdentityProviderConfig.Oidc, nil
+	return output.IdentityProviderConfig, nil
 }
 
 func statusOIDCIdentityProviderConfig(conn *eks.Client, clusterName, configName string) retry.StateRefreshFunc {
@@ -398,4 +429,47 @@ func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConf
 	}
 
 	return tfMap
+}
+
+const identityProviderConfigResourceIDSeparator = ":"
+
+func identityProviderConfigCreateResourceID(clusterName, configName string) string {
+	parts := []string{clusterName, configName}
+	id := strings.Join(parts, identityProviderConfigResourceIDSeparator)
+
+	return id
+}
+
+func identityProviderConfigParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, identityProviderConfigResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sconfig-name", id, identityProviderConfigResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = identityProviderConfigImportID{}
+)
+
+type identityProviderConfigImportID struct{}
+
+func (identityProviderConfigImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, configName, err := identityProviderConfigParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName:           clusterName,
+		"identity_provider_config_name": configName,
+	}
+
+	return id, result, nil
+}
+
+func (identityProviderConfigImportID) Create(d *schema.ResourceData) string {
+	return identityProviderConfigCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("identity_provider_config_name").(string))
 }

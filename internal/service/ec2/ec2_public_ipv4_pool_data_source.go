@@ -23,52 +23,54 @@ func dataSourcePublicIPv4Pool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_border_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pool_address_ranges": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"available_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"first_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_address": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_border_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pool_address_ranges": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"available_address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"first_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"total_address_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"total_available_address_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"total_address_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"total_available_address_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

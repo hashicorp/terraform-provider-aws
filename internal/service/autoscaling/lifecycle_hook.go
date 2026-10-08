@@ -25,11 +25,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_lifecycle_hook", name="Lifecycle Hook")
+// @IdentityAttribute("autoscaling_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("lifecycleHookImportID")
+// @Testing(importStateIdFunc=testAccLifecycleHookImportStateIDFunc)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceLifecycleHook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecycleHookPut,
@@ -37,55 +43,53 @@ func resourceLifecycleHook() *schema.Resource {
 		UpdateWithoutTimeout: resourceLifecycleHookPut,
 		DeleteWithoutTimeout: resourceLifecycleHookDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceLifecycleHookImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"default_result": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
-			},
-			"heartbeat_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(30, 7200),
-			},
-			"lifecycle_transition": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
-						`no spaces or special characters except "-", "_", and "/"`),
-				),
-			},
-			"notification_metadata": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"notification_target_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"autoscaling_group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"default_result": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
+				},
+				"heartbeat_timeout": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(30, 7200),
+				},
+				"lifecycle_transition": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
+							`no spaces or special characters except "-", "_", and "/"`),
+					),
+				},
+				"notification_metadata": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"notification_target_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -95,7 +99,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &autoscaling.PutLifecycleHookInput{
+	input := autoscaling.PutLifecycleHookInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		LifecycleHookName:    aws.String(name),
 	}
@@ -126,7 +130,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
 		func(ctx context.Context) (any, error) {
-			return conn.PutLifecycleHook(ctx, input)
+			return conn.PutLifecycleHook(ctx, &input)
 		},
 		errCodeValidationError, "Unable to publish test message to notification target")
 
@@ -134,7 +138,9 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "putting Auto Scaling Lifecycle Hook (%s): %s", name, err)
 	}
 
-	d.SetId(name)
+	if d.IsNewResource() {
+		d.SetId(name)
+	}
 
 	return append(diags, resourceLifecycleHookRead(ctx, d, meta)...)
 }
@@ -188,22 +194,6 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<lifecycle-hook-name>", d.Id())
-	}
-
-	asgName := idParts[0]
-	lifecycleHookName := idParts[1]
-
-	d.Set(names.AttrName, lifecycleHookName)
-	d.Set("autoscaling_group_name", asgName)
-	d.SetId(lifecycleHookName)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findLifecycleHook(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLifecycleHooksInput) (*awstypes.LifecycleHook, error) {
 	output, err := findLifecycleHooks(ctx, conn, input)
 
@@ -235,10 +225,46 @@ func findLifecycleHooks(ctx context.Context, conn *autoscaling.Client, input *au
 }
 
 func findLifecycleHookByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, hookName string) (*awstypes.LifecycleHook, error) {
-	input := &autoscaling.DescribeLifecycleHooksInput{
+	input := autoscaling.DescribeLifecycleHooksInput{
 		AutoScalingGroupName: aws.String(asgName),
 		LifecycleHookNames:   []string{hookName},
 	}
 
-	return findLifecycleHook(ctx, conn, input)
+	return findLifecycleHook(ctx, conn, &input)
+}
+
+const lifecycleHookImportIDSeparator = "/"
+
+func lifecycleHookParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, lifecycleHookImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected auto-scaling-group-name%[2]slifecycle-hook-name", id, lifecycleHookImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = lifecycleHookImportID{}
+)
+
+type lifecycleHookImportID struct{}
+
+func (lifecycleHookImportID) Parse(id string) (string, map[string]any, error) {
+	asgName, hookName, err := lifecycleHookParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"autoscaling_group_name": asgName,
+		names.AttrName:           hookName,
+	}
+
+	return hookName, result, nil
+}
+
+func (lifecycleHookImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }

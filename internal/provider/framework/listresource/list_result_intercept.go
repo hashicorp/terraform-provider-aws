@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -55,7 +54,7 @@ type tagsInterceptor struct {
 	interceptors.HTags
 }
 
-func TagsInterceptor(tags unique.Handle[inttypes.ServicePackageResourceTags]) tagsInterceptor {
+func TagsInterceptor(tags inttypes.ServicePackageResourceTags) tagsInterceptor {
 	return tagsInterceptor{
 		HTags: interceptors.HTags(tags),
 	}
@@ -240,7 +239,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 	var diags diag.Diagnostics
 	switch params.When {
 	case Before:
-		if reflect.ValueOf(params.Data).Kind() != reflect.Ptr {
+		if reflect.ValueOf(params.Data).Kind() != reflect.Pointer {
 			diags.AddError(
 				"Internal Error",
 				"data object must be a pointer")
@@ -298,7 +297,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 }
 
 func dereferencePointer(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Pointer {
 		return value.Elem()
 	}
 	return value
@@ -348,7 +347,7 @@ type tagsInterceptorSDK struct {
 	interceptors.HTags
 }
 
-func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags]) tagsInterceptorSDK {
+func TagsInterceptorSDK(tags inttypes.ServicePackageResourceTags) tagsInterceptorSDK {
 	return tagsInterceptorSDK{
 		HTags: interceptors.HTags(tags),
 	}

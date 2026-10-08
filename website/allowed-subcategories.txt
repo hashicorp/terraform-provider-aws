@@ -6,7 +6,9 @@ API Gateway
 API Gateway V2
 ARC (Application Recovery Controller) Region Switch
 ARC (Application Recovery Controller) Zonal Shift
+Account Access
 Account Management
+Agent Registry
 Amazon Q Business
 Amplify
 App Mesh
@@ -30,6 +32,7 @@ Batch
 Bedrock
 Bedrock AgentCore
 Bedrock Agents
+Bedrock Runtime
 Billing
 CE (Cost Explorer)
 Chatbot
@@ -55,6 +58,7 @@ CloudWatch Network Monitor
 CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
 CloudWatch Observability Admin
+CloudWatch Omni
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -88,10 +92,12 @@ Data Pipeline
 DataSync
 DataZone
 Detective
+DevOps Agent
 DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
+Directory Service Data
 DocumentDB
 DocumentDB Elastic
 DynamoDB
@@ -121,11 +127,13 @@ Elemental MediaPackage
 Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging
 End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
 EventBridge Schemas
+EventBridge V2
 FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
 FSx
@@ -143,6 +151,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Interconnect
 Invoicing
 IoT Core
 IoT Greengrass
@@ -156,6 +165,9 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda Core
+Lambda MicroVMs
+Lambda Web
 Launch Wizard
 Lex Model Building
 Lex V2 Models
@@ -177,8 +189,9 @@ Neptune
 Neptune Analytics
 Network Firewall
 Network Manager
+Network Security Manager
 OpenSearch
-OpenSearch Ingestion
+OpenSearch Ingestion (OSIS)
 OpenSearch Serverless
 Oracle Database@AWS
 Organizations
@@ -186,7 +199,6 @@ Outposts
 Outposts (EC2)
 Parallel Computing Service
 Payment Cryptography Control Plane
-Pinpoint
 Polly
 Pricing Calculator
 Private CA Connector for Active Directory
@@ -201,6 +213,7 @@ Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resilience Hub V2
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
@@ -213,11 +226,13 @@ Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
+S3 Files
 S3 Glacier
 S3 Tables
 S3 Vectors
 S3 on Outposts
 SES (Simple Email)
+SES Mail Manager
 SESv2 (Simple Email V2)
 SFN (Step Functions)
 SNS (Simple Notification)

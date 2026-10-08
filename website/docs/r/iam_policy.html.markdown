@@ -80,7 +80,7 @@ resource "aws_iam_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IAM policy.
+- `arn` (String) ARN of the IAM policy.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Policies using the `arn`. For example:
 

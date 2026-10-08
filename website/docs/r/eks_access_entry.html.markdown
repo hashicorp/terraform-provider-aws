@@ -40,7 +40,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `access_entry_arn` - Amazon Resource Name (ARN) of the Access Entry.
+* `access_entry_arn` - ARN of the Access Entry.
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 * `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -50,22 +50,49 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `20m`)
-* `update` - (Default `20m`)
 * `delete` - (Default `40m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name` and `principal_arn` separated by a colon (`:`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_eks_access_entry.my_eks_entry
-  id = "my_cluster_name:my_principal_arn"
+  to = aws_eks_access_entry.example
+  identity = {
+    cluster_name  = "example-cluster"
+    principal_arn = "arn:aws:iam::123456789012:role/example"
+  }
+}
+
+resource "aws_eks_access_entry" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS access entry using the `cluster_name` and `principal_arn` separated by a colon (`:`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `principal_arn` (String) IAM principal ARN.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Access Entries using `cluster_name` and `principal_arn` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_eks_access_entry.example
+  id = "example-cluster:arn:aws:iam::123456789012:role/example"
+}
+```
+
+Using `terraform import`, import Access Entries using `cluster_name` and `principal_arn` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_eks_access_entry.my_eks_access_entry my_cluster_name:my_principal_arn
+% terraform import aws_eks_access_entry.example example-cluster:arn:aws:iam::123456789012:role/example
 ```

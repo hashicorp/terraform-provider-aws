@@ -23,10 +23,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_deployment", name="Deployment")
+// @IdentityAttribute("rest_api_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("deploymentImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDeploymentOutput")
+// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(importStateIdFunc="testAccDeploymentImportStateIdFunc")
 func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
@@ -34,36 +41,34 @@ func resourceDeployment() *schema.Resource {
 		UpdateWithoutTimeout: resourceDeploymentUpdate,
 		DeleteWithoutTimeout: resourceDeploymentDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceDeploymentImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"variables": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -74,7 +79,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := apigateway.CreateDeploymentInput{
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
-		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:   aws.String(d.Get(attrRestAPIID).(string)),
 		Variables:   flex.ExpandStringValueMap(d.Get("variables").(map[string]any)),
 	}
 
@@ -93,7 +98,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	restAPIID := d.Get(attrRestAPIID).(string)
 	deployment, err := findDeploymentByTwoPartKey(ctx, conn, restAPIID, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -106,10 +111,14 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Deployment (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, deployment.Description)
+	resourceDeploymentFlatten(d, deployment)
 
 	return diags
+}
+
+func resourceDeploymentFlatten(d *schema.ResourceData, deployment *apigateway.GetDeploymentOutput) {
+	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, deployment.Description)
 }
 
 func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -130,7 +139,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input := apigateway.UpdateDeploymentInput{
 			DeploymentId:    aws.String(d.Id()),
 			PatchOperations: operations,
-			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+			RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		}
 		_, err := conn.UpdateDeployment(ctx, &input)
 
@@ -146,7 +155,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	restAPIID := d.Get(attrRestAPIID).(string)
 
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 	input := apigateway.DeleteDeploymentInput{
@@ -174,21 +183,6 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-	if len(idParts) != 2 {
-		return nil, fmt.Errorf("Unexpected format of ID (%s), use: 'REST-API-ID/DEPLOYMENT-ID'", d.Id())
-	}
-
-	restApiID := idParts[0]
-	deploymentID := idParts[1]
-
-	d.SetId(deploymentID)
-	d.Set("rest_api_id", restApiID)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, restAPIID, deploymentID string) (*apigateway.GetDeploymentOutput, error) {
 	input := apigateway.GetDeploymentInput{
 		DeploymentId: aws.String(deploymentID),
@@ -212,4 +206,25 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = deploymentImportID{}
+
+type deploymentImportID struct{}
+
+func (deploymentImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (deploymentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <rest-api-id>/<deployment-id>", id)
+	}
+
+	result := map[string]any{
+		attrRestAPIID: parts[0],
+	}
+
+	return parts[1], result, nil
 }

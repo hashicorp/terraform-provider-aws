@@ -145,7 +145,7 @@ func TestGlobalARN(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := globalARNSchema
@@ -352,7 +352,7 @@ func TestRegionalARN(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := regionalARNSchema
@@ -588,7 +588,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = new(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := regionalResourceWithGlobalARNFormatSchema

@@ -91,7 +91,7 @@
     "@message": "Converting",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Parrot",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·74]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·78]",
     "autoflex.target.path": "Parrots",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots"
   },
@@ -100,7 +100,7 @@
     "@message": "TRACE: nestedObjectCollection entry",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Parrot",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·74]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·78]",
     "autoflex.target.path": "Parrots",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots",
     "xmlWrapper": false,

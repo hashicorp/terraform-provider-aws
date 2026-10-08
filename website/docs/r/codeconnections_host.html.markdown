@@ -38,7 +38,7 @@ A `vpc_configuration` block supports the following arguments:
 
 * `security_group_ids` - (Required) ID of the security group or security groups associated with the Amazon VPC connected to the infrastructure where your provider type is installed.
 * `subnet_ids` - (Required) The ID of the subnet or subnets associated with the Amazon VPC connected to the infrastructure where your provider type is installed.
-* `tls_certificate` - (Optional) The value of the Transport Layer Security (TLS) certificate associated with the infrastructure where your provider type is installed.
+* `tls_certificate` - (Optional) Value of the TLS certificate associated with the infrastructure where your provider type is installed.
 * `vpc_id` - (Required) The ID of the Amazon VPC connected to the infrastructure where your provider type is installed.
 
 ## Attribute Reference
@@ -48,6 +48,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The CodeConnections Host ARN.
 * `id` - (**Deprecated**) The CodeConnections Host ARN.
 * `status` - The CodeConnections Host status. Possible values are `PENDING`, `AVAILABLE`, `VPC_CONFIG_DELETING`, `VPC_CONFIG_INITIALIZING`, and `VPC_CONFIG_FAILED_INITIALIZATION`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -70,7 +78,7 @@ resource "aws_codeconnections_host" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodeConnections host.
+- `arn` (String) ARN of the CodeConnections host.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeConnections Host using the ARN. For example:
 
