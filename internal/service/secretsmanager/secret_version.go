@@ -161,7 +161,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return findSecretVersionForExistence(ctx, conn, secretID, versionID)
+		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
 	})
 
 	if err != nil {
@@ -175,8 +175,18 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
-// findSecretVersionForExistence avoids GetSecretValue, which fails for versions whose KMS key is unavailable.
-func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretVersionExistsOutput, error) {
+// findSecretVersionForExistence falls back to ListSecretVersionIds only when needed, so readable versions don't require that permission.
+func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string, hasWriteOnly bool) (*secretVersionExistsOutput, error) {
+	if !hasWriteOnly {
+		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+		if err == nil {
+			return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
+		}
+		if !errs.IsA[*types.DecryptionFailure](err) {
+			return nil, err
+		}
+	}
+
 	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
 		return nil, err
@@ -433,7 +443,8 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID)
+		hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID, hasWriteOnly)
 
 		if err != nil {
 			return nil, err
