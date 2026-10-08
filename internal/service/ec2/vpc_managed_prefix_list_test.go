@@ -234,6 +234,54 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 	})
 }
 
+// Entries are added and removed in batches to stay within the API's per-request maximum.
+func TestAccVPCManagedPrefixList_Entry_exceedsMaxEntriesPerRequest(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:       testAccVPCManagedPrefixListConfig_entryCount(rName, 120),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "120"),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "120"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:       testAccVPCManagedPrefixListConfig_entryCount(rName, 220),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "220"),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "220"),
+				),
+			},
+			{
+				Config:       testAccVPCManagedPrefixListConfig_entryCount(rName, 105),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "105"),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "105"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_managed_prefix_list.test"
@@ -548,6 +596,25 @@ resource "aws_ec2_managed_prefix_list" "test" {
   }
 }
 `, rName, maxEntryLength)
+}
+
+func testAccVPCManagedPrefixListConfig_entryCount(rName string, entryCount int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = %[2]d
+  name           = %[1]q
+
+  dynamic "entry" {
+    for_each = range(%[2]d)
+
+    content {
+      cidr        = cidrsubnet("10.0.0.0/8", 16, entry.value)
+      description = "Test ${entry.value}"
+    }
+  }
+}
+`, rName, entryCount)
 }
 
 func testAccVPCManagedPrefixListConfig_name(rName string) string {
