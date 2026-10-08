@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_proxy_default_target_group: Fix `init_query` and `session_pinning_filters` not being cleared on the target group when removed from configuration
+```
