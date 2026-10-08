@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "service" {
 }
 ```
 
-### With AppMesh Proxy
+### With App Mesh Proxy
 
 ```terraform
 resource "aws_ecs_task_definition" "service" {

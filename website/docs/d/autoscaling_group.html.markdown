@@ -37,7 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `enabled_metrics` - List of metrics enabled for collection.
 * `health_check_grace_period` - Amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
-* `id` - Name of the Auto Scaling Group.
+* `id` - Name of the Auto Scaling group.
 * `instance_maintenance_policy` - Instance maintenance policy for the group.
     * `max_healthy_percentage` - Upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
     * `min_healthy_percentage` - Lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
@@ -113,13 +113,13 @@ This data source exports the following attributes in addition to the arguments a
                 * `launch_template_name` - Name of the launch template.
                 * `version` - Template version.
             * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
-* `name` - Name of the Auto Scaling Group.
+* `name` - Name of the Auto Scaling group.
 * `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
 * `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the EC2 User Guide.
 * `predicted_capacity` - Predicted capacity of the group.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - Current state of the group when DeleteAutoScalingGroup is in progress.
-* `suspended_processes` - List of processes suspended processes for the Auto Scaling Group.
+* `suspended_processes` - List of processes suspended processes for the Auto Scaling group.
 * `tag` - List of tags for the group.
     * `key` - Key.
     * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.

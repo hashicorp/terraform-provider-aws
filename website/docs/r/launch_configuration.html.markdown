@@ -40,12 +40,12 @@ resource "aws_launch_configuration" "as_conf" {
 }
 ```
 
-### Using with AutoScaling Groups
+### Using with Auto Scaling groups
 
 Launch Configurations cannot be updated after creation with the Amazon
 Web Service API. In order to update a Launch Configuration, Terraform will
 destroy the existing resource and create a replacement. In order to effectively
-use a Launch Configuration resource with an [AutoScaling Group resource](/docs/providers/aws/r/autoscaling_group.html),
+use a Launch Configuration resource with an [Auto Scaling group resource](/docs/providers/aws/r/autoscaling_group.html),
 it's recommended to specify `create_before_destroy` in a [lifecycle](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) block.
 Either omit the Launch Configuration `name` attribute, or specify a partial name
 with `name_prefix`.  Example:
@@ -90,13 +90,13 @@ resource "aws_autoscaling_group" "bar" {
 ```
 
 With this setup Terraform generates a unique name for your Launch
-Configuration and can then update the AutoScaling Group without conflict before
+Configuration and can then update the Auto Scaling group without conflict before
 destroying the previous Launch Configuration.
 
 ### Using with Spot Instances
 
 Launch configurations can set the spot instance pricing to be used for the
-Auto Scaling Group to reserve instances. Simply specifying the `spot_price`
+Auto Scaling group to reserve instances. Simply specifying the `spot_price`
 parameter will set the price on the Launch Configuration which will attempt to
 reserve your instances at this price.  See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)

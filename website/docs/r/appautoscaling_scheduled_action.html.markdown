@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_appautoscaling_scheduled_action
 
-Provides an Application AutoScaling ScheduledAction resource.
+Provides an Application Auto Scaling ScheduledAction resource.
 
 ## Example Usage
 

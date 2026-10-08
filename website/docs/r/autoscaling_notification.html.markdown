@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_autoscaling_notification
 
-Provides an AutoScaling Group with Notification support, via SNS Topics. Each of
+Provides an Auto Scaling group with Notification support, via SNS Topics. Each of
 the `notifications` map to a [Notification Configuration](https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html) inside Amazon Web
-Services, and are applied to each AutoScaling Group you supply.
+Services, and are applied to each Auto Scaling group you supply.
 
 ## Example Usage
 
@@ -57,7 +57,7 @@ resource "aws_autoscaling_group" "foo" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `group_names` - (Required) List of AutoScaling Group Names
+* `group_names` - (Required) List of Auto Scaling group Names
 * `notifications` - (Required) List of Notification Types that trigger
 notifications. Acceptable values are documented [in the AWS documentation here](https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html)
 * `topic_arn` - (Required) Topic ARN for notifications to be sent through

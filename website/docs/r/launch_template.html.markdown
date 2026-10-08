@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_launch_template
 
-Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
+Provides an EC2 launch template resource. Can be used to create instances or Auto Scaling groups.
 
 ## Example Usage
 
@@ -422,7 +422,7 @@ The `network_performance_options` block supports the following:
 
 Attaches one or more [Network Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) to the instance.
 
-Check limitations for Auto Scaling group in [Creating an Auto Scaling Group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
+Check limitations for Auto Scaling group in [Creating an Auto Scaling group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
 
 Each `network_interfaces` block supports the following:
 

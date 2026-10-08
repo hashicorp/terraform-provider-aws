@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_appautoscaling_policy
 
-Provides an Application AutoScaling Policy resource.
+Provides an Application Auto Scaling Policy resource.
 
 ## Example Usage
 
@@ -462,7 +462,7 @@ resource "aws_appautoscaling_policy" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application Auto Scaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
 ```terraform
 import {
@@ -471,7 +471,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+Using `terraform import`, import Application Auto Scaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
 ```console
 % terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name

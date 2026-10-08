@@ -8,8 +8,8 @@ description: |-
 
 # Data Source: aws_autoscaling_groups
 
-The Auto Scaling Groups data source allows access to the list of AWS
-ASGs within a specific region. This will allow you to pass a list of AutoScaling Groups to other resources.
+The Auto Scaling groups data source allows access to the list of AWS
+ASGs within a specific region. This will allow you to pass a list of Auto Scaling groups to other resources.
 
 ## Example Usage
 
@@ -59,6 +59,6 @@ The `filter` block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arns` - List of the Auto Scaling Groups ARNs in the current region.
+* `arns` - List of the Auto Scaling groups ARNs in the current region.
 * `id` - AWS Region.
-* `names` - List of the Auto Scaling Groups in the current region.
+* `names` - List of the Auto Scaling groups in the current region.
