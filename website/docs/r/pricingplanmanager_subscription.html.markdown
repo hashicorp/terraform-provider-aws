@@ -3,7 +3,7 @@ subcategory: "Pricing Plan Manager"
 layout: "aws"
 page_title: "AWS: aws_pricingplanmanager_subscription"
 description: |-
-  Terraform resource for managing an AWS Pricing Plan Manager Subscription.
+  Manages an AWS Pricing Plan Manager Subscription.
 ---
 
 # Resource: aws_pricingplanmanager_subscription
