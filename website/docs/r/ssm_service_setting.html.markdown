@@ -57,11 +57,6 @@ resource "aws_ssm_service_setting" "example" {
 
 * `arn` (String) ARN of the service setting.
 
-#### Optional
-
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
-
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS SSM Service Setting using the `setting_id`. For example:
 
 ```terraform
