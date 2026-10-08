@@ -29,10 +29,10 @@ func TestAccWAFV2RuleGroup_monetize(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-PreCheck: func() {
-	acctest.PreCheck(ctx, t)
-	acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
-},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
