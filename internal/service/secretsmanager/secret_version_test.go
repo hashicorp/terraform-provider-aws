@@ -538,6 +538,53 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 	})
 }
 
+// TestAccSecretsManagerSecretVersion_kmsKeyUnavailable verifies that a version
+// whose KMS key can no longer decrypt it (here, the key is disabled) does not
+// fail plan/apply. Read should preserve the last-known secret value in state
+// rather than surfacing the DecryptionFailure. Ref: issue #50368.
+func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+				),
+			},
+			{
+				// Disabling the KMS key makes GetSecretValue return a
+				// DecryptionFailure for the existing version. The post-apply
+				// refresh exercises Read against the undecryptable version; it
+				// must not error, and the secret value must be preserved.
+				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
@@ -1299,6 +1346,26 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_binary = base64encode("test-binary")
 }
 `, rName)
+}
+
+func testAccSecretVersionConfig_kmsKey(rName, secret string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  is_enabled              = %[3]t
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.key_id
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = %[2]q
+}
+`, rName, secret, enabled)
 }
 
 func testAccSecretVersionConfig_stagesSingle(rName string) string {
