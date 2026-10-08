@@ -52,24 +52,9 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if d.HasChanges("prefix_pool_allocated_count_ipv4", "prefix_pool_allocated_count_ipv6") {
-		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
-			VirtualInterfaceId: aws.String(d.Id()),
-		}
-
-		if d.HasChange("prefix_pool_allocated_count_ipv4") {
-			input.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv4").(int)))
-		}
-
-		if d.HasChange("prefix_pool_allocated_count_ipv6") {
-			input.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv6").(int)))
-		}
-
-		_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) prefix pool allocation: %s", d.Id(), err)
-		}
+	diags = append(diags, virtualInterfaceUpdatePrefixPool(ctx, d, meta)...)
+	if diags.HasError() {
+		return diags
 	}
 
 	if d.HasChange("rate_limit") {
@@ -83,6 +68,35 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) RateLimit attribute: %s", d.Id(), err)
 		}
+	}
+
+	return diags
+}
+
+func virtualInterfaceUpdatePrefixPool(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if !d.HasChanges("prefix_pool_allocated_count_ipv4", "prefix_pool_allocated_count_ipv6") {
+		return diags
+	}
+
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+	input := &directconnect.UpdateVirtualInterfaceAttributesInput{
+		VirtualInterfaceId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("prefix_pool_allocated_count_ipv4") {
+		input.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv4").(int)))
+	}
+
+	if d.HasChange("prefix_pool_allocated_count_ipv6") {
+		input.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv6").(int)))
+	}
+
+	_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) prefix pool allocation: %s", d.Id(), err)
 	}
 
 	return diags
