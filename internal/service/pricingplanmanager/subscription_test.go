@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pricingplanmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pricingplanmanager/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpricingplanmanager "github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +40,10 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriptionConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Subscription/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
 				),
@@ -53,13 +58,17 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_family"), knownvalue.StringExact("CloudFront")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("FREE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arns"), knownvalue.SetSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact(string(awstypes.StatusActive))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.StatusActive)),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrARN: knownvalue.NotNull(),
 					}),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Subscription/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
