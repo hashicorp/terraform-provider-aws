@@ -339,24 +339,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 
 	webACL.WebACL.Rules = append(webACL.WebACL.Rules, newRule)
 
-	updateInput := &wafv2.UpdateWebACLInput{
-		Id:                   aws.String(webACLID),
-		Name:                 aws.String(webACLName),
-		Scope:                awstypes.Scope(webACLScope),
-		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                webACL.WebACL.Rules,
-		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
-		LockToken:            webACL.LockToken,
-		AssociationConfig:    webACL.WebACL.AssociationConfig,
-		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
-		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
-		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		TokenDomains:         webACL.WebACL.TokenDomains,
-	}
-
-	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
-		updateInput.Description = webACL.WebACL.Description
-	}
+	updateInput := newUpdateWebACLInput(webACL, webACLID, webACLName, webACLScope, webACL.WebACL.Rules)
 
 	if err = updateWebACLWithRetry(ctx, conn, updateInput, r.CreateTimeout(ctx, plan.Timeouts), func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
 		// Re-append our rule to the latest rule list (which may have grown since we fetched).
@@ -483,24 +466,7 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	updateInput := &wafv2.UpdateWebACLInput{
-		Id:                   aws.String(webACLID),
-		Name:                 aws.String(webACLName),
-		Scope:                awstypes.Scope(webACLScope),
-		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                updatedRules,
-		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
-		LockToken:            webACL.LockToken,
-		AssociationConfig:    webACL.WebACL.AssociationConfig,
-		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
-		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
-		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		TokenDomains:         webACL.WebACL.TokenDomains,
-	}
-
-	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
-		updateInput.Description = webACL.WebACL.Description
-	}
+	updateInput := newUpdateWebACLInput(webACL, webACLID, webACLName, webACLScope, updatedRules)
 
 	if err = updateWebACLWithRetry(ctx, conn, updateInput, r.UpdateTimeout(ctx, plan.Timeouts), func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
 		var rules []awstypes.Rule
@@ -578,24 +544,7 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	updateInput := &wafv2.UpdateWebACLInput{
-		Id:                   aws.String(webACLID),
-		Name:                 aws.String(webACLName),
-		Scope:                awstypes.Scope(webACLScope),
-		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                updatedRules,
-		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
-		LockToken:            webACL.LockToken,
-		AssociationConfig:    webACL.WebACL.AssociationConfig,
-		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
-		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
-		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		TokenDomains:         webACL.WebACL.TokenDomains,
-	}
-
-	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
-		updateInput.Description = webACL.WebACL.Description
-	}
+	updateInput := newUpdateWebACLInput(webACL, webACLID, webACLName, webACLScope, updatedRules)
 
 	if err = updateWebACLWithRetry(ctx, conn, updateInput, r.DeleteTimeout(ctx, state.Timeouts), func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
 		var rules []awstypes.Rule
@@ -609,6 +558,42 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, state.Name.ValueString())
 		return
 	}
+}
+
+// newUpdateWebACLInput builds the input for UpdateWebACL from the Web ACL as it currently
+// exists in AWS, swapping in a new rule list. UpdateWebACL replaces the whole Web ACL
+// instead of patching it, so every configuration this resource does not manage has to be
+// echoed back or AWS silently drops it. Building the input in one place keeps the three
+// callers from drifting apart as the API grows.
+//
+// ApplicationConfig is deliberately absent. AWS keeps the stored entries when the field is
+// omitted, and rejects the request outright when the entries sent do not match the stored
+// ones exactly, so echoing it back would turn a concurrent change into an error.
+func newUpdateWebACLInput(webACL *wafv2.GetWebACLOutput, id, name, scope string, rules []awstypes.Rule) *wafv2.UpdateWebACLInput {
+	input := &wafv2.UpdateWebACLInput{
+		Id:                           aws.String(id),
+		Name:                         aws.String(name),
+		Scope:                        awstypes.Scope(scope),
+		DefaultAction:                webACL.WebACL.DefaultAction,
+		Rules:                        rules,
+		VisibilityConfig:             webACL.WebACL.VisibilityConfig,
+		LockToken:                    webACL.LockToken,
+		AssociationConfig:            webACL.WebACL.AssociationConfig,
+		CaptchaConfig:                webACL.WebACL.CaptchaConfig,
+		ChallengeConfig:              webACL.WebACL.ChallengeConfig,
+		CustomResponseBodies:         webACL.WebACL.CustomResponseBodies,
+		DataProtectionConfig:         webACL.WebACL.DataProtectionConfig,
+		MonetizationConfig:           webACL.WebACL.MonetizationConfig,
+		OnSourceDDoSProtectionConfig: webACL.WebACL.OnSourceDDoSProtectionConfig,
+		TokenDomains:                 webACL.WebACL.TokenDomains,
+	}
+
+	// An empty description fails validation, so it is only sent when the Web ACL has one.
+	if aws.ToString(webACL.WebACL.Description) != "" {
+		input.Description = webACL.WebACL.Description
+	}
+
+	return input
 }
 
 // updateWebACLWithRetry calls UpdateWebACL, retrying on WAFUnavailableEntityException
