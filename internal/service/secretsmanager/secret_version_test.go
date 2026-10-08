@@ -10,6 +10,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/google/go-cmp/cmp"
@@ -580,6 +581,16 @@ func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
+			},
+			{
+				// With no prior state there is no value to preserve, so import
+				// of an undecryptable version must still fail rather than leave
+				// a null secret_string in state.
+				Config:            testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecretVersionImportStateIdFunc(resourceName),
+				ExpectError:       regexache.MustCompile(`DecryptionFailure`),
 			},
 		},
 	})

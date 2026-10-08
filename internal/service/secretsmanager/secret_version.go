@@ -273,7 +273,14 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		// keeps plans and CI/CD stable through normal KMS key lifecycle events
 		// (issue #50368). Changing the configured value still forces a new
 		// version via CustomizeDiff, which re-encrypts with the current key.
-		if errs.IsA[*types.DecryptionFailure](err) {
+		//
+		// Only tolerate the failure when there is a value to preserve. Without
+		// one (e.g. importing an undecryptable version) state would hold a null
+		// value, CustomizeDiff would not force replacement when a value is later
+		// configured, and Update would record it without calling PutSecretValue.
+		_, hasSecretString := d.GetOk("secret_string")
+		_, hasSecretBinary := d.GetOk("secret_binary")
+		if errs.IsA[*types.DecryptionFailure](err) && (hasSecretString || hasSecretBinary) {
 			arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 
 			if !d.IsNewResource() && retry.NotFound(err) {
