@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `create_async` argument to `global_secondary_index` to skip waiting for a new index to become `ACTIVE`
+resource/aws_dynamodb_global_secondary_index: Add `create_async` argument to skip waiting for a new index to become `ACTIVE`
+```

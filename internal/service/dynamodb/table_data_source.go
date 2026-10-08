@@ -310,7 +310,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "setting local_secondary_index: %s", err)
 	}
 
-	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
+	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes, nil)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_secondary_index: %s", err)
 	}
 
