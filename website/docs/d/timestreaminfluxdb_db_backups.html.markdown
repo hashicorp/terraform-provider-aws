@@ -37,9 +37,9 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `backups` - List of backups. See [`backups`](#backups) below.
+* `backups` - List of backups. See [`backups` Block](#backups-block) below.
 
-### `backups`
+### `backups` Block
 
 * `arn` - ARN of the backup.
 * `created_at` - Time when the backup was created, in RFC3339 format.

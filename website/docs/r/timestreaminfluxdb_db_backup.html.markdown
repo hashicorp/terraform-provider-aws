@@ -48,7 +48,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above. These attributes capture the configuration of the source resource at the time the backup was taken:
+This resource exports the following attributes in addition to the arguments above:
 
 * `allocated_storage` - Allocated storage of the resource at the time of backup, in GiB.
 * `arn` - ARN of the backup.

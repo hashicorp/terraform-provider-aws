@@ -256,33 +256,32 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 
 The following arguments are required:
 
-* `allocated_storage` - (Required) Amount of storage in GiB (gibibytes). The minimum value is `20`, the maximum value is `16384`. This argument is updatable. The argument `db_storage_type` places restrictions on this argument's minimum value. The following is a list of `db_storage_type` values and the corresponding minimum value for `allocated_storage`: `"InfluxIOIncludedT1": `20`, `"InfluxIOIncludedT2" and `"InfluxIOIncludedT3": `400`.
-* `bucket` - (Required) Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. A bucket combines the concept of a database and a retention period (the duration of time that each data point persists). A bucket belongs to an organization. Along with `organization`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
-* `db_instance_type` - (Required) Timestream for InfluxDB DB instance type to run InfluxDB on. Valid options are: `"db.influx.medium"`, `"db.influx.large"`, `"db.influx.xlarge"`, `"db.influx.2xlarge"`, `"db.influx.4xlarge"`, `"db.influx.8xlarge"`, `"db.influx.12xlarge"`, and `"db.influx.16xlarge"`. This argument is updatable.
 * `name` - (Required) Name that uniquely identifies the DB instance when interacting with the Amazon Timestream for InfluxDB API and CLI commands. This name will also be a prefix included in the endpoint. DB instance names must be unique per customer and per region. The argument must start with a letter, cannot contain consecutive hyphens (`-`) and cannot end with a hyphen.
-* `organization` - (Required) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
-* `password` - (Required) Password of the initial admin user created in InfluxDB. This password will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `username`, and `organization`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
-* `username` - (Required) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
-* `vpc_security_group_ids` - (Required) List of VPC security group IDs to associate with the DB instance.
-* `vpc_subnet_ids` - (Required) List of VPC subnet IDs to associate with the DB instance. Provide at least two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.
 
-~> **Note:** When the [`restore`](#restore) block is configured, `allocated_storage`, `bucket`, `db_instance_type`, `organization`, `password`, and `username` are inherited from the backup and must be omitted. `name` is always required, and `vpc_security_group_ids` and `vpc_subnet_ids` may optionally be provided to override the values from the backup.
+~> **Note:** When the [`restore`](#restore-block) block is configured, `allocated_storage`, `bucket`, `db_instance_type`, `organization`, `password`, and `username` are inherited from the backup and must be omitted. `name` is always required, and `vpc_security_group_ids` and `vpc_subnet_ids` may optionally be provided to override the values from the backup.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `db_backup_configuration` - (Optional) Automated backup schedules for the DB instance. Up to four blocks are supported. This argument is updatable. See [`db_backup_configuration`](#db_backup_configuration) below.
-* `restore` - (Optional, Forces new resource) Restore the DB instance from an existing backup instead of creating a new one. See [`restore`](#restore) below.
+* `allocated_storage` - (Optional) Amount of storage in GiB (gibibytes). The minimum value is `20`, the maximum value is `16384`. This argument is updatable. The argument `db_storage_type` places restrictions on this argument's minimum value. The following is a list of `db_storage_type` values and the corresponding minimum value for `allocated_storage`: `"InfluxIOIncludedT1": `20`, `"InfluxIOIncludedT2" and `"InfluxIOIncludedT3": `400`.
+* `bucket` - (Optional) Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. A bucket combines the concept of a database and a retention period (the duration of time that each data point persists). A bucket belongs to an organization. Along with `organization`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
+* `db_backup_configuration` - (Optional) Automated backup schedules for the DB instance. Up to four blocks are supported. This argument is updatable. See [`db_backup_configuration` Block](#db_backup_configuration-block) below.
+* `db_instance_type` - (Optional) Timestream for InfluxDB DB instance type to run InfluxDB on. Valid options are: `"db.influx.medium"`, `"db.influx.large"`, `"db.influx.xlarge"`, `"db.influx.2xlarge"`, `"db.influx.4xlarge"`, `"db.influx.8xlarge"`, `"db.influx.12xlarge"`, and `"db.influx.16xlarge"`. This argument is updatable.
 * `db_parameter_group_identifier` - (Optional) ID of the DB parameter group assigned to your DB instance. This argument is updatable. If added to an existing Timestream for InfluxDB instance or given a new value, will cause an in-place update to the instance. However, if an instance already has a value for `db_parameter_group_identifier`, removing `db_parameter_group_identifier` will cause the instance to be destroyed and recreated.
 * `db_storage_type` - (Optional, Default: `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400. This argument is updatable. For a single instance, after this argument has been updated once, it can only be updated again after 6 hours have passed.
 * `deployment_type` - (Optional, Default: `"SINGLE_AZ"`) Whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`. This argument is updatable.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket. This argument is updatable.
 * `maintenance_schedule` - (Optional) Maintenance schedule for the DB instance, including the preferred maintenance window and timezone. This argument is updatable.
 * `network_type` - (Optional) Network type of the Timestream for InfluxDB instance. `IPV4` can communicate over IPv4 protocol only, and `DUAL` can communicate over both IPv4 and IPv6 protocols.
+* `organization` - (Optional) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
+* `password` - (Optional) Password of the initial admin user created in InfluxDB. This password will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `username`, and `organization`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
 * `port` - (Optional, Default: `8086`) Port on which the instance accepts connections. Valid values: `1024`-`65535`. Cannot be `2375`-`2376`, `7788`-`7799`, `8090`, or `51678`-`51680`. This argument is updatable.
 * `publicly_accessible` - (Optional, Default: `false`) Whether to configure the DB instance with a public IP to facilitate access. Other resources, such as a VPC, a subnet, an internet gateway, and a route table with routes, are also required to enable public access, in addition to this argument. See "[Usage with Public Internet Access Enabled](#usage-with-public-internet-access-enabled)" for an example configuration with all required resources for public internet access.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `restore` - (Optional, Forces new resource) Restore the DB instance from an existing backup instead of creating a new one. See [`restore` Block](#restore-block) below.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `username` - (Optional) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
+* `vpc_security_group_ids` - (Optional) List of VPC security group IDs to associate with the DB instance.
+* `vpc_subnet_ids` - (Optional) List of VPC subnet IDs to associate with the DB instance. Provide at least two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.
 
 #### `log_delivery_configuration` Block
 
@@ -298,20 +297,20 @@ The following arguments are optional:
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Whether log delivery to the S3 bucket is enabled.
 
-#### `db_backup_configuration`
+#### `db_backup_configuration` Block
 
 ~> **Note:** Automated backup configurations can be added and updated, but the AWS API does not remove an existing configuration when its block is removed from the configuration. Removing a `db_backup_configuration` block will therefore leave the schedule in place on the DB instance and produce a persistent difference.
 
+* `custom_schedule` - (Optional) Cron expression defining the backup schedule. Required when `type` is `CUSTOM_SCHEDULE` and must not be set otherwise.
 * `enabled` - (Required) Whether this automated backup configuration is enabled.
 * `retention_days` - (Required) Number of days to retain automated backups. Valid values are `1` to `365`.
 * `type` - (Required) Automated backup schedule type. Valid values are `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_SCHEDULE`, and `CONTINUOUS`.
-* `custom_schedule` - (Optional) Cron expression defining the backup schedule. Required when `type` is `CUSTOM_SCHEDULE` and must not be set otherwise.
 
-#### `restore`
+#### `restore` Block
 
-* `source_db_backup_id` - (Required, Forces new resource) Identifier of the backup to restore from.
 * `restore_mode` - (Optional, Forces new resource) Whether to restore to a new resource (`NEW_RESOURCE`, the default) or replace an existing resource (`REPLACE_EXISTING`). Only `NEW_RESOURCE` is currently supported.
 * `restore_to_time` - (Optional, Forces new resource) Point in time to restore to, in RFC3339 format. Only applies to `CONTINUOUS` backups.
+* `source_db_backup_id` - (Required, Forces new resource) Identifier of the backup to restore from.
 
 **Note**: The following arguments do updates in-place: `db_backup_configuration`, `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `deployment_type`, `db_instance_type`, and `tags`. Changes to any other argument after a DB instance has been deployed will cause destruction and re-creation of the DB instance. Additionally, when `db_parameter_group_identifier` is added to a DB instance or modified, the DB instance will be updated in-place but if `db_parameter_group_identifier` is removed from a DB instance, the DB instance will be destroyed and re-created.
 
