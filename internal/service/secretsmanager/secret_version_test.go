@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
 	tfcversion "github.com/hashicorp/go-version"
@@ -333,6 +334,43 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 
 			if diff := cmp.Diff(testcase.expectedForceNew, diff.forceNew); diff != "" {
 				t.Errorf("unexpected differences: %s", diff)
+			}
+		})
+	}
+}
+
+func TestIsKMSKeyUnavailable(t *testing.T) {
+	t.Parallel()
+
+	const prefix = "Secrets Manager can't decrypt the secret value: arn:aws:kms:us-west-2:123456789012:key/00000000-0000-0000-0000-000000000000"
+
+	testCases := map[string]struct {
+		err      error
+		expected bool
+	}{
+		"nil": {},
+		"pending deletion": {
+			err:      &types.DecryptionFailure{Message: aws.String(prefix + " is pending deletion.(Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)")},
+			expected: true,
+		},
+		"disabled": {
+			err:      &types.DecryptionFailure{Message: aws.String(prefix + " is disabled. (Service: AWSKMS; Status Code: 400; Error Code: DisabledException)")},
+			expected: true,
+		},
+		"access denied": {
+			err: &types.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: Access to KMS is not allowed (Service: AWSKMS; Status Code: 400; Error Code: AccessDeniedException)")},
+		},
+		"other error type": {
+			err: &types.InvalidRequestException{Message: aws.String("Error Code: KMSInvalidStateException")},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfsecretsmanager.IsKMSKeyUnavailable(tc.err); got != tc.expected {
+				t.Errorf("expected %t, got %t", tc.expected, got)
 			}
 		})
 	}

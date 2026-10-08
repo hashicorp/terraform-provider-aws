@@ -182,7 +182,7 @@ func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Cli
 		if err == nil {
 			return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
 		}
-		if !errs.IsA[*types.DecryptionFailure](err) {
+		if !isKMSKeyUnavailable(err) {
 			return nil, err
 		}
 	}
@@ -277,7 +277,8 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		// would be recorded by Update without calling PutSecretValue.
 		_, hasSecretString := d.GetOk("secret_string")
 		_, hasSecretBinary := d.GetOk("secret_binary")
-		if errs.IsA[*types.DecryptionFailure](err) && (hasSecretString || hasSecretBinary) {
+		if isKMSKeyUnavailable(err) && (hasSecretString || hasSecretBinary) {
+			decryptErr := err
 			arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 
 			if !d.IsNewResource() && retry.NotFound(err) {
@@ -289,13 +290,12 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 			}
 
-			log.Printf("[WARN] Secrets Manager Secret Version (%s) cannot be decrypted (KMS key unavailable), preserving existing secret value in state", d.Id())
 			d.Set(names.AttrARN, arn)
 			d.Set("secret_arn", arn)
 			d.Set("version_id", versionEntry.VersionId)
 			d.Set("version_stages", versionEntry.VersionStages)
 
-			return diags
+			return sdkdiag.AppendWarningf(diags, "Secrets Manager Secret Version (%s) cannot be decrypted because its KMS key is unavailable; using the secret value from state: %s", d.Id(), decryptErr)
 		}
 
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
@@ -534,6 +534,12 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 	}
 
 	return findSecretVersion(ctx, conn, input)
+}
+
+// isKMSKeyUnavailable excludes other DecryptionFailure causes, such as missing kms:Decrypt permission.
+func isKMSKeyUnavailable(err error) bool {
+	return errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: KMSInvalidStateException") ||
+		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: DisabledException")
 }
 
 const secretVersionIDSeparator = "|"
