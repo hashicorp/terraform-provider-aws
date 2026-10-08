@@ -68,6 +68,7 @@ func TestAccEMRCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 				),
 			},
@@ -1352,6 +1353,127 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEMRCluster_MonitoringConfiguration_cloudWatchLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cluster awstypes.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_monitoringConfigurationCloudWatchLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.0.log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.0.log_stream_name_prefix", "example"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.0.log_types.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.0.log_types.*", map[string]string{
+						names.AttrName: "STEP_LOGS",
+						"values.#":     "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.0.log_types.*", map[string]string{
+						names.AttrName: "SPARK_DRIVER",
+						"values.#":     "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_logging_configuration.#", "0"),
+				),
+			},
+			// Verify replacement without applying another billable EMR cluster.
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
+			{
+				Config:             testAccClusterConfig_monitoringConfigurationCloudWatchLogsRemoved(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEMRCluster_MonitoringConfiguration_s3Logging(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cluster awstypes.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_monitoringConfigurationS3Logging(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloud_watch_log_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_logging_configuration.0.log_type_upload_policy.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "monitoring_configuration.0.s3_logging_configuration.0.log_type_upload_policy.*", map[string]string{
+						"log_type":      "system-logs",
+						"upload_policy": "emr-managed",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "monitoring_configuration.0.s3_logging_configuration.0.log_type_upload_policy.*", map[string]string{
+						"log_type":      "application-logs",
+						"upload_policy": "on-customer-s3only",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "monitoring_configuration.0.s3_logging_configuration.0.log_type_upload_policy.*", map[string]string{
+						"log_type":      "persistent-ui-logs",
+						"upload_policy": "emr-managed",
+					}),
 				),
 			},
 			{
@@ -4574,4 +4696,180 @@ resource "aws_emr_cluster" "test" {
   ebs_root_volume_size = 21
 }
 `, rName, releaseLabel, osReleaseLabel))
+}
+
+func testAccClusterConfig_baseIAMInstanceProfileCloudWatchLogs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role_policy_attachment" "emr_instance_profile_logs" {
+  role       = aws_iam_role.emr_instance_profile.id
+  policy_arn = aws_iam_policy.emr_instance_profile_logs.arn
+}
+
+resource "aws_iam_policy" "emr_instance_profile_logs" {
+  name = "%[1]s_profile_logs"
+
+  policy = <<EOT
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+      "Sid": "AllowCWACloudWatchLogs",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents"
+      ]
+  }]
+}
+EOT
+}
+`, rName)
+}
+
+func testAccClusterConfig_monitoringConfigurationCloudWatchLogs(rName string) string {
+	return testAccClusterConfig_monitoringConfigurationCloudWatchLogsBase(rName, `
+  monitoring_configuration {
+    cloud_watch_log_configuration {
+      enabled                = true
+      log_group_name         = aws_cloudwatch_log_group.test.name
+      log_stream_name_prefix = "example"
+
+      log_types {
+        name   = "STEP_LOGS"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDERR"]
+      }
+    }
+  }
+`)
+}
+
+func testAccClusterConfig_monitoringConfigurationCloudWatchLogsRemoved(rName string) string {
+	return testAccClusterConfig_monitoringConfigurationCloudWatchLogsBase(rName, "")
+}
+
+func testAccClusterConfig_monitoringConfigurationCloudWatchLogsBase(rName, monitoringConfiguration string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMInstanceProfileCloudWatchLogs(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/emr/%[1]s"
+}
+
+resource "aws_emr_cluster" "test" {
+  name          = %[1]q
+  release_label = "emr-7.11.0"
+  applications  = ["Spark", "AmazonCloudWatchAgent"]
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection            = false
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  master_instance_group {
+    instance_type = "m5.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "m5.xlarge"
+  }
+
+%[2]s
+
+  service_role = aws_iam_role.emr_service.arn
+
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+    aws_iam_role_policy_attachment.emr_instance_profile_logs,
+  ]
+}
+`, rName, monitoringConfiguration))
+}
+
+func testAccClusterConfig_monitoringConfigurationS3Logging(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_emr_cluster" "test" {
+  name          = %[1]q
+  release_label = "emr-7.13.0"
+  applications  = ["Spark"]
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection            = false
+
+  log_uri = "s3://${aws_s3_bucket.test.bucket}/"
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  master_instance_group {
+    instance_type = "m5.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "m5.xlarge"
+  }
+
+  monitoring_configuration {
+    s3_logging_configuration {
+      log_type_upload_policy {
+        log_type      = "system-logs"
+        upload_policy = "emr-managed"
+      }
+
+      log_type_upload_policy {
+        log_type      = "application-logs"
+        upload_policy = "on-customer-s3only"
+      }
+
+      log_type_upload_policy {
+        log_type      = "persistent-ui-logs"
+        upload_policy = "emr-managed"
+      }
+    }
+  }
+
+  service_role = aws_iam_role.emr_service.arn
+
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+}
+`, rName))
 }
