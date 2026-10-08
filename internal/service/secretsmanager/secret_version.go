@@ -264,37 +264,36 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId("")
 		return diags
 	}
+	if err != nil {
+		// A version encrypted with a since-deleted or disabled KMS key can no
+		// longer be decrypted, so GetSecretValue returns DecryptionFailure. The
+		// version itself still exists; confirm via ListSecretVersionIds (which
+		// needs no decrypt), refresh the metadata we can, and preserve the
+		// last-known secret value in state rather than failing the read. This
+		// keeps plans and CI/CD stable through normal KMS key lifecycle events
+		// (issue #50368). Changing the configured value still forces a new
+		// version via CustomizeDiff, which re-encrypts with the current key.
+		if errs.IsA[*types.DecryptionFailure](err) {
+			arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 
-	// A version encrypted with a since-deleted or disabled KMS key can no
-	// longer be decrypted, so GetSecretValue returns DecryptionFailure. The
-	// version itself still exists; confirm via ListSecretVersionIds (which
-	// needs no decrypt), refresh the metadata we can, and preserve the
-	// last-known secret value in state rather than failing the read. This
-	// keeps plans and CI/CD stable through normal KMS key lifecycle events
-	// (issue #50368). Changing the configured value still forces a new
-	// version via CustomizeDiff, which re-encrypts with the current key.
-	if errs.IsA[*types.DecryptionFailure](err) {
-		arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+			if !d.IsNewResource() && retry.NotFound(err) {
+				log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
+				d.SetId("")
+				return diags
+			}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
+			}
 
-		if !d.IsNewResource() && retry.NotFound(err) {
-			log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
-			d.SetId("")
+			log.Printf("[WARN] Secrets Manager Secret Version (%s) cannot be decrypted (KMS key unavailable), preserving existing secret value in state", d.Id())
+			d.Set(names.AttrARN, arn)
+			d.Set("secret_arn", arn)
+			d.Set("version_id", versionEntry.VersionId)
+			d.Set("version_stages", versionEntry.VersionStages)
+
 			return diags
 		}
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
-		}
 
-		log.Printf("[WARN] Secrets Manager Secret Version (%s) cannot be decrypted (KMS key unavailable), preserving existing secret value in state", d.Id())
-		d.Set(names.AttrARN, arn)
-		d.Set("secret_arn", arn)
-		d.Set("version_id", versionEntry.VersionId)
-		d.Set("version_stages", versionEntry.VersionStages)
-
-		return diags
-	}
-
-	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
