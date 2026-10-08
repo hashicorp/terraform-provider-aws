@@ -484,6 +484,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.KmsKeyId = aws.String(v.(string))
 	}
 
+	if isEncrypted {
+		inputR.Encrypted = aws.Bool(true)
+	}
+
 	if v, ok := d.GetOk("maintenance_track_name"); ok {
 		inputR.MaintenanceTrackName = aws.String(v.(string))
 		inputC.MaintenanceTrackName = aws.String(v.(string))
@@ -599,7 +603,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			ClusterIdentifier: aws.String(d.Id()),
 			Encrypted:         aws.Bool(isEncrypted),
 		}
-		_, err := conn.ModifyCluster(ctx, &input)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+			func(ctx context.Context) (any, error) {
+				return conn.ModifyCluster(ctx, &input)
+			}, "streaming restore is in progress")
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): modifying Encrypted(%t): %s", d.Id(), isEncrypted, err)
 		}
