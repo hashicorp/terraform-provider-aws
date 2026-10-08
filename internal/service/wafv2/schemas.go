@@ -1083,6 +1083,7 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 				names.AttrVersion: {
 					Type:         schema.TypeString,
 					Optional:     true,
+					Computed:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
 			},
