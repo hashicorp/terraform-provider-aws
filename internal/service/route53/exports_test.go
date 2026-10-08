@@ -31,6 +31,7 @@ var (
 	FindQueryLoggingConfigByID                  = findQueryLoggingConfigByID
 	FindResourceRecordSetByFourPartKey          = findResourceRecordSetByFourPartKey
 	FindResourceRecordSetsForHostedZone         = findResourceRecordSetsForHostedZone
+	FindResourceRecordSetsForHostedZoneByName   = findResourceRecordSetsForHostedZoneByName
 	FindTrafficPolicyByID                       = findTrafficPolicyByID
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
