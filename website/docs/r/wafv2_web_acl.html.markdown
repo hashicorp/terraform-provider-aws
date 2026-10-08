@@ -1123,7 +1123,7 @@ The `immunity_time_property` block supports the following arguments:
 The `monetization_config` block supports the following arguments:
 
 * `crypto_config` - (Optional) Cryptocurrency payment configuration for the web ACL. See [`crypto_config`](#crypto_config-block) below for details.
-* `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`.
+* `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`. Defaults to `REAL`.
 
 ### `crypto_config` Block
 

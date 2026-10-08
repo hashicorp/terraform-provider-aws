@@ -22,43 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccWAFV2RuleGroup_monetize(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.RuleGroup
-	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_rule_group.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRuleGroupConfig_monetize(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
-					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
-					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.0.price_multiplier", "2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
 func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RuleGroup
@@ -2703,6 +2666,74 @@ func TestAccWAFV2RuleGroup_rateBasedStatement_ASNMatchStatement(t *testing.T) {
 						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.0.header_name":       "x-forwarded-for",
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_rulesJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_rulesJSON(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "rules_json"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rules_json", names.AttrRule},
+				ImportStateIdFunc:       testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_monetize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_monetize(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.0.price_multiplier", "2"),
 				),
 			},
 			{
@@ -5857,36 +5888,6 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, rName)
-}
-func TestAccWAFV2RuleGroup_rulesJSON(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.RuleGroup
-	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_rule_group.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRuleGroupConfig_rulesJSON(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "rules_json"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"rules_json", names.AttrRule},
-				ImportStateIdFunc:       testAccRuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
 }
 
 func testAccRuleGroupConfig_rulesJSON(rName string) string {

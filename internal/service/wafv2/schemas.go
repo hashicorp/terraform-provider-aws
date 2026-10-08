@@ -823,7 +823,7 @@ var monetizationConfigSchema = sync.OnceValue(func() *schema.Schema {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 13),
-															validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*(\.[0-9]{1,3})?|0\.([1-9][0-9]{0,2}|0[1-9][0-9]?|00[1-9]))$`), "must be a decimal amount between 0.001 and 999999999.999 with up to 3 decimal places"),
+															validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]{0,8}(\.[0-9]{1,3})?|0\.([1-9][0-9]{0,2}|0[1-9][0-9]?|00[1-9]))$`), "must be a decimal amount between 0.001 and 999999999.999 with up to 3 decimal places"),
 														),
 													},
 													"currency": {

@@ -402,7 +402,7 @@ The `action` block supports the following arguments:
 * `captcha` - (Optional) Instructs AWS WAF to run a `CAPTCHA` check against the web request. See [Captcha](#captcha-block) below for details.
 * `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [Challenge](#challenge-block) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count-block) below for details.
-* `monetize` - (Optional) Instructs AWS WAF to monetize the web request, charging per request according to the monetization configuration of the web ACL that references this rule group. See [Monetize](#monetize-block) below for details.
+* `monetize` - (Optional) Instructs AWS WAF to monetize the web request, charging per request according to the rule group's [`monetization_config`](#monetization_config-block). See [Monetize](#monetize-block) below for details.
 
 ### `allow` Block
 
@@ -445,7 +445,7 @@ The `monetize` block supports the following arguments:
 The `monetization_config` block supports the following arguments:
 
 * `crypto_config` - (Optional) Cryptocurrency payment configuration for the rule group. See [`crypto_config`](#crypto_config-block) below for details.
-* `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`.
+* `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`. Defaults to `REAL`.
 
 ### `crypto_config` Block
 
