@@ -97,6 +97,18 @@ const (
 	AssumeRoleSessionName = "TF_AWS_ASSUME_ROLE_SESSION_NAME"
 )
 
+// Custom environment variables that alter provider runtime behavior.
+// Additions should also be documented in docs/retries-and-waiters.md.
+const (
+	// AssumeNoPropagationDelay asserts that the target environment has no
+	// cross-service propagation delay, such as an in-process emulator like
+	// LocalStack. When set to a truthy value, resource waiters may skip the
+	// consecutive-confirmation budget used to absorb AWS eventual consistency.
+	// Unsupported against real AWS, where enabling it can surface spurious
+	// diffs and cross-service races.
+	AssumeNoPropagationDelay = "TF_AWS_ASSUME_NO_PROPAGATION_DELAY"
+)
+
 // GetWithDefault gets an environment variable value if non-empty or returns the default.
 func GetWithDefault(variable string, defaultValue string) string {
 	value := os.Getenv(variable)
