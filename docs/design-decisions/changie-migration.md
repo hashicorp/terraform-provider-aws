@@ -3,35 +3,39 @@
 
 # Migration from `go-changelog` to Changie
 
-**Summary:** Migrate CHANGELOG generation from `go-changelog` to Changie for improved automation, better user experience, and alignment with modern development workflows.  
-**Created**: 2025-10-23  
-**Author**: [@justinretzolk](https://github.com/justinretzolk)  
+**Summary:** Migrate CHANGELOG generation from `go-changelog` to Changie for improved automation and better user experience.
+**Created**: 2025-10-23
+**Author**: [@justinretzolk](https://github.com/justinretzolk)
 
 ---
 
 ## Background
 
-The Terraform AWS Provider has historically used [`go-changelog`](https://github.com/hashicorp/go-changelog) for managing CHANGELOG entries. Contributors would create text-based fragment files in the `.changelog/` directory with a specific format, and these would be manually compiled into the main `CHANGELOG.md` file during releases.
+The Terraform AWS Provider has historically used [`go-changelog`](https://github.com/hashicorp/go-changelog) for managing CHANGELOG entries. Contributors created text-based fragment files in the `.changelog/` directory with a specific format, and these were manually compiled into `CHANGELOG.md` during releases.
 
-While functional, this approach had several limitations:
+This approach had several limitations:
 
-- **Manual Process**: CHANGELOG generation required manual intervention during releases
-- **Format Inconsistencies**: The freeform text format led to inconsistent entry formatting
-- **Limited Metadata**: Difficult to categorize entries or extract structured information
-- **Poor Validation**: Limited ability to validate entries before merge
-- **Script Usage**: Generation relied on running a Bash script in a GitHub Actions workflow; something GitHub generally advises against.
+- **Manual Process**: CHANGELOG generation required manual intervention during releases.
+- **Format Inconsistencies**: The freeform text format led to inconsistent entry formatting.
+- **Limited Metadata**: Difficult to categorize entries or extract structured information.
+- **Poor Validation**: Limited ability to validate entries before merge.
+- **Script Usage**: Generation relied on running a Bash script in a GitHub Actions workflow — something GitHub generally advises against.
 
 ## Proposal
 
-Migrate to [Changie](https://changie.dev/) for CHANGELOG management. Changie provides a modern, YAML-based approach to CHANGELOG fragments with robust automation capabilities.
+Migrate to [Changie](https://changie.dev/) for CHANGELOG management on the `main` branch. Changie provides a modern, YAML-based approach to CHANGELOG fragments with robust automation capabilities.
 
 ### Key Benefits
 
-1. **Structured Format**: YAML-based fragments with enforced schema
-2. **Better Validation**: Automated checks for required fields and formatting
-3. **Improved UX**: Interactive CLI for creating entries with validation
-4. **Per-Version CHANGELOGs**: Change fragments do not need to be kept indefinitely
-5. **Beta/GA Workflow**: Built-in support for prerelease versioning
+1. **Structured Format**: YAML-based fragments with enforced schema.
+2. **Better Validation**: Automated checks for required fields and formatting.
+3. **Improved UX**: Interactive CLI for creating entries with validation.
+4. **Per-Version CHANGELOGs**: Change fragments do not need to be kept indefinitely.
+5. **Automated PR Backfill**: The pull request number is written into fragments automatically after merge — contributors no longer need to supply it manually.
+
+## Scope
+
+This migration covers **main-branch CHANGELOG management only**. Release branch support (beta/GA workflows, prerelease version calculation, release branch automation) is explicitly out of scope and deferred to a future decision.
 
 ## Design Details
 
@@ -41,10 +45,8 @@ Migrate to [Changie](https://changie.dev/) for CHANGELOG management. Changie pro
 .changes/
 ├── footer.md              # Footer appended to CHANGELOG.md after each merge
 └── 6.x/
-    ├── unreleased/        # New entries created by Changie
+    ├── unreleased/        # New entries created by changie new
     │   └── .gitkeep       # Ensures the directory is tracked by git when empty
-    ├── beta/              # Change fragments from beta releases on release branches
-    ├── ga/                # Change fragments from GA releases on release branches
     ├── 6.0.0.md           # Per-version CHANGELOG
     ├── 6.1.0.md
     └── ...
@@ -55,10 +57,10 @@ Migrate to [Changie](https://changie.dev/) for CHANGELOG management. Changie pro
 
 ### Entry Format
 
-Changie entries are YAML files with structured metadata, generated using Changie's CLI tool.
+Changie entries are YAML files with structured metadata, generated using `changie new`.
 
 !!! note
-    During generation, Changie creates files with a specific file naming pattern that's used during CHANGELOG generation. As such, manually creating change fragments should be avoided.
+    During generation, Changie creates files with a specific file naming pattern required for correct CHANGELOG generation. Manually creating change fragments should be avoided.
 
 ```yaml
 kind: enhancement
@@ -67,86 +69,37 @@ custom:
   Impact: |-
     resource/aws_example
   Body: Add `example_attribute` argument
-  PullRequest: 12345
 ```
+
+The `PullRequest` field is not included at fragment creation time. It is written automatically into the fragment by the `update-changelog.yml` workflow after the pull request merges.
 
 ### Kinds of Entries
 
 Five entry types are configured:
 
-- **Breaking Change**: Backward-incompatible changes
-- **Note**: Important notices (deprecations, removals)
-- **Feature**: New resources, data sources, ephemeral resources, functions, list resources, or actions
-- **Enhancement**: New attributes or arguments
-- **Bug**: Incorrect behavior
+- **Breaking Change**: Backward-incompatible changes.
+- **Note**: Important notices (deprecations, removals).
+- **Feature**: New resources, data sources, ephemeral resources, functions, list resources, or actions.
+- **Enhancement**: New attributes or arguments.
+- **Bug**: Incorrect behavior.
 
 ### Validation
 
 GitHub Actions workflows validate:
 
-1. **Entry Requirement**: Whether a pull request requires an entry (unless labeled `no-changelog-needed`)
-2. **Direct Edits**: Prevents direct modifications of the main CHANGELOG that would be overwritten on later runs of the generator
-3. **Legacy Fragments**: Detects and alerts when `go-changelog` style change fragments are included in pull requests
-4. **`PullRequest` Key**: Ensures pull request number is included. Where missing, inline suggestions are made
+1. **Entry Requirement**: Whether a pull request requires an entry (unless labeled `no-changelog-needed`).
+2. **Direct Edits**: Prevents direct modifications of `CHANGELOG.md`, which is regenerated on every PR merge.
+3. **Legacy Fragments**: Detects `go-changelog`-style `.changelog/*.txt` files and instructs contributors to convert them.
 
-### Version Calculation Logic
+### Version Calculation
 
-The provider uses `main` for next minor release development and `release/N.x` branches for major release cycles (beta/GA) and backports. Automated workflows determine the next version based on this context:
-
-**On `main` branch:**
-
-- Default: Next minor version (e.g., `6.1.0` → `6.2.0`)
-- Merges from `release/N.x` branches: Reuses version number from `version/VERSION`
-
-**On `release/N.x` branches:**
-
-- Default: Next prerelease increment (e.g., `6.0.0-beta1` → `6.0.0-beta2`)
-- When starting a new release cycle (no per-version CHANGELOGs exist yet):
-    - First beta of version number pulled from `version/VERSION` (e.g., `6.0.0-beta1`)
-- When transitioning from GA back to prerelease:
-    - First beta of the next minor version (e.g., after `6.0.0` GA → `6.1.0-beta1`)
+On the `main` branch, `changie next minor` is used to determine the next minor version. This value is used as the unreleased header label when regenerating `CHANGELOG.md` after each PR merge.
 
 When a new major version begins, three preparatory steps are taken before development starts:
 
-1. A new subdirectory (e.g., `7.x/`) is created in `.changes/`
-2. The `changesDir` in `.changie.yaml` is updated to point to the new directory
-3. The footer is updated to link to the previous major version's final `CHANGELOG.md`
-
-### Beta and GA Workflow
-
-Major releases follow a structured beta-to-GA process:
-
-1. **Beta Phase** (on `release/N.x` branch):
-
-   - Change fragments moved to `beta/` subdirectory after each beta release
-   - Per-version CHANGELOGs created for each beta (e.g., `6.0.0-beta1.md`)
-
-2. **GA Release** (on `release/N.x` branch):
-
-   - Change fragments moved to `ga/` subdirectory
-   - GA per-version CHANGELOG created (e.g., `6.0.0.md`)
-   - This CHANGELOG includes only GA changes, not beta changes
-
-3. **Merge to `main` from `release/N.x` Branch**:
-
-   - Beta and GA fragments combined with any remaining changies in `unreleased/`
-   - Single consolidated per-version CHANGELOG generated including all changes from beta and GA in one file
-   - Previous beta/GA per-version CHANGELOGs removed
-
-This approach ensures release branches maintain separate beta and GA release notes, while the main branch has a single, comprehensive CHANGELOG for the major version.
-
-### Version File Updates
-
-Changie's `replacements` feature updates lines in specified files that match a given regex pattern whenever `changie merge` is run. This is used to keep `version/VERSION` in sync with the current release version automatically — without requiring a separate workflow step or manual update:
-
-```yaml
-replacements:
-  - path: version/VERSION
-    find: '[0-9]\.(?:[0-9])+\.(?:[0-9])+'
-    replace: "{{ .VersionNoPrefix }}"
-```
-
-This means every `changie merge` call automatically updates `version/VERSION` to reflect the new version.
+1. A new subdirectory (e.g., `7.x/`) is created in `.changes/`.
+2. The `changesDir` in `.changie.yaml` is updated to point to the new directory.
+3. The footer is updated to link to the previous major version's final `CHANGELOG.md`.
 
 ## Implementation Details
 
@@ -154,65 +107,33 @@ This means every `changie merge` call automatically updates `version/VERSION` to
 
 Three GitHub Actions workflows automate CHANGELOG management:
 
-1. **`changelog-entries.yml`** - Validates entries on PRs, detects legacy fragments, provides conversion instructions, and notifies maintainers via Slack when entries are missed in merged pull requests
-2. **`update-changelog.yml`** - Automatically regenerates CHANGELOG when PRs merge, and supports manual triggering for release preparation
-3. **`create-release-branch.yml`** - Automates major release branch creation
+1. `changelog-entries.yml` — Validates entries on PRs, detects legacy fragments, and provides conversion instructions.
+2. `update-changelog.yml` — Automatically regenerates `CHANGELOG.md` when PRs merge (backfilling the `PullRequest` key and auto-converting any legacy `go-changelog` fragments), and supports manual triggering for release preparation.
+3. `maintainer_helpers.yml` - Notifies maintainers via Slack if a pull request requiring a change fragment is merged without including one.
 
 ### Tooling
 
-- **`make changelog-convert`** - Converts go-changelog fragments to Changie format
-- **`make changelog-misspell`** - Updated to check both legacy and new directories
-- **`generate-changelog`** - Deprecated with helpful error message
-
-## Migration
-
-The migration is being implemented incrementally to minimize disruption:
-
-1. **Phase 1: Core Infrastructure**
-   - Changie configuration
-   - Set up `.changes/` directory structure with version subdirectories
-   - Add Changie to `make tools` installation
-
-2. **Phase 2: Automation**
-   - Implement GitHub Actions workflows for:
-     - CHANGELOG entry validation
-     - Automatic CHANGELOG updates when pull requests are merged
-     - Slack notifications for maintainers when CHANGELOG entries are missed in merged pull requests
-     - Release preparation automation
-
-3. **Phase 3: Developer Experience**
-   - Update primary documentation ([`docs/changelog-process.md`](../changelog-process.md))
-   - Update Makefile targets (`changelog-misspell`, `generate-changelog`)
-   - Update supporting documentation
-
-4. **Phase 4: Final Migration + Tooling**
-   - Create conversion tool for legacy fragments
-   - Document migration process for open pull requests
-   - Remove ~440 existing `.changelog/` fragments
+- `changie new` — Interactive CLI for creating change fragments.
+- `make convert-changelog` — Transitional: converts `go-changelog` fragments to Changie format during the migration window.
+- `make changelog-misspell` — Updated to check both `.changelog/` and `.changes/` during the transition period.
+- `make generate-changelog` — Deprecated with a helpful error message directing users to the new process.
 
 ### Transition Period
 
 During the transition, both systems are supported:
 
-- **Legacy `.changelog/` directory**: Remains in place
-- **New `.changes/` directory**: All new entries go here
-- **Makefile targets**: Updated to check both directories
-- **CI workflows**: Watch both directory paths
-
-This dual-support approach allows:
-
-- Existing pull requests to merge without forced updates
-- Gradual migration at maintainer discretion
-- Time to develop and test conversion tooling
+- **Legacy `.changelog/` directory**: Remains in place; new `.changelog/*.txt` fragments on open PRs are auto-converted at merge time.
+- **New `.changes/` directory**: All new entries go here.
+- **CI**: Hard-fails on any new `.changelog/*.txt` fragment added after the migration landed, directing contributors to `make convert-changelog` or `changie new`.
 
 ## Rollback Plan
 
-If critical issues are discovered after deployment, the migration can be rolled back:
+If critical issues are discovered after deployment:
 
-1. **Revert the migration PR** - This restores all go-changelog tooling and workflows
-2. **Restore `.changelog/` directory** - Available in git history from the reverted commit
-3. **Remove `.changes/` directory** - Clean up Changie artifacts
-4. **Notify contributors** - Update any open PRs to use go-changelog format again
+1. **Revert the migration PR** — Restores all `go-changelog` tooling and workflows.
+2. **Restore `.changelog/` directory** — Available in git history from the reverted commit.
+3. **Remove `.changes/` directory** — Clean up Changie artifacts.
+4. **Notify contributors** — Update any open PRs to use `go-changelog` format again.
 
 ## References
 
