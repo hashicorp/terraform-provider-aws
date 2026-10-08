@@ -62,7 +62,7 @@ resource "aws_rbin_rule" "example" {
 
 The following arguments are required:
 
-* `resource_type` - (Required) Resource type to be retained by the retention rule. Valid values are `EBS_SNAPSHOT` and `EC2_IMAGE`.
+* `resource_type` - (Required) Resource type to be retained by the retention rule. Valid values are `EBS_SNAPSHOT`, `EBS_VOLUME`, and `EC2_IMAGE`.
 * `retention_period` - (Required) Information about the retention period for which the retention rule is to retain resources. See [`retention_period`](#retention_period) below.
 
 The following arguments are optional:
