@@ -50,7 +50,7 @@ resource "aws_backup_selection" "example" {
 
 ### Selecting Backups By Tag
 
-A `selection_tag` is an inclusion criterion: multiple `selection_tag` blocks use OR logic, and they do not further filter ARNs matched by `resources`. For example, `resources = ["*"]` selects resources matched by that wildcard regardless of any `selection_tag` blocks. To require a tag match in addition to a resource pattern, use a `condition` block instead; conditions use AND logic when multiple conditions are configured.
+-> `selection_tag` blocks map to AWS Backup's `ListOfTags` inclusion criteria. Multiple `selection_tag` blocks use OR logic, and they do not further filter ARNs matched by `resources`. For example, `resources = ["*"]` selects resources matched by that wildcard regardless of any `selection_tag` blocks. To require a tag match in addition to a resource pattern, use a `condition` block as shown below; multiple conditions use AND logic.
 
 ```terraform
 resource "aws_backup_selection" "example" {
