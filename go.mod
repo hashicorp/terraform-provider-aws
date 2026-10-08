@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/amp v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.48.1
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.26.0
@@ -168,6 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.110.0
 	github.com/aws/aws-sdk-go-v2/service/lambdacore v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.9.0
+	github.com/aws/aws-sdk-go-v2/service/lambdaweb v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.71.1
@@ -215,7 +216,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/polly v1.65.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.49.1
-	github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.0
+	github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.134.0
@@ -294,7 +295,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.45.1
 	github.com/aws/smithy-go v1.28.2
-	github.com/beevik/etree v1.8.0
+	github.com/beevik/etree v1.8.1
 	github.com/cedar-policy/cedar-go v1.8.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dlclark/regexp2 v1.12.0
@@ -338,7 +339,7 @@ require (
 	go.opentelemetry.io/otel v1.46.0
 	golang.org/x/crypto v0.57.0
 	golang.org/x/text v0.42.0
-	golang.org/x/tools v0.50.0
+	golang.org/x/tools v0.51.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.7
 )
 
@@ -410,3 +411,7 @@ require (
 	google.golang.org/grpc v1.85.0-dev.0.20260825072537-93e31b48545e // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
+
+// Addresses https://github.com/hashicorp/terraform-provider-aws/issues/50292
+// https://github.com/goccy/go-yaml/pull/949
+replace github.com/goccy/go-yaml => github.com/gdavison/go-yaml v0.0.0-20261007181749-9c42d2998a88

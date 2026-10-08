@@ -1,4 +1,6 @@
-## 6.68.0 (Unreleased)
+## 6.69.0 (Unreleased)
+
+## 6.68.0 (October 7, 2026)
 
 BREAKING CHANGES:
 
@@ -7,8 +9,10 @@ BREAKING CHANGES:
 
 FEATURES:
 
+* **New Data Source:** `aws_lambdamicrovms_image_version` ([#50299](https://github.com/hashicorp/terraform-provider-aws/issues/50299))
 * **New Data Source:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * **New List Resource:** `aws_ec2_transit_gateway_route` ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* **New List Resource:** `aws_ram_resource_association` ([#49901](https://github.com/hashicorp/terraform-provider-aws/issues/49901))
 * **New Resource:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * **New Resource:** `aws_odb_autonomous_database_secrets_manager_integration` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 
@@ -17,11 +21,14 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_agent_runtime: Add `platform_version` argument ([#50081](https://github.com/hashicorp/terraform-provider-aws/issues/50081))
 * resource/aws_docdb_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
 * resource/aws_ec2_transit_gateway_route: Add resource identity support ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* resource/aws_grafana_workspace: Update `grafana_version` argument to support v13.2 ([#50234](https://github.com/hashicorp/terraform-provider-aws/issues/50234))
 * resource/aws_network_interface: Add `connection_tracking_specification` argument ([#50119](https://github.com/hashicorp/terraform-provider-aws/issues/50119))
+* resource/aws_ram_resource_association: Add resource identity support ([#49901](https://github.com/hashicorp/terraform-provider-aws/issues/49901))
 * resource/aws_rds_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50014](https://github.com/hashicorp/terraform-provider-aws/issues/50014))
 
 BUG FIXES:
 
+* provider: Fixes error when parsing YAML documents with literal tab characters in double-quoted string ([#50340](https://github.com/hashicorp/terraform-provider-aws/issues/50340))
 * resource/aws_odb_autonomous_database_secrets_manager_integration: Avoid redundant disable requests when the integration is already absent or terminating ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
 * resource/aws_redshiftserverless_workgroup: Restores fully reading `config_parameter` when not specified ([#50255](https://github.com/hashicorp/terraform-provider-aws/issues/50255))
 
