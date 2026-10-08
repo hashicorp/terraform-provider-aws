@@ -482,8 +482,13 @@ This resource supports the following arguments:
   to attach to the Auto Scaling Group **before** instances are launched. The
   syntax is exactly the same as the separate
   [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
-  resource, without the `autoscaling_group_name` attribute. Please note that this will only work when creating
-  a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
+  resource, without the `autoscaling_group_name` attribute. Changes to this
+  argument are reconciled in place (hooks are added, updated, or removed via
+  the Auto Scaling API) and will **not** replace the Auto Scaling Group. Note
+  that changes apply to future lifecycle transitions. They do not affect an
+  instance that is already waiting in a lifecycle transition. To cycle
+  existing `InService` instances through an updated launch hook, trigger an
+  [Instance Refresh](#instance_refresh-block) — see the note below.
 - `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
 - `instance_lifecycle_policy` - (Optional) If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined [below](#instance_lifecycle_policy-block).
@@ -845,6 +850,49 @@ Auto Scaling Group has been created, and depending on your
 been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
+
+~> **NOTE:** `initial_lifecycle_hook` can be modified without replacing the
+Auto Scaling Group. Modifications are applied with the
+`PutLifecycleHook`/`DeleteLifecycleHook` APIs rather than recreating the
+group. However, because AWS only evaluates lifecycle hooks against instances
+as they transition state, a hook change does **not** affect an instance already
+waiting in a lifecycle transition. Existing `InService` instances can encounter
+an updated termination hook when they later terminate, but do not encounter an
+updated launch hook unless they launch again. To cycle existing instances
+through an updated launch hook, add `"initial_lifecycle_hook"` to the
+`instance_refresh.triggers` list so that the hook is updated before a rolling
+Instance Refresh starts, for example:
+
+```terraform
+resource "aws_autoscaling_group" "example" {
+  # ...
+
+  instance_refresh {
+    strategy = "Rolling"
+    triggers = ["initial_lifecycle_hook"]
+  }
+}
+```
+
+~> **NOTE:** AWS does not expose whether a lifecycle hook was created through
+`initial_lifecycle_hook`, the separate `aws_autoscaling_lifecycle_hook`
+resource, or another client. To avoid adopting or deleting hooks owned
+elsewhere, this resource tracks only the hooks it manages and never reads hooks
+back from AWS, so `initial_lifecycle_hook` is not refreshed and drift is not
+detected. Consequently, importing an Auto Scaling Group does not discover
+existing lifecycle hooks as `initial_lifecycle_hook` blocks.
+
+~> **NOTE:** `PutLifecycleHook` only sets the fields it is given and cannot
+reset an argument to its default. Removing `notification_metadata`,
+`notification_target_arn`, or `role_arn` from an `initial_lifecycle_hook` block
+is therefore applied by deleting that hook and recreating it without the
+argument, which is reported as an in-place update of the Auto Scaling Group
+rather than as a replacement. Deleting a hook completes the lifecycle action for
+any instance currently waiting on it, so an instance paused by a launch hook
+resumes immediately, potentially before its bootstrap has finished. Removing
+`default_result` or `heartbeat_timeout` leaves the current value in place: AWS
+always reports both, so a removed argument cannot be distinguished from an
+explicit one. Set them to the value you want instead.
 
 ## Timeouts
 

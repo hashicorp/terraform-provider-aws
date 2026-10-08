@@ -20,6 +20,7 @@ import (
 func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_lifecycle_hook.test"
+	groupResourceName := "aws_autoscaling_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -30,8 +31,18 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecycleHookConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					// A hook owned by this resource must not be adopted into the
+					// group's "initial_lifecycle_hook" state, which would cause a
+					// later plan to delete it.
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(groupResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecycleHookExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(groupResourceName, "initial_lifecycle_hook.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "default_result", "CONTINUE"),
 					resource.TestCheckResourceAttr(resourceName, "heartbeat_timeout", "2000"),
