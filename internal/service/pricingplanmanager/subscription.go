@@ -350,14 +350,8 @@ func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	// A pending scheduled change blocks cancellation and must be reverted
-	// first. If the pending change is itself a cancellation, there is
-	// nothing left to do.
+	// A pending scheduled change blocks cancellation and must be reverted first.
 	if sc := output.Subscription.ScheduledChange; sc != nil {
-		if sc.ChangeType == awstypes.ScheduledChangeTypeCancellation {
-			return
-		}
-
 		input := pricingplanmanager.CancelSubscriptionChangeInput{
 			Arn:     aws.String(arn),
 			IfMatch: output.ETag,
@@ -431,7 +425,19 @@ func findSubscriptionByARN(ctx context.Context, conn *pricingplanmanager.Client,
 	input := pricingplanmanager.GetSubscriptionInput{
 		Arn: aws.String(arn),
 	}
-	return findSubscription(ctx, conn, &input)
+	output, err := findSubscription(ctx, conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cancellation of an active subscription takes effect at the end of
+	// the current billing period; a pending CANCELLATION scheduled change
+	// is the terminal state visible via the API after destroy.
+	if sc := output.Subscription.ScheduledChange; sc != nil && sc.ChangeType == awstypes.ScheduledChangeTypeCancellation {
+		return nil, smarterr.NewError(&retry.NotFoundError{})
+	}
+
+	return output, nil
 }
 
 func findSubscription(ctx context.Context, conn *pricingplanmanager.Client, input *pricingplanmanager.GetSubscriptionInput) (*pricingplanmanager.GetSubscriptionOutput, error) {

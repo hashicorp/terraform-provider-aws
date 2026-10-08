@@ -312,7 +312,7 @@ func TestAccPricingPlanManagerSubscription_approvalModeManual(t *testing.T) {
 			// Paid-tier subscriptions created with MANUAL approval mode park in
 			// PENDING_APPROVAL and do not start billing until approved.
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Subscription/planTier/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Subscription/approvalMode/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"plan_tier":     config.StringVariable("PRO"),
@@ -333,7 +333,7 @@ func TestAccPricingPlanManagerSubscription_approvalModeManual(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Subscription/planTier/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Subscription/approvalMode/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"plan_tier":     config.StringVariable("PRO"),
@@ -360,7 +360,7 @@ func testAccCheckSubscriptionDestroy(ctx context.Context, t *testing.T) resource
 				continue
 			}
 
-			output, err := tfpricingplanmanager.FindSubscriptionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+			_, err := tfpricingplanmanager.FindSubscriptionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if retry.NotFound(err) {
 				continue
@@ -368,13 +368,6 @@ func testAccCheckSubscriptionDestroy(ctx context.Context, t *testing.T) resource
 
 			if err != nil {
 				return err
-			}
-
-			// Cancellation of an active subscription takes effect at the end of
-			// the current billing period; a pending CANCELLATION scheduled change
-			// is the terminal state visible via the API after destroy.
-			if sc := output.Subscription.ScheduledChange; sc != nil && sc.ChangeType == awstypes.ScheduledChangeTypeCancellation {
-				continue
 			}
 
 			return fmt.Errorf("Pricing Plan Manager Subscription %s still exists", rs.Primary.Attributes[names.AttrARN])
