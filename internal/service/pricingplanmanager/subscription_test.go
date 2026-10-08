@@ -79,6 +79,44 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 	})
 }
 
+func TestAccPricingPlanManagerSubscription_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v pricingplanmanager.GetSubscriptionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pricingplanmanager_subscription.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingPlanManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Subscription/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpricingplanmanager.ResourceSubscription, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v pricingplanmanager.GetSubscriptionOutput
@@ -389,20 +427,6 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName)
-}
-
-func testAccSubscriptionConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), `
-resource "aws_pricingplanmanager_subscription" "test" {
-  plan_family = "CloudFront"
-  plan_tier   = "FREE"
-
-  resource_arns = [
-    aws_cloudfront_distribution.test.arn,
-    aws_wafv2_web_acl.test.arn,
-  ]
-}
-`)
 }
 
 // CloudFront KeyValueStores are incompatible with the FREE tier, but Route 53
