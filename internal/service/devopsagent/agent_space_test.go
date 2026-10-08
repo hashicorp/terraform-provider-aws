@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,6 +35,7 @@ func TestAccDevOpsAgentAgentSpace_basic(t *testing.T) {
 					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_space_id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aidevops", regexache.MustCompile(`agentspace/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
