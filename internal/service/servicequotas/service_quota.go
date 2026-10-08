@@ -285,7 +285,8 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceAlreadyExistsException](err, "Only one open service quota increase request is allowed per quota") {
-		return sdkdiag.AppendWarningf(diags, "resource service quota %s already exists", d.Id())
+		diags = sdkdiag.AppendWarningf(diags, "resource service quota %s already exists", d.Id())
+		return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
 	}
 
 	if err != nil {
