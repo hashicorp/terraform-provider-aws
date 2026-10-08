@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Omit `dns-support` and `security-group-referencing-support` from the rendered document when `dns_support` and `security_group_referencing_support` are not configured
+```
+
+```release-note:bug
+resource/aws_networkmanager_core_network: Omit `dns-support` and `security-group-referencing-support` from the base policy document generated from `base_policy_regions`
+```
