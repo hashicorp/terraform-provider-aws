@@ -5310,6 +5310,30 @@ service "lambdamicrovms" {
   brand      = "AWS"
 }
 
+service "lambdaweb" {
+  sdk {
+    id             = "Lambda Web"
+    arn_namespace  = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaWeb"
+    human_friendly      = "Lambda Web"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWebFunctions"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdaweb_"
+  }
+
+  provider_package_correct = "lambdaweb"
+  doc_prefix               = ["lambdaweb_"]
+  brand                    = "AWS"
+}
+
 service "launchwizard" {
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"
@@ -7056,6 +7080,41 @@ service "pricing" {
 
   provider_package_correct = "pricing"
   doc_prefix               = ["pricing_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
+service "pricingplanmanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pricing-plan-manager"
+    aws_cli_v2_command_no_dashes = "pricingplanmanager"
+  }
+
+  sdk {
+    id            = "Pricing Plan Manager"
+    arn_namespace = "pricingplanmanager"
+  }
+
+  names {
+    provider_name_upper = "PricingPlanManager"
+    human_friendly      = "Pricing Plan Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListSubscriptions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+    endpoint_no_fips_support = true
+  }
+
+  resource_prefix {
+    correct = "aws_pricingplanmanager_"
+  }
+
+  provider_package_correct = "pricingplanmanager"
+  doc_prefix               = ["pricingplanmanager_"]
   brand                    = "AWS"
 
   is_global = true

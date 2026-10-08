@@ -1205,6 +1205,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// lambdaweb
+
+				"lambdaweb": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// launchwizard
 
 				"launchwizard": schema.StringAttribute{
@@ -1587,6 +1594,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// pricing
 
 				"pricing": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// pricingplanmanager
+
+				"pricingplanmanager": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

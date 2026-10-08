@@ -434,6 +434,8 @@ service/lambdacore:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdacore_'
 service/lambdamicrovms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
+service/lambdaweb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdaweb_'
 service/launchwizard:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
@@ -592,6 +594,8 @@ service/polly:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_polly_'
 service/pricing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricing_'
+service/pricingplanmanager:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricingplanmanager_'
 service/proton:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_proton_'
 service/qbusiness:

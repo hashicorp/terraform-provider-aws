@@ -236,6 +236,7 @@ provider "aws" {
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
 |Lambda Core|`lambdacore`|`AWS_ENDPOINT_URL_LAMBDA_CORE`|`lambda_core`|
 |Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
+|Lambda Web|`lambdaweb`|`AWS_ENDPOINT_URL_LAMBDA_WEB`|`lambda_web`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -284,6 +285,7 @@ provider "aws" {
 |EventBridge Pipes|`pipes`|`AWS_ENDPOINT_URL_PIPES`|`pipes`|
 |Polly|`polly`|`AWS_ENDPOINT_URL_POLLY`|`polly`|
 |Pricing Calculator|`pricing`|`AWS_ENDPOINT_URL_PRICING`|`pricing`|
+|Pricing Plan Manager|`pricingplanmanager`|`AWS_ENDPOINT_URL_PRICING_PLAN_MANAGER`|`pricing_plan_manager`|
 |Amazon Q Business|`qbusiness`|`AWS_ENDPOINT_URL_QBUSINESS`|`qbusiness`|
 |QLDB (Quantum Ledger Database)|`qldb`|`AWS_ENDPOINT_URL_QLDB`|`qldb`|
 |QuickSight|`quicksight`|`AWS_ENDPOINT_URL_QUICKSIGHT`|`quicksight`|

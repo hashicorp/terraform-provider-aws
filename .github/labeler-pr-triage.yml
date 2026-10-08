@@ -1383,6 +1383,12 @@ service/lambdamicrovms:
           - any-glob-to-any-file:
               - 'internal/service/lambdamicrovms/**/*'
               - 'website/**/lambdamicrovms_*'
+service/lambdaweb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/lambdaweb/**/*'
+              - 'website/**/lambdaweb_*'
 service/launchwizard:
   - any:
       - changed-files:
@@ -1865,6 +1871,12 @@ service/pricing:
           - any-glob-to-any-file:
               - 'internal/service/pricing/**/*'
               - 'website/**/pricing_*'
+service/pricingplanmanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pricingplanmanager/**/*'
+              - 'website/**/pricingplanmanager_*'
 service/proton:
   - any:
       - changed-files:
