@@ -60,7 +60,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `execute_command_configuration`
 
-* `kms_key_id` - AWS Key Management Service key ID used to encrypt the data between the local client and the container
+* `kms_key_id` - AWS KMS key ID used to encrypt the data between the local client and the container
 * `log_configuration` - Log configuration for the results of the execute command actions. See [`log_configuration`](#log_configuration) below.
 * `logging` - Log setting to use for redirecting logs for execute command results. One of `NONE`, `DEFAULT` or `OVERRIDE`.
 
@@ -74,8 +74,8 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `managed_storage_configuration`
 
-* `fargate_ephemeral_storage_kms_key_id` - AWS Key Management Service key ID for the Fargate ephemeral storage
-* `kms_key_id` - AWS Key Management Service key ID used to encrypt the managed storage
+* `fargate_ephemeral_storage_kms_key_id` - AWS KMS key ID for the Fargate ephemeral storage
+* `kms_key_id` - AWS KMS key ID used to encrypt the managed storage
 
 ### `default_capacity_provider_strategy`
 
