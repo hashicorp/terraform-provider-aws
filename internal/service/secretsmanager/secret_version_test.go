@@ -342,7 +342,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 func TestIsKMSKeyUnavailable(t *testing.T) {
 	t.Parallel()
 
-	const prefix = "Secrets Manager can't decrypt the secret value: arn:aws:kms:us-west-2:123456789012:key/00000000-0000-0000-0000-000000000000"
+	const prefix = "Secrets Manager can't decrypt the secret value: arn:aws:kms:us-west-2:123456789012:key/00000000-0000-0000-0000-000000000000" //lintignore:AWSAT003,AWSAT005
 
 	testCases := map[string]struct {
 		err      error
