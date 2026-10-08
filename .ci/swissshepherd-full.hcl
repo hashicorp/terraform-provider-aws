@@ -229,6 +229,35 @@ check "banned_glosses" {
   severity         = "error"
 }
 
+check "prose_casing" {
+  enabled  = true
+  severity = "warning"
+
+  enforce_casing = [
+    "ACL", "ACM", "ACMPCA", "Amazon WorkSpaces", "AMI", "API Gateway",
+    "App Mesh", "App Runner", "AppConfig", "AppFabric", "AppFlow",
+    "Application Auto Scaling", "AppStream", "AppSync", "ARN", "ASG", "ASN",
+    "Auto Scaling group", "Auto Scaling groups", "AWS Auto Scaling",
+    "AWS WorkSpaces", "BGP", "BYOIP", "CIDR", "CloudFormation", "CloudFront",
+    "CloudHSM", "CloudTrail", "CloudWatch", "CMK", "CNAME", "CodeArtifact",
+    "CodeBuild", "CodeCatalyst", "CodeCommit", "CodeConnections",
+    "CodeDeploy", "CodeGuru", "CodePipeline", "CoIP", "CSV", "DataBrew",
+    "DataSync", "DataZone", "DAX", "DB", "DHCP", "DKIM", "DLM", "DMS",
+    "DNSSEC", "DocDB", "DynamoDB", "EBS", "EC2", "EC2 Auto Scaling", "ECMP",
+    "ECR", "ECS", "EFS", "EIP", "EKS", "ElastiCache", "Elasticsearch", "ELB",
+    "EMR", "EventBridge", "FIFO", "FMS", "FQDNs", "FSx", "GameLift", "GCM",
+    "GraphQL", "gRPC", "GuardDuty", "HAProxy", "HSM", "HVM", "IAM", "IoT",
+    "IPAM", "IPSet", "iSCSI", "JDBC", "KMS", "Lake Formation", "MFA",
+    "MicroVMs", "MSK", "MWAA", "MySQL", "NFS", "OAuth", "OIDC", "OpsWorks",
+    "PHP", "PITR", "POSIX", "QLDB", "QuickSight", "RabbitMQ", "RDS", "RFC",
+    "SageMaker", "SASL", "Security Hub", "SFN", "SMB", "SMS", "SMTP", "SNS",
+    "SQS", "SSM", "SSO", "STS", "SWF", "TTL", "VGW", "VoIP", "VPC", "VPN",
+    "WAF", "WAFv2", "WorkLink", "WorkMail", "XSS", "YAML",
+  ]
+
+  skip_frontmatter = true
+}
+
 check "schema_docs" {
   enabled = true
 
