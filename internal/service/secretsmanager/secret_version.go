@@ -161,7 +161,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
+		return findSecretVersionForExistence(ctx, conn, secretID, versionID)
 	})
 
 	if err != nil {
@@ -175,15 +175,12 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
-func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string, hasWriteOnly bool) (*secretVersionExistsOutput, error) {
-	if hasWriteOnly {
-		_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
-		if err != nil {
-			return nil, err
-		}
-		return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
-	}
-	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+// findSecretVersionForExistence reports whether a secret version exists using
+// ListSecretVersionIds, which never decrypts the value. Existence checks must
+// not depend on GetSecretValue: a version encrypted with a since-deleted KMS
+// key still exists but can no longer be decrypted (issue #50368).
+func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretVersionExistsOutput, error) {
+	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
 		return nil, err
 	}
@@ -267,6 +264,36 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId("")
 		return diags
 	}
+
+	// A version encrypted with a since-deleted or disabled KMS key can no
+	// longer be decrypted, so GetSecretValue returns DecryptionFailure. The
+	// version itself still exists; confirm via ListSecretVersionIds (which
+	// needs no decrypt), refresh the metadata we can, and preserve the
+	// last-known secret value in state rather than failing the read. This
+	// keeps plans and CI/CD stable through normal KMS key lifecycle events
+	// (issue #50368). Changing the configured value still forces a new
+	// version via CustomizeDiff, which re-encrypts with the current key.
+	if errs.IsA[*types.DecryptionFailure](err) {
+		arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+
+		if !d.IsNewResource() && retry.NotFound(err) {
+			log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[WARN] Secrets Manager Secret Version (%s) cannot be decrypted (KMS key unavailable), preserving existing secret value in state", d.Id())
+		d.Set(names.AttrARN, arn)
+		d.Set("secret_arn", arn)
+		d.Set("version_id", versionEntry.VersionId)
+		d.Set("version_stages", versionEntry.VersionStages)
+
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
@@ -413,8 +440,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
-		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID, hasWriteOnly)
+		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID)
 
 		if err != nil {
 			return nil, err
