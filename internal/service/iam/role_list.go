@@ -11,6 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -32,7 +35,23 @@ type roleListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type roleListResourceModel struct{}
+type roleListResourceModel struct {
+	PathPrefix types.String `tfsdk:"path_prefix"`
+}
+
+func (l *roleListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"path_prefix": listschema.StringAttribute{
+				Optional:    true,
+				Description: "Path prefix on which to filter role names.",
+				Validators: []validator.String{
+					validPolicyPathFramework,
+				},
+			},
+		},
+	}
+}
 
 func (l *roleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
