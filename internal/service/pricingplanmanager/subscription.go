@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -86,18 +87,13 @@ func (r *subscriptionResource) Schema(ctx context.Context, req resource.SchemaRe
 				Required: true,
 			},
 			"resource_arns": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				ElementType: types.StringType,
-				Required:    true,
+				CustomType: fwtypes.SetOfStringType,
+				Required:   true,
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 10),
 				},
 			},
-			"scheduled_change": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[scheduledChangeModel](ctx),
-				Computed:    true,
-				ElementType: fwtypes.NewObjectTypeOf[scheduledChangeModel](ctx),
-			},
+			"scheduled_change": framework.ResourceComputedListOfObjectsAttribute[scheduledChangeModel](ctx),
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
@@ -120,42 +116,28 @@ func (r *subscriptionResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 func (r *subscriptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().PricingPlanManagerClient(ctx)
-
 	var plan subscriptionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().PricingPlanManagerClient(ctx)
+
+	planFamily := fwflex.StringValueFromFramework(ctx, plan.PlanFamily)
 	var input pricingplanmanager.CreateSubscriptionInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateSubscription(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PlanFamily.String())
-		return
-	}
-	if out == nil || out.Subscription == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.PlanFamily.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, planFamily)
 		return
 	}
 
 	arn := aws.ToString(out.Subscription.Arn)
-
-	// Persist state before waiting so that a failed or timed-out wait leaves
-	// the subscription tracked (and destroyable) instead of leaked.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, &pricingplanmanager.GetSubscriptionOutput{ETag: out.ETag, Subscription: out.Subscription}, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	// The service-side default for ApprovalMode is MANUAL, except for FREE
 	// tier subscriptions where it is IMMEDIATE.
@@ -163,11 +145,13 @@ func (r *subscriptionResource) Create(ctx context.Context, req resource.CreateRe
 		(plan.ApprovalMode.IsNull() && plan.PlanTier.ValueString() != planTierFree)
 	output, err := waitSubscriptionCreated(ctx, conn, arn, manualApproval, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -176,26 +160,27 @@ func (r *subscriptionResource) Create(ctx context.Context, req resource.CreateRe
 }
 
 func (r *subscriptionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().PricingPlanManagerClient(ctx)
-
 	var state subscriptionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findSubscriptionByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().PricingPlanManagerClient(ctx)
+
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	output, err := findSubscriptionByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, output, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -204,8 +189,6 @@ func (r *subscriptionResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().PricingPlanManagerClient(ctx)
-
 	var plan, state subscriptionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -213,8 +196,9 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	arn := state.ARN.ValueString()
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	conn := r.Meta().PricingPlanManagerClient(ctx)
+
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
 
 	// Re-read for the current entity tag and any pending scheduled change.
 	// Every mutation invalidates the entity tag, so each successive call must
@@ -225,6 +209,8 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 	etag := current.ETag
+
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
 	// usage_level is Optional+Computed: when it is not set in configuration it
 	// is unknown in the plan and must not trigger an update by itself.
@@ -239,7 +225,8 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 				IfMatch: etag,
 			}
 
-			if _, err := conn.CancelSubscriptionChange(ctx, &input); err != nil {
+			_, err := conn.CancelSubscriptionChange(ctx, &input)
+			if err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 				return
 			}
@@ -265,9 +252,9 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 			input := pricingplanmanager.UpdateSubscriptionInput{
 				Arn:      aws.String(arn),
 				IfMatch:  etag,
-				PlanTier: plan.PlanTier.ValueStringPointer(),
+				PlanTier: fwflex.StringFromFramework(ctx, plan.PlanTier),
 				// Omitting usageLevel resets it to the plan tier's default.
-				UsageLevel: plan.UsageLevel.ValueStringPointer(),
+				UsageLevel: fwflex.StringFromFramework(ctx, plan.UsageLevel),
 			}
 
 			out, err := conn.UpdateSubscription(ctx, &input)
@@ -286,8 +273,8 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	if !plan.ResourceARNs.Equal(state.ResourceARNs) {
-		os := flex.ExpandFrameworkStringValueSet(ctx, state.ResourceARNs)
-		ns := flex.ExpandFrameworkStringValueSet(ctx, plan.ResourceARNs)
+		os := fwflex.ExpandFrameworkStringValueSet(ctx, state.ResourceARNs)
+		ns := fwflex.ExpandFrameworkStringValueSet(ctx, plan.ResourceARNs)
 
 		if add := ns.Difference(os); len(add) > 0 {
 			input := pricingplanmanager.AssociateResourcesToSubscriptionInput{
@@ -336,7 +323,7 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -345,18 +332,15 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 }
 
 func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().PricingPlanManagerClient(ctx)
-
 	var state subscriptionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	arn := state.ARN.ValueString()
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	conn := r.Meta().PricingPlanManagerClient(ctx)
 
 	// Re-read to get the current entity tag; the one in state may be stale.
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
 	output, err := findSubscriptionByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		return
@@ -379,14 +363,15 @@ func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRe
 			IfMatch: output.ETag,
 		}
 
-		if _, err := conn.CancelSubscriptionChange(ctx, &input); err != nil {
+		_, err := conn.CancelSubscriptionChange(ctx, &input)
+		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 
 		// The revert transitions the subscription through SYNC_IN_PROGRESS;
 		// cancelling before it settles returns a ConflictException.
-		if _, err := waitSubscriptionSynced(ctx, conn, arn, deleteTimeout); err != nil {
+		if _, err := waitSubscriptionSynced(ctx, conn, arn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
@@ -410,29 +395,53 @@ func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRe
 		IfMatch: output.ETag,
 	}
 
-	if _, err := conn.CancelSubscription(ctx, &input); err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
+	_, err = conn.CancelSubscription(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
+}
+
+// flattenSubscription copies the API response into the model. plan_tier and
+// usage_level hold the desired values: while a downgrade is scheduled the API
+// keeps reporting the old tier until the end of the billing period, so the
+// scheduled target values are mapped back into those arguments (the pending
+// change itself is exposed via scheduled_change).
+func (r *subscriptionResource) flatten(ctx context.Context, output *pricingplanmanager.GetSubscriptionOutput, data *subscriptionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, output.Subscription, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if sc := output.Subscription.ScheduledChange; sc != nil && sc.ChangeType == awstypes.ScheduledChangeTypeDowngrade {
+		data.PlanTier = fwflex.StringToFramework(ctx, sc.PlanTier)
+		data.UsageLevel = fwflex.StringToFramework(ctx, sc.UsageLevel)
+	}
+
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	return diags
 }
 
 func findSubscriptionByARN(ctx context.Context, conn *pricingplanmanager.Client, arn string) (*pricingplanmanager.GetSubscriptionOutput, error) {
 	input := pricingplanmanager.GetSubscriptionInput{
 		Arn: aws.String(arn),
 	}
+	return findSubscription(ctx, conn, &input)
+}
 
-	output, err := conn.GetSubscription(ctx, &input)
+func findSubscription(ctx context.Context, conn *pricingplanmanager.Client, input *pricingplanmanager.GetSubscriptionInput) (*pricingplanmanager.GetSubscriptionOutput, error) {
+	output, err := conn.GetSubscription(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
 		return nil, smarterr.NewError(err)
 	}
 
@@ -498,27 +507,6 @@ func waitSubscriptionStatus(ctx context.Context, conn *pricingplanmanager.Client
 	}
 
 	return nil, smarterr.NewError(err)
-}
-
-// flattenSubscription copies the API response into the model. plan_tier and
-// usage_level hold the desired values: while a downgrade is scheduled the API
-// keeps reporting the old tier until the end of the billing period, so the
-// scheduled target values are mapped back into those arguments (the pending
-// change itself is exposed via scheduled_change).
-func flattenSubscription(ctx context.Context, output *pricingplanmanager.GetSubscriptionOutput, data *subscriptionResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	diags := flex.Flatten(ctx, output.Subscription, data)
-	if diags.HasError() {
-		return diags
-	}
-
-	if sc := output.Subscription.ScheduledChange; sc != nil && sc.ChangeType == awstypes.ScheduledChangeTypeDowngrade {
-		data.PlanTier = flex.StringToFramework(ctx, sc.PlanTier)
-		data.UsageLevel = flex.StringToFramework(ctx, sc.UsageLevel)
-	}
-
-	data.ETag = flex.StringToFramework(ctx, output.ETag)
-
-	return diags
 }
 
 type subscriptionResourceModel struct {
