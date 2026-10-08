@@ -756,8 +756,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		var connectivityInfo types.ConnectivityInfo
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			connectivityInfo.VpcConnectivity = expandVPCConnectivity(v.([]any)[0].(map[string]any))
+		// Use d.Get instead of d.GetOk because GetOk returns false when all nested
+		// values are zero-values (e.g. booleans set to false), causing the
+		// VpcConnectivity field to be nil and the API request body to be empty.
+		if v := d.Get("broker_node_group_info.0.connectivity_info.0.vpc_connectivity").([]any); len(v) > 0 && v[0] != nil {
+			connectivityInfo.VpcConnectivity = expandVPCConnectivity(v[0].(map[string]any))
 		}
 		input.ConnectivityInfo = &connectivityInfo
 
@@ -786,8 +789,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		var connectivityInfo types.ConnectivityInfo
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.public_access"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			connectivityInfo.PublicAccess = expandPublicAccess(v.([]any)[0].(map[string]any))
+		if v := d.Get("broker_node_group_info.0.connectivity_info.0.public_access").([]any); len(v) > 0 && v[0] != nil {
+			connectivityInfo.PublicAccess = expandPublicAccess(v[0].(map[string]any))
 		}
 		input.ConnectivityInfo = &connectivityInfo
 
@@ -816,8 +819,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		var connectivityInfo types.ConnectivityInfo
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.network_type"); ok && v != "" {
-			connectivityInfo.NetworkType = types.NetworkType(v.(string))
+		if v := d.Get("broker_node_group_info.0.connectivity_info.0.network_type").(string); v != "" {
+			connectivityInfo.NetworkType = types.NetworkType(v)
 		}
 		input.ConnectivityInfo = &connectivityInfo
 
