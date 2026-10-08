@@ -1,0 +1,2 @@
+release-note:bug
+resource/aws_acm_certificate: Fix options.export defaulting to ENABLED instead of DISABLED when options block is not specified
