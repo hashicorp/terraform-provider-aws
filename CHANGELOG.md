@@ -1,5 +1,16 @@
 ## 6.69.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_resiliencehubv2_policy: Add `sharing_enabled` attribute ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+* resource/aws_resiliencehubv2_input_source: Add `resource_configuration.eks.label_selector` argument ([#50075](https://github.com/hashicorp/terraform-provider-aws/issues/50075))
+* resource/aws_resiliencehubv2_policy: Add `sharing_enabled` argument ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+
+BUG FIXES:
+
+* resource/aws_agentregistry_registry: Fix validation of `custom_claim`-only custom JWT authorizers ([#50298](https://github.com/hashicorp/terraform-provider-aws/issues/50298))
+* resource/aws_observabilityadmin_telemetry_rule: Fix updates when `all_regions` is enabled ([#50150](https://github.com/hashicorp/terraform-provider-aws/issues/50150))
+
 ## 6.68.0 (October 7, 2026)
 
 BREAKING CHANGES:
