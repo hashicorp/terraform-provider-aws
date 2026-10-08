@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -1280,6 +1281,125 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_oidcClientSecretWO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_oidcClientSecretWO(rName, key, certificate, "7Fjfp0ZBr1KtDRbnfVdmIw", 1, 604800),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "authenticate-oidc"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_id", "s6BhdRkqt3"),
+					resource.TestCheckNoResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret"),
+					resource.TestCheckNoResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.session_timeout", "604800"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"action.0.authenticate_oidc.0.client_secret_wo_version",
+					"action.1.forward",
+				},
+			},
+			// Rotate the client secret by incrementing the version.
+			{
+				Config: testAccListenerRuleConfig_oidcClientSecretWO(rName, key, certificate, "Rotated0ZBr1KtDRbnfVdmIw", 2, 604800),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckNoResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo_version", "2"),
+				),
+			},
+			// Change another argument without changing the version; the rule keeps its existing secret.
+			{
+				Config: testAccListenerRuleConfig_oidcClientSecretWO(rName, key, certificate, "Rotated0ZBr1KtDRbnfVdmIw", 2, 3600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret_wo_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.session_timeout", "3600"),
+				),
+			},
+			// Switch back to client_secret.
+			{
+				Config: testAccListenerRuleConfig_oidc(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret", "7Fjfp0ZBr1KtDRbnfVdmIw"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_oidcClientSecretWO_validate(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccListenerRuleConfig_oidcClientSecretWO_validate(rName, key, certificate, ``),
+				ExpectError: regexache.MustCompile(`No attribute specified when one \(and only one\) of \[action\[0\]\.authenticate_oidc\[0\]\.client_secret, action\[0\]\.authenticate_oidc\[0\]\.client_secret_wo\] is required`),
+			},
+			{
+				Config: testAccListenerRuleConfig_oidcClientSecretWO_validate(rName, key, certificate, `
+      client_secret            = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      client_secret_wo         = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      client_secret_wo_version = 1
+`),
+				ExpectError: regexache.MustCompile(`2 attributes specified when one \(and only one\) of \[action\[0\]\.authenticate_oidc\[0\]\.client_secret, action\[0\]\.authenticate_oidc\[0\]\.client_secret_wo\] is required`),
+			},
+			{
+				Config: testAccListenerRuleConfig_oidcClientSecretWO_validate(rName, key, certificate, `
+      client_secret_wo = "7Fjfp0ZBr1KtDRbnfVdmIw"
+`),
+				ExpectError: regexache.MustCompile(`Attribute "action\[0\]\.authenticate_oidc\[0\]\.client_secret_wo_version" must be specified when "action\[0\]\.authenticate_oidc\[0\]\.client_secret_wo" is specified`),
+			},
+			{
+				Config: testAccListenerRuleConfig_oidcClientSecretWO_validate(rName, key, certificate, `
+      client_secret            = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      client_secret_wo_version = 1
+`),
+				ExpectError: regexache.MustCompile(`Attribute "action\[0\]\.authenticate_oidc\[0\]\.client_secret_wo" must be specified when "action\[0\]\.authenticate_oidc\[0\]\.client_secret_wo_version" is specified`),
 			},
 		},
 	})
@@ -4105,6 +4225,109 @@ resource "aws_lb_listener" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerRuleConfig_baseHTTPS(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerRuleConfig_oidcClientSecretWO(rName, key, certificate, clientSecret string, clientSecretWOVersion, sessionTimeout int) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseHTTPS(rName, key, certificate), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint   = "https://example.com/authorization_endpoint"
+      client_id                = "s6BhdRkqt3"
+      client_secret_wo         = %[2]q
+      client_secret_wo_version = %[3]d
+      issuer                   = "https://example.com"
+      session_timeout          = %[4]d
+      token_endpoint           = "https://example.com/token_endpoint"
+      user_info_endpoint       = "https://example.com/user_info_endpoint"
+
+      authentication_request_extra_params = {
+        param = "test"
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, clientSecret, clientSecretWOVersion, sessionTimeout))
+}
+
+func testAccListenerRuleConfig_oidcClientSecretWO_validate(rName, key, certificate, clientSecretArguments string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseHTTPS(rName, key, certificate), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+%[1]s
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+}
+`, clientSecretArguments))
 }
 
 func testAccListenerRuleConfig_jwtValidation(rName, key, certificate string) string {

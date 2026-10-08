@@ -651,7 +651,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 			return diags
 		}
 
-		diags = append(diags, setAuthenticateOIDCClientSecretWO(d, input.DefaultActions)...)
+		diags = append(diags, setAuthenticateOIDCClientSecretWO(d, names.AttrDefaultAction, input.DefaultActions)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -821,7 +821,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return diags
 			}
 
-			diags = append(diags, setAuthenticateOIDCClientSecretWO(d, input.DefaultActions)...)
+			diags = append(diags, setAuthenticateOIDCClientSecretWO(d, names.AttrDefaultAction, input.DefaultActions)...)
 			if diags.HasError() {
 				return diags
 			}
@@ -1286,10 +1286,10 @@ func expandListenerAuthenticateCognitoConfig(l []any) *awstypes.AuthenticateCogn
 }
 
 // setAuthenticateOIDCClientSecretWO sets the client secret of each authenticate-oidc
-// default action configured with the write-only client_secret_wo argument.
+// action in attrName configured with the write-only client_secret_wo argument.
 // The secret is read from configuration on create and whenever client_secret_wo_version
-// changes; otherwise the listener keeps its existing secret.
-func setAuthenticateOIDCClientSecretWO(d *schema.ResourceData, actions []awstypes.Action) diag.Diagnostics {
+// changes; otherwise the listener or rule keeps its existing secret.
+func setAuthenticateOIDCClientSecretWO(d *schema.ResourceData, attrName string, actions []awstypes.Action) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	for i, action := range actions {
@@ -1298,12 +1298,12 @@ func setAuthenticateOIDCClientSecretWO(d *schema.ResourceData, actions []awstype
 			continue
 		}
 
-		if !d.IsNewResource() && !d.HasChange(names.AttrDefaultAction+"."+strconv.Itoa(i)+".authenticate_oidc.0.client_secret_wo_version") {
+		if !d.IsNewResource() && !d.HasChange(attrName+"."+strconv.Itoa(i)+".authenticate_oidc.0.client_secret_wo_version") {
 			config.UseExistingClientSecret = aws.Bool(true)
 			continue
 		}
 
-		clientSecretWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(names.AttrDefaultAction).IndexInt(i).GetAttr("authenticate_oidc").IndexInt(0).GetAttr("client_secret_wo"))
+		clientSecretWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(attrName).IndexInt(i).GetAttr("authenticate_oidc").IndexInt(0).GetAttr("client_secret_wo"))
 		diags = append(diags, di...)
 		if diags.HasError() {
 			return diags
@@ -2095,11 +2095,6 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 }
 
 func listenerActionAuthenticateOIDCPlantimeValidate(oidcPath cty.Path, oidc cty.Value, diags *diag.Diagnostics) {
-	// aws_lb_listener_rule shares this validation but does not support client_secret_wo.
-	if !oidc.Type().HasAttribute("client_secret_wo") {
-		return
-	}
-
 	clientSecret := oidc.GetAttr(names.AttrClientSecret)
 	clientSecretWO := oidc.GetAttr("client_secret_wo")
 	clientSecretWOVersion := oidc.GetAttr("client_secret_wo_version")
