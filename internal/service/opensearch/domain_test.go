@@ -540,6 +540,10 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_warmOI2(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
