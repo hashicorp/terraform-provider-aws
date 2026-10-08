@@ -59,6 +59,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Replication Task status.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`) Maximum time for creating the task, including starting it when `start_replication_task` is `true`.
+* `update` - (Default `60m`) Maximum time for updating the task, including stopping, modifying or moving, and restarting it.
+* `delete` - (Default `30m`) Maximum time for deleting the task, including stopping it.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication tasks using the `replication_task_id`. For example:
