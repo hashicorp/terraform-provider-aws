@@ -58,7 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `metric_selections` - (Optional) Configuration block that limits which metrics CloudWatch collects. At most one block is supported. When omitted, CloudWatch collects all available detailed metrics for the resource. See [`metric_selections`](#metric_selections) below.
+* `metric_selections` - (Optional) Configuration block that limits which metrics CloudWatch collects. At most one block is supported. When omitted, CloudWatch collects all available detailed metrics for the resource. See [`metric_selections`](#metric_selections-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `metric_selections` Block
