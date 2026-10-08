@@ -58,7 +58,7 @@ func TestAccEKSCapability_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateIdFunc:                    testAccCapabilityImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -129,7 +129,7 @@ func TestAccEKSCapability_tags(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateIdFunc:                    testAccCapabilityImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -200,7 +200,7 @@ func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateIdFunc:                    testAccCapabilityImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -240,7 +240,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateIdFunc:                    testAccCapabilityImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -257,6 +257,10 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCapabilityImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name")
 }
 
 func testAccCheckCapabilityExists(ctx context.Context, t *testing.T, n string, v *awstypes.Capability) resource.TestCheckFunc {

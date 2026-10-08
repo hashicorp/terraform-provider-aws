@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_backup_vault_policy: Improve refresh to avoid unnecessary diffs in `policy`
-```

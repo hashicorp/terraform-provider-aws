@@ -36,7 +36,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `file_system_arn` - Amazon Resource Name of the file system for which the mount target is intended.
+* `file_system_arn` - ARN of the file system for which the mount target is intended.
 * `subnet_id` - ID of the mount target's subnet.
 * `ip_address` - Address at which the file system may be mounted via the mount target.
 * `ip_address_type` - IP address type for the mount target.

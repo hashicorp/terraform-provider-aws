@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,21 +38,23 @@ func resourcePipeline() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -61,7 +63,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
-	uniqueID := sdkid.UniqueId()
+	uniqueID := create.UniqueId(ctx)
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get(names.AttrName).(string)),
 		UniqueId: aws.String(uniqueID),

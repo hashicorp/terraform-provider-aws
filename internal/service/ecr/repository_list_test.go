@@ -62,12 +62,12 @@ func TestAccECRRepository_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_ecr_repository.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      name1.Value(),
+						names.AttrName:      name1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_ecr_repository.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      name2.Value(),
+						names.AttrName:      name2.ValueCheck(),
 					}),
 				},
 			},
@@ -166,7 +166,7 @@ func TestAccECRRepository_List_regionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_ecr_repository.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrName:      name.Value(),
+						names.AttrName:      name.ValueCheck(),
 					}),
 				},
 			},

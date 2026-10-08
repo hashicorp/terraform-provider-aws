@@ -1,3 +1,0 @@
-```release-note:note
-resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute is no longer deprecated
-```

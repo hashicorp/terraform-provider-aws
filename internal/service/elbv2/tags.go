@@ -12,7 +12,15 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 )
 
-func batchListTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifiers []string, optFns ...func(*elasticloadbalancingv2.Options)) (map[string][]awstypes.Tag, error) {
+type tagDescriber interface {
+	DescribeTags(ctx context.Context, params *elasticloadbalancingv2.DescribeTagsInput, optFns ...func(*elasticloadbalancingv2.Options)) (*elasticloadbalancingv2.DescribeTagsOutput, error)
+}
+
+func batchListTags(ctx context.Context, conn tagDescriber, identifiers []string, optFns ...func(*elasticloadbalancingv2.Options)) (map[string][]awstypes.Tag, error) {
+	if len(identifiers) == 0 {
+		return make(map[string][]awstypes.Tag, 0), nil
+	}
+
 	input := elasticloadbalancingv2.DescribeTagsInput{
 		ResourceArns: identifiers,
 	}

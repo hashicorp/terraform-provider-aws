@@ -363,6 +363,14 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_provisioned_product.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_provisioned_product.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

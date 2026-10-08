@@ -7,7 +7,6 @@ package guardduty
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -26,7 +25,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newFindingIDsDataSource,
 			TypeName: "aws_guardduty_finding_ids",
 			Name:     "Finding Ids",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -37,16 +36,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMalwareProtectionPlanResource,
 			TypeName: "aws_guardduty_malware_protection_plan",
 			Name:     "Malware Protection Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newMemberDetectorFeatureResource,
 			TypeName: "aws_guardduty_member_detector_feature",
 			Name:     "Member Detector Feature",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -57,8 +54,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsInline(),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -69,82 +66,72 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDetector,
 			TypeName: "aws_guardduty_detector",
 			Name:     "Detector",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDetectorFeature,
 			TypeName: "aws_guardduty_detector_feature",
 			Name:     "Detector Feature",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceFilter,
 			TypeName: "aws_guardduty_filter",
 			Name:     "Filter",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceInviteAccepter,
 			TypeName: "aws_guardduty_invite_accepter",
 			Name:     "Invite Accepter",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceIPSet,
 			TypeName: "aws_guardduty_ipset",
 			Name:     "IP Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceMember,
 			TypeName: "aws_guardduty_member",
 			Name:     "Member",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
 			Name:     "Organization Admin Account",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_guardduty_organization_configuration",
 			Name:     "Organization Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceOrganizationConfigurationFeature,
 			TypeName: "aws_guardduty_organization_configuration_feature",
 			Name:     "Organization Configuration Feature",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourcePublishingDestination,
 			TypeName: "aws_guardduty_publishing_destination",
 			Name:     "Publishing Destination",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceThreatIntelSet,
 			TypeName: "aws_guardduty_threatintelset",
 			Name:     "Threat Intel Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -155,7 +142,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*guardduty.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*guardduty.Options){
 		guardduty.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

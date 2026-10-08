@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,79 +51,96 @@ func resourceUser() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_string": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"passwords": {
-							Type:      schema.TypeSet,
-							Optional:  true,
-							MinItems:  1,
-							Sensitive: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_string": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_mode": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"passwords": {
+								Type:      schema.TypeSet,
+								Optional:  true,
+								MinItems:  1,
+								Sensitive: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						"password_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							"password_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
-					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
-				),
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-			},
-			"no_password_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"passwords": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(16, 128),
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+						verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+					),
+					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 				},
-				Sensitive: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"no_password_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"passwords": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 2,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(16, 128),
+					},
+					Sensitive: true,
+				},
+				"passwords_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ValidateFunc:  validation.StringLenBetween(16, 128),
+					ConflictsWith: []string{"passwords", "authentication_mode"},
+					RequiredWith:  []string{"passwords_wo_version"},
+				},
+				"passwords_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"passwords_wo"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_id": {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					StateFunc: sdkv2.ToLowerSchemaStateFunc,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -131,6 +149,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
+
+	// Get write-only password from configuration
+	passwordsWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("passwords_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
 
 	userID := d.Get("user_id").(string)
 	input := &elasticache.CreateUserInput{
@@ -148,6 +173,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if v, ok := d.GetOk("passwords"); ok && v.(*schema.Set).Len() > 0 {
 		input.Passwords = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if passwordsWO != "" {
+		input.Passwords = []string{passwordsWO}
 	}
 
 	output, err := conn.CreateUser(ctx, input)
@@ -255,6 +284,17 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		if d.HasChange("passwords") {
 			input.Passwords = flex.ExpandStringValueSet(d.Get("passwords").(*schema.Set))
+		}
+
+		if d.HasChange("passwords_wo_version") {
+			passwordsWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("passwords_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+			if passwordsWO != "" {
+				input.Passwords = []string{passwordsWO}
+			}
 		}
 
 		_, err := conn.ModifyUser(ctx, input)

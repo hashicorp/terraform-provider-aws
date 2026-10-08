@@ -15,7 +15,7 @@ import (
 
 func TestAccSESV2EmailIdentityMailFromAttributesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	mailFromDomain1 := domain.Subdomain("test1")
 
 	rName := domain.String()

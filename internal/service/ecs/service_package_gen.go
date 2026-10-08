@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -28,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newClustersDataSource,
 			TypeName: "aws_ecs_clusters",
 			Name:     "Clusters",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -36,15 +35,56 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newDaemonResource,
+			TypeName: "aws_ecs_daemon",
+			Name:     "Daemon",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newDaemonTaskDefinitionResource,
+			TypeName: "aws_ecs_daemon_task_definition",
+			Name:     "Daemon Task Definition",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newExpressGatewayServiceResource,
 			TypeName: "aws_ecs_express_gateway_service",
 			Name:     "Express Gateway Service",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "service_arn",
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("service_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  daemonResourceAsListResource,
+			TypeName: "aws_ecs_daemon",
+			Name:     "Daemon",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  daemonTaskDefinitionResourceAsListResource,
+			TypeName: "aws_ecs_daemon_task_definition",
+			Name:     "Daemon Task Definition",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -53,33 +93,33 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCluster,
 			TypeName: "aws_ecs_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsInline(),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceContainerDefinition,
 			TypeName: "aws_ecs_container_definition",
 			Name:     "Container Definition",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceService,
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsInline(),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceTaskExecution,
 			TypeName: "aws_ecs_task_execution",
 			Name:     "Task Execution",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -90,16 +130,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAccountSettingDefault,
 			TypeName: "aws_ecs_account_setting_default",
 			Name:     "Account Setting Default",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceCapacityProvider,
 			TypeName: "aws_ecs_capacity_provider",
 			Name:     "Capacity Provider",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -112,25 +150,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_ecs_cluster",
 			Name:     "Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceClusterCapacityProviders,
 			TypeName: "aws_ecs_cluster_capacity_providers",
 			Name:     "Cluster Capacity Providers",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceService,
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("cluster", true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
@@ -144,16 +182,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTag,
 			TypeName: "aws_ecs_tag",
 			Name:     "ECS Resource Tag",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrFamily, true),
 				inttypes.IntIdentityAttribute("revision", true),
@@ -169,10 +205,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTaskSet,
 			TypeName: "aws_ecs_task_set",
 			Name:     "Task Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -180,13 +214,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newClusterResourceAsListResource,
+			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
 			Factory:  newServiceResourceAsListResource,
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("cluster", true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
@@ -196,10 +236,8 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newTaskDefinitionResourceAsListResource,
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrFamily, true),
 				inttypes.IntIdentityAttribute("revision", true),
@@ -216,7 +254,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecs.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*ecs.Options){
 		ecs.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

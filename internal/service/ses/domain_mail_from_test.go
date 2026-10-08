@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -19,7 +20,7 @@ import (
 
 func TestAccSESDomainMailFrom_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dn := acctest.RandomDomain()
+	dn := acctest.RandomDomain(t)
 	domain := dn.String()
 	mailFromDomain1 := dn.Subdomain("bounce1").String()
 	mailFromDomain2 := dn.Subdomain("bounce2").String()
@@ -60,7 +61,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 
 func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	dn := acctest.RandomDomain()
+	dn := acctest.RandomDomain(t)
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
@@ -78,6 +79,14 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainMailFrom(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -85,7 +94,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 
 func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 	ctx := acctest.Context(t)
-	dn := acctest.RandomDomain()
+	dn := acctest.RandomDomain(t)
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
@@ -103,6 +112,14 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -110,7 +127,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 
 func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

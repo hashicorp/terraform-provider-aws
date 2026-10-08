@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_datasync_location_s3: Correctly parse S3 on Outposts location URI
-```

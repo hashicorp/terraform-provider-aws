@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_medialive_channel: Added `client_cache` to `hls_group_settings`.
-```

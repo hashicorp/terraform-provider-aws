@@ -62,14 +62,14 @@ func TestAccWAFV2WebACLRule_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_wafv2_web_acl_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"web_acl_arn":       webACLARN.Value(),
-						names.AttrName:      name1.Value(),
+						"web_acl_arn":       webACLARN.ValueCheck(),
+						names.AttrName:      name1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_wafv2_web_acl_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"web_acl_arn":       webACLARN.Value(),
-						names.AttrName:      name2.Value(),
+						"web_acl_arn":       webACLARN.ValueCheck(),
+						names.AttrName:      name2.ValueCheck(),
 					}),
 				},
 			},

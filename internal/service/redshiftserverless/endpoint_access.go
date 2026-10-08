@@ -39,92 +39,94 @@ func resourceEndpointAccess() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 30),
-			},
-			"owner_account": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"vpc_endpoint": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"network_interface": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAvailabilityZone: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrNetworkInterfaceID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"private_ip_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrSubnetID: {
-										Type:     schema.TypeString,
-										Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 30),
+				},
+				"owner_account": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"vpc_endpoint": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"network_interface": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAvailabilityZone: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrNetworkInterfaceID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"private_ip_address": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrSubnetID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -42,105 +42,107 @@ func resourceReportPlan() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validReportPlanName,
-			},
-			"report_delivery_channel": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"formats": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validReportPlanName,
+				},
+				"report_delivery_channel": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"formats": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(reportDeliveryChannelFormat_Values(), false),
+								},
+							},
+							names.AttrS3BucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrS3KeyPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"report_setting": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accounts": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"framework_arns": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"number_of_frameworks": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"organization_units": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"regions": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							// A report plan template cannot be updated
+							"report_template": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(reportDeliveryChannelFormat_Values(), false),
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice(reportSettingTemplate_Values(), false),
 							},
-						},
-						names.AttrS3BucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrS3KeyPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 					},
 				},
-			},
-			"report_setting": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accounts": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"framework_arns": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"number_of_frameworks": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"organization_units": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"regions": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						// A report plan template cannot be updated
-						"report_template": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(reportSettingTemplate_Values(), false),
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -151,7 +153,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateReportPlanInput{
-		IdempotencyToken:      aws.String(sdkid.UniqueId()),
+		IdempotencyToken:      aws.String(create.UniqueId(ctx)),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]any)),
 		ReportPlanName:        aws.String(name),
 		ReportPlanTags:        getTagsIn(ctx),
@@ -214,7 +216,7 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &backup.UpdateReportPlanInput{
-			IdempotencyToken:      aws.String(sdkid.UniqueId()),
+			IdempotencyToken:      aws.String(create.UniqueId(ctx)),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]any)),
 			ReportPlanDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			ReportPlanName:        aws.String(d.Id()),

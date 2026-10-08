@@ -45,33 +45,35 @@ func resourceTargetGroupAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceAttachmentRead,
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				ForceNew: true,
-				Optional: true,
-			},
-			"quic_server_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"target_group_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"target_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					ForceNew: true,
+					Optional: true,
+				},
+				"quic_server_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"target_group_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"target_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -60,12 +60,12 @@ func TestAccVPCSecurityGroupIngressRule_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc_security_group_ingress_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        ruleID1.Value(),
+						names.AttrID:        ruleID1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_vpc_security_group_ingress_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        ruleID2.Value(),
+						names.AttrID:        ruleID2.ValueCheck(),
 					}),
 				},
 			},
@@ -114,12 +114,12 @@ func TestAccVPCSecurityGroupIngressRule_List_filter(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc_security_group_ingress_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        ruleID1.Value(),
+						names.AttrID:        ruleID1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_vpc_security_group_ingress_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        ruleID2.Value(),
+						names.AttrID:        ruleID2.ValueCheck(),
 					}),
 				},
 			},
@@ -167,12 +167,12 @@ func TestAccVPCSecurityGroupIngressRule_List_regionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc_security_group_ingress_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        ruleID1.Value(),
+						names.AttrID:        ruleID1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_vpc_security_group_ingress_rule.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        ruleID2.Value(),
+						names.AttrID:        ruleID2.ValueCheck(),
 					}),
 				},
 			},

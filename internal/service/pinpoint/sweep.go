@@ -48,18 +48,18 @@ func sweepApps(region string) error {
 	})
 
 	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Pinpoint App sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping End User Messaging App sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing Pinpoint Apps (%s): %w", region, err)
+		return fmt.Errorf("error listing End User Messaging Apps (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping Pinpoint Apps (%s): %w", region, err)
+		return fmt.Errorf("error sweeping End User Messaging Apps (%s): %w", region, err)
 	}
 
 	return nil

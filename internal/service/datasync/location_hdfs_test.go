@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -84,6 +85,14 @@ func TestAccDataSyncLocationHDFS_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationHDFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -140,7 +149,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	principal := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	principal := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -234,7 +243,7 @@ func testAccCheckLocationHDFSExists(ctx context.Context, t *testing.T, n string,
 }
 
 func testAccLocationHDFSConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q

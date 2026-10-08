@@ -7,7 +7,8 @@ package fis
 
 import (
 	"context"
-	"unique"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -26,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newExperimentTemplatesDataSource,
 			TypeName: "aws_fis_experiment_templates",
 			Name:     "Experiment Templates",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -34,12 +35,34 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newSafetyLeverStateResource,
+			TypeName: "aws_fis_safety_lever_state",
+			Name:     "Safety Lever State",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourceTargetAccountConfiguration,
 			TypeName: "aws_fis_target_account_configuration",
 			Name:     "Target Account Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newSafetyLeverStateResourceAsListResource,
+			TypeName: "aws_fis_safety_lever_state",
+			Name:     "Safety Lever State",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -52,8 +75,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceExperimentTemplate,
 			TypeName: "aws_fis_experiment_template",
 			Name:     "Experiment Template",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsInline(),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -64,7 +87,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*fis.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*fis.Options){
 		fis.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

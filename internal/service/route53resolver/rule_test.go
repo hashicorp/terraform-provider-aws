@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +22,7 @@ import (
 func TestAccRoute53ResolverRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.ResolverRule
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_route53_resolver_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +59,7 @@ func TestAccRoute53ResolverRule_basic(t *testing.T) {
 func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.ResolverRule
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_route53_resolver_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -74,6 +75,14 @@ func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -82,7 +91,7 @@ func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 func TestAccRoute53ResolverRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.ResolverRule
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_route53_resolver_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -191,7 +200,7 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule1, rule2 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -231,7 +240,7 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.test"
 	ep1ResourceName := "aws_route53_resolver_endpoint.test.0"
 	ep2ResourceName := "aws_route53_resolver_endpoint.test.1"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -309,7 +318,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 	var rule awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	epResourceName := "aws_route53_resolver_endpoint.test.0"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -381,7 +390,7 @@ func TestAccRoute53ResolverRule_forward_ipv6(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.test"
 	ep1ResourceName := "aws_route53_resolver_endpoint.test.0"
 	ep2ResourceName := "aws_route53_resolver_endpoint.test.1"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -459,7 +468,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	var rule1, rule2 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	epResourceName := "aws_route53_resolver_endpoint.test.0"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -508,7 +517,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate_ipv6(t *testing.T) {
 	var rule1, rule2 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	epResourceName := "aws_route53_resolver_endpoint.test.0"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

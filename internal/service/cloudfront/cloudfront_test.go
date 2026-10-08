@@ -18,5 +18,6 @@ func init() {
 func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterValueException: Unsupported source arn",
+		"no matching Route 53 Hosted Zone found",
 	)
 }

@@ -30,12 +30,14 @@ func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 		UpdateWithoutTimeout: resourceEBSSnapshotBlockPublicAccessPut,
 		DeleteWithoutTimeout: resourceEBSSnapshotBlockPublicAccessDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
+				},
+			}
 		},
 	}
 }

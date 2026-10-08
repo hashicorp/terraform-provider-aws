@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ses_event_destination: Allow `.` and `@` characters in `cloudwatch_destination.default_value` argument
-```

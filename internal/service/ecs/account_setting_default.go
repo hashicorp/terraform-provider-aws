@@ -37,21 +37,23 @@ func resourceAccountSettingDefault() *schema.Resource {
 			StateContext: resourceAccountSettingDefaultImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(settingName_Values(), false),
-			},
-			"principal_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrValue: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(settingName_Values(), false),
+				},
+				"principal_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrValue: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

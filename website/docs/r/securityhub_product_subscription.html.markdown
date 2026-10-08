@@ -76,17 +76,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub product subscriptions using `product_arn,arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_securityhub_product_subscription.example
-  id = "arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+  identity = {
+    product_arn = "arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement"
+    arn         = "arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+  }
+}
+
+resource "aws_securityhub_product_subscription" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Security Hub product subscriptions using `product_arn,arn`. For example:
+### Identity Schema
+
+#### Required
+
+* `arn` (String) Subscription ARN.
+* `product_arn` (String) Product ARN.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub product subscriptions using `product_arn` and `arn` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_securityhub_product_subscription.example
+  id = "arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+}
+```
+
+Using `terraform import`, import Security Hub product subscriptions using `product_arn` and `arn` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
+% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
 ```

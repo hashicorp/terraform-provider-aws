@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -64,6 +65,14 @@ func TestAccIoTThingGroupMembership_disappears(t *testing.T) {
 					testAccCheckThingGroupMembershipExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThingGroupMembership(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -89,6 +98,14 @@ func TestAccIoTThingGroupMembership_disappears_Thing(t *testing.T) {
 					testAccCheckThingGroupMembershipExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThing(), thingResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -114,6 +131,14 @@ func TestAccIoTThingGroupMembership_disappears_ThingGroup(t *testing.T) {
 					testAccCheckThingGroupMembershipExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThingGroup(), thingGroupResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

@@ -7,7 +7,6 @@ package cloudfrontkeyvaluestore
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
@@ -30,7 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newKeyResource,
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("key_value_store_arn", true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
@@ -45,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newKeysExclusiveResource,
 			TypeName: "aws_cloudfrontkeyvaluestore_keys_exclusive",
 			Name:     "Keys  Exclusive",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -64,7 +63,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudfrontkeyvaluestore.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*cloudfrontkeyvaluestore.Options){
 		cloudfrontkeyvaluestore.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

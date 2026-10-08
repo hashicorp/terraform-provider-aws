@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
@@ -36,25 +35,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceHostedZoneID,
 			TypeName: "aws_elb_hosted_zone_id",
 			Name:     "Hosted Zone ID",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: false,
-			}),
+			Region:   inttypes.ResourceRegionNoPartitionValidation(),
 		},
 		{
 			Factory:  dataSourceServiceAccount,
 			TypeName: "aws_elb_service_account",
 			Name:     "Service Account",
-			Region: unique.Make(inttypes.ServicePackageResourceRegion{
-				IsOverrideEnabled:             true,
-				IsValidateOverrideInPartition: false,
-			}),
+			Region:   inttypes.ResourceRegionNoPartitionValidation(),
 		},
 	}
 }
@@ -65,17 +58,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAppCookieStickinessPolicy,
 			TypeName: "aws_app_cookie_stickiness_policy",
 			Name:     "App Cookie Stickiness Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceLoadBalancer,
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -84,43 +75,43 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAttachment,
 			TypeName: "aws_elb_attachment",
 			Name:     "Attachment",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceCookieStickinessPolicy,
 			TypeName: "aws_lb_cookie_stickiness_policy",
 			Name:     "LB Cookie Stickiness Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSSLNegotiationPolicy,
 			TypeName: "aws_lb_ssl_negotiation_policy",
 			Name:     "SSL Negotiation Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceBackendServerPolicy,
 			TypeName: "aws_load_balancer_backend_server_policy",
 			Name:     "Backend Server Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceListenerPolicy,
 			TypeName: "aws_load_balancer_listener_policy",
 			Name:     "Listener Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourcePolicy,
 			TypeName: "aws_load_balancer_policy",
 			Name:     "Load Balancer Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceProxyProtocolPolicy,
 			TypeName: "aws_proxy_protocol_policy",
 			Name:     "Proxy Protocol Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -131,11 +122,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newLoadBalancerResourceAsListResource,
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }
@@ -146,7 +135,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticloadbalancing.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*elasticloadbalancing.Options){
 		elasticloadbalancing.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

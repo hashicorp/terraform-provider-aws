@@ -7,7 +7,6 @@ package bedrockagent
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -26,7 +25,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceAgentVersions,
 			TypeName: "aws_bedrockagent_agent_versions",
 			Name:     "Agent Versions",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -37,70 +36,60 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAgentResource,
 			TypeName: "aws_bedrockagent_agent",
 			Name:     "Agent",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_arn",
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("agent_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentActionGroupResource,
 			TypeName: "aws_bedrockagent_agent_action_group",
 			Name:     "Agent Action Group",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentAliasResource,
 			TypeName: "aws_bedrockagent_agent_alias",
 			Name:     "Agent Alias",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_alias_arn",
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("agent_alias_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentCollaboratorResource,
 			TypeName: "aws_bedrockagent_agent_collaborator",
 			Name:     "Agent Collaborator",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentKnowledgeBaseAssociationResource,
 			TypeName: "aws_bedrockagent_agent_knowledge_base_association",
 			Name:     "Agent Knowledge Base Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceResource,
 			TypeName: "aws_bedrockagent_data_source",
 			Name:     "Data Source",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newFlowResource,
 			TypeName: "aws_bedrockagent_flow",
 			Name:     "Flow",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newKnowledgeBaseResource,
 			TypeName: "aws_bedrockagent_knowledge_base",
 			Name:     "Knowledge Base",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newPromptResource,
 			TypeName: "aws_bedrockagent_prompt",
 			Name:     "Prompt",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -119,7 +108,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*bedrockagent.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*bedrockagent.Options){
 		bedrockagent.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

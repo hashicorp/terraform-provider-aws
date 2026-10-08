@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 )
 
 // StatementModelMaxLevel is the maximum nesting depth for logical statements.
@@ -81,12 +82,12 @@ func statementBlockLevel{{.}}(ctx context.Context) schema.ListNestedBlock {
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-	}
 {{- if gt . 0}}
-	blocks["and_statement"] = andStatementBlockLevel{{minus .}}(ctx)
-	blocks["not_statement"] = notStatementBlockLevel{{minus .}}(ctx)
-	blocks["or_statement"] = orStatementBlockLevel{{minus .}}(ctx)
+		"and_statement":                         andStatementBlockLevel{{minus .}}(ctx),
+		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
+		"or_statement":                          orStatementBlockLevel{{minus .}}(ctx),
 {{- end}}
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel{{.}}Model](ctx),
@@ -103,7 +104,7 @@ func statementBlockLevel{{.}}(ctx context.Context) schema.ListNestedBlock {
 
 {{- if gt . 0}}
 
-func andStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
+var andStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndStatementLevel{{minus .}}Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -114,9 +115,9 @@ func andStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlo
 		},
 		Description: "Logical AND statement.",
 	}
-}
+})
 
-func notStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
+var notStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotStatementLevel{{minus .}}Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -127,9 +128,9 @@ func notStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlo
 		},
 		Description: "Logical NOT statement.",
 	}
-}
+})
 
-func orStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBlock {
+var orStatementBlockLevel{{minus .}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleOrStatementLevel{{minus .}}Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -140,10 +141,10 @@ func orStatementBlockLevel{{minus .}}(ctx context.Context) schema.ListNestedBloc
 		},
 		Description: "Logical OR statement.",
 	}
-}
+})
 
 // statementBlockLevel{{minus .}}NoMinMax is for AND/OR statements that need multiple nested statements.
-func statementBlockLevel{{minus .}}NoMinMax(ctx context.Context) schema.ListNestedBlock {
+var statementBlockLevel{{minus .}}NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
@@ -158,12 +159,12 @@ func statementBlockLevel{{minus .}}NoMinMax(ctx context.Context) schema.ListNest
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-	}
 {{- if gt (minus .) 0}}
-	blocks["and_statement"] = andStatementBlockLevel{{minus (minus .)}}(ctx)
-	blocks["not_statement"] = notStatementBlockLevel{{minus (minus .)}}(ctx)
-	blocks["or_statement"] = orStatementBlockLevel{{minus (minus .)}}(ctx)
+		"and_statement":                         andStatementBlockLevel{{minus (minus .)}}(ctx),
+		"not_statement":                         notStatementBlockLevel{{minus (minus .)}}(ctx),
+		"or_statement":                          orStatementBlockLevel{{minus (minus .)}}(ctx),
 {{- end}}
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel{{minus .}}Model](ctx),
@@ -175,10 +176,10 @@ func statementBlockLevel{{minus .}}NoMinMax(ctx context.Context) schema.ListNest
 		},
 		Description: "Nested statements for logical operations.",
 	}
-}
+})
 
 // statementBlockLevel{{minus .}}Single is for NOT statement that needs exactly one nested statement.
-func statementBlockLevel{{minus .}}Single(ctx context.Context) schema.ListNestedBlock {
+var statementBlockLevel{{minus .}}Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
@@ -193,12 +194,12 @@ func statementBlockLevel{{minus .}}Single(ctx context.Context) schema.ListNested
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-	}
 {{- if gt (minus .) 0}}
-	blocks["and_statement"] = andStatementBlockLevel{{minus (minus .)}}(ctx)
-	blocks["not_statement"] = notStatementBlockLevel{{minus (minus .)}}(ctx)
-	blocks["or_statement"] = orStatementBlockLevel{{minus (minus .)}}(ctx)
+		"and_statement":                         andStatementBlockLevel{{minus (minus .)}}(ctx),
+		"not_statement":                         notStatementBlockLevel{{minus (minus .)}}(ctx),
+		"or_statement":                          orStatementBlockLevel{{minus (minus .)}}(ctx),
 {{- end}}
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementLevel{{minus .}}Model](ctx),
@@ -211,7 +212,7 @@ func statementBlockLevel{{minus .}}Single(ctx context.Context) schema.ListNested
 		},
 		Description: "Nested statement for NOT operation.",
 	}
-}
+})
 {{- end}}
 {{end}}
 

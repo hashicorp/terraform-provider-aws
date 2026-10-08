@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -49,71 +49,73 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"private_dns_preference": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.PrivateDnsPreference](),
-						},
-						"private_dns_specified_domains": {
-							Type:     schema.TypeSet,
-							MaxItems: 10,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_by": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"private_dns_preference": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.PrivateDnsPreference](),
+							},
+							"private_dns_specified_domains": {
+								Type:     schema.TypeSet,
+								MaxItems: 10,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 255),
+								},
 							},
 						},
 					},
 				},
-			},
-			"private_dns_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeList,
-				MaxItems: 5,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"service_network_identifier": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentIDOrARN,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"private_dns_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeList,
+					MaxItems: 5,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"service_network_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -123,7 +125,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	input := vpclattice.CreateServiceNetworkVpcAssociationInput{
-		ClientToken:              aws.String(sdkid.UniqueId()),
+		ClientToken:              aws.String(create.UniqueId(ctx)),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
 		Tags:                     getTagsIn(ctx),
 		VpcIdentifier:            aws.String(d.Get("vpc_identifier").(string)),

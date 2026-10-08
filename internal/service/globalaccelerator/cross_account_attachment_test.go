@@ -11,7 +11,11 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
@@ -152,6 +156,14 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCrossAccountAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -199,6 +211,69 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGlobalAcceleratorCrossAccountAttachment_addAndDeleteResources(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var v awstypes.Attachment
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrossAccountAttachmentConfig_albs(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrossAccountAttachmentConfig_albs(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource"), knownvalue.SetSizeExact(3)),
+				},
+			},
+			{
+				Config: testAccCrossAccountAttachmentConfig_albs(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource"), knownvalue.SetSizeExact(1)),
+				},
 			},
 		},
 	})
@@ -269,7 +344,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
 }
 
 func testAccCrossAccountAttachmentConfig_resources(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 1), fmt.Sprintf(`
 resource "aws_eip" "test" {
   tags = {
     Name = %[1]q
@@ -280,14 +355,14 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
   name = %[1]q
 
   resource {
-    endpoint_id = aws_lb.test.id
+    endpoint_id = aws_lb.test[0].id
   }
 }
 `, rName))
 }
 
 func testAccCrossAccountAttachmentConfig_resourcesUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 1), fmt.Sprintf(`
 resource "aws_eip" "test" {
   tags = {
     Name = %[1]q
@@ -327,4 +402,19 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccCrossAccountAttachmentConfig_albs(rName string, n int) string {
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName, 3), fmt.Sprintf(`
+resource "aws_globalaccelerator_cross_account_attachment" "test" {
+  name = %[1]q
+
+  dynamic "resource" {
+    for_each = toset(slice(aws_lb.test[*].id, 0, %[2]d))
+    content {
+      endpoint_id = resource.value
+    }
+  }
+}
+`, rName, n))
 }

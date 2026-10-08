@@ -24,8 +24,8 @@ data "aws_ssoadmin_application" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_arn` - (Required) ARN of the application.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -37,5 +37,15 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the application.
 * `instance_arn` - ARN of the instance of IAM Identity Center.
 * `name` - Name of the application.
-* `portal_options` - Options for the portal associated with an application. See the `aws_ssoadmin_application` [resource documentation](../r/ssoadmin_application.html.markdown#portal_options-argument-reference). The attributes are the same.
+* `portal_options` - Options for the portal associated with an application. See [`portal_options` Block](#portal_options-block) below.
 * `status` - Status of the application.
+
+### `portal_options` Block
+
+* `sign_in_options` - Sign-in options for the access portal. See [`sign_in_options` Block](#sign_in_options-block) below.
+* `visibility` - Whether the application is visible in the access portal.
+
+### `sign_in_options` Block
+
+* `application_url` - URL that accepts authentication requests for an application.
+* `origin` - How IAM Identity Center navigates the user to the target application.

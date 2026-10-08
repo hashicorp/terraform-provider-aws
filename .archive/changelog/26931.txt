@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_batch_compute_environment: Allow deletion of AWS Batch compute environments in `INVALID` state 
-```

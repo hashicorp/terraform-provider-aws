@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_default_vpc_dhcp_options: Add `owner_id` argument.
-```

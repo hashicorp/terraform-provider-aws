@@ -47,69 +47,71 @@ func resourceEventSubscription() *schema.Resource {
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_aws_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"event_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_aws_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{
+							names.AttrConfiguration,
+							"management",
+							"monitoring",
+							"security",
+							"pending",
+						}, false),
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"severity": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "INFO",
 					ValidateFunc: validation.StringInSlice([]string{
-						names.AttrConfiguration,
-						"management",
-						"monitoring",
-						"security",
-						"pending",
+						"ERROR",
+						"INFO",
 					}, false),
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"severity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "INFO",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ERROR",
-					"INFO",
-				}, false),
-			},
-			names.AttrSNSTopicARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"source_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSourceType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SourceType](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrSNSTopicARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"source_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSourceType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SourceType](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

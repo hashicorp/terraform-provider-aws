@@ -49,10 +49,7 @@ func (d *ipRangesDataSource) Schema(ctx context.Context, request datasource.Sche
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID: idAttributeDeprecatedNoReplacement(),
 			"ipv6_cidr_blocks": schema.ListAttribute{
 				ElementType: types.StringType,
 				CustomType:  fwtypes.ListOfStringType,

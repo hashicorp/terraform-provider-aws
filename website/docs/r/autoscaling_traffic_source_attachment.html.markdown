@@ -37,7 +37,7 @@ This resource supports the following arguments:
 
 `traffic_source` supports the following:
 
-- `identifier` - (Required) Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+- `identifier` - (Required) Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 - `type` - (Required) Provides additional context for the value of `identifier`.
   The following lists the valid values:
   `elb` if `identifier` is the name of a Classic Load Balancer.
@@ -47,3 +47,27 @@ This resource supports the following arguments:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Auto Scaling Traffic Source Attachments using `autoscaling_group_name`, `traffic_source_type`, and `traffic_source_identifier` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_autoscaling_traffic_source_attachment.example
+  id = "example,elbv2,arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/example/1234567890123456"
+}
+```
+
+Using `terraform import`, import Auto Scaling Traffic Source Attachments using `autoscaling_group_name`, `traffic_source_type`, and `traffic_source_identifier` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_autoscaling_traffic_source_attachment.example example,elbv2,arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/example/1234567890123456
+```

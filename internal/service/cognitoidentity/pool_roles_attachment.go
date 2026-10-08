@@ -36,74 +36,76 @@ func resourcePoolRolesAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"role_mapping": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"identity_provider": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"ambiguous_role_resolution": {
-							Type:             schema.TypeString,
-							Optional:         true, // Required if Type equals Token or Rules.
-							ValidateDiagFunc: enum.Validate[awstypes.AmbiguousRoleResolutionType](),
-						},
-						"mapping_rule": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 25,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"claim": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validRoleMappingsRulesClaim,
-									},
-									"match_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrValue: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
+				"role_mapping": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identity_provider": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"ambiguous_role_resolution": {
+								Type:             schema.TypeString,
+								Optional:         true, // Required if Type equals Token or Rules.
+								ValidateDiagFunc: enum.Validate[awstypes.AmbiguousRoleResolutionType](),
+							},
+							"mapping_rule": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 25,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"claim": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validRoleMappingsRulesClaim,
+										},
+										"match_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrValue: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RoleMappingType](),
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RoleMappingType](),
+							},
 						},
 					},
 				},
-			},
 
-			"roles": {
-				Type:     schema.TypeMap,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"roles": {
+					Type:     schema.TypeMap,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
+			}
 		},
 	}
 }

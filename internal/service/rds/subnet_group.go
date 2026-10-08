@@ -7,6 +7,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -29,7 +30,12 @@ import (
 
 // @SDKResource("aws_db_subnet_group", name="DB Subnet Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(idAttrDuplicates="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBSubnetGroup")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(name="Subnet Group")
 func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -37,52 +43,50 @@ func resourceSubnetGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
 		DeleteWithoutTimeout: resourceSubnetGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validSubnetGroupName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validSubnetGroupNamePrefix,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"supported_network_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validSubnetGroupName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validSubnetGroupNamePrefix,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"supported_network_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -126,17 +130,29 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Subnet Group (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceSubnetGroupFlatten(v, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceSubnetGroupFlatten(v *types.DBSubnetGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, v.DBSubnetGroupArn)
 	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
 	d.Set(names.AttrName, v.DBSubnetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
+	if err := d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
-	}))
-	d.Set("supported_network_types", v.SupportedNetworkTypes)
+	})); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSubnetIDs, err)
+	}
+	if err := d.Set("supported_network_types", v.SupportedNetworkTypes); err != nil {
+		return fmt.Errorf("setting supported_network_types: %w", err)
+	}
 	d.Set(names.AttrVPCID, v.VpcId)
 
-	return diags
+	return nil
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

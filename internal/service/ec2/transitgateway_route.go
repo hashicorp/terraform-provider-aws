@@ -22,47 +22,55 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_route", name="Transit Gateway Route")
+// @IdentityAttribute("transit_gateway_route_table_id")
+// @IdentityAttribute("destination_cidr_block")
+// @ImportIDHandler("transitGatewayRouteImportID")
+// @Testing(preIdentityVersion="v6.67.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayRoute")
+// @Testing(preCheck="testAccPreCheckTransitGateway")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(identityTest=false)
 func resourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteRead,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"blackhole": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"destination_cidr_block": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateFunc:     verify.ValidCIDRNetworkAddress,
-				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"blackhole": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"destination_cidr_block": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateFunc:     verify.ValidCIDRNetworkAddress,
+					DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"transit_gateway_route_table_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }
@@ -119,6 +127,14 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceTransitGatewayRouteFlatten(d, transitGatewayRoute, transitGatewayRouteTableID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening EC2 Transit Gateway Route (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceTransitGatewayRouteFlatten(d *schema.ResourceData, transitGatewayRoute *awstypes.TransitGatewayRoute, transitGatewayRouteTableID string) error {
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 {
 		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
@@ -128,8 +144,11 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		d.Set("blackhole", true)
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
+	if err := d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock); err != nil {
+		return fmt.Errorf("setting destination_cidr_block: %w", err)
+	}
 
-	return diags
+	return nil
 }
 
 func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -180,4 +199,24 @@ func transitGatewayRouteParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TRANSIT-GATEWAY-ROUTE-TABLE-ID%[2]sDESTINATION", id, transitGatewayRouteIDSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = transitGatewayRouteImportID{}
+
+type transitGatewayRouteImportID struct{}
+
+func (transitGatewayRouteImportID) Create(d *schema.ResourceData) string {
+	return transitGatewayRouteCreateResourceID(d.Get("transit_gateway_route_table_id").(string), d.Get("destination_cidr_block").(string))
+}
+
+func (transitGatewayRouteImportID) Parse(id string) (string, map[string]any, error) {
+	transitGatewayRouteTableID, destination, err := transitGatewayRouteParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return transitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination), map[string]any{
+		"destination_cidr_block":         destination,
+		"transit_gateway_route_table_id": transitGatewayRouteTableID,
+	}, nil
 }

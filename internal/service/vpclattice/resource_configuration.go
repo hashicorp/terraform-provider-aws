@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -267,7 +267,7 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.DomainVerificationIdentifier = fwflex.StringFromFramework(ctx, data.DomainVerificationID)
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)

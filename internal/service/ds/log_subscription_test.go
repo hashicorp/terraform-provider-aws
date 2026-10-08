@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,7 +21,7 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_log_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -48,7 +49,7 @@ func TestAccDSLogSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_log_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -63,6 +64,14 @@ func TestAccDSLogSubscription_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceLogSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

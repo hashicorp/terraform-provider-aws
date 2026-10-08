@@ -43,21 +43,23 @@ func resourceDomainPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"access_policies": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
+				"access_policies": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+			}
 		},
 	}
 }

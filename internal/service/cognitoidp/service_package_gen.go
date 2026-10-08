@@ -7,7 +7,6 @@ package cognitoidp
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
@@ -26,19 +25,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newUserGroupDataSource,
 			TypeName: "aws_cognito_user_group",
 			Name:     "User Group",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserGroupsDataSource,
 			TypeName: "aws_cognito_user_groups",
 			Name:     "User Groups",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserPoolDataSource,
 			TypeName: "aws_cognito_user_pool",
 			Name:     "User Pool",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -49,8 +48,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newLogDeliveryConfigurationResource,
 			TypeName: "aws_cognito_log_delivery_configuration",
 			Name:     "Log Delivery Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrUserPoolID),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrUserPoolID, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -59,19 +58,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newManagedLoginBrandingResource,
 			TypeName: "aws_cognito_managed_login_branding",
 			Name:     "Managed Login Branding",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newManagedUserPoolClientResource,
 			TypeName: "aws_cognito_managed_user_pool_client",
 			Name:     "Managed User Pool Client",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserPoolClientResource,
 			TypeName: "aws_cognito_user_pool_client",
 			Name:     "User Pool Client",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -82,25 +81,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceUserPoolClient,
 			TypeName: "aws_cognito_user_pool_client",
 			Name:     "User Pool Client",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceUserPoolClients,
 			TypeName: "aws_cognito_user_pool_clients",
 			Name:     "User Pool Clients",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceUserPoolSigningCertificate,
 			TypeName: "aws_cognito_user_pool_signing_certificate",
 			Name:     "User Pool Signing Certificate",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceUserPools,
 			TypeName: "aws_cognito_user_pools",
 			Name:     "User Pools",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -111,58 +110,56 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceIdentityProvider,
 			TypeName: "aws_cognito_identity_provider",
 			Name:     "Identity Provider",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceResourceServer,
 			TypeName: "aws_cognito_resource_server",
 			Name:     "Resource Server",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRiskConfiguration,
 			TypeName: "aws_cognito_risk_configuration",
 			Name:     "Risk Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_cognito_user",
 			Name:     "User",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserGroup,
 			TypeName: "aws_cognito_user_group",
 			Name:     "User Group",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserInGroup,
 			TypeName: "aws_cognito_user_in_group",
 			Name:     "Group User",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserPool,
 			TypeName: "aws_cognito_user_pool",
 			Name:     "User Pool",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserPoolDomain,
 			TypeName: "aws_cognito_user_pool_domain",
 			Name:     "User Pool Domain",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserPoolUICustomization,
 			TypeName: "aws_cognito_user_pool_ui_customization",
 			Name:     "User Pool UI Customization",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -173,7 +170,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cognitoidentityprovider.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*cognitoidentityprovider.Options){
 		cognitoidentityprovider.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

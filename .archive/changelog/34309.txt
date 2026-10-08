@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_rds_cluster: Add `delete_automated_backups` argument
-```

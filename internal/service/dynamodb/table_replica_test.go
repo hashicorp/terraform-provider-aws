@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -72,6 +73,14 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTableReplica(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -138,6 +147,11 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccTableReplicaConfig_pitrKMS(rName, false),
@@ -146,6 +160,11 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -186,6 +205,11 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
@@ -194,6 +218,11 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -237,6 +266,16 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD_INFREQUENT_ACCESS"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -275,6 +314,16 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test2", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -313,6 +362,11 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
@@ -320,6 +374,11 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			// disable deletion protection to allow acceptance test cleanup to complete
 			{

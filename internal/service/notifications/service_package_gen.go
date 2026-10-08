@@ -7,7 +7,6 @@ package notifications
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
@@ -31,52 +30,50 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newChannelAssociationResource,
 			TypeName: "aws_notifications_channel_association",
 			Name:     "Channel Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newEventRuleResource,
 			TypeName: "aws_notifications_event_rule",
 			Name:     "Event Rule",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newManagedNotificationAccountContactAssociationResource,
 			TypeName: "aws_notifications_managed_notification_account_contact_association",
 			Name:     "Managed Notification Account Contact Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newManagedNotificationAdditionalChannelAssociationResource,
 			TypeName: "aws_notifications_managed_notification_additional_channel_association",
 			Name:     "Managed Notification Additional Channel Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newNotificationConfigurationResource,
 			TypeName: "aws_notifications_notification_configuration",
 			Name:     "Notification Configuration",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newNotificationHubResource,
 			TypeName: "aws_notifications_notification_hub",
 			Name:     "Notification Hub",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newOrganizationalUnitAssociationResource,
 			TypeName: "aws_notifications_organizational_unit_association",
 			Name:     "Organizational Unit Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newOrganizationsAccessResource,
 			TypeName: "aws_notifications_organizations_access",
 			Name:     "Organizations Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -95,7 +92,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*notifications.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*notifications.Options){
 		notifications.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

@@ -1,0 +1,35 @@
+```release-note:enhancement
+resource/aws_dx_private_virtual_interface: Add `rate_limit` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_public_virtual_interface: Add `rate_limit` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_transit_virtual_interface: Add `rate_limit` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface: Add `rate_limit` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_public_virtual_interface: Add `rate_limit` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface: Add `rate_limit` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add `rate_limiter_status` attribute
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Add `rate_limiter_status` attribute
+```
+
+```release-note:enhancement
+data-source/aws_dx_connection: Add `rate_limiter_status` attribute
+```

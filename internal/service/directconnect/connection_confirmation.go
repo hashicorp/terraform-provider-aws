@@ -29,12 +29,14 @@ func resourceConnectionConfirmation() *schema.Resource {
 		ReadWithoutTimeout:   resourceConnectionConfirmationRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -63,6 +63,9 @@ func TestIdentityInterceptor(t *testing.T) {
 		"read": {
 			operation: read,
 		},
+		"read_with_removed_state": {
+			operation: readWithRemovedState,
+		},
 	}
 
 	for tname, tc := range testOperations {
@@ -145,6 +148,27 @@ func read(ctx context.Context, interceptor identityInterceptor, resourceSchema s
 	}
 	response := resource.ReadResponse{
 		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     After,
+	}
+
+	interceptor.read(ctx, opts)
+
+	return response.Identity, response.Diagnostics
+}
+
+func readWithRemovedState(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.ReadRequest{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.ReadResponse{
+		State:    nullStateFromSchema(ctx, resourceSchema),
 		Identity: identity,
 	}
 	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
@@ -314,11 +338,11 @@ func getIdentityAttributeValue(ctx context.Context, t *testing.T, identity *tfsd
 }
 
 func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name)
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func stateFromSchema(ctx context.Context, schema schema.Schema, values map[string]string) tfsdk.State {
@@ -332,6 +356,13 @@ func stateFromSchema(ctx context.Context, schema schema.Schema, values map[strin
 	}
 	return tfsdk.State{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), val),
+		Schema: schema,
+	}
+}
+
+func nullStateFromSchema(ctx context.Context, schema schema.Schema) tfsdk.State {
+	return tfsdk.State{
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
 }
@@ -364,6 +395,48 @@ func planFromSchema(ctx context.Context, schema schema.Schema, values map[string
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), val),
 		Schema: schema,
 	}
+}
+
+func TestIdentityIsFullyNull_NonStringAttributes(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	attributes := []inttypes.IdentityAttribute{
+		inttypes.BoolIdentityAttribute("egress", true),
+		inttypes.IntIdentityAttribute("rule_number", true),
+	}
+
+	identitySchema := &identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"egress":      identityschema.BoolAttribute{},
+			"rule_number": identityschema.Int64Attribute{},
+		},
+	}
+
+	t.Run("all_null", func(t *testing.T) {
+		t.Parallel()
+
+		identity := emtpyIdentityFromSchema(ctx, identitySchema)
+		if got := identityIsFullyNull(ctx, identity, attributes); !got {
+			t.Errorf("expected identityIsFullyNull to return true for a fully-null non-string identity, got %v", got)
+		}
+	})
+
+	t.Run("bool_false_int_set", func(t *testing.T) {
+		t.Parallel()
+
+		identity := emtpyIdentityFromSchema(ctx, identitySchema)
+		if diags := identity.SetAttribute(ctx, path.Root("egress"), false); diags.HasError() {
+			t.Fatalf("unexpected error setting egress: %s", fwdiag.DiagnosticsError(diags))
+		}
+		if diags := identity.SetAttribute(ctx, path.Root("rule_number"), int64(100)); diags.HasError() {
+			t.Fatalf("unexpected error setting rule_number: %s", fwdiag.DiagnosticsError(diags))
+		}
+		if got := identityIsFullyNull(ctx, identity, attributes); got {
+			t.Errorf("expected identityIsFullyNull to return false when non-string attributes are set, got %v", got)
+		}
+	})
 }
 
 func emtpyIdentityFromSchema(ctx context.Context, schema *identityschema.Schema) *tfsdk.ResourceIdentity {

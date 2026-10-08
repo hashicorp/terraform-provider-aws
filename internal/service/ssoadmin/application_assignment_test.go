@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -111,6 +112,14 @@ func TestAccSSOAdminApplicationAssignment_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplicationAssignment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_application_assignment.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_application_assignment.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -139,6 +148,14 @@ func TestAccSSOAdminApplicationAssignment_disappears_Application(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_application_assignment.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_application_assignment.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

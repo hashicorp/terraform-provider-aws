@@ -13,9 +13,9 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -35,34 +35,36 @@ func resourceControlPanel() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"default_control_panel": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"routing_control_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"default_control_panel": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"routing_control_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -72,7 +74,7 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.CreateControlPanelInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		ClusterArn:       aws.String(d.Get("cluster_arn").(string)),
 		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
 	}

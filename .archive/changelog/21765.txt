@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_endpoint: Add `deployment_config` argument
-```

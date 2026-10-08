@@ -125,18 +125,27 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 
 func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf types.InventoryConfiguration
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_inventory.test"
 	inventoryName := t.Name()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
-				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+				Config: testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketInventoryExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -310,7 +319,7 @@ resource "aws_s3_bucket_inventory" "test" {
 }
 
 func testAccBucketInventoryConfig_directoryBucket(bucketName, inventoryName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), testAccBucketInventoryConfig_base(bucketName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_directory_bucket" "test" {
@@ -343,7 +352,7 @@ resource "aws_s3_bucket_inventory" "test" {
   destination {
     bucket {
       format     = "ORC"
-      bucket_arn = aws_s3_directory_bucket.test.arn
+      bucket_arn = aws_s3_bucket.test.arn
       account_id = data.aws_caller_identity.current.account_id
       prefix     = "inventory"
     }

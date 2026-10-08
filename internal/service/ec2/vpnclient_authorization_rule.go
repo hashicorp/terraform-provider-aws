@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,36 +42,38 @@ func resourceClientVPNAuthorizationRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_group_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotContainAny(","),
-				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
-			},
-			"authorize_all_groups": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
-			},
-			"client_vpn_endpoint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"target_network_cidr": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_group_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringDoesNotContainAny(","),
+					ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
+				},
+				"authorize_all_groups": {
+					Type:         schema.TypeBool,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
+				},
+				"client_vpn_endpoint_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"target_network_cidr": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+			}
 		},
 	}
 }
@@ -83,7 +85,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
 	input := &ec2.AuthorizeClientVpnIngressInput{
-		ClientToken:         aws.String(sdkid.UniqueId()),
+		ClientToken:         aws.String(create.UniqueId(ctx)),
 		ClientVpnEndpointId: aws.String(endpointID),
 		TargetNetworkCidr:   aws.String(targetNetworkCIDR),
 	}

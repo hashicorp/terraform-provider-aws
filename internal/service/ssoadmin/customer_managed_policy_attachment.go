@@ -44,42 +44,44 @@ func resourceCustomerManagedPolicyAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"customer_managed_policy_reference": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(0, 128),
-						},
-						names.AttrPath: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "/",
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(0, 512),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"customer_managed_policy_reference": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(0, 128),
+							},
+							names.AttrPath: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "/",
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(0, 512),
+							},
 						},
 					},
 				},
-			},
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"permission_set_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"permission_set_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

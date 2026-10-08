@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ebs_snapshot_copy: Add support for `timeouts` configuration block.
-```

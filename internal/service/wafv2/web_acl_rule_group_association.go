@@ -925,6 +925,11 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		return
 	}
 
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	// Get current Web ACL configuration
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
@@ -1366,6 +1371,11 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 		return
 	}
 
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	// Get current Web ACL configuration
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
@@ -1583,6 +1593,11 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 		)
 		return
 	}
+
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	// Get the Web ACL
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
@@ -1908,7 +1923,7 @@ func (m awsManagedRulesACFPRuleSetModel) Expand(ctx context.Context) (result any
 	r.RegistrationPagePath = m.RegistrationPagePath.ValueStringPointer()
 	r.EnableRegexInPath = m.EnableRegexInPath.ValueBool()
 
-	if !m.RequestInspection.IsNull() && len(m.RequestInspection.Elements()) > 0 {
+	if m.RequestInspection.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		var reqInspection requestInspectionACFPModel
 		diags.Append(m.RequestInspection.Elements()[0].(fwtypes.ObjectValueOf[requestInspectionACFPModel]).As(ctx, &reqInspection, basetypes.ObjectAsOptions{})...)
 		if diags.HasError() {

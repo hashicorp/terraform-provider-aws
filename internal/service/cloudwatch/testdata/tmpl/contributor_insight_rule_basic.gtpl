@@ -1,7 +1,35 @@
 resource "aws_cloudwatch_contributor_insight_rule" "test" {
-  rule_name       = var.rName
-  rule_state      = "ENABLED"
-  rule_definition = "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"
+{{- template "region" }}
+  rule_name = var.rName
 
-  {{- template "tags" . }}
+  rule_definition = <<EOF
+{
+    "Schema": {
+        "Name": "CloudWatchLogRule",
+        "Version": 1
+    },
+    "LogGroupNames": [
+        "API-Gateway-Access-Logs*",
+        "Log-group-name2"
+    ],
+    "LogFormat": "JSON",
+    "Contribution": {
+        "Keys": [
+            "$.ip"
+        ],
+        "ValueOf": "$.requestBytes",
+        "Filters": [
+            {
+                "Match": "$.httpMethod",
+                "In": [
+                    "PUT"
+                ]
+            }
+        ]
+    },
+    "AggregateOn": "Sum"
+}
+EOF
+
+{{- template "tags" . }}
 }

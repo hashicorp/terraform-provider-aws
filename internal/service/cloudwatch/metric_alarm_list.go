@@ -37,15 +37,6 @@ type listResourceMetricAlarm struct {
 func (l *listResourceMetricAlarm) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().CloudWatchClient(ctx)
 
-	var query listMetricAlarmModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	tflog.Info(ctx, "Listing CloudWatch Metric Alarm")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input cloudwatch.DescribeAlarmsInput
 		input.AlarmTypes = []awstypes.AlarmType{awstypes.AlarmTypeMetricAlarm}
@@ -64,7 +55,12 @@ func (l *listResourceMetricAlarm) List(ctx context.Context, request list.ListReq
 			rd.SetId(name)
 
 			tflog.Info(ctx, "Reading CloudWatch Metric Alarm")
-			resourceMetricAlarmFlatten(ctx, rd, &item)
+			if err := resourceMetricAlarmFlatten(ctx, rd, &item); err != nil {
+				tflog.Error(ctx, "Reading CloudWatch Metric Alarm", map[string]any{
+					"error": err.Error(),
+				})
+				continue
+			}
 
 			result.DisplayName = name
 
@@ -81,17 +77,13 @@ func (l *listResourceMetricAlarm) List(ctx context.Context, request list.ListReq
 	}
 }
 
-type listMetricAlarmModel struct {
-	framework.WithRegionModel
-}
-
 func listMetricAlarms(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) iter.Seq2[awstypes.MetricAlarm, error] {
 	return func(yield func(awstypes.MetricAlarm, error) bool) {
 		pages := cloudwatch.NewDescribeAlarmsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.MetricAlarm{}, fmt.Errorf("listing CloudWatch Metric Alarm resources: %w", err))
+				yield(inttypes.Zero[awstypes.MetricAlarm](), fmt.Errorf("listing CloudWatch Metric Alarms: %w", err))
 				return
 			}
 

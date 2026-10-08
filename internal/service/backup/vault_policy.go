@@ -38,17 +38,19 @@ func resourceVaultPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"backup_vault_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"backup_vault_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"backup_vault_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"backup_vault_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }

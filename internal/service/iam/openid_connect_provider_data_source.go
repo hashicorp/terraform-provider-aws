@@ -26,38 +26,41 @@ import (
 
 // @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
 // @Tags
+// @Testing(name="OpenIDConnectProvider")
 // @Testing(tagsIdentifierAttribute="arn", tagsResourceType="OIDCProvider")
 func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrURL},
-			},
-			"client_id_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"thumbprint_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrURL: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validOpenIDURL,
-				DiffSuppressFunc: suppressOpenIDURL,
-				ExactlyOneOf:     []string{names.AttrARN, names.AttrURL},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+					ExactlyOneOf: []string{names.AttrARN, names.AttrURL},
+				},
+				"client_id_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"thumbprint_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrURL: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateFunc:     validOpenIDURL,
+					DiffSuppressFunc: suppressOpenIDURL,
+					ExactlyOneOf:     []string{names.AttrARN, names.AttrURL},
+				},
+			}
 		},
 	}
 }

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -34,6 +34,7 @@ import (
 // @FrameworkResource("aws_vpclattice_domain_verification", name="Domain Verification")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetDomainVerificationOutput")
+// @Testing(serialize=true)
 func newDomainVerificationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &domainVerificationResource{}, nil
 }
@@ -103,7 +104,7 @@ func (r *domainVerificationResource) Create(ctx context.Context, request resourc
 	conn := r.Meta().VPCLatticeClient(ctx)
 
 	input := vpclattice.StartDomainVerificationInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		DomainName:  fwflex.StringFromFramework(ctx, data.DomainName),
 		Tags:        getTagsIn(ctx),
 	}

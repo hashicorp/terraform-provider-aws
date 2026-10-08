@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_config_organization_custom_rule
 
-Manages a Config Organization Custom Rule. More information about these rules can be found in the [Enabling AWS Config Rules Across all Accounts in Your Organization](https://docs.aws.amazon.com/config/latest/developerguide/config-rule-multi-account-deployment.html) and [AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html) documentation. For working with Organization Managed Rules (those invoking an AWS managed rule), see the [`aws_config_organization_managed__rule` resource](/docs/providers/aws/r/config_organization_managed_rule.html).
+Manages a Config Organization Custom Rule. More information about these rules can be found in the [Enabling AWS Config Rules Across all Accounts in Your Organization](https://docs.aws.amazon.com/config/latest/developerguide/config-rule-multi-account-deployment.html) and [AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html) documentation. For working with Organization Managed Rules (those invoking an AWS managed rule), see the [`aws_config_organization_managed_rule` resource](/docs/providers/aws/r/config_organization_managed_rule.html).
 
 ~> **NOTE:** This resource must be created in the Organization master account and rules will include the master account unless its ID is added to the `excluded_accounts` argument.
 
@@ -46,7 +46,7 @@ resource "aws_config_organization_custom_rule" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `lambda_function_arn` - (Required) Amazon Resource Name (ARN) of the rule Lambda Function
+* `lambda_function_arn` - (Required) ARN of the rule Lambda Function
 * `name` - (Required) The name of the rule
 * `trigger_types` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`, and `ScheduledNotification`
 * `description` - (Optional) Description of the rule
@@ -62,7 +62,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the rule
+* `arn` - ARN of the rule
 
 ## Timeouts
 
@@ -74,7 +74,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Custom Rules using the name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_config_organization_custom_rule.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_organization_custom_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Custom Rules using the `name`. For example:
 
 ```terraform
 import {
@@ -83,7 +109,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Config Organization Custom Rules using the name. For example:
+Using `terraform import`, import Config Organization Custom Rules using the `name`. For example:
 
 ```console
 % terraform import aws_config_organization_custom_rule.example example

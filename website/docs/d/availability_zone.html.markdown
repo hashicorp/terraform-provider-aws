@@ -72,20 +72,16 @@ resource "aws_subnet" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `name` - (Optional) Full name of the availability zone to select.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `state` - (Optional) Specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
 * `zone_id` - (Optional) Zone ID of the availability zone to select.
 
-The arguments of this data source act as filters for querying the available
-availability zones. The given filters must match exactly one availability
-zone whose data will be exported as attributes.
+### `filter` Block
 
-### filter Configuration Block
-
-The `filter` configuration block supports the following arguments:
+The `filter` block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
@@ -94,12 +90,10 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `group_long_name` - The long name of the Availability Zone group, Local Zone group, or Wavelength Zone group.
-* `group_name` - The name of the zone group. For example: `us-east-1-zg-1`, `us-west-2-lax-1`, or `us-east-1-wl1-bos-wlz-1`.
-* `name_suffix` - Part of the AZ name that appears after the region name, uniquely identifying the AZ within its region.
-For Availability Zones this is usually a single letter, for example `a` for the `us-west-2a` zone.
-For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz-1` for the `us-west-2-wl1-sfo-wlz-1` zone.
-* `network_border_group` - The name of the location from which the address is advertised.
+* `group_long_name` - Long name of the Availability Zone group, Local Zone group, or Wavelength Zone group.
+* `group_name` - Name of the zone group. For example: `us-east-1-zg-1`, `us-west-2-lax-1`, or `us-east-1-wl1-bos-wlz-1`.
+* `name_suffix` - Part of the AZ name that appears after the region name, uniquely identifying the AZ within its region. For Availability Zones this is usually a single letter, for example `a` for the `us-west-2a` zone. For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz-1` for the `us-west-2-wl1-sfo-wlz-1` zone.
+* `network_border_group` - Name of the location from which the address is advertised.
 * `opt_in_status` - For Availability Zones, this always has the value of `opt-in-not-required`. For Local Zones, this is the opt in status. The possible values are `opted-in` and `not-opted-in`.
 * `parent_zone_id` - ID of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
 * `parent_zone_name` - Name of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.

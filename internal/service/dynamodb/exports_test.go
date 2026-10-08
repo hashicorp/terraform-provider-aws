@@ -36,8 +36,5 @@ var (
 	TableNameFromARN                             = tableNameFromARN
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
-)
-
-const (
-	GlobalSecondaryIndexExperimentalFlagEnvVar = globalSecondaryIndexExperimentalFlagEnvVar
+	CheckIfGSIRecreateAttributesChanged          = checkIfGSIRecreateAttributesChanged
 )

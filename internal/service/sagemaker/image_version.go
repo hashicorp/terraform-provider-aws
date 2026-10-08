@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -55,74 +55,76 @@ func resourceImageVersion() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aliases": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"base_image": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"container_image": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"horovod": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"image_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"job_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
-			},
-			"ml_framework": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
-			},
-			"processor": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Processor](),
-			},
-			"programming_lang": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
-			},
-			"release_notes": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"vendor_guidance": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VendorGuidance](),
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"aliases": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"base_image": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"container_image": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"horovod": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"image_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"job_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JobType](),
+				},
+				"ml_framework": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+				},
+				"processor": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Processor](),
+				},
+				"programming_lang": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+				},
+				"release_notes": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"vendor_guidance": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VendorGuidance](),
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -136,7 +138,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk("job_type"); ok {

@@ -109,6 +109,14 @@ func TestAccVPCNetworkACLRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACLRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -132,6 +140,14 @@ func TestAccVPCNetworkACLRule_Disappears_networkACL(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACL(), "aws_network_acl.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -155,6 +171,14 @@ func TestAccVPCNetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACLRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -836,6 +860,28 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 		if protocol != resourceProtocol {
 			protocol = resourceProtocol
 		}
+		egress := rs.Primary.Attributes["egress"]
+
+		return strings.Join([]string{naclID, ruleNumber, protocol, egress}, tfec2.NetworkACLRuleImportIDSeparator), nil
+	}
+}
+
+// testAccNetworkACLRuleImportStateIdentityFunc is used in resource identity testing
+func testAccNetworkACLRuleImportStateIdentityFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		naclID := rs.Primary.Attributes["network_acl_id"]
+		ruleNumber := rs.Primary.Attributes["rule_number"]
+		protocol := rs.Primary.Attributes[names.AttrProtocol]
+
+		if protocolNumber, err := strconv.ParseInt(protocol, 10, 64); err == nil {
+			protocol = tfec2.IanaProtocolIToA[int(protocolNumber)]
+		}
+
 		egress := rs.Primary.Attributes["egress"]
 
 		return strings.Join([]string{naclID, ruleNumber, protocol, egress}, tfec2.NetworkACLRuleImportIDSeparator), nil

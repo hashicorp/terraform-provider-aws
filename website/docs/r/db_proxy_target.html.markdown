@@ -69,13 +69,13 @@ resource "aws_db_proxy_target" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `db_proxy_name` - (Required, Forces new resource) The name of the DB proxy.
-* `target_group_name` - (Required, Forces new resource) The name of the target group.
-* `db_instance_identifier` - (Optional, Forces new resource) DB instance identifier.
-* `db_cluster_identifier` - (Optional, Forces new resource) DB cluster identifier.
-
 **NOTE:** Either `db_instance_identifier` or `db_cluster_identifier` should be specified and both should not be specified together
+
+* `db_cluster_identifier` - (Optional, Forces new resource) DB cluster identifier.
+* `db_instance_identifier` - (Optional, Forces new resource) DB instance identifier.
+* `db_proxy_name` - (Required, Forces new resource) Name of the DB proxy.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `target_group_name` - (Required, Forces new resource) Name of the target group.
 
 ## Attribute Reference
 
@@ -85,7 +85,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Identifier of  `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`).
 * `port` - Port for the target RDS DB Instance or Aurora DB Cluster.
 * `rds_resource_id` - Identifier representing the DB Instance or DB Cluster target.
-* `target_arn` - Amazon Resource Name (ARN) for the DB instance or DB cluster. Currently not returned by the RDS API.
+* `target_arn` - ARN for the DB instance or DB cluster. Currently not returned by the RDS API.
 * `tracked_cluster_id` - DB Cluster identifier for the DB Instance target. Not returned unless manually importing an `RDS_INSTANCE` target that is part of a DB Cluster.
 * `type` - Type of targetE.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`
 

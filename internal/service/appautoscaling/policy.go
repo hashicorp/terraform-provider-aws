@@ -26,20 +26,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appautoscaling_policy", name="Scaling Policy")
+// @IdentityAttribute("service_namespace")
+// @IdentityAttribute("resource_id")
+// @IdentityAttribute("scalable_dimension")
+// @IdentityAttribute("name")
+// @ImportIDHandler("policyImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types;awstypes;awstypes.ScalingPolicy")
+// @Testing(importStateIdFunc=testAccPolicyImportStateIdFunc)
+// @Testing(name="Policy")
+// @Testing(preIdentityVersion="v6.43.0")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyPut,
 		DeleteWithoutTimeout: resourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourcePolicyImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -568,27 +574,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alarm_arns", tfslices.ApplyToAll(output.Alarms, func(v awstypes.Alarm) string {
-		return aws.ToString(v.AlarmARN)
-	}))
-	d.Set(names.AttrARN, output.PolicyARN)
-	d.Set(names.AttrName, output.PolicyName)
-	d.Set("policy_type", output.PolicyType)
-	if output.PredictiveScalingPolicyConfiguration != nil {
-		if err := d.Set("predictive_scaling_policy_configuration", []any{flattenPredictiveScalingPolicyConfiguration(output.PredictiveScalingPolicyConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_policy_configuration: %s", err)
-		}
-	} else {
-		d.Set("predictive_scaling_policy_configuration", nil)
-	}
-	d.Set(names.AttrResourceID, output.ResourceId)
-	d.Set("scalable_dimension", output.ScalableDimension)
-	d.Set("service_namespace", output.ServiceNamespace)
-	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(output.StepScalingPolicyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting step_scaling_policy_configuration: %s", err)
-	}
-	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(output.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_tracking_scaling_policy_configuration: %s", err)
+	if err := resourcePolicyFlatten(output, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -618,26 +605,6 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
-}
-
-func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts, err := policyParseImportID(d.Id())
-	if err != nil {
-		return nil, err
-	}
-
-	serviceNamespace := parts[0]
-	resourceID := parts[1]
-	scalableDimension := parts[2]
-	name := parts[3]
-
-	d.SetId(name)
-	d.Set(names.AttrName, name)
-	d.Set(names.AttrResourceID, resourceID)
-	d.Set("scalable_dimension", scalableDimension)
-	d.Set("service_namespace", serviceNamespace)
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func findScalingPolicyByFourPartKey(ctx context.Context, conn *applicationautoscaling.Client, name, serviceNamespace, resourceID, scalableDimension string) (*awstypes.ScalingPolicy, error) {
@@ -684,6 +651,33 @@ func findScalingPolicies(ctx context.Context, conn *applicationautoscaling.Clien
 	return output, nil
 }
 
+func resourcePolicyFlatten(policy *awstypes.ScalingPolicy, d *schema.ResourceData) error {
+	d.Set("alarm_arns", tfslices.ApplyToAll(policy.Alarms, func(v awstypes.Alarm) string {
+		return aws.ToString(v.AlarmARN)
+	}))
+	d.Set(names.AttrARN, policy.PolicyARN)
+	d.Set(names.AttrName, policy.PolicyName)
+	d.Set("policy_type", policy.PolicyType)
+	if policy.PredictiveScalingPolicyConfiguration != nil {
+		if err := d.Set("predictive_scaling_policy_configuration", []any{flattenPredictiveScalingPolicyConfiguration(policy.PredictiveScalingPolicyConfiguration)}); err != nil {
+			return fmt.Errorf("setting predictive_scaling_policy_configuration: %w", err)
+		}
+	} else {
+		d.Set("predictive_scaling_policy_configuration", nil)
+	}
+	d.Set(names.AttrResourceID, policy.ResourceId)
+	d.Set("scalable_dimension", policy.ScalableDimension)
+	d.Set("service_namespace", policy.ServiceNamespace)
+	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(policy.StepScalingPolicyConfiguration)); err != nil {
+		return fmt.Errorf("setting step_scaling_policy_configuration: %w", err)
+	}
+	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(policy.TargetTrackingScalingPolicyConfiguration)); err != nil {
+		return fmt.Errorf("setting target_tracking_scaling_policy_configuration: %w", err)
+	}
+
+	return nil
+}
+
 func policyParseImportID(id string) ([]string, error) {
 	const (
 		importIDSeparator = "/"
@@ -726,6 +720,30 @@ func policyParseImportID(id string) ([]string, error) {
 	}
 
 	return []string{serviceNamespace, resourceID, scalableDimension, name}, nil
+}
+
+var _ inttypes.SDKv2ImportID = policyImportID{}
+
+type policyImportID struct{}
+
+func (policyImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := policyParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"service_namespace":  parts[0],
+		names.AttrResourceID: parts[1],
+		"scalable_dimension": parts[2],
+		names.AttrName:       parts[3],
+	}
+
+	return parts[3], result, nil
+}
+
+func (policyImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }
 
 func expandTargetTrackingScalingPolicyConfiguration(tfList []any) *awstypes.TargetTrackingScalingPolicyConfiguration {

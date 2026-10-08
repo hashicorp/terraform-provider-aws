@@ -64,11 +64,11 @@ func TestAccBatchJobDefinition_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_batch_job_definition.test", map[string]knownvalue.Check{
-						names.AttrARN: arn1.Value(),
+						names.AttrARN: arn1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_batch_job_definition.test", map[string]knownvalue.Check{
-						names.AttrARN: arn2.Value(),
+						names.AttrARN: arn2.ValueCheck(),
 					}),
 				},
 			},

@@ -24,92 +24,94 @@ func dataSourceAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIRead,
 
-		Schema: map[string]*schema.Schema{
-			"api_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"api_key_selection_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cors_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_credentials": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"allow_headers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_methods": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_origins": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"expose_headers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"max_age": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"api_key_selection_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cors_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_credentials": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"allow_headers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allow_methods": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allow_origins": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"expose_headers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"max_age": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disable_execute_api_endpoint": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"protocol_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"route_selection_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disable_execute_api_endpoint": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protocol_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"route_selection_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

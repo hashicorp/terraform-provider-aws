@@ -63,19 +63,19 @@ func TestAccVPCSubnet_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id3.Value(),
+						names.AttrID:        id3.ValueCheck(),
 					}),
 				},
 			},
@@ -132,19 +132,19 @@ func TestAccVPCSubnet_List_regionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id3.Value(),
+						names.AttrID:        id3.ValueCheck(),
 					}),
 				},
 			},
@@ -200,25 +200,25 @@ func TestAccVPCSubnet_List_filtered(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected1.Value(),
+						names.AttrID:        expected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected2.Value(),
+						names.AttrID:        expected2.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected1.Value(),
+						names.AttrID:        notExpected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected2.Value(),
+						names.AttrID:        notExpected2.ValueCheck(),
 					}),
 				},
 			},
@@ -264,18 +264,18 @@ func TestAccVPCSubnet_List_excludeDefaultSubnets(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id.Value(),
+						names.AttrID:        id.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        defaultSubnetID0.Value(),
+						names.AttrID:        defaultSubnetID0.ValueCheck(),
 					}),
 					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        defaultSubnetID1.Value(),
+						names.AttrID:        defaultSubnetID1.ValueCheck(),
 					}),
 				},
 			},
@@ -326,25 +326,25 @@ func TestAccVPCSubnet_List_subnetIDs(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id3.Value(),
+						names.AttrID:        id3.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id4.Value(),
+						names.AttrID:        id4.ValueCheck(),
 					}),
 				},
 			},
@@ -401,25 +401,25 @@ func TestAccVPCSubnet_List_filteredSubnetIDs(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected1.Value(),
+						names.AttrID:        expected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected2.Value(),
+						names.AttrID:        expected2.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected1.Value(),
+						names.AttrID:        notExpected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected2.Value(),
+						names.AttrID:        notExpected2.ValueCheck(),
 					}),
 				},
 			},
@@ -428,8 +428,6 @@ func TestAccVPCSubnet_List_filteredSubnetIDs(t *testing.T) {
 }
 
 func TestAccVPCSubnet_List_Filtered_defaultForAZ(t *testing.T) {
-	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
-
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

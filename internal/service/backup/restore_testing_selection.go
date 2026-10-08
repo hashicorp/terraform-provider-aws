@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -170,7 +170,7 @@ func (r *restoreTestingSelectionResource) Create(ctx context.Context, request re
 	restoreTestingPlanName := data.RestoreTestingPlanName.ValueString()
 	name := data.RestoreTestingSelectionName.ValueString()
 	input := &backup.CreateRestoreTestingSelectionInput{
-		CreatorRequestId:        aws.String(sdkid.UniqueId()),
+		CreatorRequestId:        aws.String(create.UniqueId(ctx)),
 		RestoreTestingPlanName:  aws.String(restoreTestingPlanName),
 		RestoreTestingSelection: &awstypes.RestoreTestingSelectionForCreate{},
 	}

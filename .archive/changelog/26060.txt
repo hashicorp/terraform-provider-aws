@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appstream_fleet: Fix IAM `InvalidRoleException` error on creation
-```

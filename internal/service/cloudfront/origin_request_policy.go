@@ -35,107 +35,109 @@ func resourceOriginRequestPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cookies_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookie_behavior": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyCookieBehavior](),
-						},
-						"cookies": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"cookies_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookie_behavior": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyCookieBehavior](),
+							},
+							"cookies": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"headers_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"header_behavior": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyHeaderBehavior](),
-						},
-						"headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"headers_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"header_behavior": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyHeaderBehavior](),
+							},
+							"headers": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"query_strings_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"query_string_behavior": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyQueryStringBehavior](),
-						},
-						"query_strings": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"query_strings_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"query_string_behavior": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OriginRequestPolicyQueryStringBehavior](),
+							},
+							"query_strings": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

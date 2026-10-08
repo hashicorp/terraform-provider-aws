@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1038,6 +1039,63 @@ func findLocalGatewayRouteTableVPCAssociationByID(ctx context.Context, conn *ec2
 	return output, nil
 }
 
+func findLocalGatewayRouteTableVIFGroupAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	input := ec2.DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsInput{
+		LocalGatewayRouteTableVirtualInterfaceGroupAssociationIds: []string{id},
+	}
+
+	output, err := findLocalGatewayRouteTableVIFGroupAssociation(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.ToString(output.State); state == string(awstypes.RouteTableAssociationStateCodeDisassociated) {
+		return nil, &retry.NotFoundError{
+			Message: state,
+		}
+	}
+
+	if aws.ToString(output.LocalGatewayRouteTableVirtualInterfaceGroupAssociationId) != id {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVIFGroupAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsInput) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	output, err := findLocalGatewayRouteTableVIFGroupAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTableVIFGroupAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsInput) ([]awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	var output []awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation
+
+	pages := ec2.NewDescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableVIFGroupAssociationIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTableVirtualInterfaceGroupAssociations...)
+	}
+
+	return output, nil
+}
+
 func findLocalGatewayVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) (*awstypes.LocalGatewayVirtualInterface, error) {
 	output, err := findLocalGatewayVirtualInterfaces(ctx, conn, input)
 
@@ -1260,6 +1318,36 @@ func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, insta
 	return nil, &retry.NotFoundError{}
 }
 
+func findVolumeAttachments(ctx context.Context, conn *ec2.Client, instanceID string) ([]awstypes.VolumeAttachment, error) {
+	input := ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"attachment.instance-id": instanceID,
+		}),
+	}
+
+	volumes, err := findEBSVolumes(ctx, conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	attachments := make([]awstypes.VolumeAttachment, 0)
+	for _, volume := range volumes {
+		for _, attachment := range volume.Attachments {
+			if attachment.State == awstypes.VolumeAttachmentStateDetached {
+				continue
+			}
+
+			if aws.ToString(attachment.InstanceId) != instanceID {
+				continue
+			}
+
+			attachments = append(attachments, attachment)
+		}
+	}
+
+	return attachments, nil
+}
+
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},
@@ -1389,6 +1477,36 @@ func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpo
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceLinkVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) (*awstypes.ServiceLinkVirtualInterface, error) {
+	output, err := findServiceLinkVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceLinkVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) ([]awstypes.ServiceLinkVirtualInterface, error) {
+	var output []awstypes.ServiceLinkVirtualInterface
+
+	err := describeServiceLinkVirtualInterfacesPages(ctx, conn, input, func(page *ec2.DescribeServiceLinkVirtualInterfacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ServiceLinkVirtualInterfaces...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findSubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {
@@ -1723,6 +1841,28 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 	return findNetworkACL(ctx, conn, &input)
 }
 
+func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
+	input := ec2.DescribeNetworkAclsInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"default": {"true"},
+			"vpc-id":  ids,
+		}),
+	}
+
+	output, err := findNetworkACLs(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.NetworkAcl, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
+}
+
 func findNATGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*awstypes.NatGateway, error) {
 	output, err := findNATGateways(ctx, conn, input)
 
@@ -1940,6 +2080,28 @@ func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id strin
 	return findSecurityGroup(ctx, conn, &input)
 }
 
+func batchFindVPCDefaultSecurityGroups(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.SecurityGroup, error) {
+	input := ec2.DescribeSecurityGroupsInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"group-name": {defaultSecurityGroupName},
+			"vpc-id":     ids,
+		}),
+	}
+
+	output, err := findSecurityGroups(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.SecurityGroup, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
+}
+
 func findVPCDHCPOptionsAssociation(ctx context.Context, conn *ec2.Client, vpcID string, dhcpOptionsID string) error {
 	vpc, err := findVPCByID(ctx, conn, vpcID)
 
@@ -1965,6 +2127,28 @@ func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*a
 	}
 
 	return findRouteTable(ctx, conn, &input)
+}
+
+func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.RouteTable, error) {
+	input := ec2.DescribeRouteTablesInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"association.main": {"true"},
+			"vpc-id":           ids,
+		}),
+	}
+
+	output, err := findRouteTables(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.RouteTable, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
 }
 
 func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
@@ -3599,12 +3783,16 @@ func findClientVPNRoutes(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 }
 
 func findClientVPNRouteByThreePartKey(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) (*awstypes.ClientVpnRoute, error) {
+	filters := map[string]string{
+		"destination-cidr": destinationCIDR,
+	}
+	if targetSubnetID != "" {
+		filters["target-subnet"] = targetSubnetID
+	}
+
 	input := ec2.DescribeClientVpnRoutesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		Filters: newAttributeFilterList(map[string]string{
-			"destination-cidr": destinationCIDR,
-			"target-subnet":    targetSubnetID,
-		}),
+		Filters:             newAttributeFilterList(filters),
 	}
 
 	return findClientVPNRoute(ctx, conn, &input)
@@ -5226,7 +5414,7 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 }
 
 func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) ([]awstypes.TransitGatewayMeteringPolicy, error) {
-	output, err := tfslices.CollectWithError(listTransitGatewayMeteringPolicies(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listTransitGatewayMeteringPolicyPages(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -5234,27 +5422,35 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
 }
 
-func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
-	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
+func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
+	return tfiter.ConcatValuesWithError(listTransitGatewayMeteringPolicyPages(ctx, conn, input, optFns...))
+}
+
+func listTransitGatewayMeteringPolicyPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.TransitGatewayMeteringPolicy, error] {
+	return func(yield func([]awstypes.TransitGatewayMeteringPolicy, error) bool) {
+		var stopped bool
 		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
-			for _, v := range page.TransitGatewayMeteringPolicies {
-				if !yield(v, nil) {
-					return false
-				}
+			if !yield(page.TransitGatewayMeteringPolicies, nil) {
+				stopped = true
+				return false
 			}
 
 			return !lastPage
-		})
+		}, optFns...)
 
-		if err != nil {
-			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
+		if !stopped && err != nil {
+			yield(nil, fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
 			return
 		}
 	}
@@ -5314,6 +5510,10 @@ func findTransitGatewayMeteringPolicyEntries(ctx context.Context, conn *ec2.Clie
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
 }
 
@@ -5337,6 +5537,70 @@ func findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx context.Context, conn
 	}
 
 	if state := output.State; state == awstypes.TransitGatewayMeteringPolicyEntryStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(state),
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput) ([]awstypes.TransitGatewayPolicyTableEntry, error) {
+	output, err := tfslices.CollectAndConcatWithError(listTransitGatewayPolicyTableEntryPages(ctx, conn, input))
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func listTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.TransitGatewayPolicyTableEntry, error] {
+	return tfiter.ConcatValuesWithError(listTransitGatewayPolicyTableEntryPages(ctx, conn, input, optFns...))
+}
+
+func listTransitGatewayPolicyTableEntryPages(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.TransitGatewayPolicyTableEntry, error] {
+	return func(yield func([]awstypes.TransitGatewayPolicyTableEntry, error) bool) {
+		pages := ec2.NewGetTransitGatewayPolicyTableEntriesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing EC2 Transit Gateway Policy Table Entries: %w", err))
+				return
+			}
+
+			if !yield(page.TransitGatewayPolicyTableEntries, nil) {
+				return
+			}
+		}
+	}
+}
+
+func findTransitGatewayPolicyTableEntryByTwoPartKey(ctx context.Context, conn *ec2.Client, policyTableID, ruleNumber string) (*awstypes.TransitGatewayPolicyTableEntry, error) {
+	input := ec2.GetTransitGatewayPolicyTableEntriesInput{
+		TransitGatewayPolicyTableId: aws.String(policyTableID),
+	}
+	transitGatewayPolicyTableEntries, err := findTransitGatewayPolicyTableEntries(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := tfresource.AssertSingleValueResult(tfslices.Filter(transitGatewayPolicyTableEntries, func(v awstypes.TransitGatewayPolicyTableEntry) bool {
+		return aws.ToString(v.PolicyRuleNumber) == ruleNumber
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayPolicyTableEntryStateDeleted {
 		return nil, &retry.NotFoundError{
 			Message: string(state),
 		}

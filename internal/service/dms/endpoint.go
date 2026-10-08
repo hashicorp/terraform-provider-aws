@@ -54,790 +54,792 @@ func resourceEndpoint() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"elasticsearch_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"endpoint_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"error_retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      300,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"full_load_error_percentage": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      10,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_new_mapping_type": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  false,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"endpoint_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validEndpointID,
-			},
-			names.AttrEndpointType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ReplicationEndpointTypeValue](),
-			},
-			"engine_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(engineName_Values(), false),
-			},
-			"extra_connection_attributes": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				Optional:         true,
-				DiffSuppressFunc: suppressExtraConnectionAttributesDiffs,
-			},
-			"kafka_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"broker": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"include_control_details": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_null_and_empty": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_partition_value": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_table_alter_operations": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_transaction_details": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"message_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.MessageFormatValueJson,
-							ValidateDiagFunc: enum.Validate[awstypes.MessageFormatValue](),
-						},
-						"message_max_bytes": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  1000000,
-						},
-						"no_hex_prefix": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"partition_include_schema_table": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"sasl_mechanism": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.KafkaSaslMechanism](),
-						},
-						"sasl_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"sasl_username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"security_protocol": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.KafkaSecurityProtocol](),
-						},
-						"ssl_ca_certificate_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"ssl_client_certificate_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"ssl_client_key_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"ssl_client_key_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  kafkaDefaultTopic,
-						},
-					},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-			},
-			"kinesis_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"include_control_details": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_null_and_empty": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_partition_value": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_table_alter_operations": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"include_transaction_details": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"message_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.MessageFormatValueJson,
-							ValidateDiagFunc: enum.Validate[awstypes.MessageFormatValue](),
-						},
-						"partition_include_schema_table": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrStreamARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_large_integer_value": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"mongodb_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_mechanism": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      mongoDBAuthMechanismValueDefault,
-							ValidateFunc: validation.StringInSlice(mongoDBAuthMechanismValue_Values(), false),
-						},
-						"auth_source": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  mongoDBAuthSourceAdmin,
-						},
-						"auth_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.AuthTypeValuePassword,
-							ValidateDiagFunc: enum.Validate[awstypes.AuthTypeValue](),
-						},
-						"docs_to_investigate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "1000",
-						},
-						"extract_doc_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "false",
-						},
-						"nesting_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.NestingLevelValueNone,
-							ValidateDiagFunc: enum.Validate[awstypes.NestingLevelValue](),
-						},
-						"use_update_lookup": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"mysql_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"after_connect_script": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"authentication_method": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MySQLAuthenticationMethod](),
-						},
-						"clean_source_metadata_on_mismatch": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"events_poll_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"execute_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"max_file_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"parallel_load_threads": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"server_timezone": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"target_db_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TargetDbType](),
-						},
-					},
-				},
-			},
-			"oracle_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_alternate_directly": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"add_supplemental_logging": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"additional_archived_log_dest_id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"allow_selected_nested_tables": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"archived_log_dest_id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"archived_logs_only": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"asm_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Computed:  true,
-							Sensitive: true,
-						},
-						"asm_server": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"asm_user": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"authentication_method": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OracleAuthenticationMethod](),
-							ConflictsWith:    []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
-						},
-						"char_length_semantics": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CharLengthSemantics](),
-						},
-						"convert_timestamp_with_zone_to_utc": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"direct_path_no_log": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"direct_path_parallel_load": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"enable_homogenous_tablespace": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"extra_archived_log_dest_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeInt,
+				"elasticsearch_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"endpoint_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"error_retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								Default:      300,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"full_load_error_percentage": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								Default:      10,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							"service_access_role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"use_new_mapping_type": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  false,
 							},
 						},
-						"fail_task_on_lob_truncation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"number_datatype_scale": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"open_transaction_window": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"oracle_path_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"parallel_asm_read_threads": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"read_ahead_blocks": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"read_table_space_name": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"replace_path_prefix": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"retry_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"secrets_manager_oracle_asm_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"secrets_manager_oracle_asm_secret_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"security_db_encryption": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Computed:  true,
-							Sensitive: true,
-						},
-						"security_db_encryption_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"spatial_data_option_to_geo_json_function_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"standby_delay_time": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"trim_space_in_char": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"use_alternate_folder_for_online": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"use_bfile": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"use_direct_path_full_load": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"use_logminer_reader": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"use_path_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+					},
+				},
+				"endpoint_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validEndpointID,
+				},
+				names.AttrEndpointType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ReplicationEndpointTypeValue](),
+				},
+				"engine_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(engineName_Values(), false),
+				},
+				"extra_connection_attributes": {
+					Type:             schema.TypeString,
+					Computed:         true,
+					Optional:         true,
+					DiffSuppressFunc: suppressExtraConnectionAttributesDiffs,
+				},
+				"kafka_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"broker": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"include_control_details": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_null_and_empty": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_partition_value": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_table_alter_operations": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_transaction_details": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"message_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.MessageFormatValueJson,
+								ValidateDiagFunc: enum.Validate[awstypes.MessageFormatValue](),
+							},
+							"message_max_bytes": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  1000000,
+							},
+							"no_hex_prefix": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"partition_include_schema_table": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"sasl_mechanism": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaSaslMechanism](),
+							},
+							"sasl_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"sasl_username": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"security_protocol": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaSecurityProtocol](),
+							},
+							"ssl_ca_certificate_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"ssl_client_certificate_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"ssl_client_key_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"ssl_client_key_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  kafkaDefaultTopic,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPassword: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
-			},
-			"pause_replication_tasks": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrPort: {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
-			},
-			"postgres_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"after_connect_script": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"authentication_method": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PostgreSQLAuthenticationMethod](),
-						},
-						"babelfish_database_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"capture_ddls": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"database_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DatabaseMode](),
-						},
-						"ddl_artifacts_schema": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"execute_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"fail_tasks_on_lob_truncation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"heartbeat_enable": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"heartbeat_frequency": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"heartbeat_schema": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"map_boolean_as_boolean": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"map_jsonb_as_clob": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"map_long_varchar_as": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LongVarcharMappingType](),
-						},
-						"max_file_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"plugin_name": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PluginNameValue](),
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"slot_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"kinesis_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"include_control_details": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_null_and_empty": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_partition_value": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_table_alter_operations": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"include_transaction_details": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"message_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.MessageFormatValueJson,
+								ValidateDiagFunc: enum.Validate[awstypes.MessageFormatValue](),
+							},
+							"partition_include_schema_table": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"service_access_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrStreamARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"use_large_integer_value": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"redis_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"auth_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RedisAuthTypeValue](),
-						},
-						"auth_user_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"server_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"ssl_ca_certificate_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ssl_security_protocol": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.SslSecurityProtocolValueSslEncryption,
-							ValidateDiagFunc: enum.Validate[awstypes.SslSecurityProtocolValue](),
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"mongodb_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_mechanism": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      mongoDBAuthMechanismValueDefault,
+								ValidateFunc: validation.StringInSlice(mongoDBAuthMechanismValue_Values(), false),
+							},
+							"auth_source": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  mongoDBAuthSourceAdmin,
+							},
+							"auth_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.AuthTypeValuePassword,
+								ValidateDiagFunc: enum.Validate[awstypes.AuthTypeValue](),
+							},
+							"docs_to_investigate": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  "1000",
+							},
+							"extract_doc_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  "false",
+							},
+							"nesting_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.NestingLevelValueNone,
+								ValidateDiagFunc: enum.Validate[awstypes.NestingLevelValue](),
+							},
+							"use_update_lookup": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"redshift_settings": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Computed:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_folder": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"encryption_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      encryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
-						},
-						"server_side_encryption_kms_key_id": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: tfkms.DiffSuppressKey,
-							ValidateFunc:     tfkms.ValidateKey,
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				"mysql_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"after_connect_script": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"authentication_method": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MySQLAuthenticationMethod](),
+							},
+							"clean_source_metadata_on_mismatch": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"events_poll_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"execute_timeout": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"max_file_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"parallel_load_threads": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"server_timezone": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"service_access_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"target_db_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TargetDbType](),
+							},
 						},
 					},
 				},
-			},
-			"secrets_manager_access_role_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidARN,
-				RequiredWith:  []string{"secrets_manager_arn"},
-				ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
-			},
-			"secrets_manager_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidARN,
-				RequiredWith:  []string{"secrets_manager_access_role_arn"},
-				ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
-			},
-			"server_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
-			},
-			"service_access_role": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ssl_mode": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DmsSslModeValue](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrUsername: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
-			},
+				"oracle_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_alternate_directly": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"add_supplemental_logging": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"additional_archived_log_dest_id": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"allow_selected_nested_tables": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"archived_log_dest_id": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"archived_logs_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"asm_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Computed:  true,
+								Sensitive: true,
+							},
+							"asm_server": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"asm_user": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"authentication_method": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OracleAuthenticationMethod](),
+								ConflictsWith:    []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+							},
+							"char_length_semantics": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CharLengthSemantics](),
+							},
+							"convert_timestamp_with_zone_to_utc": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"direct_path_no_log": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"direct_path_parallel_load": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"enable_homogenous_tablespace": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"extra_archived_log_dest_ids": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeInt,
+								},
+							},
+							"fail_task_on_lob_truncation": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"number_datatype_scale": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"open_transaction_window": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"oracle_path_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"parallel_asm_read_threads": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"read_ahead_blocks": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"read_table_space_name": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"replace_path_prefix": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"retry_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"secrets_manager_oracle_asm_access_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"secrets_manager_oracle_asm_secret_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"security_db_encryption": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Computed:  true,
+								Sensitive: true,
+							},
+							"security_db_encryption_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"spatial_data_option_to_geo_json_function_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"standby_delay_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"trim_space_in_char": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"use_alternate_folder_for_online": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"use_bfile": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"use_direct_path_full_load": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"use_logminer_reader": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"use_path_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrPassword: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+				},
+				"pause_replication_tasks": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrPort: {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+				},
+				"postgres_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"after_connect_script": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"authentication_method": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PostgreSQLAuthenticationMethod](),
+							},
+							"babelfish_database_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"capture_ddls": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"database_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DatabaseMode](),
+							},
+							"ddl_artifacts_schema": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"execute_timeout": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"fail_tasks_on_lob_truncation": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"heartbeat_enable": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"heartbeat_frequency": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"heartbeat_schema": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"map_boolean_as_boolean": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"map_jsonb_as_clob": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"map_long_varchar_as": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LongVarcharMappingType](),
+							},
+							"max_file_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"plugin_name": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PluginNameValue](),
+							},
+							"service_access_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"slot_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"redis_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"auth_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RedisAuthTypeValue](),
+							},
+							"auth_user_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"server_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"ssl_ca_certificate_arn": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ssl_security_protocol": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.SslSecurityProtocolValueSslEncryption,
+								ValidateDiagFunc: enum.Validate[awstypes.SslSecurityProtocolValue](),
+							},
+						},
+					},
+				},
+				"redshift_settings": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					Computed:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bucket_folder": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"encryption_mode": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      encryptionModeSseS3,
+								ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
+							},
+							"server_side_encryption_kms_key_id": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: tfkms.DiffSuppressKey,
+								ValidateFunc:     tfkms.ValidateKey,
+							},
+							"service_access_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"secrets_manager_access_role_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					RequiredWith:  []string{"secrets_manager_arn"},
+					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
+				},
+				"secrets_manager_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					RequiredWith:  []string{"secrets_manager_access_role_arn"},
+					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
+				},
+				"server_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+				},
+				"service_access_role": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ssl_mode": {
+					Type:             schema.TypeString,
+					Computed:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DmsSslModeValue](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrUsername: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(

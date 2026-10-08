@@ -56,19 +56,26 @@ resource "aws_ram_resource_share_accepter" "receiver_accept" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `share_arn` - (Required) The ARN of the resource share.
+* `share_arn` - (Required) ARN of the resource share.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `invitation_arn` - The ARN of the resource share invitation.
-* `share_id` - The ID of the resource share as displayed in the console.
-* `status` - The status of the resource share (ACTIVE, PENDING, FAILED, DELETING, DELETED).
-* `receiver_account_id` - The account ID of the receiver account which accepts the invitation.
-* `sender_account_id` - The account ID of the sender account which submits the invitation.
-* `share_name` - The name of the resource share.
-* `resources` - A list of the resource ARNs shared via the resource share.
+* `invitation_arn` - ARN of the resource share invitation.
+* `receiver_account_id` - Account ID of the receiver account which accepts the invitation.
+* `resources` - List of the resource ARNs shared via the resource share.
+* `sender_account_id` - Account ID of the sender account which submits the invitation.
+* `share_id` - ID of the resource share as displayed in the console.
+* `share_name` - Name of the resource share.
+* `status` - Status of the resource share (ACTIVE, PENDING, FAILED, DELETING, DELETED).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

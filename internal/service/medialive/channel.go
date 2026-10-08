@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,18 +32,17 @@ import (
 
 // @SDKResource("aws_medialive_channel", name="Channel")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("channel_id", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
 // @Testing(importIgnore="start_channel")
+// @Testing(preIdentityVersion="v6.60.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
 		ReadWithoutTimeout:   resourceChannelRead,
 		UpdateWithoutTimeout: resourceChannelUpdate,
 		DeleteWithoutTimeout: resourceChannelDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
@@ -747,7 +745,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		RequestId: aws.String(sdkid.UniqueId()),
+		RequestId: aws.String(create.UniqueId(ctx)),
 		Tags:      getTagsIn(ctx),
 	}
 

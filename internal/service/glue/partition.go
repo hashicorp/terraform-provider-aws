@@ -35,181 +35,183 @@ func resourcePartition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrTableName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"partition_values": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"storage_descriptor": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"additional_locations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"bucket_columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrComment: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Optional: true,
+				names.AttrDatabaseName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrTableName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"partition_values": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 1024),
+					},
+				},
+				"storage_descriptor": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"additional_locations": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"bucket_columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrComment: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"compressed": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"input_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"number_of_buckets": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"output_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrParameters: {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ser_de_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrParameters: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"serialization_library": {
-										Type:     schema.TypeString,
-										Optional: true,
+							"compressed": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"input_format": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"number_of_buckets": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"output_format": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrParameters: {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ser_de_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrParameters: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"serialization_library": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"skewed_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"skewed_column_names": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"skewed_column_values": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"skewed_column_value_location_maps": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"sort_columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"column": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"sort_order": {
-										Type:     schema.TypeInt,
-										Required: true,
+							"skewed_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"skewed_column_names": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"skewed_column_values": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"skewed_column_value_location_maps": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"stored_as_sub_directories": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							"sort_columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"sort_order": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
+							},
+							"stored_as_sub_directories": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_analyzed_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_accessed_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_analyzed_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_accessed_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

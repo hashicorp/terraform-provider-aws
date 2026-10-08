@@ -44,49 +44,51 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"details": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateS3MultiRegionAccessPointName,
-						},
-						names.AttrPolicy: {
-							Type:                  schema.TypeString,
-							Required:              true,
-							ValidateFunc:          validation.StringIsJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v any) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"details": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validateS3MultiRegionAccessPointName,
+							},
+							names.AttrPolicy: {
+								Type:                  schema.TypeString,
+								Required:              true,
+								ValidateFunc:          validation.StringIsJSON,
+								DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+								DiffSuppressOnRefresh: true,
+								StateFunc: func(v any) string {
+									json, _ := structure.NormalizeJsonString(v)
+									return json
+								},
 							},
 						},
 					},
 				},
-			},
-			"established": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proposed": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"established": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proposed": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -107,7 +109,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]any)[0].(map[string]any))
 	}
 
-	id := MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
+	id := multiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
 
 	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
@@ -131,7 +133,7 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
+	accountID, name, err := multiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -179,7 +181,7 @@ func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, _, err := MultiRegionAccessPointParseResourceID(d.Id())
+	accountID, _, err := multiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

@@ -39,26 +39,26 @@ Reading key-value pairs from JSON back into a native Terraform map can be accomp
 
 ```terraform
 output "example" {
-  value = ephemeral.aws_secretsmanager_secret_version.example.secret_string["key1"]
+  value = jsondecode(ephemeral.aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
-* `version_id` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
-* `version_stage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
+* `secret_id` - (Required) Secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
+* `version_id` - (Optional) Unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
+* `version_stage` - (Optional) Secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+This ephemeral resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
 * `created_date` - Created date of the secret in UTC.
-* `id` - Unique identifier of this version of the secret.
-* `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
 * `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
+* `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
 * `version_id` - Unique identifier of this version of the secret.
+* `version_stages` - List of staging labels attached to this version of the secret.

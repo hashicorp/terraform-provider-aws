@@ -206,8 +206,9 @@ resource "aws_bedrock_provisioned_model_throughput" "test" {
   model_units            = 1
 }
 
+# https://docs.aws.amazon.com/bedrock/latest/userguide/prov-thru-supported.html
 data "aws_bedrock_foundation_model" "test" {
-  model_id = "amazon.titan-text-express-v1:0:8k"
+  model_id = "amazon.nova-micro-v1:0:128k"
 }
 `, rName)
 }

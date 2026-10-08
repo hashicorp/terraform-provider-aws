@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_secretsmanager_secret: Return diagnostic `warning` when remote policy is invalid
-```

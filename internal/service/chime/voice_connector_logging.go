@@ -33,22 +33,24 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"enable_media_metric_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_sip_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"voice_connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"enable_media_metric_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_sip_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"voice_connector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

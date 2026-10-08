@@ -43,6 +43,8 @@ This data source exports the following attributes in addition to the arguments a
 * `local_address` - Local address.
 * `local_bgp_asn` - Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the EC2 Local Gateway.
 * `local_gateway_id` - Identifier of the EC2 Local Gateway.
+* `local_gateway_virtual_interface_group_id` - Identifier of the EC2 Local Gateway Virtual Interface Group.
+* `outpost_lag_id` - Identifier of the Outpost LAG.
 * `peer_address` - Peer address.
 * `peer_bgp_asn` - Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the peer.
 * `vlan` - Virtual Local Area Network.

@@ -7,7 +7,6 @@ package s3vectors
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
@@ -30,10 +29,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newIndexResource,
 			TypeName: "aws_s3vectors_index",
 			Name:     "Index",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "index_arn",
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("index_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("index_arn"),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -43,10 +40,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newVectorBucketResource,
 			TypeName: "aws_s3vectors_vector_bucket",
 			Name:     "Vector Bucket",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "vector_bucket_arn",
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("vector_bucket_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("vector_bucket_arn"),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -56,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newVectorBucketPolicyResource,
 			TypeName: "aws_s3vectors_vector_bucket_policy",
 			Name:     "Vector Bucket Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("vector_bucket_arn"),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -79,7 +74,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3vectors.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*s3vectors.Options){
 		s3vectors.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

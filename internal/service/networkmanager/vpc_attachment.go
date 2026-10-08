@@ -110,100 +110,102 @@ func resourceVPCAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attachment_policy_rule_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"attachment_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"edge_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"appliance_mode_support": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"dns_support": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"ipv6_support": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"security_group_referencing_support": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attachment_policy_rule_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"attachment_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"edge_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"appliance_mode_support": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"dns_support": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"ipv6_support": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"security_group_referencing_support": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"routing_policy_label": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"segment_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subnet_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"routing_policy_label": {
 					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"segment_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subnet_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+			}
 		},
 	}
 }

@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -99,6 +100,14 @@ func TestAccFSxLustreFileSystem_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -480,9 +489,48 @@ func TestAccFSxLustreFileSystem_fileSystemTypeVersion(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_typeVersion(rName, "2.12"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, t, resourceName, &filesystem2),
-					testAccCheckLustreFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "file_system_type_version", "2.12"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_fileSystemTypeVersion_downgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_typeVersion(rName, "2.12"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, t, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "file_system_type_version", "2.12"),
+				),
+			},
+			{
+				Config: testAccLustreFileSystemConfig_typeVersion(rName, "2.10"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, t, resourceName, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "file_system_type_version", "2.10"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})
@@ -929,6 +977,40 @@ func TestAccFSxLustreFileSystem_intelligentTiering(t *testing.T) {
 					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_dataReadCacheConfiguration_proportional(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, t, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.0.sizing_mode", "PROPORTIONAL_TO_THROUGHPUT_CAPACITY"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_read_cache_configuration.0.size"),
+				),
+			},
+			{
+				// Verify no perpetual diff on subsequent plan
+				Config: testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
 				},
 			},
 		},
@@ -2153,4 +2235,24 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 }
 `, throughputCapacity, cacheSize))
+}
+
+func testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), `
+resource "aws_fsx_lustre_file_system" "test" {
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "PERSISTENT_2"
+  storage_type        = "INTELLIGENT_TIERING"
+  throughput_capacity = 4000
+
+  metadata_configuration {
+    mode = "USER_PROVISIONED"
+    iops = 6000
+  }
+
+  data_read_cache_configuration {
+    sizing_mode = "PROPORTIONAL_TO_THROUGHPUT_CAPACITY"
+  }
+}
+`)
 }

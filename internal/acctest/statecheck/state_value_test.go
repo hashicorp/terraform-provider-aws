@@ -43,7 +43,7 @@ func TestStateValue_ValuesSame(t *testing.T) { //nolint:paralleltest // false po
 }
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
+					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.ValueCheck()),
 				},
 			},
 		},
@@ -77,7 +77,7 @@ func TestStateValue_ValuesNotSame(t *testing.T) { //nolint:paralleltest // false
 }
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
+					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.ValueCheck()),
 				},
 				ExpectError: regexache.MustCompile(`expected value same for StateValue check, got: not same`),
 			},
@@ -103,7 +103,7 @@ func TestStateValue_NotInitialized(t *testing.T) { //nolint:paralleltest // fals
 }
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
+					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.ValueCheck()),
 				},
 				ExpectError: regexache.MustCompile(`state value has not been set`),
 			},

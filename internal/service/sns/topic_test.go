@@ -114,6 +114,14 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -579,6 +587,41 @@ func TestAccSNSTopic_fifoWithHighThroughput(t *testing.T) {
 					testAccCheckTopicExists(ctx, t, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "MessageGroup"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSNSTopic_maximumMessageSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_maximumMessageSize(rName, 1024),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "maximum_message_size", "1024"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicConfig_maximumMessageSize(rName, 262144),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "maximum_message_size", "262144"),
 				),
 			},
 		},
@@ -1179,6 +1222,15 @@ resource "aws_sns_topic" "test" {
   fifo_throughput_scope = "%[2]s"
 }
 `, rName, throughputScope)
+}
+
+func testAccTopicConfig_maximumMessageSize(rName string, maximumMessageSize int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name                 = %[1]q
+  maximum_message_size = %[2]d
+}
+`, rName, maximumMessageSize)
 }
 
 func testAccTopicConfig_expectContentBasedDeduplicationError(rName string) string {

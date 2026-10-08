@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_spot_instance_request: Change `network_interface.network_card_index` to Computed
-```

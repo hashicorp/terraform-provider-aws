@@ -1014,8 +1014,7 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 		return false
 	}
 
-	fn := func(ctx context.Context) {}
-	ftyp := reflect.TypeOf(fn)
+	ftyp := reflect.TypeFor[func(ctx context.Context)]()
 
 	return typ.In(0) == ftyp.In(0)
 }

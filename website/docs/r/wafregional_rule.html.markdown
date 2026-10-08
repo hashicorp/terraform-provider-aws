@@ -44,9 +44,7 @@ This resource supports the following arguments:
 * `predicate` - (Optional) The objects to include in a rule (documented below).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Fields
-
-### `predicate`
+### predicate
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
 
@@ -55,8 +53,6 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 * `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`
 * `data_id` - (Required) The unique identifier of a predicate, such as the ID of a `ByteMatchSet` or `IPSet`.
 * `negated` - (Required) Whether to use the settings or the negated settings that you specified in the objects.
-
-## Remarks
 
 ## Attribute Reference
 

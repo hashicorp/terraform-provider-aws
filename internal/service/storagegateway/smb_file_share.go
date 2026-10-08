@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -48,165 +48,167 @@ func resourceSMBFileShare() *schema.Resource {
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_based_enumeration": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"admin_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"audit_destination_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"authentication": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      authenticationActiveDirectory,
-				ValidateFunc: validation.StringInSlice(authentication_Values(), false),
-			},
-			"bucket_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"vpc_endpoint_dns_name"},
-			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(300, 2592000),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_based_enumeration": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"admin_user_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"audit_destination_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"authentication": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      authenticationActiveDirectory,
+					ValidateFunc: validation.StringInSlice(authentication_Values(), false),
+				},
+				"bucket_region": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"vpc_endpoint_dns_name"},
+				},
+				"cache_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_stale_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(300, 2592000),
+							},
 						},
 					},
 				},
-			},
-			"case_sensitivity": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CaseSensitivityClientSpecified,
-				ValidateDiagFunc: enum.Validate[awstypes.CaseSensitivity](),
-			},
-			"default_storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      defaultStorageClassS3Standard,
-				ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
-			},
-			"fileshare_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_share_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"guess_mime_type_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"invalid_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"kms_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-				RequiredWith: []string{"kms_encrypted"},
-			},
-			"location_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"object_acl": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ObjectACLPrivate,
-				ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
-			},
-			"oplocks_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"notification_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
-					validation.StringLenBetween(2, 100),
-				),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"requester_pays": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"smb_acl_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"valid_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_endpoint_dns_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				"case_sensitivity": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.CaseSensitivityClientSpecified,
+					ValidateDiagFunc: enum.Validate[awstypes.CaseSensitivity](),
+				},
+				"default_storage_class": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      defaultStorageClassS3Standard,
+					ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
+				},
+				"fileshare_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"file_share_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"guess_mime_type_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"invalid_user_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"kms_encrypted": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					RequiredWith: []string{"kms_encrypted"},
+				},
+				"location_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"object_acl": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ObjectACLPrivate,
+					ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
+				},
+				"oplocks_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"notification_policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "{}",
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+						validation.StringLenBetween(2, 100),
+					),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"requester_pays": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"smb_acl_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"valid_user_list": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"vpc_endpoint_dns_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -217,7 +219,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
-		ClientToken:            aws.String(sdkid.UniqueId()),
+		ClientToken:            aws.String(create.UniqueId(ctx)),
 		GatewayARN:             aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),

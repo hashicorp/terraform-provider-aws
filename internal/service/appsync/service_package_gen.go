@@ -7,7 +7,6 @@ package appsync
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
@@ -30,25 +29,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAPIResource,
 			TypeName: "aws_appsync_api",
 			Name:     "API",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "api_arn",
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("api_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newChannelNamespaceResource,
 			TypeName: "aws_appsync_channel_namespace",
 			Name:     "Channel Namespace",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "channel_namespace_arn",
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("channel_namespace_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newSourceAPIAssociationResource,
 			TypeName: "aws_appsync_source_api_association",
 			Name:     "Source API Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -63,58 +58,56 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAPICache,
 			TypeName: "aws_appsync_api_cache",
 			Name:     "API Cache",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceAPIKey,
 			TypeName: "aws_appsync_api_key",
 			Name:     "API Key",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDataSource,
 			TypeName: "aws_appsync_datasource",
 			Name:     "Data Source",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDomainName,
 			TypeName: "aws_appsync_domain_name",
 			Name:     "Domain Name",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDomainNameAPIAssociation,
 			TypeName: "aws_appsync_domain_name_api_association",
 			Name:     "Domain Name API Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceFunction,
 			TypeName: "aws_appsync_function",
 			Name:     "Function",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceGraphQLAPI,
 			TypeName: "aws_appsync_graphql_api",
 			Name:     "GraphQL API",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceResolver,
 			TypeName: "aws_appsync_resolver",
 			Name:     "Resolver",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceType,
 			TypeName: "aws_appsync_type",
 			Name:     "Type",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -125,7 +118,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appsync.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*appsync.Options){
 		appsync.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

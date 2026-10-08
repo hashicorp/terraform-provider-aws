@@ -12,6 +12,8 @@ Manages an EKS Capability for an EKS cluster.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_eks_capability" "example" {
   cluster_name              = aws_eks_cluster.example.name
@@ -32,6 +34,43 @@ resource "aws_eks_capability" "example" {
   tags = {
     Name = "example-capability"
   }
+}
+```
+
+### Controller Log Delivery
+
+Capability controllers run in AWS-managed infrastructure outside your cluster, and their logs are exposed through [CloudWatch Vended Logs](https://docs.aws.amazon.com/eks/latest/userguide/capabilities-controller-logs.html) rather than the EKS API. Configure delivery with the [`aws_cloudwatch_log_delivery_source`](/docs/providers/aws/r/cloudwatch_log_delivery_source.html), [`aws_cloudwatch_log_delivery_destination`](/docs/providers/aws/r/cloudwatch_log_delivery_destination.html), and [`aws_cloudwatch_log_delivery`](/docs/providers/aws/r/cloudwatch_log_delivery.html) resources, using the capability ARN as the source. Valid log types are `EKS_CAPABILITY_ACK_LOGS` (ACK), `EKS_CAPABILITY_KRO_LOGS` (kro), and `EKS_CAPABILITY_ARGOCD_APPLICATION_LOGS`, `EKS_CAPABILITY_ARGOCD_APPLICATIONSET_LOGS`, `EKS_CAPABILITY_ARGOCD_COMMITSERVER_LOGS`, `EKS_CAPABILITY_ARGOCD_REPOSERVER_LOGS`, and `EKS_CAPABILITY_ARGOCD_SERVER_LOGS` (Argo CD, one per controller component).
+
+```terraform
+resource "aws_eks_capability" "example" {
+  cluster_name              = aws_eks_cluster.example.name
+  capability_name           = "ack"
+  type                      = "ACK"
+  role_arn                  = aws_iam_role.example.arn
+  delete_propagation_policy = "RETAIN"
+}
+
+resource "aws_cloudwatch_log_group" "ack" {
+  name = "/aws/eks/example/capabilities/ack"
+}
+
+resource "aws_cloudwatch_log_delivery_source" "ack" {
+  name         = "eks-capability-ack-logs"
+  log_type     = "EKS_CAPABILITY_ACK_LOGS"
+  resource_arn = aws_eks_capability.example.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "ack" {
+  name = "eks-capability-ack-logs"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.ack.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "ack" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.ack.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.ack.arn
 }
 ```
 
@@ -109,17 +148,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_eks_capability.example
-  id = "my-cluster,my-capability"
+  identity = {
+    cluster_name    = "example-cluster"
+    capability_name = "example-capability"
+  }
+}
+
+resource "aws_eks_capability" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `capability_name` (String) Name of the capability.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Capabilities using `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_eks_capability.example
+  id = "example-cluster,example-capability"
+}
+```
+
+Using `terraform import`, import Capabilities using `cluster_name` and `capability_name` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_eks_capability.example my-cluster,my-capability
+% terraform import aws_eks_capability.example example-cluster,example-capability
 ```

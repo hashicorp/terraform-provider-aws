@@ -14,7 +14,7 @@ import (
 
 func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_identitystore_users.test"
 	userResourceName := "aws_identitystore_user.test"
@@ -37,6 +37,7 @@ func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.name.0.family_name", userResourceName, "name.0.family_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.name.0.given_name", userResourceName, "name.0.given_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.emails.0.value", userResourceName, "emails.0.value"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.user_status", userResourceName, "user_status"),
 				),
 			},
 		},

@@ -32,56 +32,58 @@ func ResourcePlan() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"contact_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStage: {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"duration_in_minutes": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrTarget: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_target_info": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"contact_channel_id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"retry_interval_in_minutes": {
-													Type:     schema.TypeInt,
-													Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"contact_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStage: {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"duration_in_minutes": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrTarget: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"channel_target_info": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"contact_channel_id": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"retry_interval_in_minutes": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
 												},
 											},
 										},
-									},
-									"contact_target_info": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"is_essential": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"contact_id": {
-													Type:     schema.TypeString,
-													Optional: true,
+										"contact_target_info": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"is_essential": {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													"contact_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
@@ -91,7 +93,7 @@ func ResourcePlan() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

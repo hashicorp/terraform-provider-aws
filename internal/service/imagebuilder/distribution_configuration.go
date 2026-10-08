@@ -15,10 +15,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -40,309 +40,311 @@ func resourceDistributionConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_updated": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"distribution": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ami_distribution_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ami_tags": tftags.TagsSchema(),
-									names.AttrDescription: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									"launch_permission": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"organization_arns": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_updated": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"distribution": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ami_distribution_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ami_tags": tftags.TagsSchema(),
+										names.AttrDescription: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"launch_permission": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"organization_arns": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidARN,
+														},
+													},
+													"organizational_unit_arns": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidARN,
+														},
+													},
+													"user_groups": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(1, 1024),
+														},
+													},
+													"user_ids": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidAccountID,
+														},
 													},
 												},
-												"organizational_unit_arns": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
+											},
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 127),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\.\s:{}-]+[0-9A-Za-z_}-]$`), "must be a valid output AMI name"),
+											),
+										},
+										"target_account_ids": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidAccountID,
+											},
+										},
+									},
+								},
+							},
+							"container_distribution_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_tags": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 1024),
+											},
+										},
+										names.AttrDescription: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"target_repository": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrRepositoryName: {
 														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
+													"service": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
 													},
 												},
-												"user_groups": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
+											},
+										},
+									},
+								},
+							},
+							"fast_launch_configuration": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 1000,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										names.AttrLaunchTemplate: {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"launch_template_id": {
 														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidLaunchTemplateID,
+													},
+													"launch_template_name": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidLaunchTemplateName,
+													},
+													"launch_template_version": {
+														Type:         schema.TypeString,
+														Optional:     true,
 														ValidateFunc: validation.StringLenBetween(1, 1024),
 													},
 												},
-												"user_ids": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidAccountID,
+											},
+										},
+										"max_parallel_launches": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      0,
+											ValidateFunc: validation.IntBetween(1, 10000),
+										},
+										"snapshot_configuration": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_resource_count": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntBetween(1, 10000),
 													},
 												},
 											},
 										},
 									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 127),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\.\s:{}-]+[0-9A-Za-z_}-]$`), "must be a valid output AMI name"),
-										),
-									},
-									"target_account_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
+								},
+							},
+							"launch_template_configuration": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 100,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
 											Type:         schema.TypeString,
+											Optional:     true,
 											ValidateFunc: verify.ValidAccountID,
+										},
+										"default": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"launch_template_id": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidLaunchTemplateID,
 										},
 									},
 								},
 							},
-						},
-						"container_distribution_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_tags": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
+							"license_configuration_arns": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+							names.AttrRegion: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"s3_export_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"disk_image_format": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
+										},
+										"role_name": {
 											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										names.AttrS3Bucket: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"s3_prefix": {
+											Type:         schema.TypeString,
+											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 1024),
 										},
 									},
-									names.AttrDescription: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									"target_repository": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrRepositoryName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-												"service": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
-												},
-											},
+								},
+							},
+							"ssm_parameter_configuration": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ami_account_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidAccountID,
 										},
-									},
-								},
-							},
-						},
-						"fast_launch_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 1000,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									names.AttrLaunchTemplate: {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidLaunchTemplateID,
-												},
-												"launch_template_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidLaunchTemplateName,
-												},
-												"launch_template_version": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
+										"data_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SsmParameterDataType](),
 										},
-									},
-									"max_parallel_launches": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0,
-										ValidateFunc: validation.IntBetween(1, 10000),
-									},
-									"snapshot_configuration": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_resource_count": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 10000),
-												},
-											},
+										"parameter_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1011),
 										},
-									},
-								},
-							},
-						},
-						"launch_template_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 100,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									"default": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"launch_template_id": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidLaunchTemplateID,
-									},
-								},
-							},
-						},
-						"license_configuration_arns": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidARN,
-							},
-						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-						},
-						"s3_export_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"disk_image_format": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
-									},
-									"role_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									names.AttrS3Bucket: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									"s3_prefix": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-								},
-							},
-						},
-						"ssm_parameter_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ami_account_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									"data_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.SsmParameterDataType](),
-									},
-									"parameter_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1011),
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 126),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -352,7 +354,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 

@@ -113,6 +113,8 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	// Additional fields.
 	input.IfMatch = etag
+	// Manually set Value to avoid JSON encoding by AutoFlEx.
+	input.Value = data.Value.ValueStringPointer()
 
 	output, err := conn.PutKey(ctx, input)
 
@@ -159,6 +161,11 @@ func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, re
 		return
 	}
 
+	// Manually set Value to avoid JSON decoding by AutoFlEx.
+	if output.Value != nil {
+		data.Value = types.StringValue(*output.Value)
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -200,6 +207,8 @@ func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest
 
 		// Additional fields.
 		input.IfMatch = etag
+		// Manually set Value to avoid JSON encoding by AutoFlEx.
+		input.Value = new.Value.ValueStringPointer()
 
 		output, err := conn.PutKey(ctx, input)
 

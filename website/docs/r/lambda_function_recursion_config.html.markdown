@@ -42,7 +42,7 @@ resource "aws_lambda_function" "production_processor" {
   function_name = "production-data-processor"
   role          = aws_iam_role.lambda_role.arn
   handler       = "app.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   tags = {
     Environment = "production"

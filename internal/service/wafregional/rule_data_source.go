@@ -25,11 +25,13 @@ func dataSourceRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

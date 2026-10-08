@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_dx_location
-```
-
-```release-note:new-data-source
-aws_dx_locations
-```

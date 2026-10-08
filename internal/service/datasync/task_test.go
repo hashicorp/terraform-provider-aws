@@ -96,6 +96,14 @@ func TestAccDataSyncTask_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -140,7 +148,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				// Disable the schedule by setting status to DISABLED
 				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusDisabled)),
@@ -150,7 +158,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				// Re-enable the schedule by setting status to ENABLED
 				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
@@ -628,7 +636,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

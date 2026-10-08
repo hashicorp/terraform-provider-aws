@@ -46,92 +46,94 @@ func resourceReplicationTask() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cdc_start_position": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"cdc_start_time"},
-			},
-			"cdc_start_time": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidStringDateOrPositiveInt,
-				ConflictsWith: []string{"cdc_start_position"},
-			},
-			"migration_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
-			},
-			"replication_instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"replication_task_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_task_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validReplicationTaskID,
-			},
-			// "replication_task_settings" is equivalent to "replication_settings" on "aws_dms_replication_config"
-			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_config"
-			"replication_task_settings": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringIsJSON),
-					validateReplicationSettings,
-				),
-				DiffSuppressFunc:      suppressEquivalentTaskSettings,
-				DiffSuppressOnRefresh: true,
-			},
-			"resource_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 31),
-					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
-			},
-			"source_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"start_replication_task": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"table_mappings": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cdc_start_position": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"cdc_start_time"},
+				},
+				"cdc_start_time": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidStringDateOrPositiveInt,
+					ConflictsWith: []string{"cdc_start_position"},
+				},
+				"migration_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
+				},
+				"replication_instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"replication_task_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_task_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validReplicationTaskID,
+				},
+				// "replication_task_settings" is equivalent to "replication_settings" on "aws_dms_replication_config"
+				// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_config"
+				"replication_task_settings": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringIsJSON),
+						validateReplicationSettings,
+					),
+					DiffSuppressFunc:      suppressEquivalentTaskSettings,
+					DiffSuppressOnRefresh: true,
+				},
+				"resource_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 31),
+						validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+					),
+				},
+				"source_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"start_replication_task": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"table_mappings": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

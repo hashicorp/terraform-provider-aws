@@ -20,7 +20,7 @@ func TestAccVPCEndpointServicePrivateDNSVerification_basic(t *testing.T) {
 	}
 
 	rName := acctest.RandomWithPrefix(t, "tfacctest") // 32 character limit
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_vpc_endpoint_service_private_dns_verification.test"
 	endpointServiceResourceName := "aws_vpc_endpoint_service.test"
 
@@ -50,7 +50,7 @@ func TestAccVPCEndpointServicePrivateDNSVerification_waitForVerification(t *test
 	}
 
 	rName := acctest.RandomWithPrefix(t, "tfacctest") // 32 character limit
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

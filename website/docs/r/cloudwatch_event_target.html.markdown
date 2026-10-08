@@ -58,8 +58,11 @@ resource "aws_cloudwatch_event_rule" "console" {
 }
 
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "terraform-kinesis-test"
-  shard_count = 1
+  name = "terraform-kinesis-test"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 ```
 
@@ -245,7 +248,7 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = "${aws_api_gateway_stage.example.execution_arn}/GET"
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   http_target {
     query_string_parameters = {
@@ -331,7 +334,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   input_transformer {
     input_paths = {
@@ -357,7 +360,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   input_transformer {
     input_paths = {
@@ -465,7 +468,7 @@ resource "aws_cloudwatch_event_rule" "invoke_appsync_mutation" {
 
 resource "aws_cloudwatch_event_target" "invoke_appsync_mutation" {
   arn      = replace(aws_appsync_graphql_api.graphql-api.arn, "apis", "endpoints/graphql-api")
-  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.id
+  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.name
   role_arn = aws_iam_role.appsync_mutation_role.arn
 
   input_transformer {
@@ -553,7 +556,7 @@ resource "aws_appsync_graphql_api" "graphql-api" {
 
 The following arguments are required:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the target.
+* `arn` - (Required) ARN of the target.
 * `rule` - (Required) The name of the rule you want to add targets to.
 
 The following arguments are optional:
@@ -571,7 +574,7 @@ The following arguments are optional:
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
+* `role_arn` - (Optional) ARN of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.

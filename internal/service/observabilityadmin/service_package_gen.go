@@ -7,7 +7,8 @@ package observabilityadmin
 
 import (
 	"context"
-	"unique"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
@@ -30,25 +31,105 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCentralizationRuleForOrganizationResource,
 			TypeName: "aws_observabilityadmin_centralization_rule_for_organization",
 			Name:     "Centralization Rule For Organization",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "rule_arn",
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  newTelemetryPipelineResource,
-			TypeName: "aws_observabilityadmin_telemetry_pipeline",
-			Name:     "Telemetry Pipeline",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Factory:  newS3TableIntegrationResource,
+			TypeName: "aws_observabilityadmin_s3_table_integration",
+			Name:     "S3 Table Integration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newTelemetryEnrichmentResource,
+			TypeName: "aws_observabilityadmin_telemetry_enrichment",
+			Name:     "Telemetry Enrichment",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTelemetryEvaluationResource,
+			TypeName: "aws_observabilityadmin_telemetry_evaluation",
+			Name:     "Telemetry Evaluation",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTelemetryEvaluationForOrganizationResource,
+			TypeName: "aws_observabilityadmin_telemetry_evaluation_for_organization",
+			Name:     "Telemetry Evaluation For Organization",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTelemetryPipelineResource,
+			TypeName: "aws_observabilityadmin_telemetry_pipeline",
+			Name:     "Telemetry Pipeline",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTelemetryRuleResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule",
+			Name:     "Telemetry Rule",
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newTelemetryRuleResourceAsListResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule",
+			Name:     "Telemetry Rule",
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+		},
+		{
+			Factory:  newTelemetryRuleForOrganizationResourceAsListResource,
+			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
+			Name:     "Telemetry Rule For Organization",
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -65,7 +146,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*observabilityadmin.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*observabilityadmin.Options){
 		observabilityadmin.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_s3_bucket_replication_configuration: Replication configs sometimes need more than a second or two. This resolves a race condition and adds retry logic when reading them.
-```

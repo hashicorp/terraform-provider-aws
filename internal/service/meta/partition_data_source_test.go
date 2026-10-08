@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaPartitionDataSource_basic(t *testing.T) {
@@ -24,6 +25,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPartitionDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, "partition"),
 					resource.TestCheckResourceAttrWith(dataSourceName, "partition", func(value string) error {
 						expected := acctest.ProviderMeta(ctx, t).Partition(ctx)
 						if value != expected {

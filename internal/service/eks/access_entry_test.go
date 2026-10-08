@@ -8,21 +8,33 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func checkAccessEntryARN(clusterName, roleName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("eks", regexache.MustCompile(`access-entry/`+clusterName+`/role/`+inttypes.CanonicalAccountIDPatternNoAnchors+`/`+roleName+`/.+`))
+}
+
+func checkAccessEntryARNAlternateRegion(clusterName, roleName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("eks", regexache.MustCompile(`access-entry/`+clusterName+`/role/`+inttypes.CanonicalAccountIDPatternNoAnchors+`/`+roleName+`/.+`))
+}
+
 func TestAccEKSAccessEntry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -37,19 +49,32 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessEntryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AccessEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
-					resource.TestCheckResourceAttrSet(resourceName, "access_entry_arn"),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "0"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "modified_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_entry_arn"), checkAccessEntryARN(rName, rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kubernetes_groups"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("modified_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("STANDARD")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrUserName), knownvalue.NotNull()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -60,10 +85,6 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 
 func TestAccEKSAccessEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -78,12 +99,23 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessEntryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AccessEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceAccessEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -91,10 +123,6 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 
 func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -110,12 +138,23 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessEntryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AccessEntry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(clusterResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(clusterResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -123,10 +162,6 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 
 func TestAccEKSAccessEntry_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -176,10 +211,6 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 
 func TestAccEKSAccessEntry_type(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -213,10 +244,6 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 
 func TestAccEKSAccessEntry_username(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -261,10 +288,6 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 
 func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
@@ -410,19 +433,6 @@ resource "aws_eks_cluster" "test" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
-}
-`, rName))
-}
-
-func testAccAccessEntryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-}
-
-resource "aws_eks_access_entry" "test" {
-  cluster_name  = aws_eks_cluster.test.name
-  principal_arn = aws_iam_user.test.arn
 }
 `, rName))
 }

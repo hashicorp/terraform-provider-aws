@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -88,7 +88,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 
 	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	input := amp.PutResourcePolicyInput{
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		PolicyDocument: fwflex.StringFromFramework(ctx, data.PolicyDocument),
 		WorkspaceId:    aws.String(workspaceID),
 	}
@@ -163,7 +163,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, request resource.Up
 	if !new.PolicyDocument.Equal(old.PolicyDocument) || !new.RevisionID.Equal(old.RevisionID) {
 		workspaceID := fwflex.StringValueFromFramework(ctx, new.WorkspaceID)
 		input := amp.PutResourcePolicyInput{
-			ClientToken:    aws.String(sdkid.UniqueId()),
+			ClientToken:    aws.String(create.UniqueId(ctx)),
 			PolicyDocument: fwflex.StringFromFramework(ctx, new.PolicyDocument),
 			WorkspaceId:    aws.String(workspaceID),
 		}
@@ -201,7 +201,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	input := amp.DeleteResourcePolicyInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		WorkspaceId: aws.String(workspaceID),
 	}
 

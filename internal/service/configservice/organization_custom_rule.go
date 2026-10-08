@@ -28,6 +28,11 @@ import (
 )
 
 // @SDKResource("aws_config_organization_custom_rule", name="Organization Custom Rule")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConfigRule")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganizationCustomRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCustomRuleCreate,
@@ -35,95 +40,93 @@ func resourceOrganizationCustomRule() *schema.Resource {
 		UpdateWithoutTimeout: resourceOrganizationCustomRuleUpdate,
 		DeleteWithoutTimeout: resourceOrganizationCustomRuleDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"excluded_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"input_parameters": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringIsJSON,
-				),
-			},
-			"lambda_function_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"maximum_execution_frequency": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"resource_id_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 768),
-			},
-			"resource_types_scope": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Schema{
+				names.AttrDescription: {
 					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 256),
 				},
-			},
-			"tag_key_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"tag_value_scope": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"trigger_types": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 3,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.OrganizationConfigRuleTriggerType](),
+				"excluded_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
+				"input_parameters": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringIsJSON,
+					),
+				},
+				"lambda_function_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"maximum_execution_frequency": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"resource_id_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 768),
+				},
+				"resource_types_scope": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(0, 256),
+					},
+				},
+				"tag_key_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"tag_value_scope": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"trigger_types": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 3,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.OrganizationConfigRuleTriggerType](),
+					},
+				},
+			}
 		},
 	}
 }
@@ -133,7 +136,7 @@ func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationCustomRuleMetadata: &types.OrganizationCustomRuleMetadata{
 			LambdaFunctionArn:                  aws.String(d.Get("lambda_function_arn").(string)),
@@ -174,7 +177,7 @@ func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutOrganizationConfigRule(ctx, input)
+		return conn.PutOrganizationConfigRule(ctx, &input)
 	})
 
 	if err != nil {
@@ -227,7 +230,7 @@ func resourceOrganizationCustomRuleUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.PutOrganizationConfigRuleInput{
+	input := configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
 		OrganizationCustomRuleMetadata: &types.OrganizationCustomRuleMetadata{
 			LambdaFunctionArn:                  aws.String(d.Get("lambda_function_arn").(string)),
@@ -267,7 +270,7 @@ func resourceOrganizationCustomRuleUpdate(ctx context.Context, d *schema.Resourc
 		input.OrganizationCustomRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(ctx, input)
+	_, err := conn.PutOrganizationConfigRule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating ConfigService Organization Custom Rule (%s): %s", d.Id(), err)
@@ -284,14 +287,15 @@ func resourceOrganizationCustomRuleDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Rule: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Rule: %s", d.Id())
+	input := configservice.DeleteOrganizationConfigRuleInput{
+		OrganizationConfigRuleName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
-			OrganizationConfigRuleName: aws.String(d.Id()),
-		})
+		return conn.DeleteOrganizationConfigRule(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {

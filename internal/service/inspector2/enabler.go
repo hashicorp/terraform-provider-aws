@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -54,25 +53,27 @@ func ResourceEnabler() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account_ids": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_ids": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
-			"resource_types": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.ResourceScanType](),
+				"resource_types": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.ResourceScanType](),
+					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -110,7 +111,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	in := &inspector2.EnableInput{
 		AccountIds:    accountIDs,
 		ResourceTypes: typeEnable,
-		ClientToken:   aws.String(sdkid.UniqueId()),
+		ClientToken:   aws.String(create.UniqueId(ctx)),
 	}
 
 	id := enablerID(accountIDs, typeEnable)
@@ -275,7 +276,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			in := &inspector2.EnableInput{
 				AccountIds:    acctEnable,
 				ResourceTypes: typeEnable,
-				ClientToken:   aws.String(sdkid.UniqueId()),
+				ClientToken:   aws.String(create.UniqueId(ctx)),
 			}
 
 			out, err := conn.Enable(ctx, in)

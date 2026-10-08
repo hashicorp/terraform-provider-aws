@@ -110,12 +110,15 @@ func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[r
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
-		if response.State.Raw.IsNull() {
-			break
-		}
 		identity := response.Identity
 		if identity == nil {
 			break
+		}
+
+		// If state is null (resource removed), populate identity from request state
+		stateToRead := response.State
+		if response.State.Raw.IsNull() {
+			stateToRead = opts.request.State
 		}
 
 		for _, att := range r.attributes {
@@ -134,7 +137,7 @@ func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[r
 
 			default:
 				var attrVal attr.Value
-				opts.response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+				opts.response.Diagnostics.Append(stateToRead.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
 				if opts.response.Diagnostics.HasError() {
 					return
 				}
@@ -248,14 +251,19 @@ func identityIsFullyNull(ctx context.Context, identity *tfsdk.ResourceIdentity, 
 		return true
 	}
 
-	for _, attr := range attributes {
-		var attrVal types.String
-		if diags := identity.GetAttribute(ctx, path.Root(attr.Name()), &attrVal); diags.HasError() {
+	for _, att := range attributes {
+		var attrVal attr.Value
+		if diags := identity.GetAttribute(ctx, path.Root(att.Name()), &attrVal); diags.HasError() {
 			return false
 		}
-		if !attrVal.IsNull() && attrVal.ValueString() != "" {
-			return false
+		if attrVal == nil || attrVal.IsNull() {
+			continue
 		}
+		// Preserve the historical behavior of treating an empty string as null.
+		if s, ok := attrVal.(types.String); ok && s.ValueString() == "" {
+			continue
+		}
+		return false
 	}
 
 	return true

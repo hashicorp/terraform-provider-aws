@@ -10,22 +10,7 @@ description: |-
 
 Manages an Amazon OpenSearch Domain.
 
-## Elasticsearch vs. OpenSearch
-
-Amazon OpenSearch Service is the successor to Amazon Elasticsearch Service and supports OpenSearch and legacy Elasticsearch OSS (up to 7.10, the final open source version of the software).
-
-OpenSearch Domain configurations are similar in many ways to Elasticsearch Domain configurations. However, there are important differences including these:
-
-* OpenSearch has `engine_version` while Elasticsearch has `elasticsearch_version`
-* Versions are specified differently - _e.g._, `Elasticsearch_7.10` with OpenSearch vs. `7.10` for Elasticsearch.
-* `instance_type` argument values end in `search` for OpenSearch vs. `elasticsearch` for Elasticsearch (_e.g._, `t2.micro.search` vs. `t2.micro.elasticsearch`).
-* The AWS-managed service-linked role for OpenSearch is called `AWSServiceRoleForAmazonOpenSearchService` instead of `AWSServiceRoleForAmazonElasticsearchService` for Elasticsearch.
-
-There are also some potentially unexpected similarities in configurations:
-
-* ARNs for both are prefaced with `arn:aws:es:`.
-* Both OpenSearch and Elasticsearch use assume role policies that refer to the `Principal` `Service` as `es.amazonaws.com`.
-* IAM policy actions, such as those you will find in `access_policies`, are prefaced with `es:` for both.
+Amazon OpenSearch Service is the successor to Amazon Elasticsearch Service and supports OpenSearch and legacy Elasticsearch OSS (up to 7.10, the final open source version of the software). Notable differences from Elasticsearch: OpenSearch uses `engine_version` (vs `elasticsearch_version`), versions are specified as `Elasticsearch_7.10` (vs `7.10`), `instance_type` values end in `search` (vs `elasticsearch`), and the service-linked role is `AWSServiceRoleForAmazonOpenSearchService`. Similarities: ARNs use `arn:aws:es:`, assume role policies reference `es.amazonaws.com`, and IAM policy actions are prefixed with `es:`.
 
 ## Example Usage
 
@@ -328,6 +313,7 @@ The following arguments are optional:
 * `auto_tune_options` - (Optional) Configuration block for the Auto-Tune options of the domain. Detailed below.
 * `cluster_config` - (Optional) Configuration block for the cluster of the domain. Detailed below.
 * `cognito_options` - (Optional) Configuration block for authenticating dashboard with Cognito. Detailed below.
+* `deployment_strategy_options` - (Optional) Configuration block for the deployment strategy options of the domain. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
@@ -355,7 +341,8 @@ The following arguments are optional:
 #### jwt_options
 
 * `enabled` - (Optional) Whether JWT authentication is enabled.
-* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
+* `jwks_url` - (Optional) URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures. This argument can be specified only with OpenSearch versions 3.3 and later. At least one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`.
+* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures. At least one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`. If both `jwks_url` and `public_key` are specified, `public_key` is ignored.
 * `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
 * `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 
@@ -398,7 +385,7 @@ The following arguments are optional:
 * `duration` - (Required) Configuration block for the duration of the Auto-Tune maintenance window. Detailed below.
 * `cron_expression_for_recurrence` - (Required) A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
 
-##### duration
+#### duration
 
 * `value` - (Required) An integer specifying the value of the duration of an Auto-Tune maintenance window.
 * `unit` - (Required) Unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `HOURS`.
@@ -415,7 +402,7 @@ The following arguments are optional:
 * `node_options` - (Optional) List of node options for the domain.
 * `warm_count` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warm_enabled` - (Optional) Whether to enable warm storage.
-* `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
+* `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 
@@ -448,6 +435,10 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use.
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use.
+
+### deployment_strategy_options
+
+* `deployment_strategy` - (Optional) Deployment strategy for the domain. Valid values: `Default` and `CapacityOptimized`.
 
 ### domain_endpoint_options
 
@@ -540,9 +531,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `90m`)
+* `create` - (Default `120m`)
 * `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `delete` - (Default `120m`)
 
 ## Import
 
