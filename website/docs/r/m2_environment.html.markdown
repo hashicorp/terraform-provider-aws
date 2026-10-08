@@ -57,7 +57,7 @@ resource "aws_m2_environment" "test" {
 }
 ```
 
-### FSX Filesystem
+### FSx Filesystem
 
 ```terraform
 resource "aws_m2_environment" "test" {
@@ -93,29 +93,29 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) ARN of the KMS key to use for the Environment.
 * `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime environment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
 * `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
-* `security_group_ids` - (Optional) List of security group ids.
-* `subnet_ids` - (Optional) List of subnet ids to deploy environment to.
+* `security_group_ids` - (Optional) List of security group IDs.
+* `subnet_ids` - (Optional) List of subnet IDs to deploy environment to.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### storage_configuration
 
-#### efs
+#### `efs`
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
 
 * `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
-* `file_system_id` - (Required) Id of the EFS filesystem to mount.
+* `file_system_id` - (Required) ID of the EFS filesystem to mount.
 
-#### fsx
+#### `fsx`
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
 
 * `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
-* `file_system_id` - (Required) Id of the FSX filesystem to mount.
+* `file_system_id` - (Required) ID of the FSx filesystem to mount.
 
 ### high_availability_config
 
@@ -130,8 +130,8 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Environment.
-* `id` - The id of the Environment.
-* `environment_id` - The id of the Environment.
+* `id` - The ID of the Environment.
+* `environment_id` - The ID of the Environment.
 * `load_balancer_arn` - ARN of the load balancer created by the Environment.
 
 ## Timeouts

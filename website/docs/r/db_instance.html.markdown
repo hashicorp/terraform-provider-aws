@@ -325,7 +325,7 @@ This resource supports the following arguments:
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `customer_owned_ip_enabled` - (Optional) Whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
 * `database_insights_mode` - (Optional) Mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
-* `db_name` - (Optional) Name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
+* `db_name` - (Optional) Name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle DB name, it needs to be in all upper case. Cannot be specified for a replica.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will be created in the VPC associated with the DB subnet group. If unspecified, will be created in the `default` Subnet Group. When working with read replicas created in the same region, defaults to the Subnet Group Name of the source DB. When working with read replicas created in a different region, defaults to the `default` Subnet Group. See [DBSubnetGroupName in API action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html) for additional read replica constraints.
 * `dedicated_log_volume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `delete_automated_backups` - (Optional) Whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
@@ -403,7 +403,7 @@ The `s3_import` block supports the following arguments:
 * `bucket_name` - (Required) Bucket name where your backup is stored.
 * `bucket_prefix` - (Optional) Can be blank, but is the path to your backup.
 * `ingestion_role` - (Required) Role applied to load the data.
-* `source_engine` - (Required, as of Feb 2018 only 'mysql' supported) Source engine for the backup.
+* `source_engine` - (Required, as of Feb 2018 only `mysql` supported) Source engine for the backup.
 * `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup.
 
 ### `blue_green_update` Block

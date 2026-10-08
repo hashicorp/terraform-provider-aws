@@ -112,7 +112,7 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
--> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
+-> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet IDs.
 
 ```terraform
 variable "subnets" {}
@@ -266,11 +266,11 @@ The `launch_template_config` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
+* `version` - (Optional) Template version. Unlike the AutoScaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
-    what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
+    what you can specify as spot fleet does not support all the attributes that are supported by AutoScaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
 
 ### spot_maintenance_strategies
 

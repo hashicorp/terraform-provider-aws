@@ -69,7 +69,7 @@ resource "aws_prometheus_rule_group_namespace" "demo" {
 
 - `arn` (String) ARN of the Prometheus rule group namespace.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the prometheus rule group namespace using the arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the prometheus rule group namespace using the ARN. For example:
 
 ```terraform
 import {
@@ -78,7 +78,7 @@ import {
 }
 ```
 
-Using `terraform import`, import the prometheus rule group namespace using the arn. For example:
+Using `terraform import`, import the prometheus rule group namespace using the ARN. For example:
 
 ```console
 % terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name

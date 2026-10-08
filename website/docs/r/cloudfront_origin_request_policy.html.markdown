@@ -77,7 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Origin Request Policies using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Origin Request Policies using the `id`. For example:
 
 ```terraform
 import {
@@ -86,7 +86,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudfront Origin Request Policies using the `id`. For example:
+Using `terraform import`, import CloudFront Origin Request Policies using the `id`. For example:
 
 ```console
 % terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3

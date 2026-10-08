@@ -33,7 +33,7 @@ This resource supports the following arguments:
 * `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### oidc Configuration Block
+### `oidc` Configuration Block
 
 * `client_id` - (Required) Client ID for the OpenID Connect identity provider.
 * `groups_claim` - (Optional) The JWT claim that the provider will use to return groups.

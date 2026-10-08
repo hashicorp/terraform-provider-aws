@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_ec2_transit_gateway_route_table_routes
 
-Provides informations for routes of a specific transit gateway, such as state, type, cidr
+Provides informations for routes of a specific transit gateway, such as state, type, CIDR
 
 ## Example Usage
 
@@ -187,7 +187,7 @@ which take the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The transit gateway route table id suffixed by `-routes`
+* `id` - The transit gateway route table ID suffixed by `-routes`
 * `routes` - List of Transit Gateway Routes.
 
 #### Routes list Attributes Reference
@@ -195,5 +195,5 @@ This data source exports the following attributes in addition to the arguments a
 * `destination_cidr_block` - The CIDR used for route destination matches.
 * `prefix_list_id` - The ID of the prefix list used for destination matches.
 * `state` - The current state of the route, can be `active`, `deleted`, `pending`, `blackhole`, `deleting`.
-* `transit_gateway_route_table_announcement_id` - The id of the transit gateway route table announcement, most of the time it is an empty string.
+* `transit_gateway_route_table_announcement_id` - The ID of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.

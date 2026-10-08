@@ -45,7 +45,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique ID of the appstream stack fleet association, composed of the `fleet_name` and `stack_name` separated by a slash (`/`).
+* `id` - Unique ID of the AppStream stack fleet association, composed of the `fleet_name` and `stack_name` separated by a slash (`/`).
 
 ## Import
 

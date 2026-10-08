@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline` using the ID (Pipeline ID). For example:
 
 ```terraform
 import {
@@ -45,7 +45,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
+Using `terraform import`, import `aws_datapipeline_pipeline` using the ID (Pipeline ID). For example:
 
 ```console
 % terraform import aws_datapipeline_pipeline.default df-1234567890

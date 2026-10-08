@@ -12,7 +12,7 @@ Provides an Application AutoScaling Policy resource.
 
 ## Example Usage
 
-### DynamoDB Table Autoscaling
+### DynamoDB Table AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
@@ -40,7 +40,7 @@ resource "aws_appautoscaling_policy" "dynamodb_table_read_policy" {
 }
 ```
 
-### ECS Service Autoscaling
+### ECS Service AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "ecs_target" {
@@ -86,7 +86,7 @@ resource "aws_ecs_service" "ecs_service" {
 }
 ```
 
-### Aurora Read Replica Autoscaling
+### Aurora Read Replica AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "replicas" {

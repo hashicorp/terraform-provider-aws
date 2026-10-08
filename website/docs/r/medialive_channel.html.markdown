@@ -105,7 +105,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cdi_input_specification` - (Optional) Specification of CDI inputs for this channel. See [CDI Input Specification](#cdi-input-specification) for more details.
 * `input_attachments` - (Optional) Input attachments for the channel. See [Input Attachments](#input-attachments) for more details.
-* `log_level` - (Optional) The log level to write to Cloudwatch logs.
+* `log_level` - (Optional) The log level to write to CloudWatch logs.
 * `maintenance` - (Optional) Maintenance settings for this channel. See [Maintenance](#maintenance) for more details.
 * `role_arn` - (Optional) Concise argument description.
 * `start_channel` - (Optional) Whether to start/stop channel. Default: `false`
@@ -118,7 +118,7 @@ The following arguments are optional:
 
 ### Destinations
 
-* `id` - (Required) User-specified id. Ths is used in an output group or an output.
+* `id` - (Required) User-specified ID. Ths is used in an output group or an output.
 * `media_package_settings` - (Optional) Destination settings for a MediaPackage output; one destination for both encoders. See [Media Package Settings](#media-package-settings) for more details.
 * `multiplex_settings` - (Optional) Destination settings for a Multiplex output; one destination for both encoders. See [Multiplex Settings](#multiplex-settings) for more details.
 * `settings` - (Optional) Destination settings for a standard output; one destination for each redundant encoder. See [Settings](#settings) for more details.
@@ -249,7 +249,7 @@ The following arguments are optional:
 
 ### Network Input Settings
 
-* `hls_input_settings` - (Optional) Specifies HLS input settings when the uri is for a HLS manifest. See [HLS Input Settings](#hls-input-settings) for more details.
+* `hls_input_settings` - (Optional) Specifies HLS input settings when the URI is for a HLS manifest. See [HLS Input Settings](#hls-input-settings) for more details.
 * `server_validation` - (Optional) Check HTTPS server certificates.
 
 ### HLS Input Settings
@@ -665,7 +665,7 @@ The following arguments are optional:
 
 ### Motion Graphics Settings
 
-* `html_motion_graphics_settings` - (Optional) Html Motion Graphics Settings.
+* `html_motion_graphics_settings` - (Optional) HTML Motion Graphics Settings.
 
 ### Nielsen Configuration
 
@@ -767,7 +767,7 @@ The following arguments are optional:
 ### VPC
 
 * `subnet_ids` - (Required) A list of VPC subnet IDs from the same VPC. If STANDARD channel, subnet IDs must be mapped to two unique availability zones (AZ).
-* `public_address_allocation_ids` - (Required) List of public address allocation ids to associate with ENIs that will be created in Output VPC. Must specify one for SINGLE_PIPELINE, two for STANDARD channels.
+* `public_address_allocation_ids` - (Required) List of public address allocation IDs to associate with ENIs that will be created in Output VPC. Must specify one for SINGLE_PIPELINE, two for STANDARD channels.
 * `security_group_ids` - (Optional) A list of up to 5 EC2 VPC security group IDs to attach to the Output VPC network interfaces. If none are specified then the VPC default security group will be used.
 
 ## Attribute Reference

@@ -202,8 +202,8 @@ This resource supports the following arguments:
 
 ### network_configuration Arguments
 
-* `security_group_ids` - (Optional) The array of security group Ids for customer VPC connectivity.
-* `subnet_ids` - (Optional) The array of subnet Ids for customer VPC connectivity.
+* `security_group_ids` - (Optional) The array of security group IDs for customer VPC connectivity.
+* `subnet_ids` - (Optional) The array of subnet IDs for customer VPC connectivity.
 
 #### image_configuration Arguments
 

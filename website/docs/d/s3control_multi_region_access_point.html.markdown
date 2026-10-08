@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### public_access_block
 
-* `block_public_acls` - Whether Amazon S3 should block public access control lists (ACLs). When set to `true`, PUT Bucket acl and PUT Object acl calls fail if the specified ACL is public, PUT Object calls fail if the request includes a public ACL, and PUT Bucket calls fail if the request includes a public ACL.
+* `block_public_acls` - Whether Amazon S3 should block public access control lists (ACLs). When set to `true`, PUT Bucket ACL and PUT Object ACL calls fail if the specified ACL is public, PUT Object calls fail if the request includes a public ACL, and PUT Bucket calls fail if the request includes a public ACL.
 * `block_public_policy` - Whether Amazon S3 should block public bucket policies for buckets in this account. When set to `true`, Amazon S3 rejects calls to PUT Bucket policy if the specified bucket policy allows public access.
 * `ignore_public_acls` - Whether Amazon S3 should ignore public ACLs for buckets in this account. When set to `true`, Amazon S3 ignores all public ACLs on buckets in this account and any objects that they contain.
 * `restrict_public_buckets` - Whether Amazon S3 should restrict public bucket policies for buckets in this account. When set to `true`, only the bucket owner and AWS Services can access buckets with public policies.

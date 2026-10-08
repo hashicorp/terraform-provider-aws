@@ -63,7 +63,7 @@ resource "aws_codeartifact_domain" "example" {
 
 - `arn` (String) ARN of the CodeArtifact domain.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain using the CodeArtifact Domain arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain using the CodeArtifact Domain ARN. For example:
 
 ```terraform
 import {
@@ -72,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeArtifact Domain using the CodeArtifact Domain arn. For example:
+Using `terraform import`, import CodeArtifact Domain using the CodeArtifact Domain ARN. For example:
 
 ```console
 % terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305

@@ -51,4 +51,4 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `asset_ids` - List of all the asset ids found. This data source will fail if none are found.
+* `asset_ids` - List of all the asset IDs found. This data source will fail if none are found.

@@ -62,7 +62,7 @@ resource "aws_apprunner_vpc_connector" "example" {
 
 - `arn` (String) ARN of the App Runner VPC connector.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner vpc connector using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner VPC connector using the `arn`. For example:
 
 ```terraform
 import {
@@ -71,7 +71,7 @@ import {
 }
 ```
 
-Using `terraform import`, import App Runner vpc connector using the `arn`. For example:
+Using `terraform import`, import App Runner VPC connector using the `arn`. For example:
 
 ```console
 % terraform import aws_apprunner_vpc_connector.example arn:aws:apprunner:us-east-1:1234567890:vpcconnector/example/1/0a03292a89764e5882c41d8f991c82fe

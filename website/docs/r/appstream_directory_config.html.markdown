@@ -54,11 +54,11 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the directory config was created.
-* `id` - Unique identifier (ID) of the appstream directory config.
+* `id` - Unique identifier (ID) of the AppStream directory config.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_directory_config` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_directory_config` using the ID. For example:
 
 ```terraform
 import {
@@ -67,7 +67,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_appstream_directory_config` using the id. For example:
+Using `terraform import`, import `aws_appstream_directory_config` using the ID. For example:
 
 ```console
 % terraform import aws_appstream_directory_config.example directoryNameExample

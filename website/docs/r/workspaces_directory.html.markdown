@@ -338,7 +338,7 @@ This resource supports the following arguments:
 
 -> **Note:** Once you specified `custom_security_group_id` or `default_ou`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
-* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
 * `default_ou` - (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
 * `enable_internet_access` - (Optional) Indicates whether internet access is enabled for your WorkSpaces.
 * `enable_maintenance_mode` - (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
@@ -369,7 +369,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces directory using the directory ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces directory using the directory ID. For example:
 
 ```terraform
 import {
@@ -378,7 +378,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Workspaces directory using the directory ID. For example:
+Using `terraform import`, import WorkSpaces directory using the directory ID. For example:
 
 ```console
 % terraform import aws_workspaces_directory.main d-4444444444

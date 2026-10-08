@@ -89,7 +89,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `status` - current user status.
-* `sub` - unique user id that is never reassignable to another user.
+* `sub` - unique user ID that is never reassignable to another user.
 * `mfa_preference` - user's settings regarding MFA settings and preferences.
 
 ## Import

@@ -69,8 +69,8 @@ The following arguments are optional:
 * `customer_algorithm` - (Optional) Algorithm to use when encrypting the object (for example, AES256).
 * `customer_key` - (Optional) Customer-provided encryption key for Amazon S3 to use in encrypting data. This value is used to store the object and then it is discarded; Amazon S3 does not store the encryption key. The key must be appropriate for use with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm header.
 * `customer_key_md5` - (Optional) 128-bit MD5 digest of the encryption key according to RFC 1321. Amazon S3 uses this header for a message integrity check to ensure that the encryption key was transmitted without error.
-* `expected_bucket_owner` - (Optional) Account id of the expected destination bucket owner. If the destination bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
-* `expected_source_bucket_owner` - (Optional) Account id of the expected source bucket owner. If the source bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
+* `expected_bucket_owner` - (Optional) Account ID of the expected destination bucket owner. If the destination bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
+* `expected_source_bucket_owner` - (Optional) Account ID of the expected source bucket owner. If the source bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `expires` - (Optional) Date and time at which the object is no longer cacheable, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version. Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
 * `grant` - (Optional) Configuration block for header grants. Documented below. Conflicts with `acl`.

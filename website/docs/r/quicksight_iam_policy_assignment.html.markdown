@@ -42,8 +42,8 @@ The following arguments are optional:
 
 ### `identities` Block
 
-* `group` - (Optional) Array of Quicksight group names to assign the policy to.
-* `user` - (Optional) Array of Quicksight user names to assign the policy to.
+* `group` - (Optional) Array of QuickSight group names to assign the policy to.
+* `user` - (Optional) Array of QuickSight user names to assign the policy to.
 
 ## Attribute Reference
 

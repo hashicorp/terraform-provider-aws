@@ -42,7 +42,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The same as `name`
-* `arn` - The Arn of the queue
+* `arn` - The ARN of the queue
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

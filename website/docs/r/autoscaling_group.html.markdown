@@ -497,7 +497,7 @@ This resource supports the following arguments:
   even if it's in the process of scaling a resource. Normally, Terraform
   drains all the instances before deleting the group. This bypasses that
   behavior and potentially leaves resources dangling.
-- `load_balancers` - (Optional) List of elastic load balancer names to add to the autoscaling
+- `load_balancers` - (Optional) List of elastic load balancer names to add to the Auto Scaling
   group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead. To remove all load balancer attachments an empty list should be specified.
 - `traffic_source` - (Optional) Attaches one or more traffic sources to the specified Auto Scaling group.
 - `vpc_zone_identifier` - (Optional) List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
@@ -559,7 +559,7 @@ A newly-created Auto Scaling Group takes time to initialize the instances that m
 
 This configuration block supports the following:
 
-- `capacity_reservation_ids` - (Optional) List of On-Demand Capacity Reservation Ids. Conflicts with `capacity_reservation_resource_group_arns`.
+- `capacity_reservation_ids` - (Optional) List of On-Demand Capacity Reservation IDs. Conflicts with `capacity_reservation_resource_group_arns`.
 - `capacity_reservation_resource_group_arns` - (Optional) List of On-Demand Capacity Reservation Resource Group Arns. Conflicts with `capacity_reservation_ids`.
 
 ### `launch_template` Block
@@ -757,7 +757,7 @@ This configuration block supports the following:
     - `skip_matching` - (Optional) Skip replacing instances that already have your desired configuration. Defaults to `false`.
     - `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launch_template` or `mixed_instances_policy`.
     - `alarm_specification` - (Optional) Alarm Specification for Instance Refresh.
-        - `alarms` - (Required) List of Cloudwatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.
+        - `alarms` - (Required) List of CloudWatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.
     - `scale_in_protected_instances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Ignore`.
     - `standby_instances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
@@ -817,7 +817,7 @@ This configuration block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `id` - Auto Scaling Group id.
+- `id` - Auto Scaling Group ID.
 - `arn` - ARN for this Auto Scaling Group
 - `availability_zones` - Availability zones of the Auto Scaling Group.
 - `min_size` - Minimum size of the Auto Scaling Group

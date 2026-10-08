@@ -108,7 +108,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the SNS topic
-* `arn` - The ARN of the SNS topic, as a more obvious property (clone of id)
+* `arn` - The ARN of the SNS topic, as a more obvious property (clone of `id`)
 * `beginning_archive_time` - The oldest timestamp at which a FIFO topic subscriber can start a replay.
 * `owner` - The AWS Account ID of the SNS topic owner
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

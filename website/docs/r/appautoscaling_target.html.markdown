@@ -16,7 +16,7 @@ Provides an Application AutoScaling ScalableTarget resource. To manage policies 
 
 ## Example Usage
 
-### DynamoDB Table Autoscaling
+### DynamoDB Table AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
@@ -28,7 +28,7 @@ resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
 }
 ```
 
-### DynamoDB Index Autoscaling
+### DynamoDB Index AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "dynamodb_index_read_target" {
@@ -40,7 +40,7 @@ resource "aws_appautoscaling_target" "dynamodb_index_read_target" {
 }
 ```
 
-### ECS Service Autoscaling
+### ECS Service AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "ecs_target" {
@@ -52,7 +52,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 ```
 
-### Aurora Read Replica Autoscaling
+### Aurora Read Replica AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "replicas" {

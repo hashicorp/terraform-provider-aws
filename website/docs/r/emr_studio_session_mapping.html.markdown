@@ -36,7 +36,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id`- The id of the Elastic MapReduce Studio Session Mapping.
+* `id`- The ID of the Elastic MapReduce Studio Session Mapping.
 
 ## Import
 

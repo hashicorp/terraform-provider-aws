@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_workspaces_workspace
 
-Use this data source to get information about a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service.
+Use this data source to get information about a workspace in [AWS WorkSpaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service.
 
 ## Example Usage
 
@@ -44,7 +44,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `bundle_id` - ID of the bundle for the WorkSpace.
 * `computer_name` - Name of the WorkSpace, as seen by the operating system.
-* `id` - Workspaces ID.
+* `id` - WorkSpaces ID.
 * `ip_address` - IP address of the WorkSpace.
 * `root_volume_encryption_enabled` - Indicates whether the data stored on the root volume is encrypted.
 * `state` - Operational state of the WorkSpace.

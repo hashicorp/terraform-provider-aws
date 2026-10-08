@@ -83,7 +83,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cloud_exadata_infrastructure_arn` - (Optional) Exadata infrastructure ARN. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
-* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure id. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
+* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure ID. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
 * `description` - (Optional) Description of the Autonomous VM cluster.
 * `is_mtls_enabled_vm_cluster` - (Optional) Whether mutual TLS (mTLS) authentication is enabled for the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `license_model` - (Optional) License model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE. Changing this will force terraform to create new resource.

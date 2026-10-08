@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_odb_db_node
 
-Terraform data source for managing db nodes linked to cloud vm cluster of Oracle Database@AWS.
+Terraform data source for managing DB nodes linked to cloud vm cluster of Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -28,7 +28,7 @@ data "aws_odb_db_node" "example" {
 The following arguments are required:
 
 * `cloud_vm_cluster_id` - (Required) Unique identifier of the cloud vm cluster.
-* `id` - (Required) Unique identifier of db node associated with vm cluster.
+* `id` - (Required) Unique identifier of DB node associated with vm cluster.
 
 The following arguments are optional:
 

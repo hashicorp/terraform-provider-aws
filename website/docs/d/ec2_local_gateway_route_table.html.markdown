@@ -10,7 +10,7 @@ description: |-
 
 Provides details about an EC2 Local Gateway Route Table.
 
-This data source can prove useful when a module accepts a local gateway route table id as
+This data source can prove useful when a module accepts a local gateway route table ID as
 an input variable and needs to, for example, find the associated Outpost or Local Gateway.
 
 ## Example Usage
@@ -30,7 +30,7 @@ data "aws_ec2_local_gateway_route_table" "selected" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired local gateway route table
+* `local_gateway_route_table_id` - (Optional) Local Gateway Route Table ID assigned to desired local gateway route table
 * `local_gateway_id` - (Optional) ID of the specific local gateway route table to retrieve.
 * `outpost_arn` - (Optional) ARN of the Outpost the local gateway route table is associated with.
 * `state` - (Optional) State of the local gateway route table.

@@ -11,7 +11,7 @@ description: |-
 Provides a CodeBuild Source Credentials Resource.
 
 ~> **NOTE:
-** [Codebuild only allows a single credential per given server type in a given region](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_codebuild.GitHubSourceCredentials.html).
+** [CodeBuild only allows a single credential per given server type in a given region](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_codebuild.GitHubSourceCredentials.html).
 Therefore, when you define `aws_codebuild_source_credential`, [
 `aws_codebuild_project` resource](/docs/providers/aws/r/codebuild_project.html) defined in the same module will use it.
 
@@ -53,7 +53,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auth_type` - (Required) The type of authentication used to connect to a GitHub, GitHub Enterprise, or Bitbucket
   repository. Valid values are `BASIC_AUTH`,
-  `PERSONAL_ACCESS_TOKEN`, `CODECONNECTIONS`, and `SECRETS_MANAGER`. An OAUTH connection is not supported by the API.
+  `PERSONAL_ACCESS_TOKEN`, `CODECONNECTIONS`, and `SECRETS_MANAGER`. An OAuth connection is not supported by the API.
 * `server_type` - (Required) The source provider used for this project.
 * `token` - (Required) For a GitHub and GitHub Enterprise, this is the personal access token. For Bitbucket, this is the
   app password. When using an AWS CodeStar connection (`auth_type = "CODECONNECTIONS")`, this is an AWS CodeStar
@@ -92,7 +92,7 @@ resource "aws_codebuild_source_credential" "example" {
 - `arn` (String) ARN of the CodeBuild source credential.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
-import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:
+import CodeBuild Source Credential using the CodeBuild Source Credential ARN. For example:
 
 ```terraform
 import {
@@ -101,7 +101,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:
+Using `terraform import`, import CodeBuild Source Credential using the CodeBuild Source Credential ARN. For example:
 
 ```console
 % terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github

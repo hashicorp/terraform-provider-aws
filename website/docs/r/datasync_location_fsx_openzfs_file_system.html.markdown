@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 * `nfs` - (Required) Represents the Network File System (NFS) protocol that DataSync uses to access your FSx for OpenZFS file system. See below.
 
-### nfs
+### NFS
 
 * `mount_options` - (Required) Represents the mount options that are available for DataSync to access an NFS location. See below.
 

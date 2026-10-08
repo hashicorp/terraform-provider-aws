@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch RUM App Monitor using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch RUM App Monitor using the `name`. For example:
 
 ```terraform
 import {
@@ -69,7 +69,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. For example:
+Using `terraform import`, import CloudWatch RUM App Monitor using the `name`. For example:
 
 ```console
 % terraform import aws_rum_app_monitor.example example
