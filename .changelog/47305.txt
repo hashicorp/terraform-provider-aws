@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_paymentcryptography_key: Replace placeholder `FIXME` in error messages with the actual key ARN
+```
+
+```release-note:bug
+resource/aws_ssmcontacts_rotation: Replace placeholder `TODO` in debug log with descriptive resource name
+```
