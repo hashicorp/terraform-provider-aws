@@ -28,6 +28,11 @@ This resource supports the following arguments:
 * `properties` - (Optional), Configuration block that can contain the following properties of the thing type:
     * `description` - (Optional, Forces New Resource) The description of the thing type.
     * `searchable_attributes` - (Optional, Forces New Resource) A list of searchable thing attribute names.
+    * `mqtt5_configuration` - (Optional) Configuration block that can contain the following properties
+        * `propagating_attributes` - (Optional) List of propagating attribute configuration
+            * `user_property_key` - The key of the user property key-value pair.
+            * `connection_attribute` - The attribute associated with the connection between a device and AWS IoT Core.
+            * `thing_attribute` - The user-defined thing attribute that is propagating for MQTT 5 message enrichment.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
