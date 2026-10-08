@@ -38,6 +38,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newIPRouteResource,
+			TypeName: "aws_directory_service_ip_route",
+			Name:     "IP Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("cidr_ip", false),
+				inttypes.StringIdentityAttribute("cidr_ipv6", false),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      ipRouteImportID{},
+			},
+		},
+		{
+			Factory:  newIPRoutesExclusiveResource,
+			TypeName: "aws_directory_service_ip_routes_exclusive",
+			Name:     "IP Routes Exclusive",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTrustResource,
 			TypeName: "aws_directory_service_trust",
 			Name:     "Trust",
@@ -54,6 +79,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Directory Settings",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("directory_id", true)),
+		},
+		{
+			Factory:  newIPRouteResourceAsListResource,
+			TypeName: "aws_directory_service_ip_route",
+			Name:     "IP Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("cidr_ip", false),
+				inttypes.StringIdentityAttribute("cidr_ipv6", false),
+			}),
 		},
 	})
 }

@@ -7,6 +7,8 @@ package ds
 var (
 	ResourceConditionalForwarder    = resourceConditionalForwarder
 	ResourceDirectory               = resourceDirectory
+	ResourceIPRoute                 = newIPRouteResource
+	ResourceIPRoutesExclusive       = newIPRoutesExclusiveResource
 	ResourceDirectorySettings       = newDirectorySettingsResource
 	ResourceLogSubscription         = resourceLogSubscription
 	ResourceRadiusSettings          = resourceRadiusSettings
@@ -17,6 +19,12 @@ var (
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
+	FindIPRouteByTwoPartKey              = findIPRouteByTwoPartKey
+	FindIPRoutesByDirectoryID            = findIPRoutesByDirectoryID
+	WaitIPRoutesAdded                    = waitIPRoutesAdded
+	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
+	IsIPRoutesUpdateRetryable            = isIPRoutesUpdateRetryable
+	IPRoutesSemanticEquals               = ipRoutesSemanticEquals
 	FindDirectorySettingsByDirectoryID   = findDirectorySettingsByDirectoryID
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
@@ -25,4 +33,10 @@ var (
 	FindTrustByTwoPartKey                = findTrustByTwoPartKey
 
 	ResNameDirectorySettingsExported = ResNameDirectorySettings
+)
+
+// Type aliases for use in tests only.
+type (
+	IPRouteImportID = ipRouteImportID
+	IPRouteModel    = ipRouteModel
 )

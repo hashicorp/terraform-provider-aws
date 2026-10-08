@@ -101,7 +101,7 @@ The following arguments are optional:
 * `short_description` - (Optional) Short description of entry.
 * `status` - (Optional) If glossary term is ENABLED or DISABLED.
 * `term_relations` - (Optional) Object classifying the term relations through the following attributes:
-    * `classifies` - (Optional) String array that calssifies the term relations.
+    * `classifies` - (Optional) String array that classifies the term relations.
     * `is_as` - (Optional) The isA property of the term relations.
 
 ## Attribute Reference

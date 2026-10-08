@@ -20,6 +20,31 @@ if [ $TARGET_SHA == $PREVIOUS_RELEASE_SHA ]; then
   exit 0
 fi
 
+# Guard: the reassembly below assumes the first line of the CHANGELOG is the
+# current "## <version> (Unreleased)" heading that separates not-yet-released
+# entries from already-released sections. If that heading is missing (for
+# example, the post-release "Update Changelog" job never ran), keying off the
+# previous release tag makes this script re-append the previous release section
+# on every run, duplicating it. Fail loudly instead of corrupting the file.
+FIRST_LINE=$(head -n 1 "$__root/$CHANGELOG_FILE_NAME")
+if [[ ! "$FIRST_LINE" =~ ^##[[:space:]].*\(Unreleased\)$ ]]; then
+  echo "ERROR: expected the first line of $CHANGELOG_FILE_NAME to be a '## <version> (Unreleased)' heading, but found:" >&2
+  echo "  ${FIRST_LINE}" >&2
+  echo "Refusing to generate the changelog to avoid duplicating released sections." >&2
+  echo "Confirm the 'Update Changelog' workflow added the next '## <version> (Unreleased)' heading, then re-run." >&2
+  exit 1
+fi
+
+# The unreleased version at the top of the file must differ from the previous
+# release tag. If they match, the previous-release marker and the file's top
+# section coincide and the reassembly would duplicate that section.
+UNRELEASED_VERSION=$(echo "$FIRST_LINE" | cut -d ' ' -f 2)
+if [ "$UNRELEASED_VERSION" == "${PREVIOUS_RELEASE_TAG#v}" ]; then
+  echo "ERROR: top-of-file version ($UNRELEASED_VERSION) matches the previous release tag (${PREVIOUS_RELEASE_TAG})." >&2
+  echo "Refusing to generate the changelog to avoid duplicating the released section." >&2
+  exit 1
+fi
+
 PREVIOUS_CHANGELOG=$(sed -n -e "/# ${PREVIOUS_RELEASE_TAG#v}/,\$p" $__root/$CHANGELOG_FILE_NAME)
 
 if [ -z "$PREVIOUS_CHANGELOG" ]

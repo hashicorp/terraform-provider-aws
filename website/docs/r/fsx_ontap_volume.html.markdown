@@ -70,6 +70,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the volume. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tiering_policy` - (Optional) Data tiering policy for an FSx for ONTAP volume. See [`tiering_policy` Block](#tiering_policy-block) for details.
 * `volume_style` - (Optional) Styles of volume, valid values are `FLEXVOL`, `FLEXGROUP`. Default value is `FLEXVOL`. FLEXGROUPS have a larger minimum and maximum size. See Volume Styles for more details. [Volume Styles](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/volume-styles.html)
+* `volume_type` - (Optional) Type of volume, currently the only valid value is `ONTAP`.
 
 ### `aggregate_configuration` Block
 
@@ -143,7 +144,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - Volume's UUID (universally unique identifier).
-* `volume_type` - Type of volume, currently the only valid value is `ONTAP`.
 
 ## Timeouts
 

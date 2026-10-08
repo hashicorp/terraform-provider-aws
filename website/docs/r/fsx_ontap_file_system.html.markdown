@@ -103,10 +103,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `endpoints` Block
 
-* `intercluster` - Endpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [Endpoint](#endpoint).
-* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint).
+* `intercluster` - Endpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [`endpoints.intercluster`](#endpointsintercluster-block) below.
+* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [`endpoints.management`](#endpointsmanagement-block) below.
 
-#### Endpoint
+#### `endpoints.intercluster` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the file system. You can mount your file system using its DNS name.
+* `ip_addresses` - IP addresses of the file system endpoint.
+
+#### `endpoints.management` Block
 
 * `dns_name` - Domain Name Service (DNS) name for the file system. You can mount your file system using its DNS name.
 * `ip_addresses` - IP addresses of the file system endpoint.

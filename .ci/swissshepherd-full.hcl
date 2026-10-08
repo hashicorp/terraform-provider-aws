@@ -241,6 +241,8 @@ check "schema_docs" {
   ordering    = true
   deprecated  = true
 
+  nested_object_attributes = true
+
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
     "`{Path}` Block",
@@ -265,6 +267,14 @@ check "schema_docs" {
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
+
+  # Mirrors the QuickSight API's visual model, a reuse graph rather than a tree:
+  # with nested_object_attributes, path-keyed `coverage` wants ~21,000 Read-Only
+  # entries. Only `coverage` is off; every other sub-check runs. See swissshepherd#74.
+  override {
+    targets  = ["data_source/aws_quicksight_analysis"]
+    coverage = false
+  }
 }
 
 check "import_section" {

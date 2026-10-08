@@ -52,17 +52,17 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_id` - (Optional) Id of the VPC to which this exclusion applies. Either this or the subnet_id needs to be provided.
-* `subnet_id` - (Optional) Id of the subnet to which this exclusion applies. Either this or the vpc_id needs to be provided.
-* `tags` - (Optional) A map of tags to assign to the exclusion. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `subnet_id` - (Optional) ID of the subnet to which this exclusion applies. Either this or the vpc_id needs to be provided.
+* `tags` - (Optional) Map of tags to assign to the exclusion. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_id` - (Optional) ID of the VPC to which this exclusion applies. Either this or the subnet_id needs to be provided.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the VPC Block Public Access Exclusion.
+* `id` - ID of the VPC Block Public Access Exclusion.
 * `resource_arn` - ARN the excluded resource.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

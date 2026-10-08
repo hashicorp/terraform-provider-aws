@@ -1,4 +1,50 @@
-## 6.67.0 (Unreleased)
+## 6.69.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_resiliencehubv2_policy: Add `sharing_enabled` attribute ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+* resource/aws_quicksight_custom_permissions: Add `action`, `analysis`, `automate`, `chat_agent`, `create_chat_agents`, `dashboard`, `flow`, `knowledge_base`, `perform_flow_ui_task`, `publish_without_approval`, `research`, `space`, `use_agent_web_search`, and `use_bedrock_models` to `capabilities` configuration block ([#47135](https://github.com/hashicorp/terraform-provider-aws/issues/47135))
+* resource/aws_resiliencehubv2_input_source: Add `resource_configuration.eks.label_selector` argument ([#50075](https://github.com/hashicorp/terraform-provider-aws/issues/50075))
+* resource/aws_resiliencehubv2_policy: Add `sharing_enabled` argument ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+
+BUG FIXES:
+
+* resource/aws_agentregistry_registry: Fix validation of `custom_claim`-only custom JWT authorizers ([#50298](https://github.com/hashicorp/terraform-provider-aws/issues/50298))
+* resource/aws_observabilityadmin_telemetry_rule: Fix updates when `all_regions` is enabled ([#50150](https://github.com/hashicorp/terraform-provider-aws/issues/50150))
+
+## 6.68.0 (October 7, 2026)
+
+BREAKING CHANGES:
+
+* resource/aws_docdb_cluster: `availability_zones` now validates that at most 3 items are provided at plan time. This is acceptable in a minor version because AWS would always reject requests with more than 3 availability zones at apply time. ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
+* resource/aws_rds_cluster: `availability_zones` now validates that at most 3 items are provided at plan time. This is acceptable in a minor version because AWS would always reject requests with more than 3 availability zones at apply time. ([#50014](https://github.com/hashicorp/terraform-provider-aws/issues/50014))
+
+FEATURES:
+
+* **New Data Source:** `aws_lambdamicrovms_image_version` ([#50299](https://github.com/hashicorp/terraform-provider-aws/issues/50299))
+* **New Data Source:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+* **New List Resource:** `aws_ec2_transit_gateway_route` ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* **New List Resource:** `aws_ram_resource_association` ([#49901](https://github.com/hashicorp/terraform-provider-aws/issues/49901))
+* **New Resource:** `aws_odb_autonomous_database` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+* **New Resource:** `aws_odb_autonomous_database_secrets_manager_integration` ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_agent_runtime: Add `platform_version` argument ([#50081](https://github.com/hashicorp/terraform-provider-aws/issues/50081))
+* resource/aws_docdb_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50015](https://github.com/hashicorp/terraform-provider-aws/issues/50015))
+* resource/aws_ec2_transit_gateway_route: Add resource identity support ([#50202](https://github.com/hashicorp/terraform-provider-aws/issues/50202))
+* resource/aws_grafana_workspace: Update `grafana_version` argument to support v13.2 ([#50234](https://github.com/hashicorp/terraform-provider-aws/issues/50234))
+* resource/aws_network_interface: Add `connection_tracking_specification` argument ([#50119](https://github.com/hashicorp/terraform-provider-aws/issues/50119))
+* resource/aws_ram_resource_association: Add resource identity support ([#49901](https://github.com/hashicorp/terraform-provider-aws/issues/49901))
+* resource/aws_rds_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement ([#50014](https://github.com/hashicorp/terraform-provider-aws/issues/50014))
+
+BUG FIXES:
+
+* provider: Fixes error when parsing YAML documents with literal tab characters in double-quoted string ([#50340](https://github.com/hashicorp/terraform-provider-aws/issues/50340))
+* resource/aws_odb_autonomous_database_secrets_manager_integration: Avoid redundant disable requests when the integration is already absent or terminating ([#48991](https://github.com/hashicorp/terraform-provider-aws/issues/48991))
+* resource/aws_redshiftserverless_workgroup: Restores fully reading `config_parameter` when not specified ([#50255](https://github.com/hashicorp/terraform-provider-aws/issues/50255))
+
+## 6.67.0 (September 30, 2026)
 
 NOTES:
 
@@ -8,10 +54,17 @@ FEATURES:
 
 * **New Ephemeral Resource:** `aws_bedrockruntime_apply_guardrail` ([#50155](https://github.com/hashicorp/terraform-provider-aws/issues/50155))
 * **New List Resource:** `aws_default_security_group` ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
+* **New List Resource:** `aws_directory_service_ip_route` ([#50138](https://github.com/hashicorp/terraform-provider-aws/issues/50138))
+* **New List Resource:** `aws_directoryservicedata_user` ([#50001](https://github.com/hashicorp/terraform-provider-aws/issues/50001))
 * **New List Resource:** `aws_ec2_transit_gateway_route_table_propagation` ([#50193](https://github.com/hashicorp/terraform-provider-aws/issues/50193))
+* **New Resource:** `aws_directory_service_ip_route` ([#50138](https://github.com/hashicorp/terraform-provider-aws/issues/50138))
+* **New Resource:** `aws_directory_service_ip_routes_exclusive` ([#50204](https://github.com/hashicorp/terraform-provider-aws/issues/50204))
+* **New Resource:** `aws_directoryservicedata_user` ([#50001](https://github.com/hashicorp/terraform-provider-aws/issues/50001))
 
 ENHANCEMENTS:
 
+* resource/aws_apprunner_custom_domain_association: Add validation to prevent trailing dot on `domain_name` ([#50189](https://github.com/hashicorp/terraform-provider-aws/issues/50189))
+* resource/aws_apprunner_custom_domain_association: Add validation to require `enable_www_subdomain` to be `false` for wildcard domain ([#50189](https://github.com/hashicorp/terraform-provider-aws/issues/50189))
 * resource/aws_bedrockagentcore_workload_identity: Add `tags` and `tags_all` attributes ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_bedrockagentcore_workload_identity: Add resource identity support ([#49746](https://github.com/hashicorp/terraform-provider-aws/issues/49746))
 * resource/aws_default_security_group: Add Resource Identity support ([#50120](https://github.com/hashicorp/terraform-provider-aws/issues/50120))
@@ -22,8 +75,10 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * list-resource/aws_dynamodb_table_replica: Fix eventual consistency error when replacing resource. ([#50133](https://github.com/hashicorp/terraform-provider-aws/issues/50133))
+* resource/aws_apprunner_custom_domain_association: Populate `dns_target` when importing ([#50206](https://github.com/hashicorp/terraform-provider-aws/issues/50206))
 * resource/aws_autoscaling_group: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#50084](https://github.com/hashicorp/terraform-provider-aws/issues/50084))
 * resource/aws_bedrockagentcore_harness: Fix "inconsistent result after apply" when `environment_variables` is unset ([#50088](https://github.com/hashicorp/terraform-provider-aws/issues/50088))
+* resource/aws_config_aggregate_authorization: Fix `region` to `authorized_aws_region` migration incorrectly forcing resource replacement ([#49851](https://github.com/hashicorp/terraform-provider-aws/issues/49851))
 * resource/aws_rds_global_cluster: Wait for source cluster promotion to complete when `source_db_cluster_identifier` is specified, fixing race condition with downstream resources ([#48076](https://github.com/hashicorp/terraform-provider-aws/issues/48076))
 
 ## 6.66.0 (September 21, 2026)

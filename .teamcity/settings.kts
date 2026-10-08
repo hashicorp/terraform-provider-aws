@@ -21,6 +21,7 @@ version = "2026.1"
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
 val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_domain", "")
+var acctestRootDomain = DslContext.getParameter("acctest_root_domain", "")
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
@@ -78,8 +79,16 @@ project {
 
         if (acmCertificateRootDomain != "") {
             text("env.ACM_CERTIFICATE_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
-            text("env.AMPLIFY_DOMAIN_NAME", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
-            text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
+         }
+
+        // Defaults acctestRootDomain to acmCertificateRootDomain for migration
+        if (acctestRootDomain == "") {
+            acctestRootDomain = acmCertificateRootDomain
+        }
+        if (acctestRootDomain != "") {
+            text("env.AMPLIFY_DOMAIN_NAME", acctestRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.APPRUNNER_CUSTOM_DOMAIN", acctestRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acctestRootDomain, display = ParameterDisplay.HIDDEN)
         }
 
         val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")
