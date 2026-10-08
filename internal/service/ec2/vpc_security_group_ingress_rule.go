@@ -277,6 +277,10 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
+	// During import, only the ID is populated in state.
+	// SecurityGroupID is not set during import but always set after a successful Read.
+	isImport := data.SecurityGroupID.IsNull()
+
 	output, err := r.findByID(ctx, data.ID.ValueString())
 
 	if retry.NotFound(err) {
@@ -303,12 +307,14 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
 	// If planned from_port or to_port are null and values of -1 are returned, propagate null.
-	if v := aws.ToInt32(output.FromPort); v == -1 && data.FromPort.IsNull() {
+	// Skip this during import (when SecurityGroupID was not yet in state) so that the actual
+	// API values are preserved and ImportStateVerify succeeds.
+	if v := aws.ToInt32(output.FromPort); v == -1 && data.FromPort.IsNull() && !isImport {
 		data.FromPort = types.Int64Null()
 	} else {
 		data.FromPort = fwflex.Int32ToFrameworkInt64(ctx, output.FromPort)
 	}
-	if v := aws.ToInt32(output.ToPort); v == -1 && data.ToPort.IsNull() {
+	if v := aws.ToInt32(output.ToPort); v == -1 && data.ToPort.IsNull() && !isImport {
 		data.ToPort = types.Int64Null()
 	} else {
 		data.ToPort = fwflex.Int32ToFrameworkInt64(ctx, output.ToPort)
