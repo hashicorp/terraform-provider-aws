@@ -265,6 +265,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute("baseline_id", true),
 			}),
 		},
+		{
+			Factory:  newServiceSettingResourceAsListResource,
+			TypeName: "aws_ssm_service_setting",
+			Name:     "Service Setting",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 	})
 }
 

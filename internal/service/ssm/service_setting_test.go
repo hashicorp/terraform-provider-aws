@@ -26,6 +26,7 @@ func TestAccSSMServiceSetting_serial(t *testing.T) {
 		acctest.CtBasic:     testAccServiceSetting_basic,
 		"upgradeFromV6_5_0": testAccServiceSetting_upgradeFromV6_5_0,
 		"identity":          testAccSSMServiceSetting_identitySerial,
+		"list":              testAccSSMServiceSetting_listSerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
