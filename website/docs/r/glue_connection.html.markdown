@@ -66,6 +66,7 @@ resource "aws_glue_connection" "example" {
 ```terraform
 # Define the custom connector using the connection_type of `CUSTOM` with the match_criteria of `template_connection`
 # Example here being a snowflake jdbc connector with a secret having user and password as keys
+# The second element of JDBC_CONNECTION_URL is the URL parameter delimiter, `&` for this query-string style URL
 
 data "aws_secretsmanager_secret" "example" {
   name = "example-secret"
@@ -78,7 +79,7 @@ resource "aws_glue_connection" "example1" {
     CONNECTOR_CLASS_NAME = "net.snowflake.client.jdbc.SnowflakeDriver"
     CONNECTION_TYPE      = "Jdbc"
     CONNECTOR_URL        = "s3://example/snowflake-jdbc.jar" # S3 path to the snowflake jdbc jar
-    JDBC_CONNECTION_URL  = "[[\"default=jdbc:snowflake://example.com/?user=$${user}&password=$${password}\"],\",\"]"
+    JDBC_CONNECTION_URL  = "[[\"default=jdbc:snowflake://example.com/?user=$${user}&password=$${password}\"],\"&\"]"
   }
   match_criteria = ["template-connection"]
 }
