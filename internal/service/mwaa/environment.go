@@ -14,9 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaa/types"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -308,25 +306,6 @@ func resourceEnvironment() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("airflow_version", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
-				o, n := d.GetChange("airflow_version")
-
-				if oldVersion, err := gversion.NewVersion(o.(string)); err == nil {
-					if newVersion, err := gversion.NewVersion(n.(string)); err == nil {
-						// https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html#airflow-versions-upgrade:
-						// 	Amazon MWAA supports minor version upgrades.
-						// 	This means you can upgrade your environment from version x.4.z to x.5.z.
-						// 	However, you cannot upgrade your environment to a new major version of Apache Airflow.
-						// 	For example, upgrading from version 1.y.z to 2.y.z is not supported.
-						return oldVersion.Segments()[0] < newVersion.Segments()[0]
-					}
-				}
-
-				return false
-			}),
-		),
 	}
 }
 
