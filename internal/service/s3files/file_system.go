@@ -303,7 +303,7 @@ func findFileSystemByID(ctx context.Context, conn *s3files.Client, id string) (*
 func waitFileSystemCreated(ctx context.Context, conn *s3files.Client, id string, timeout time.Duration) (*s3files.GetFileSystemOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
-		Target:     enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateError),
+		Target:     enum.Slice(awstypes.LifeCycleStateAvailable, lifeCycleStateMisconfigured, awstypes.LifeCycleStateError),
 		Refresh:    statusFileSystem(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -320,7 +320,7 @@ func waitFileSystemCreated(ctx context.Context, conn *s3files.Client, id string,
 
 func waitFileSystemDeleted(ctx context.Context, conn *s3files.Client, id string, timeout time.Duration) (*s3files.GetFileSystemOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
+		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, lifeCycleStateMisconfigured, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
 		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
