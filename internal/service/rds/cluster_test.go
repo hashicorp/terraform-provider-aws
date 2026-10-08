@@ -4835,8 +4835,13 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfig_clusterSubnetGroup(rName),
+		acctest.ConfigVPCWithSubnetsEnableDNSHostnames(rName, 3),
 		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[3]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -4849,7 +4854,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
   engine_latest_version      = true
   preferred_instance_classes = [%[2]s]
-  storage_type               = "io1"
+  storage_type               = "gp3"
   supports_iops              = true
   supports_clusters          = true
 }
@@ -4862,8 +4867,8 @@ resource "aws_rds_cluster" "test" {
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
-  allocated_storage         = 100
-  iops                      = 1000
+  allocated_storage         = 400
+  iops                      = 12000
   master_password           = "mustbeeightcharaters"
   master_username           = "test"
   publicly_accessible       = %[4]t
