@@ -68,7 +68,6 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, "aws_ecs_cluster.test", &cluster),
-					// The rule requires a Create post-refresh check; this resource is planned for update instead (see comment below).
 					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceClusterCapacityProviders(), resourceName),
 				),
@@ -77,18 +76,8 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
-					// This resource doesn't own the cluster: Delete only calls
-					// PutClusterCapacityProviders with empty lists, and the cluster
-					// remains. Read removes the resource from state only when the
-					// cluster is not found, so after the out-of-band delete the
-					// resource stays in state with no capacity providers and
-					// Terraform plans an in-place update to restore them, not a
-					// create.
-					//
-					// Removing the resource from state when the cluster has no
-					// capacity providers was rejected: `capacity_providers = []`
-					// with no default strategy is a valid configuration and would
-					// produce a perpetual diff.
+					// Read removes the resource from state only when the parent cluster is not found.
+					// A planned update is expected for an out-of-band deletion of capacity providers.
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
