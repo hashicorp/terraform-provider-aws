@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.112.0
 	github.com/aws/aws-sdk-go-v2/service/lambdacore v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.11.0
-	github.com/aws/aws-sdk-go-v2/service/lambdaweb v1.0.1
+	github.com/aws/aws-sdk-go-v2/service/lambdaweb v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.71.1
