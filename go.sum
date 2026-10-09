@@ -181,8 +181,8 @@ github.com/aws/aws-sdk-go-v2/service/configservice v1.74.3 h1:MYrdr9JHfmSV3IJxSl
 github.com/aws/aws-sdk-go-v2/service/configservice v1.74.3/go.mod h1:f6bbsgRmWAcJnyanNvCgZVCe6yKg03PrrfNhXR7+Z00=
 github.com/aws/aws-sdk-go-v2/service/connect v1.204.2 h1:gH2IXSTkKOLr8EmgkHUJLIb6G+epryUsOyhkMWSkJWs=
 github.com/aws/aws-sdk-go-v2/service/connect v1.204.2/go.mod h1:22rmAjN4vVNapRZJwaYSyXSKHZV6NQ5oM1onjSJ321A=
-github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.1 h1:6NLM0GYnIV5e9j8fkEXWUpAUVbKmqGlE8Jh106ap2jc=
-github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.1/go.mod h1:krkIKZwcsWGOpdAJ0Zzpn/erciH93MG5xgyUFeiYnK4=
+github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.3 h1:9YtTX+4D4E6sA3UcxMW1+GcQ+bz0nyGG8MDiPS40bFY=
+github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.3/go.mod h1:I/wnMWcO7yzfMwwzcB68owPFSpAQghy0GJkyZBI04nM=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.37.1 h1:v2TC9WSz2se+oG+43tVs5OaHlpmSsAojhTz91LocAZ0=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.37.1/go.mod h1:Ej6hYc3fr0lEWHU8bKwo0d1ri+zmt4OyQVRCW9sWHxc=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.43.1 h1:reW/sP/qODTExEGNzoXjOhCZTnTaoCKU5mN8pam+u90=
