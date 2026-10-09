@@ -13,9 +13,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pricingplanmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,28 +48,30 @@ func (l *subscriptionListResource) List(ctx context.Context, request list.ListRe
 			arn := aws.ToString(item.Arn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
+			var output *pricingplanmanager.GetSubscriptionOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findSubscriptionByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data subscriptionResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				output := pricingplanmanager.GetSubscriptionOutput{
-					ETag: item.ETag,
-					Subscription: &awstypes.Subscription{
-						Arn:             item.Arn,
-						CreatedAt:       item.CreatedAt,
-						PlanFamily:      item.PlanFamily,
-						PlanTier:        item.PlanTier,
-						ResourceArns:    item.ResourceArns,
-						ScheduledChange: item.ScheduledChange,
-						Status:          item.Status,
-						StatusReason:    item.StatusReason,
-						UpdatedAt:       item.UpdatedAt,
-						UsageLevel:      item.UsageLevel,
-					},
-				}
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &output, &data), smerr.ID, arn)
-				if result.Diagnostics.HasError() {
-					return
+				data.ARN = fwflex.StringValueToFramework(ctx, arn)
+
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
 				}
 
 				result.DisplayName = arn
