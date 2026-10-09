@@ -175,15 +175,19 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
+// findSecretVersionForExistence falls back to ListSecretVersionIds only when needed, so readable versions don't require that permission.
 func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string, hasWriteOnly bool) (*secretVersionExistsOutput, error) {
-	if hasWriteOnly {
-		_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
-		if err != nil {
+	if !hasWriteOnly {
+		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+		if err == nil {
+			return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
+		}
+		if !isKMSKeyUnavailable(err) {
 			return nil, err
 		}
-		return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
 	}
-	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+
+	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
 		return nil, err
 	}
@@ -268,6 +272,32 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	if err != nil {
+		// The KMS key is unavailable. Keep the version and its last-known value, but
+		// not when state has no value (e.g. import), or a later configured value
+		// would be recorded by Update without calling PutSecretValue.
+		_, hasSecretString := d.GetOk("secret_string")
+		_, hasSecretBinary := d.GetOk("secret_binary")
+		if isKMSKeyUnavailable(err) && (hasSecretString || hasSecretBinary) {
+			decryptErr := err
+			arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+
+			if !d.IsNewResource() && retry.NotFound(err) {
+				log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
+				d.SetId("")
+				return diags
+			}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
+			}
+
+			d.Set(names.AttrARN, arn)
+			d.Set("secret_arn", arn)
+			d.Set("version_id", versionEntry.VersionId)
+			d.Set("version_stages", versionEntry.VersionStages)
+
+			return sdkdiag.AppendWarningf(diags, "Secrets Manager Secret Version (%s) cannot be decrypted because its KMS key is unavailable; using the secret value from state: %s", d.Id(), decryptErr)
+		}
+
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
@@ -504,6 +534,12 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 	}
 
 	return findSecretVersion(ctx, conn, input)
+}
+
+// isKMSKeyUnavailable excludes other DecryptionFailure causes, such as missing kms:Decrypt permission.
+func isKMSKeyUnavailable(err error) bool {
+	return errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: KMSInvalidStateException") ||
+		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: DisabledException")
 }
 
 const secretVersionIDSeparator = "|"

@@ -10,8 +10,10 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
 	tfcversion "github.com/hashicorp/go-version"
@@ -337,6 +339,43 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 	}
 }
 
+func TestIsKMSKeyUnavailable(t *testing.T) {
+	t.Parallel()
+
+	const prefix = "Secrets Manager can't decrypt the secret value: arn:aws:kms:us-west-2:123456789012:key/00000000-0000-0000-0000-000000000000" //lintignore:AWSAT003,AWSAT005
+
+	testCases := map[string]struct {
+		err      error
+		expected bool
+	}{
+		"nil": {},
+		"pending deletion": {
+			err:      &types.DecryptionFailure{Message: aws.String(prefix + " is pending deletion.(Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)")},
+			expected: true,
+		},
+		"disabled": {
+			err:      &types.DecryptionFailure{Message: aws.String(prefix + " is disabled. (Service: AWSKMS; Status Code: 400; Error Code: DisabledException)")},
+			expected: true,
+		},
+		"access denied": {
+			err: &types.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: Access to KMS is not allowed (Service: AWSKMS; Status Code: 400; Error Code: AccessDeniedException)")},
+		},
+		"other error type": {
+			err: &types.InvalidRequestException{Message: aws.String("Error Code: KMSInvalidStateException")},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfsecretsmanager.IsKMSKeyUnavailable(tc.err); got != tc.expected {
+				t.Errorf("expected %t, got %t", tc.expected, got)
+			}
+		})
+	}
+}
+
 func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
@@ -533,6 +572,52 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+				),
+			},
+			{
+				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config:            testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecretVersionImportStateIdFunc(resourceName),
+				ExpectError:       regexache.MustCompile(`DecryptionFailure`),
 			},
 		},
 	})
@@ -1299,6 +1384,26 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_binary = base64encode("test-binary")
 }
 `, rName)
+}
+
+func testAccSecretVersionConfig_kmsKey(rName, secret string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  is_enabled              = %[3]t
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.key_id
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = %[2]q
+}
+`, rName, secret, enabled)
 }
 
 func testAccSecretVersionConfig_stagesSingle(rName string) string {
