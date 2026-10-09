@@ -643,7 +643,7 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 }
 
 func parseQueueURL(u string) (result inttypes.BaseIdentity, err error) {
-	re := regexache.MustCompile(`^https://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
+	re := regexache.MustCompile(`^https?://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
 	match := re.FindStringSubmatch(u)
 	if match == nil {
 		return inttypes.BaseIdentity{}, fmt.Errorf("could not parse %q as SQS URL", u)
