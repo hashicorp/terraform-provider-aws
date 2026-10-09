@@ -1354,7 +1354,7 @@ type dataSourceConfigurationModel struct {
 }
 
 type managedKnowledgeBaseConnectorConfigurationModel struct {
-	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters"`
+	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters" autoflex:"-"`
 	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
 	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
 }
@@ -1367,55 +1367,36 @@ var (
 func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var r awstypes.ManagedKnowledgeBaseConnectorConfiguration
-
+	// To prevent infinite recursion...
+	type modelAlias managedKnowledgeBaseConnectorConfigurationModel
+	alias := modelAlias(m)
+	diags.Append(fwflex.Expand(ctx, alias, &r)...)
 	if !m.ConnectorParameters.IsNull() {
 		v, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ConnectorParameters), document.NewLazyDocument)
 		if err != nil {
-			diags.AddError("creating Smithy document", err.Error())
+			diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
 			return nil, diags
 		}
 		r.ConnectorParameters = v
 	}
-
-	if !m.DeletionProtectionConfiguration.IsNull() {
-		data, d := m.DeletionProtectionConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var v awstypes.DeletionProtectionConfiguration
-		diags.Append(fwflex.Expand(ctx, data, &v)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		r.DeletionProtectionConfiguration = &v
-	}
-
-	if !m.MediaExtractionConfiguration.IsNull() {
-		data, d := m.MediaExtractionConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var v awstypes.MediaExtractionConfiguration
-		diags.Append(fwflex.Expand(ctx, data, &v)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		r.MediaExtractionConfiguration = &v
-	}
-
 	return &r, diags
 }
 
 func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *managedKnowledgeBaseConnectorConfigurationModel
+	alias := modelAlias(m)
 	switch t := v.(type) {
 	case awstypes.ManagedKnowledgeBaseConnectorConfiguration:
+		diags.Append(fwflex.Flatten(ctx, t, alias)...)
+		if diags.HasError() {
+			return diags
+		}
 		if v := t.ConnectorParameters; v != nil {
 			v, err := tfsmithy.DocumentToJSONString(v)
 			if err != nil {
-				diags.AddError("reading Smithy document", err.Error())
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
 
@@ -1423,41 +1404,22 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 			if strings.HasPrefix(v, `"{`) && strings.HasSuffix(v, `}"`) {
 				var inner string
 				if err := tfjson.DecodeFromString(v, &inner); err != nil {
-					diags.AddError("Decoding", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %s", err))
+					diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
 					return diags
 				}
 				v = inner
 			}
 
 			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
-		} else {
-			m.ConnectorParameters = fwtypes.NewSmithyJSONNull[document.Interface]()
 		}
 
-		if v := t.DeletionProtectionConfiguration; v != nil {
-			var data deletionProtectionConfigurationModel
-			diags.Append(fwflex.Flatten(ctx, v, &data)...)
-			if diags.HasError() {
-				return diags
-			}
-			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-		} else {
-			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[deletionProtectionConfigurationModel](ctx)
-		}
-
-		if v := t.MediaExtractionConfiguration; v != nil {
-			var data mediaExtractionConfigurationModel
-			diags.Append(fwflex.Flatten(ctx, v, &data)...)
-			if diags.HasError() {
-				return diags
-			}
-			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-		} else {
-			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfNull[mediaExtractionConfigurationModel](ctx)
-		}
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %T", v))
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("managedKnowledgeBaseConnectorConfigurationModel.Flatten: %T", v),
+		)
 	}
+
 	return diags
 }
 
