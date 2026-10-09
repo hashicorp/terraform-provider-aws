@@ -367,8 +367,8 @@ github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.71.3 h1:YpkjLkwRoazTWm8dacN3
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.71.3/go.mod h1:UWBC74+KW5PHEd+Sz6PShdcIaBdEKnf+3fRvHWiC+pA=
 github.com/aws/aws-sdk-go-v2/service/licensemanager v1.47.3 h1:XV2D8uFKq2KV8bGE4gEB5oZpwJ6HRFSzKxYaDaKpJJo=
 github.com/aws/aws-sdk-go-v2/service/licensemanager v1.47.3/go.mod h1:Sj11Bz6VDNFsf/m58gNM94MeKNzg5trHtCbEOIiF0xM=
-github.com/aws/aws-sdk-go-v2/service/lightsail v1.66.1 h1:IrSKJNnKpBJsMzn7XrzK/43XQwW5uP01Xbko9HUKKF4=
-github.com/aws/aws-sdk-go-v2/service/lightsail v1.66.1/go.mod h1:9zpsNDhJzOqXcnwLUy0Uv1+h1/e0GXGh8n/NdYJ9GK0=
+github.com/aws/aws-sdk-go-v2/service/lightsail v1.66.3 h1:bnf1FMuhdXzDdhTH3CTT4doKDN5/l9giHe1xOXH/r9A=
+github.com/aws/aws-sdk-go-v2/service/lightsail v1.66.3/go.mod h1:klzIqvmHrGscGO9js+R4v+s2iHjs3561rWPIk3EEYRE=
 github.com/aws/aws-sdk-go-v2/service/location v1.59.1 h1:K2ApNdbq7pRVHVCDQMpQS8+gtv+qC++PBdJNBlqkYXc=
 github.com/aws/aws-sdk-go-v2/service/location v1.59.1/go.mod h1:UCDUdWa27oWvJVuaEp09bYhDkkiH4DOXHPrf5UgNZ84=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.35.1 h1:WcGLRlpM0UXV1WYFOWKSF41D4/g4YTBmrsIVj+5V7vs=
