@@ -9,8 +9,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworksecuritymanager "github.com/hashicorp/terraform-provider-aws/internal/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -582,11 +585,32 @@ func testAccCheckAdminAccountExists(ctx context.Context, t *testing.T, n string,
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckOrganizationManagementAccount(ctx, t)
 
-	conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
+	meta := acctest.ProviderMeta(ctx, t)
+
+	// Enable AWS Organizations trusted access for Network Security Manager.
+	// EnableAWSServiceAccess is idempotent, so this is safe when trusted access
+	// is already enabled. A failure is deliberately not fatal: every test
+	// configuration also declares aws_organizations_aws_service_access for the
+	// same principal, and it is the first create that onboards the account. In
+	// particular, a caller without organizations:EnableAWSServiceAccess must not
+	// skip or fail the whole suite here.
+	orgInput := organizations.EnableAWSServiceAccessInput{
+		ServicePrincipal: aws.String("network-security-manager.amazonaws.com"),
+	}
+	if _, err := meta.OrganizationsClient(ctx).EnableAWSServiceAccess(ctx, &orgInput); err != nil {
+		t.Logf("enabling AWS Organizations trusted access for Network Security Manager: %s", err)
+	}
+
+	conn := meta.NetworkSecurityManagerClient(ctx)
 
 	input := networksecuritymanager.ListAdminAccountsInput{}
 	_, err := conn.ListAdminAccounts(ctx, &input)
 
+	// An account that has never created a Network Security Manager resource is
+	// not yet onboarded; the first create onboards it.
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not onboarded") {
+		return
+	}
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
