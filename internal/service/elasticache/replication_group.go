@@ -1161,14 +1161,14 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		if d.HasChange("log_delivery_configuration") {
 			o, n := d.GetChange("log_delivery_configuration")
 
-			input.LogDeliveryConfigurations = []awstypes.LogDeliveryConfigurationRequest{}
+			logDeliveryConfigurations := []awstypes.LogDeliveryConfigurationRequest{}
 			logTypesToSubmit := make(map[awstypes.LogType]bool)
 
 			currentLogDeliveryConfig := n.(*schema.Set).List()
 			for _, current := range currentLogDeliveryConfig {
 				logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
 				logTypesToSubmit[logDeliveryConfigurationRequest.LogType] = true
-				input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
+				logDeliveryConfigurations = append(logDeliveryConfigurations, logDeliveryConfigurationRequest)
 			}
 
 			previousLogDeliveryConfig := o.(*schema.Set).List()
@@ -1176,11 +1176,34 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurationRequest(previous.(map[string]any))
 				//if something was removed, send an empty request
 				if !logTypesToSubmit[logDeliveryConfigurationRequest.LogType] {
-					input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
+					logDeliveryConfigurations = append(logDeliveryConfigurations, logDeliveryConfigurationRequest)
 				}
 			}
 
-			requestUpdate = true
+			if d.Get(names.AttrApplyImmediately).(bool) {
+				input.LogDeliveryConfigurations = logDeliveryConfigurations
+				requestUpdate = true
+			} else {
+				// ElastiCache requires apply-immediately for all log delivery modifications, so with
+				// apply_immediately = false they use a separate ApplyImmediately=true call; requestUpdate stays unset to avoid an empty combined call.
+				logDeliveryInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:          aws.Bool(true),
+					LogDeliveryConfigurations: logDeliveryConfigurations,
+					ReplicationGroupId:        aws.String(d.Id()),
+				}
+				updateFuncs = append(updateFuncs, func() error {
+					_, err := conn.ModifyReplicationGroup(ctx, &logDeliveryInput)
+					// modifying to match out of band operations may result in this error
+					if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+						return nil
+					}
+
+					if err != nil {
+						return fmt.Errorf("modifying ElastiCache Replication Group (%s) log delivery configuration: %w", d.Id(), err)
+					}
+					return nil
+				})
+			}
 		}
 
 		if d.HasChange("maintenance_window") {

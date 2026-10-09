@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `InvalidParameterValue` error when modifying `log_delivery_configuration` with `apply_immediately = false`
+```
