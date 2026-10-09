@@ -438,7 +438,7 @@ Exactly one of the following must be specified:
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 

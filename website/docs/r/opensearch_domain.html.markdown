@@ -402,7 +402,7 @@ The following arguments are optional:
 * `node_options` - (Optional) List of node options for the domain.
 * `warm_count` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warm_enabled` - (Optional) Whether to enable warm storage.
-* `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
+* `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 
@@ -531,9 +531,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `90m`)
+* `create` - (Default `120m`)
 * `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `delete` - (Default `120m`)
 
 ## Import
 

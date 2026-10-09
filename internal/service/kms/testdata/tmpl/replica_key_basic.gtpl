@@ -7,7 +7,7 @@ resource "aws_kms_replica_key" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  provider = awsalternate
+  region = var.secondary_region
 
   description  = "${var.rName}-source"
   multi_region = true

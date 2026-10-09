@@ -108,7 +108,7 @@ This configuration block supports the following:
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum. Set to `0` to exclude instance types with accelerators.
 * `accelerator_manufacturers` - (Optional) List of accelerator manufacturer names. Default is any manufacturer.
-* `accelerator_names` - (Optional) List of accelerator names. Default is any acclerator.
+* `accelerator_names` - (Optional) List of accelerator names. Default is any accelerator.
 * `accelerator_total_memory_mib` - (Optional) Block describing the minimum and maximum total memory of the accelerators. Default is no minimum or maximum.
     * `min` - (Optional) The minimum amount of accelerator memory, in MiB. To specify no minimum limit, omit this parameter.
     * `max` - (Optional) The maximum amount of accelerator memory, in MiB. To specify no maximum limit, omit this parameter.
@@ -117,7 +117,7 @@ This configuration block supports the following:
 
     If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.
 
-* `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `bare_metal` - (Optional) Indicate whether bare metal instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) The minimum baseline bandwidth, in Mbps. To specify no minimum limit, omit this parameter..
     * `max` - (Optional) The maximum baseline bandwidth, in Mbps. To specify no maximum limit, omit this parameter..

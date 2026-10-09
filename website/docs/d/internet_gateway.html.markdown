@@ -52,7 +52,7 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected Internet Gateway.
 
-`attachments` are also exported with the following attributes, when there are relevants:
+`attachments` are also exported with the following attributes, when there are relevant:
 Each attachment supports the following:
 
 * `owner_id` - ID of the AWS account that owns the internet gateway.

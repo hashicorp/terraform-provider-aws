@@ -86,12 +86,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `endpoints` Block
 
-* `iscsi` - Endpoint for accessing data on your storage virtual machine via iSCSI protocol. See [Endpoint](#endpoint).
-* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint).
-* `nfs` - Endpoint for accessing data on your storage virtual machine via NFS protocol. See [Endpoint](#endpoint).
-* `smb` - Endpoint for accessing data on your storage virtual machine via SMB protocol. This is only set if an active_directory_configuration has been set. See [Endpoint](#endpoint).
+* `iscsi` - Endpoint for accessing data on your storage virtual machine via iSCSI protocol. See [`endpoints.iscsi`](#endpointsiscsi-block) below.
+* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [`endpoints.management`](#endpointsmanagement-block) below.
+* `nfs` - Endpoint for accessing data on your storage virtual machine via NFS protocol. See [`endpoints.nfs`](#endpointsnfs-block) below.
+* `smb` - Endpoint for accessing data on your storage virtual machine via SMB protocol. This is only set if an active_directory_configuration has been set. See [`endpoints.smb`](#endpointssmb-block) below.
 
-#### Endpoint
+#### `endpoints.iscsi` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
+* `ip_addresses` - IP addresses of the storage virtual machine endpoint.
+
+#### `endpoints.management` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
+* `ip_addresses` - IP addresses of the storage virtual machine endpoint.
+
+#### `endpoints.nfs` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
+* `ip_addresses` - IP addresses of the storage virtual machine endpoint.
+
+#### `endpoints.smb` Block
 
 * `dns_name` - Domain Name Service (DNS) name for the storage virtual machine. You can mount your storage virtual machine using its DNS name.
 * `ip_addresses` - IP addresses of the storage virtual machine endpoint.
@@ -121,7 +136,7 @@ Using `terraform import`, import FSx Storage Virtual Machine using the `id`. For
 % terraform import aws_fsx_ontap_storage_virtual_machine.example svm-12345678abcdef123
 ```
 
-Certain resource arguments, like `svm_admin_password` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
+Certain resource arguments, like `svm_admin_password` and the `self_managed_active_directory` configuration block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_ontap_storage_virtual_machine" "example" {

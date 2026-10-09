@@ -70,28 +70,27 @@ resource "aws_ec2_managed_prefix_list" "pls" {
 
 This data source supports the following arguments:
 
+* `filter` - (Optional) Custom filter block as described below.
+* `ipam_pool_id` - (Required) ID of the IPAM pool you would like the list of provisioned CIDRs.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `ipam_pool_id` - ID of the IPAM pool you would like the list of provisioned CIDRs.
-* `filter` - Custom filter block as described below.
 
-### `filter`
+### `filter` Block
 
 More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
-* `name` - (Required) Name of the field to filter by, as defined by
-  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetIpamPoolCidrs.html).
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetIpamPoolCidrs.html).
 * `values` - (Required) Set of values that are accepted for the given field.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `ipam_pool_cidrs` - The CIDRs provisioned into the IPAM pool, described below.
+* `ipam_pool_cidrs` - CIDRs provisioned into the IPAM pool, described below.
 
-### ipam_pool_cidrs
+### `ipam_pool_cidrs` Block
 
-* `cidr` - A network CIDR.
-* `state` - The provisioning state of that CIDR.
+* `cidr` - Network CIDR.
+* `state` - Provisioning state of that CIDR.
 
 ## Timeouts
 

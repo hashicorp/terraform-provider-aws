@@ -24,16 +24,16 @@ data "aws_vpc_ipam" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) ID of the IPAM.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the IPAM.
-* `default_resource_discovery_association_id` - The default resource discovery association ID.
-* `default_resource_discovery_id` - The default resource discovery ID.
+* `default_resource_discovery_association_id` - Default resource discovery association ID.
+* `default_resource_discovery_id` - Default resource discovery ID.
 * `description` - Description for the IPAM.
 * `enable_private_gua` - If private GUA is enabled.
 * `id` - ID of the IPAM resource.
@@ -47,5 +47,9 @@ This data source exports the following attributes in addition to the arguments a
 * `scope_count` - Number of scopes on this IPAM.
 * `state` - Current state of the IPAM.
 * `state_message` - State message of the IPAM.
-* `tier` - IPAM Tier.
 * `tags` - Tags of the IPAM resource.
+* `tier` - IPAM Tier.
+
+### `operating_regions` Block
+
+* `region_name` - Name of the Region.

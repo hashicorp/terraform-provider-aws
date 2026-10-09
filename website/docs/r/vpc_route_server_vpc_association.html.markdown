@@ -24,8 +24,8 @@ resource "aws_vpc_route_server_vpc_association" "example" {
 
 The following arguments are required:
 
-* `route_server_id` - (Required) The unique identifier for the route server to be associated.
-* `vpc_id` - (Required) The ID of the VPC to associate with the route server.
+* `route_server_id` - (Required) Unique identifier for the route server to be associated.
+* `vpc_id` - (Required) ID of the VPC to associate with the route server.
 
 The following arguments are optional:
 
