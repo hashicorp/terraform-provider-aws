@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
 	tfcversion "github.com/hashicorp/go-version"
@@ -332,6 +333,49 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 
 			if diff := cmp.Diff(testcase.expectedForceNew, diff.forceNew); diff != "" {
 				t.Errorf("unexpected differences: %s", diff)
+			}
+		})
+	}
+}
+
+func TestIsKMSKeyCreatingError(t *testing.T) {
+	t.Parallel()
+
+	const creating = "arn:aws:kms:eu-north-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab is creating. (Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)"
+
+	testcases := map[string]struct {
+		err      error
+		expected bool
+	}{
+		"nil": {
+			err: nil,
+		},
+		"CreateSecret key creating": {
+			err:      &awstypes.PreconditionNotMetException{Message: aws.String(creating)},
+			expected: true,
+		},
+		"PutSecretValue key creating": {
+			err:      &awstypes.EncryptionFailure{Message: aws.String("Secrets Manager can't encrypt the secret value: " + creating)},
+			expected: true,
+		},
+		"GetSecretValue key creating": {
+			err:      &awstypes.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: " + creating)},
+			expected: true,
+		},
+		"GetSecretValue key pending deletion": {
+			err: &awstypes.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: arn:aws:kms:eu-north-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab is pending deletion.")},
+		},
+		"other error type": {
+			err: &awstypes.InvalidRequestException{Message: aws.String(creating)},
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfsecretsmanager.IsKMSKeyCreatingError(testcase.err); got != testcase.expected {
+				t.Errorf("IsKMSKeyCreatingError() = %t, want %t", got, testcase.expected)
 			}
 		})
 	}
