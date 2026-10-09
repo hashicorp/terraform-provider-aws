@@ -127,6 +127,49 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAppConfigHostedConfigurationVersion_featureFlagsNoDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_appconfig_hosted_configuration_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostedConfigurationVersionConfig_featureFlags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostedConfigurationVersionExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}/hostedconfigurationversion/[0-9]+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_appconfig_application.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", "aws_appconfig_configuration_profile.test", "configuration_profile_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Second apply to verify no drift is detected
+			{
+				Config: testAccHostedConfigurationVersionConfig_featureFlags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostedConfigurationVersionExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).AppConfigClient(ctx)
@@ -203,4 +246,42 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
   version_label = %[2]q
 }
 `, rName, versionLabel))
+}
+
+func testAccHostedConfigurationVersionConfig_featureFlags(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfigurationProfileConfig_name(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_hosted_configuration_version" "test" {
+  application_id           = aws_appconfig_application.test.id
+  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
+  content_type             = "application/json"
+
+  content = jsonencode({
+    flags = {
+      testflag = {
+        name = "testFlag"
+      }
+    }
+    values = {
+      testflag = {
+        _variants = [
+          {
+            enabled = true
+            name    = "variant1"
+            rule    = "(eq $context \"variant1\")"
+          },
+          {
+            enabled = false
+            name    = "Default"
+          }
+        ]
+      }
+    }
+    version = "1"
+  })
+
+  description = %q
+}
+`, rName))
 }
