@@ -5322,7 +5322,7 @@ service "lambdaweb" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ListWebFunctions"
+    endpoint_api_call = "GetWebAccountSettings"
   }
 
   resource_prefix {
