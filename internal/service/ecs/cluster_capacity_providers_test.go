@@ -87,6 +87,41 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 	})
 }
 
+func TestAccECSClusterCapacityProviders_disappears_Cluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster awstypes.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_cluster_capacity_providers.test"
+	clusterResourceName := "aws_ecs_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterCapacityProvidersConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, "aws_ecs_cluster.test", &cluster),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceCluster(), clusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(clusterResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(clusterResourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSClusterCapacityProviders_defaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster awstypes.Cluster
