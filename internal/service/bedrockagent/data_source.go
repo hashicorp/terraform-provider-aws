@@ -1424,6 +1424,7 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 				var inner string
 				if err := tfjson.DecodeFromString(v, &inner); err != nil {
 					diags.AddError("Decoding", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %s", err))
+					return diags
 				}
 				v = inner
 			}
