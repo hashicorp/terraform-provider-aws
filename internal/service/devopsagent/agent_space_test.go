@@ -211,11 +211,8 @@ func testAccCheckAgentSpaceExists(ctx context.Context, t *testing.T, n string) r
 		conn := acctest.ProviderMeta(ctx, t).DevOpsAgentClient(ctx)
 
 		_, err := tfdevopsagent.FindAgentSpaceByID(ctx, conn, rs.Primary.Attributes["agent_space_id"])
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
