@@ -87,7 +87,7 @@ func listSubscriptionPages(ctx context.Context, conn *pricingplanmanager.Client,
 	return func(yield func([]awstypes.SubscriptionSummary, error) bool) {
 		pages := pricingplanmanager.NewListSubscriptionsPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
 				yield(nil, fmt.Errorf("listing Pricing Plan Manager Subscriptions: %w", err))
 				return
