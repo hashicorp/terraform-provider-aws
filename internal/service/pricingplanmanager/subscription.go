@@ -275,6 +275,7 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 	if !plan.ResourceARNs.Equal(state.ResourceARNs) {
 		os := fwflex.ExpandFrameworkStringValueSet(ctx, state.ResourceARNs)
 		ns := fwflex.ExpandFrameworkStringValueSet(ctx, plan.ResourceARNs)
+
 		if del := os.Difference(ns); len(del) > 0 {
 			input := pricingplanmanager.DisassociateResourcesFromSubscriptionInput{
 				Arn:          aws.String(arn),
@@ -282,11 +283,13 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 				ResourceArns: del,
 			}
 
-			_, err := conn.DisassociateResourcesFromSubscription(ctx, &input)
+			out, err := conn.DisassociateResourcesFromSubscription(ctx, &input)
 			if err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 				return
 			}
+
+			etag = out.ETag
 
 			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
@@ -301,13 +304,11 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 				ResourceArns: add,
 			}
 
-			out, err := conn.AssociateResourcesToSubscription(ctx, &input)
+			_, err := conn.AssociateResourcesToSubscription(ctx, &input)
 			if err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 				return
 			}
-
-			etag = out.ETag
 
 			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
