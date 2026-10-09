@@ -595,8 +595,8 @@ github.com/aws/aws-sdk-go-v2/service/uxc v1.8.3 h1:Mq7ws5PqbYsXYpmpJ2kyFD6uKp7In
 github.com/aws/aws-sdk-go-v2/service/uxc v1.8.3/go.mod h1:MYpOs5EaoMcXDDAYWQFqFXg8+mhSTMLVOIHNbp1DiTs=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.41.3 h1:2lCLJSf5I2qdXMONBEeL8NRQQERyr+4r2e88m023nII=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.41.3/go.mod h1:5FvVPlALpahmyDIYen6X9W/KpfbD/gr5bLIf62aRXoI=
-github.com/aws/aws-sdk-go-v2/service/vpclattice v1.33.1 h1:Ob7WAstLREo5qmW+GvWoW8jSkWZ6gdpQKD6XLScnEM0=
-github.com/aws/aws-sdk-go-v2/service/vpclattice v1.33.1/go.mod h1:OpFPL4ejCUx4e+8cGf4J4wU1D8pGtkLEvYmy4biT1WI=
+github.com/aws/aws-sdk-go-v2/service/vpclattice v1.33.3 h1:vlm4wIJphZwmhdeLY6al0eyTDXvI64tkYirMOywkGO0=
+github.com/aws/aws-sdk-go-v2/service/vpclattice v1.33.3/go.mod h1:lLL2AjzNhopy2pXf8/YsNVRc8e4o4q0BasXxWqFH068=
 github.com/aws/aws-sdk-go-v2/service/waf v1.38.1 h1:lJKVl47CHeX3j5EGCN5taymwRXak2gik/I1hX5ZPugE=
 github.com/aws/aws-sdk-go-v2/service/waf v1.38.1/go.mod h1:e7nyp2icl/KyxIa7IN8b1Uob7cCQjrXyptey6aYxOHY=
 github.com/aws/aws-sdk-go-v2/service/wafregional v1.38.1 h1:JF3aCWCkBQtaMZn5atpIcOvXDGXn4MRw7byQuG/ZC3Y=
