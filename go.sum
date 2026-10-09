@@ -329,8 +329,8 @@ github.com/aws/aws-sdk-go-v2/service/iot v1.84.3 h1:Xi63bWUMrdYBcomGpCkcpUgMKhTH
 github.com/aws/aws-sdk-go-v2/service/iot v1.84.3/go.mod h1:C3mMGsl1x7B9hflV8FDilpqXZ0UxQ+oOZrEsJtWpKtI=
 github.com/aws/aws-sdk-go-v2/service/ivs v1.61.3 h1:WHacHPF9F6VV28swNy2ZROBfrhcFVqz0dujAl40bvXw=
 github.com/aws/aws-sdk-go-v2/service/ivs v1.61.3/go.mod h1:IGuegwoNaJj5pbYwV6mh+zN9ynUJmSeSyilmCipLPmA=
-github.com/aws/aws-sdk-go-v2/service/ivschat v1.29.1 h1:GVmmVfYb94dFiuNd4hsgEHqQ3iM+Sjf0WAhvr2fmyRE=
-github.com/aws/aws-sdk-go-v2/service/ivschat v1.29.1/go.mod h1:glYAEz4iFyuuG/oy3EvF2hwmW2Cd/Jv64GCBQzuCvQU=
+github.com/aws/aws-sdk-go-v2/service/ivschat v1.29.3 h1:Uh2cFKpIWJ2xWom/rJOo/ZVXIgy+xcysTVmQiaHILiE=
+github.com/aws/aws-sdk-go-v2/service/ivschat v1.29.3/go.mod h1:ts5fK36HLYEU8gvYcU1UaHr5OALbJJUmsi0db36jcWw=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.65.1 h1:IxeJgUriYPsfo2sHbQY9YWoV4hUfZrfSTkHUlcaDcuU=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.65.1/go.mod h1:dLmfTMk7qZ1UmYnVjdBBU/zcqDCeTSdamY0gRly2QRc=
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.39.1 h1:Ne7KMO3cPD1jq09kGjo0deOPzAxqyGe8rPikc8ooM+E=
