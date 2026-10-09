@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -94,8 +95,10 @@ func (d *catalogDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	tags, err := listTags(ctx, d.Meta().GlueClient(ctx), data.ARN.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
-		return
+		if !errs.IsA[*awstypes.InvalidInputException](err) {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
+			return
+		}
 	}
 	setTagsOut(ctx, tags.Map())
 
