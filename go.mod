@@ -242,7 +242,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/rum v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.2
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.79.1
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.79.3
 	github.com/aws/aws-sdk-go-v2/service/s3files v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.23.1
