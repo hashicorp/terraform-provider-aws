@@ -1522,8 +1522,8 @@ type vectorIngestionConfigurationModel struct {
 }
 
 type contextEnrichmentConfigurationModel struct {
-	Type                                fwtypes.StringEnum[awstypes.ContextEnrichmentType]                                         `tfsdk:"type"`
 	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelContextEnrichmentConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
+	Type                                fwtypes.StringEnum[awstypes.ContextEnrichmentType]                                         `tfsdk:"type"`
 }
 
 type bedrockFoundationModelContextEnrichmentConfigurationModel struct {
@@ -1653,67 +1653,6 @@ type patternObjectFilterModel struct {
 	ExclusionFilters fwtypes.SetOfString `tfsdk:"exclusion_filters"`
 	InclusionFilters fwtypes.SetOfString `tfsdk:"inclusion_filters"`
 	ObjectType       types.String        `tfsdk:"object_type"`
-}
-
-func (c crawlFilterConfigurationModel) GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject {
-	return schema.NestedBlockObject{
-		Blocks: map[string]schema.Block{
-			"filter_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[crawlFilterConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrType: schema.StringAttribute{
-							Required: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"pattern_object_filter": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterConfigurationModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"filters": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"exclusion_filters": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.Set{
-														setvalidator.SizeBetween(1, 25),
-														setvalidator.ValueStringsAre(
-															stringvalidator.LengthBetween(1, 1000),
-														),
-													},
-												},
-												"inclusion_filters": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.Set{
-														setvalidator.SizeBetween(1, 25),
-														setvalidator.ValueStringsAre(
-															stringvalidator.LengthBetween(1, 1000),
-														),
-													},
-												},
-												"object_type": schema.StringAttribute{
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 type chunkingConfigurationModel struct {
