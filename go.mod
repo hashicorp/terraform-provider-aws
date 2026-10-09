@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.74.3
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.41.3
-	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/glue v1.167.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.41.1
