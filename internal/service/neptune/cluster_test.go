@@ -882,6 +882,55 @@ func TestAccNeptuneCluster_GlobalUpgrade_minorTertiary(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneCluster_GlobalCluster_engineVersionIgnore(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	var p, s awstypes.DBCluster
+	var globalCluster awstypes.GlobalCluster
+	resourceNamePrimary := "aws_neptune_cluster.primary"
+	resourceNameSecondary := "aws_neptune_cluster.secondary"
+	globalClusterResourceName := "aws_neptune_global_cluster.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalCluster(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+				Config:                   testAccClusterConfig_globalClusterEngineVersion(rName, "1.4.1.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, t, globalClusterResourceName, &globalCluster),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceNamePrimary, names.AttrEngineVersion, "1.4.1.0"),
+					resource.TestCheckResourceAttr(resourceNamePrimary, "global_cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceNameSecondary, names.AttrEngineVersion, "1.4.1.0"),
+					resource.TestCheckResourceAttr(resourceNameSecondary, "global_cluster_identifier", rName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+				Config:                   testAccClusterConfig_globalClusterEngineVersion(rName, "1.4.3.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, t, globalClusterResourceName, &globalCluster),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceNamePrimary, names.AttrEngineVersion, "1.4.3.0"),
+					resource.TestCheckResourceAttr(resourceNamePrimary, "global_cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceNameSecondary, names.AttrEngineVersion, "1.4.3.0"),
+					resource.TestCheckResourceAttr(resourceNameSecondary, "global_cluster_identifier", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
@@ -1723,6 +1772,100 @@ resource "aws_neptune_cluster_instance" "secondary" {
   instance_class     = "db.r6g.large"
 }
 `, rNameGlobal, rNamePrimary, rNameSecondary))
+}
+
+func testAccClusterConfig_globalClusterEngineVersion(rName, engineVersion string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_neptune_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "neptune"
+  engine_version            = %[2]q
+}
+
+resource "aws_neptune_cluster" "primary" {
+  apply_immediately         = true
+  cluster_identifier        = "%[1]s-primary"
+  engine                    = aws_neptune_global_cluster.test.engine
+  engine_version            = aws_neptune_global_cluster.test.engine_version
+  global_cluster_identifier = aws_neptune_global_cluster.test.global_cluster_identifier
+  skip_final_snapshot       = true
+}
+
+resource "aws_neptune_cluster_instance" "primary" {
+  apply_immediately  = true
+  cluster_identifier = aws_neptune_cluster.primary.id
+  engine             = aws_neptune_cluster.primary.engine
+  engine_version     = aws_neptune_cluster.primary.engine_version
+  identifier         = "%[1]s-primary"
+  instance_class     = "db.r6g.large"
+}
+
+resource "aws_vpc" "alternate" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "%[1]s-secondary"
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  provider          = "awsalternate"
+  count             = 3
+  vpc_id            = aws_vpc.alternate.id
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+
+  tags = {
+    Name = "%[1]s-secondary"
+  }
+}
+
+resource "aws_neptune_subnet_group" "alternate" {
+  provider   = "awsalternate"
+  name       = "%[1]s-secondary"
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_neptune_cluster" "secondary" {
+  provider                  = "awsalternate"
+  apply_immediately         = true
+  cluster_identifier        = "%[1]s-secondary"
+  engine                    = aws_neptune_global_cluster.test.engine
+  engine_version            = aws_neptune_global_cluster.test.engine_version
+  global_cluster_identifier = aws_neptune_global_cluster.test.global_cluster_identifier
+  neptune_subnet_group_name = aws_neptune_subnet_group.alternate.name
+  skip_final_snapshot       = true
+
+  depends_on = [aws_neptune_cluster_instance.primary]
+
+  lifecycle {
+    ignore_changes = [replication_source_identifier]
+  }
+}
+
+resource "aws_neptune_cluster_instance" "secondary" {
+  provider           = "awsalternate"
+  apply_immediately  = true
+  cluster_identifier = aws_neptune_cluster.secondary.id
+  engine             = aws_neptune_cluster.secondary.engine
+  engine_version     = aws_neptune_cluster.secondary.engine_version
+  identifier         = "%[1]s-secondary"
+  instance_class     = "db.r6g.large"
+}
+`, rName, engineVersion))
 }
 
 func testAccClusterConfig_restoreFromSnapshot(rName string) string {

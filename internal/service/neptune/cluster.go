@@ -672,8 +672,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if d.HasChange(names.AttrEngineVersion) {
-			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-			input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+			if _, ok := d.GetOk("global_cluster_identifier"); !ok {
+				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+				input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+			}
 		}
 
 		if d.HasChange("iam_database_authentication_enabled") {
