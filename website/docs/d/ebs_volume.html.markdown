@@ -53,6 +53,7 @@ This data source exports the following attributes in addition to the arguments a
 * `kms_key_id` - ARN for the KMS encryption key.
 * `multi_attach_enabled` - (Optional) Specifies whether Amazon EBS Multi-Attach is enabled.
 * `outpost_arn` - ARN of the Outpost.
+* `owner_id` - AWS account ID of the volume owner. For shared volumes, this is the source account.
 * `size` - Size of the drive in GiBs.
 * `snapshot_id` - Snapshot_id the EBS volume is based off.
 * `tags` - Map of tags for the resource.
