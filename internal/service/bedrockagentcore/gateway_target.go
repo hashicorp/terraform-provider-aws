@@ -1311,6 +1311,16 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
+	if target.Status == awstypes.TargetStatusCreatePendingAuth {
+		response.Diagnostics.AddWarning(
+			"Gateway Target Requires Manual Authorization",
+			"This target is in CREATE_PENDING_AUTH state and needs manual OAuth consent before it can reach READY. "+
+				"The resource has been written to state, but terraform destroy will be rejected by AWS until the target "+
+				"leaves the pending-auth state. Complete the OAuth authorization flow first, or remove it from state manually "+
+				"with 'terraform state rm' if you want to abandon it.",
+		)
+	}
+
 	// Set values for unknowns.
 	target = normalizeGatewayTargetOutputForState(target, data.MetadataConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0)
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, target, &data))
@@ -1394,9 +1404,19 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		if _, err := waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		updatedTarget, err := waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 			return
+		}
+
+		if updatedTarget != nil && updatedTarget.Status == awstypes.TargetStatusUpdatePendingAuth {
+			response.Diagnostics.AddWarning(
+				"Gateway Target Requires Manual Authorization",
+				"This target is in UPDATE_PENDING_AUTH state and needs manual OAuth consent before it can reach READY. "+
+					"terraform destroy will be rejected by AWS until the target leaves the pending-auth state. "+
+					"Complete the OAuth authorization flow first.",
+			)
 		}
 	}
 
@@ -1487,7 +1507,9 @@ func (gatewayTargetImportID) Parse(id string) (string, map[string]any, error) {
 
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.TargetStatusCreating),
+		Pending: enum.Slice(awstypes.TargetStatusCreating),
+		// CREATE_PENDING_AUTH is a valid terminal state for AUTHORIZATION_CODE
+		// targets that require manual user consent before transitioning to READY.
 		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
@@ -1505,7 +1527,9 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.TargetStatusUpdating),
+		Pending: enum.Slice(awstypes.TargetStatusUpdating),
+		// UPDATE_PENDING_AUTH is a valid terminal state for AUTHORIZATION_CODE
+		// targets that require manual user consent before transitioning to READY.
 		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
@@ -1523,10 +1547,17 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		// FAILED and SYNCHRONIZING can appear until AWS moves the target to DELETING.
-		// The *_PENDING_AUTH states (OAuth 3LO awaiting consent) also block delete until
-		// the auth window resolves, so treat them as pending rather than unexpected.
-		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing, awstypes.TargetStatusCreatePendingAuth, awstypes.TargetStatusUpdatePendingAuth, awstypes.TargetStatusSynchronizePendingAuth),
+		// FAILED, SYNCHRONIZING, and *_PENDING_AUTH states (OAuth 3LO awaiting consent)
+		// can appear until AWS moves the target to DELETING.
+		Pending: enum.Slice(
+			awstypes.TargetStatusDeleting,
+			awstypes.TargetStatusReady,
+			awstypes.TargetStatusFailed,
+			awstypes.TargetStatusSynchronizing,
+			awstypes.TargetStatusCreatePendingAuth,
+			awstypes.TargetStatusUpdatePendingAuth,
+			awstypes.TargetStatusSynchronizePendingAuth,
+		),
 		Target:  []string{},
 		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
@@ -1593,6 +1624,11 @@ func deleteGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 	_, err := conn.DeleteGatewayTarget(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
+	}
+
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "Pending_Auth") {
+		return smarterr.NewError(fmt.Errorf("deleting Bedrock AgentCore Gateway (%s) Target (%s): target is in a *_PENDING_AUTH state and cannot be deleted. "+
+			"Complete the OAuth authorization flow to move it to READY first, or remove it from Terraform state with 'terraform state rm': %w", gatewayIdentifier, targetID, err))
 	}
 
 	if err != nil {
