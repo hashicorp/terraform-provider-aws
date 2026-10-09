@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rum_app_monitor: Add `deobfuscation_configuration` configuration block to support enabling unminification of JavaScript error stack traces.
+```
