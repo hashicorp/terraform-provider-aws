@@ -31,15 +31,17 @@ import (
 )
 
 // @SDKResource("aws_ram_principal_association", name="Principal Association")
+// @IdentityAttribute("principal")
+// @IdentityAttribute("resource_share_arn")
+// @ImportIDHandler("principalAssociationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShareAssociation")
+// @Testing(useAlternateAccount=true)
+// @Testing(preIdentityVersion="v6.68.0")
 func resourcePrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrincipalAssociationCreate,
 		ReadWithoutTimeout:   resourcePrincipalAssociationRead,
 		DeleteWithoutTimeout: resourcePrincipalAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -280,4 +282,38 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 	}
 
 	return nil, err
+}
+
+var _ inttypes.SDKv2ImportID = principalAssociationImportID{}
+
+func createPrincipalAssociationResourceID(resourceShareARN, principal string) string {
+	id, _ := flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false)
+	return id
+}
+
+type principalAssociationImportID struct{}
+
+func (principalAssociationImportID) Create(d *schema.ResourceData) string {
+	return createPrincipalAssociationResourceID(
+		d.Get("resource_share_arn").(string),
+		d.Get(names.AttrPrincipal).(string),
+	)
+}
+
+func (principalAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := flex.ExpandResourceId(
+		id,
+		principalAssociationResourceIDPartCount,
+		false,
+	)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"resource_share_arn": parts[0],
+		names.AttrPrincipal:  parts[1],
+	}
+
+	return id, result, nil
 }
