@@ -309,8 +309,8 @@ github.com/aws/aws-sdk-go-v2/service/inspector v1.39.3 h1:3zuEx7Wf0HCdD33mYgJ2JC
 github.com/aws/aws-sdk-go-v2/service/inspector v1.39.3/go.mod h1:I/f0gLGPpFEBLY05fsUGzODK/WRSza5ZWICU841WWJ4=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.61.2 h1:60rwT/BORPjp+1SeYZORXmSXgAbUO5R0BHilgThDIb0=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.61.2/go.mod h1:1Ea9rbJ67kQS2Gdml605ASPPLtNlj9hn0Ors/na88g8=
-github.com/aws/aws-sdk-go-v2/service/interconnect v1.9.1 h1:U+BKXFCDdOA9u2Jl2i9Qo5KcUtnRfN8VvUwxJniT0dQ=
-github.com/aws/aws-sdk-go-v2/service/interconnect v1.9.1/go.mod h1:Nh2Ge8S9n1X/ub93u0lDzO3+YIvnL/OG7ImCCzYJ1xY=
+github.com/aws/aws-sdk-go-v2/service/interconnect v1.9.3 h1:XiF/yyLrmC+0KANa2WICe8cW9wizE6hiWHdOsj3eQX8=
+github.com/aws/aws-sdk-go-v2/service/interconnect v1.9.3/go.mod h1:TWOpKvvddEMwhYrF4pEreRpQJGD5W+Ae7VZNjay8hTQ=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.20 h1:XBYeuBbMY5LRAKOdZgzUQO1BVj3B07uYAROSapq/IWg=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.20/go.mod h1:XL6ZfC3ePnooN2u2LT4RNhpr/xs5TiboydyUbgr8Dmg=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.6 h1:FliCmwxz1mpssINb4n9hkuX1UoReFWyatTQNASP1w7Y=
