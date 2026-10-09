@@ -1,5 +1,5 @@
 resource "aws_devopsagent_agent_space" "test" {
 {{- template "region" }}
-  name = "tf-acc-test-devopsagent"
+  name = var.rName
 {{- template "tags" . }}
 }

@@ -32,10 +32,8 @@ import (
 // @FrameworkResource("aws_devopsagent_agent_space", name="Agent Space")
 // @IdentityAttribute("agent_space_id")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsagent;devopsagent.GetAgentSpaceOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="agent_space_id")
-// @Testing(generator=false)
 func newAgentSpaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &agentSpaceResource{}, nil
 }

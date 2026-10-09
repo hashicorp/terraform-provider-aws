@@ -20,15 +20,6 @@ list "aws_devopsagent_agent_space" "example" {
 }
 ```
 
-### Include Resource Data
-
-```terraform
-list "aws_devopsagent_agent_space" "example" {
-  provider         = aws
-  include_resource = true
-}
-```
-
 ## Argument Reference
 
 This list resource supports the following arguments:

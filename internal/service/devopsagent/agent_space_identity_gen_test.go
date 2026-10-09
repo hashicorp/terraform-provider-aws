@@ -8,7 +8,6 @@ package devopsagent_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -24,8 +23,8 @@ import (
 func TestAccDevOpsAgentAgentSpace_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -39,9 +38,11 @@ func TestAccDevOpsAgentAgentSpace_Identity_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/basic/"),
-				ConfigVariables: config.Variables{},
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -56,8 +57,10 @@ func TestAccDevOpsAgentAgentSpace_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory:                      config.StaticDirectory("testdata/AgentSpace/basic/"),
-				ConfigVariables:                      config.Variables{},
+				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_space_id"),
 				ResourceName:                         resourceName,
@@ -68,8 +71,10 @@ func TestAccDevOpsAgentAgentSpace_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/AgentSpace/basic/"),
-				ConfigVariables:   config.Variables{},
+				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -85,7 +90,9 @@ func TestAccDevOpsAgentAgentSpace_Identity_basic(t *testing.T) {
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/basic/"),
-				ConfigVariables: config.Variables{},
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -104,6 +111,7 @@ func TestAccDevOpsAgentAgentSpace_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -118,7 +126,8 @@ func TestAccDevOpsAgentAgentSpace_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -135,7 +144,8 @@ func TestAccDevOpsAgentAgentSpace_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "agent_space_id"),
@@ -149,7 +159,8 @@ func TestAccDevOpsAgentAgentSpace_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -167,7 +178,8 @@ func TestAccDevOpsAgentAgentSpace_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

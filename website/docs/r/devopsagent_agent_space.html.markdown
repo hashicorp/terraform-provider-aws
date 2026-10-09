@@ -35,6 +35,8 @@ resource "aws_devopsagent_agent_space" "example" {
 
 ### With KMS Encryption
 
+The KMS key must allow the calling identity and the DevOps Agent service principal to use it. Configure the key policy as described in the [AWS DevOps Agent encryption documentation](https://docs.aws.amazon.com/devopsagent/latest/userguide/aws-devops-agent-security-encryption-at-rest-for-devops-agent.html#step-2-set-the-key-policy) before using this example.
+
 ```terraform
 resource "aws_devopsagent_agent_space" "example" {
   name        = "my-agent-space"

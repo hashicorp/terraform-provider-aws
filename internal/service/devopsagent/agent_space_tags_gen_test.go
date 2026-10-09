@@ -8,7 +8,6 @@ package devopsagent_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,8 +22,8 @@ import (
 func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -38,12 +37,13 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -68,6 +68,7 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -81,13 +82,14 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -116,6 +118,7 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -130,12 +133,13 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -160,6 +164,7 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -173,10 +178,11 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -193,6 +199,7 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -208,8 +215,8 @@ func TestAccDevOpsAgentAgentSpace_tags(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -223,12 +230,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -253,6 +261,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -273,8 +282,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_null(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -288,10 +297,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -308,6 +318,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:                         resourceName,
@@ -326,8 +337,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_emptyMap(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -341,10 +352,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -361,12 +373,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -391,6 +404,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -408,8 +422,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_addOnUpdate(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -423,12 +437,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -453,6 +468,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -466,10 +482,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -486,6 +503,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -501,8 +519,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_onCreate(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -516,12 +534,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -546,13 +565,14 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -581,6 +601,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -595,12 +616,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -625,6 +647,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -642,8 +665,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -657,12 +680,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -687,12 +711,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -717,6 +742,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -734,8 +760,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -749,13 +775,14 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -777,6 +804,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -792,6 +820,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -799,7 +828,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -823,6 +852,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -839,13 +869,14 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -867,6 +898,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -882,10 +914,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -903,6 +936,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -918,8 +952,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_providerOnly(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -933,6 +967,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -941,7 +976,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -969,6 +1004,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -986,6 +1022,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -995,7 +1032,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1027,6 +1064,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1045,10 +1083,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1066,6 +1105,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -1081,8 +1121,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1096,6 +1136,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1104,7 +1145,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1130,6 +1171,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1147,6 +1189,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1157,7 +1200,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1187,6 +1230,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1206,6 +1250,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1214,7 +1259,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1240,6 +1285,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1260,8 +1306,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_overlapping(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1275,12 +1321,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToProviderOnly(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1306,13 +1353,14 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToProviderOnly(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1334,6 +1382,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToProviderOnly(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1352,8 +1401,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToProviderOnly(t *testi
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1367,13 +1416,14 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToResourceOnly(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1395,12 +1445,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToResourceOnly(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1426,6 +1477,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToResourceOnly(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1443,8 +1495,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_updateToResourceOnly(t *testi
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1458,6 +1510,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyResourceTag(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1466,7 +1519,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyResourceTag(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1492,6 +1545,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyResourceTag(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1512,8 +1566,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyResourceTag(t *testing.T
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1527,13 +1581,14 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyProviderOnlyTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1555,6 +1610,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyProviderOnlyTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1573,8 +1629,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_emptyProviderOnlyTag(t *testi
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1588,6 +1644,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullOverlappingResourceTag(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1596,7 +1653,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1622,6 +1679,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullOverlappingResourceTag(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1645,8 +1703,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullOverlappingResourceTag(t 
 func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1660,6 +1718,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullNonOverlappingResourceTag
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1668,7 +1727,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullNonOverlappingResourceTag
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1696,6 +1755,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullNonOverlappingResourceTag
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1719,8 +1779,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_DefaultTags_nullNonOverlappingResourceTag
 func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1734,10 +1794,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1762,6 +1823,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:                         resourceName,
@@ -1777,8 +1839,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_onCreate(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1792,12 +1854,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1823,12 +1886,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tagsComputed2/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1859,6 +1923,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tagsComputed2/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1876,8 +1941,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1891,12 +1956,13 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_replace(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1922,10 +1988,11 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_replace(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1950,6 +2017,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_replace(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:                         resourceName,
@@ -1965,8 +2033,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_ComputedTag_OnUpdate_replace(t *testing.T
 func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1981,6 +2049,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1992,7 +2061,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2029,6 +2098,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -2040,7 +2110,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2077,6 +2147,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -2088,7 +2159,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2127,8 +2198,8 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v devopsagent.GetAgentSpaceOutput
 	resourceName := "aws_devopsagent_agent_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2143,6 +2214,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2152,7 +2224,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2200,6 +2272,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2209,7 +2282,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2256,6 +2329,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AgentSpace/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),
@@ -2265,7 +2339,7 @@ func TestAccDevOpsAgentAgentSpace_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentSpaceExists(ctx, t, resourceName, &v),
+					testAccCheckAgentSpaceExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

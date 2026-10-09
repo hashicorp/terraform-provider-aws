@@ -4,9 +4,14 @@
 resource "aws_devopsagent_agent_space" "test" {
   region = var.region
 
-  name = "tf-acc-test-devopsagent"
+  name = var.rName
 }
 
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
 
 variable "region" {
   description = "Region to deploy resource in"

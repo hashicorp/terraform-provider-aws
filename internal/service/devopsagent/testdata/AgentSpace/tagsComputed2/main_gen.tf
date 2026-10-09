@@ -4,7 +4,7 @@
 provider "null" {}
 
 resource "aws_devopsagent_agent_space" "test" {
-  name = "tf-acc-test-devopsagent"
+  name = var.rName
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id
@@ -13,6 +13,12 @@ resource "aws_devopsagent_agent_space" "test" {
 }
 
 resource "null_resource" "test" {}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
 
 variable "unknownTagKey" {
   type     = string

@@ -2,9 +2,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_devopsagent_agent_space" "test" {
-  name = "tf-acc-test-devopsagent"
+  name = var.rName
 
   tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "resource_tags" {
