@@ -2,7 +2,9 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_pricingplanmanager_subscription` ([#49235](https://github.com/hashicorp/terraform-provider-aws/issues/49235))
 * **New List Resource:** `aws_ssm_service_setting` ([#50359](https://github.com/hashicorp/terraform-provider-aws/issues/50359))
+* **New Resource:** `aws_pricingplanmanager_subscription` ([#49235](https://github.com/hashicorp/terraform-provider-aws/issues/49235))
 
 ENHANCEMENTS:
 
