@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.46.0
-	github.com/aws/aws-sdk-go-v2/service/appconfig v1.54.1
+	github.com/aws/aws-sdk-go-v2/service/appconfig v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.49.0
