@@ -59,15 +59,16 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_mode"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkSubscriptionARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("etag"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_family"), knownvalue.StringExact("CloudFront")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("FREE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arns"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scheduled_change"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.StatusActive)),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.NotNull(),
-					}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatusReason), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("usage_level"), knownvalue.Null()),
 				},
 			},
 			{

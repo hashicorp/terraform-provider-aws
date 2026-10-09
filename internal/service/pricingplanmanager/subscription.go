@@ -275,6 +275,24 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 	if !plan.ResourceARNs.Equal(state.ResourceARNs) {
 		os := fwflex.ExpandFrameworkStringValueSet(ctx, state.ResourceARNs)
 		ns := fwflex.ExpandFrameworkStringValueSet(ctx, plan.ResourceARNs)
+		if del := os.Difference(ns); len(del) > 0 {
+			input := pricingplanmanager.DisassociateResourcesFromSubscriptionInput{
+				Arn:          aws.String(arn),
+				IfMatch:      etag,
+				ResourceArns: del,
+			}
+
+			_, err := conn.DisassociateResourcesFromSubscription(ctx, &input)
+			if err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
+
+			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
+		}
 
 		if add := ns.Difference(os); len(add) > 0 {
 			input := pricingplanmanager.AssociateResourcesToSubscriptionInput{
@@ -290,25 +308,6 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 			}
 
 			etag = out.ETag
-
-			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
-				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-				return
-			}
-		}
-
-		if del := os.Difference(ns); len(del) > 0 {
-			input := pricingplanmanager.DisassociateResourcesFromSubscriptionInput{
-				Arn:          aws.String(arn),
-				IfMatch:      etag,
-				ResourceArns: del,
-			}
-
-			_, err := conn.DisassociateResourcesFromSubscription(ctx, &input)
-			if err != nil {
-				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-				return
-			}
 
 			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
@@ -497,10 +496,11 @@ func waitSubscriptionSynced(ctx context.Context, conn *pricingplanmanager.Client
 
 func waitSubscriptionStatus(ctx context.Context, conn *pricingplanmanager.Client, arn string, pending, target []string, timeout time.Duration) (*pricingplanmanager.GetSubscriptionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Refresh: statusSubscription(conn, arn),
-		Timeout: timeout,
+		Pending:                   pending,
+		Target:                    target,
+		Refresh:                   statusSubscription(conn, arn),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
