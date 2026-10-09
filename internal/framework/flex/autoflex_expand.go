@@ -1100,10 +1100,7 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
