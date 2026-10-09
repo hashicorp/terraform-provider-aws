@@ -220,6 +220,10 @@ The `managed_knowledge_base_connector_configuration` configuration block support
 * `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` Block](#deletion_protection_configuration-block) for details.
 * `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` Block](#media_extraction_configuration-block) for details.
 
+~> **Note:** The service populates `connector_parameters` with default keys that you did not supply (for example an S3 connector returns `aclEnabled` and `filterConfiguration.maxFileSizeInMegaBytes`) and may return the JSON object with its keys in a different order than `jsonencode` produces. Because `connector_parameters` is a plain JSON string, either difference shows as an in-place update (often a `# whitespace changes` diff) on the following plan. To keep plans clean, include every key the service returns in your configuration (inspect the stored value with `aws bedrock-agent get-data-source`), and run one `apply` so the service echoes your key order back. If you intentionally omit the service-populated keys, add `connector_parameters` to a `lifecycle { ignore_changes = [...] }` block.
+
+~> **Note:** When `media_extraction_configuration` is omitted, the service still populates it with default values and returns it (for example `image_extraction_configuration.image_extraction_status = ENABLED`). Expect the block to appear in state after apply. If you do not configure it, add `media_extraction_configuration` to a `lifecycle { ignore_changes = [...] }` block to avoid a perpetual diff.
+
 ### `deletion_protection_configuration` Block
 
 The `deletion_protection_configuration` configuration block supports the following arguments:
