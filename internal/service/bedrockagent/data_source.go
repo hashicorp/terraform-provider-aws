@@ -370,9 +370,11 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													},
 													NestedObject: schema.NestedBlockObject{
 														Blocks: map[string]schema.Block{
-															"sync_schedule": schema.ListNestedBlock{
+															"day_of_month": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[dayOfMonthModel](ctx),
 																Validators: []validator.List{
+																	listvalidator.IsRequired(),
+																	listvalidator.SizeAtLeast(1),
 																	listvalidator.SizeAtMost(1),
 																},
 																NestedObject: schema.NestedBlockObject{

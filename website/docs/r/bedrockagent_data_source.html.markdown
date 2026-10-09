@@ -282,6 +282,7 @@ The `managed_knowledge_base_connector_configuration` configuration block support
 * `connector_parameters` - (Optional) JSON-encoded string containing the connector-specific parameters. The structure depends on the connector type (S3, SharePoint, Google Drive, etc.). See [Managed Knowledge Base connector parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-connectors.html) for details on each connector type.
 * `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` Block](#deletion_protection_configuration-block) for details.
 * `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` Block](#media_extraction_configuration-block) for details.
+* `sync_schedule` - (Optional) Recurring schedule on which the connector automatically syncs this data source. See [`sync_schedule` Block](#sync_schedule-block) for details.
 
 ### `deletion_protection_configuration` Block
 
@@ -315,6 +316,41 @@ The `image_extraction_configuration` configuration block supports the following 
 The `video_extraction_configuration` configuration block supports the following arguments:
 
 * `video_extraction_status` - (Required) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `sync_schedule` Block
+
+The `sync_schedule` configuration block supports the following arguments:
+
+* `daily` - (Optional) Daily sync that runs once a day at a system-chosen off-peak time. The run time is not configurable. See [`daily` Block](#daily-block) for details.
+* `monthly` - (Optional) Monthly sync that runs once a month on the specified day of the month. See [`monthly` Block](#monthly-block) for details.
+* `weekly` - (Optional) Weekly sync that runs once a week on the specified day of the week. See [`weekly` Block](#weekly-block) for details.
+
+### `daily` Block
+
+The `daily` configuration block has no arguments.
+
+### `monthly` Block
+
+The `monthly` configuration block supports the following arguments:
+
+* `day_of_month` - (Required) Day of the month on which the monthly sync runs. See [`day_of_month` Block](#day_of_month-block) for details.
+
+### `day_of_month` Block
+
+The `day_of_month` configuration block supports the following arguments:
+
+* `day_number` - (Optional) Specific day of the month, from 1 to 28.
+* `last_day_of_month` - (Required) Configure this option to run the monthly sync on the last calendar day of each month. See [`last_day_of_month` Block](#last_day_of_month-block) for details.
+
+### `last_day_of_month` Block
+
+The `last_day_of_month` configuration block has no arguments.
+
+### `weekly` Block
+
+The `weekly` configuration block supports the following arguments:
+
+* `day_of_week` - (Required) Day of the week on which the weekly sync runs. Valid values: `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`.
 
 ### `s3_configuration` Block
 
