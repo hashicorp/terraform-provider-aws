@@ -201,7 +201,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.30.0
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/odb v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.40.1
