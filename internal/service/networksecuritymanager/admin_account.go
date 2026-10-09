@@ -221,6 +221,8 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 
 	output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("admin_account_id"), adminAccountID)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
 		return
 	}
@@ -274,9 +276,15 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 
 	adminAccountID := plan.AdminAccountID.ValueString()
 
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// There is no separate update operation: PutAdminAccount on an existing
 	// administrator account replaces its priority and administrative scope.
-	if !plan.Priority.Equal(state.Priority) || !plan.AdminScope.Equal(state.AdminScope) {
+	if diff.HasChanges() {
 		input, diags := expandPutAdminAccountInput(ctx, &plan)
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		if resp.Diagnostics.HasError() {
@@ -290,17 +298,21 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
 			return
 		}
-	}
 
-	output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, r.UpdateTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
-		return
-	}
+		output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
+			return
+		}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAdminAccount(ctx, output, &plan))
-	if resp.Diagnostics.HasError() {
-		return
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAdminAccount(ctx, output, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else if plan.Status.IsUnknown() {
+		// Nothing was sent to the service, so there is no fresh status to read;
+		// carry the computed value forward from state.
+		plan.Status = state.Status
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
