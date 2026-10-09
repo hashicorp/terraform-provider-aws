@@ -123,6 +123,7 @@ func TestAccBedrockAgentCorePolicy_List_includeResource(t *testing.T) {
 							"cedar": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"statement": knownvalue.NotNull(),
 							})}),
+							names.AttrPolicy: knownvalue.ListExact([]knownvalue.Check{}),
 						})})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
