@@ -68,7 +68,7 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, "aws_ecs_cluster.test", &cluster),
-					// The rule requires a Create post-refresh check; this resource is planned for update instead (see comment above).
+					// The rule requires a Create post-refresh check; this resource is planned for update instead (see comment below).
 					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceClusterCapacityProviders(), resourceName),
 				),
