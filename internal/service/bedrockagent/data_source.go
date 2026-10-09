@@ -763,6 +763,77 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								},
 							},
 						},
+						"context_enrichment_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[contextEnrichmentConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.ContextEnrichmentType](),
+										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ContextEnrichmentType]path.Expression{
+												awstypes.ContextEnrichmentTypeBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
+											}),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelContextEnrichmentConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"model_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"enrichment_strategy_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[enrichmentStrategyConfigurationModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"method": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnrichmentStrategyMethod](),
+																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"custom_transformation_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customTransformationConfigurationModel](ctx),
 							PlanModifiers: []planmodifier.List{
@@ -1444,8 +1515,23 @@ type serverSideEncryptionConfigurationModel struct {
 
 type vectorIngestionConfigurationModel struct {
 	ChunkingConfiguration             fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel]             `tfsdk:"chunking_configuration"`
+	ContextEnrichmentConfiguration    fwtypes.ListNestedObjectValueOf[contextEnrichmentConfigurationModel]    `tfsdk:"context_enrichment_configuration"`
 	CustomTransformationConfiguration fwtypes.ListNestedObjectValueOf[customTransformationConfigurationModel] `tfsdk:"custom_transformation_configuration"`
 	ParsingConfiguration              fwtypes.ListNestedObjectValueOf[parsingConfigurationModel]              `tfsdk:"parsing_configuration"`
+}
+
+type contextEnrichmentConfigurationModel struct {
+	Type                                fwtypes.StringEnum[awstypes.ContextEnrichmentType]                                         `tfsdk:"type"`
+	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelContextEnrichmentConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
+}
+
+type bedrockFoundationModelContextEnrichmentConfigurationModel struct {
+	EnrichmentStrategyConfiguration fwtypes.ListNestedObjectValueOf[enrichmentStrategyConfigurationModel] `tfsdk:"enrichment_strategy_configuration"`
+	ModelARN                        fwtypes.ARN                                                           `tfsdk:"model_arn"`
+}
+
+type enrichmentStrategyConfigurationModel struct {
+	Method fwtypes.StringEnum[awstypes.EnrichmentStrategyMethod] `tfsdk:"method"`
 }
 
 type parsingConfigurationModel struct {

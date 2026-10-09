@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -347,6 +348,51 @@ func testAccDataSource_parsingModality(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.bedrock_foundation_model_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.bedrock_foundation_model_configuration.0.parsing_modality", "MULTIMODAL"),
 					resource.TestCheckResourceAttrSet(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.bedrock_foundation_model_configuration.0.model_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDataSource_contextEnrichment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource types.DataSource
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+	// Graph construction models are reachable only through a cross-Region inference profile.
+	enrichmentModel := "anthropic.claude-haiku-4-5-20251001-v1:0"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// GraphRAG with Neptune Analytics is not available in every Region.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.EuCentral1RegionID, endpoints.ApNortheast1RegionID, endpoints.ApSoutheast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_contextEnrichment(rName, enrichmentModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "S3"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.type", "BEDROCK_FOUNDATION_MODEL"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.0.model_arn"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.0.enrichment_strategy_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.context_enrichment_configuration.0.bedrock_foundation_model_configuration.0.enrichment_strategy_configuration.0.method", "CHUNK_ENTITY_EXTRACTION"),
 				),
 			},
 			{
@@ -844,6 +890,79 @@ resource "aws_bedrockagent_data_source" "test" {
   }
 }
 `, rName, parsingModel))
+}
+
+func testAccDataSourceConfig_contextEnrichment(rName, enrichmentModel string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_NeptuneAnalytics_basic(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+data "aws_bedrock_inference_profile" "test" {
+  inference_profile_id = "us.%[2]s"
+}
+
+# The Neptune Analytics base config grants only Neptune and RDS permissions.
+resource "aws_iam_role_policy" "test_context_enrichment" {
+  name = "%[1]s-context-enrichment"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket", "s3:GetObject"]
+        Resource = [aws_s3_bucket.test.arn, "${aws_s3_bucket.test.arn}/*"]
+      },
+      {
+        # Scoping this to the profile ARN is not honored by AWS.
+        Effect   = "Allow"
+        Action   = ["bedrock:GetInferenceProfile"]
+        Resource = ["*"]
+      },
+      {
+        # An inference profile also requires the underlying model in each Region it routes to.
+        Effect = "Allow"
+        Action = ["bedrock:InvokeModel"]
+        Resource = concat(
+          [data.aws_bedrock_inference_profile.test.inference_profile_arn],
+          data.aws_bedrock_inference_profile.test.models[*].model_arn,
+        )
+      },
+    ]
+  })
+}
+
+resource "aws_bedrockagent_data_source" "test" {
+  depends_on = [aws_iam_role_policy.test_context_enrichment]
+
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "S3"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.test.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    context_enrichment_configuration {
+      type = "BEDROCK_FOUNDATION_MODEL"
+
+      bedrock_foundation_model_configuration {
+        model_arn = data.aws_bedrock_inference_profile.test.inference_profile_arn
+
+        enrichment_strategy_configuration {
+          method = "CHUNK_ENTITY_EXTRACTION"
+        }
+      }
+    }
+  }
+}
+`, rName, enrichmentModel))
 }
 
 func testAccDataSourceConfig_fullSemantic(rName, embeddingModel string) string {

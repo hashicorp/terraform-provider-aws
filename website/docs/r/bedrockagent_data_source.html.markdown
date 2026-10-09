@@ -139,6 +139,69 @@ resource "aws_bedrockagent_data_source" "example" {
 }
 ```
 
+### GraphRAG with Neptune Analytics
+
+Knowledge bases that use `NEPTUNE_ANALYTICS` storage require every associated data source to set `context_enrichment_configuration`.
+
+The graph construction model must be one that GraphRAG currently supports, and the supported models are reachable only through a cross-Region [inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html). Passing a plain foundation model ARN fails with `ValidationException: Invalid graph bedrock foundation model provided`.
+
+The knowledge base service role needs:
+
+* `bedrock:GetInferenceProfile` on `*`. Scoping this to the profile ARN is not honored, and creation fails with `Not authorized to call GetInferenceProfile` even when the granted ARN matches the one in the error.
+* `bedrock:InvokeModel` on the inference profile ARN.
+* `bedrock:InvokeModel` on the underlying foundation model in every Region the profile routes to, which `aws bedrock get-inference-profile` reports as `models[].modelArn`.
+
+```terraform
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "graphrag-example"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "VECTOR"
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:aws:bedrock:us-east-1::foundation-model/cohere.embed-english-v3"
+    }
+  }
+
+  storage_configuration {
+    type = "NEPTUNE_ANALYTICS"
+    neptune_analytics_configuration {
+      graph_arn = aws_neptunegraph_graph.example.arn
+      field_mapping {
+        metadata_field = "metadata"
+        text_field     = "text"
+      }
+    }
+  }
+}
+
+resource "aws_bedrockagent_data_source" "example" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "graphrag-example"
+
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.example.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    context_enrichment_configuration {
+      type = "BEDROCK_FOUNDATION_MODEL"
+
+      bedrock_foundation_model_configuration {
+        model_arn = "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
+        enrichment_strategy_configuration {
+          method = "CHUNK_ENTITY_EXTRACTION"
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -405,6 +468,7 @@ The `server_side_encryption_configuration` configuration block supports the foll
 The `vector_ingestion_configuration` configuration block supports the following arguments:
 
 * `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` Block](#chunking_configuration-block) for details.
+* `context_enrichment_configuration` - (Optional, Forces new resource) Context enrichment configuration used to provide additional context to the RAG application. Required when the knowledge base uses Amazon Neptune Analytics (GraphRAG) storage. See [`context_enrichment_configuration` Block](#context_enrichment_configuration-block) for details.
 * `custom_transformation_configuration` - (Optional, Forces new resource) Configuration for custom transformation of data source documents. See [`custom_transformation_configuration` Block](#custom_transformation_configuration-block) for details.
 * `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` Block](#parsing_configuration-block) for details.
 
@@ -444,6 +508,26 @@ The `semantic_chunking_configuration` configuration block supports the following
 * `breakpoint_percentile_threshold` - (Required, Forces new resource) Dissimilarity threshold for splitting chunks.
 * `buffer_size` - (Required, Forces new resource) Buffer size.
 * `max_token` - (Required, Forces new resource) Maximum number of tokens a chunk can contain.
+
+### `context_enrichment_configuration` Block
+
+The `context_enrichment_configuration` configuration block supports the following arguments:
+
+* `bedrock_foundation_model_configuration` - (Optional, Forces new resource) Settings for a foundation model used to enrich the context of data source documents. Required when `type` is `BEDROCK_FOUNDATION_MODEL`. See [`context_enrichment_configuration.bedrock_foundation_model_configuration` Block](#context_enrichment_configurationbedrock_foundation_model_configuration-block) for details.
+* `type` - (Required, Forces new resource) Method used for context enrichment. Valid value: `BEDROCK_FOUNDATION_MODEL`.
+
+### `context_enrichment_configuration.bedrock_foundation_model_configuration` Block
+
+The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
+
+* `enrichment_strategy_configuration` - (Required, Forces new resource) Strategy used to enrich the context of data source documents. See [`context_enrichment_configuration.bedrock_foundation_model_configuration.enrichment_strategy_configuration` Block](#context_enrichment_configurationbedrock_foundation_model_configurationenrichment_strategy_configuration-block) for details.
+* `model_arn` - (Required, Forces new resource) ARN of the foundation model used for context enrichment.
+
+### `context_enrichment_configuration.bedrock_foundation_model_configuration.enrichment_strategy_configuration` Block
+
+The `enrichment_strategy_configuration` configuration block supports the following arguments:
+
+* `method` - (Required, Forces new resource) Method used to enrich the context of data source documents. Valid value: `CHUNK_ENTITY_EXTRACTION`.
 
 ### `custom_transformation_configuration` Block
 

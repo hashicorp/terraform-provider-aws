@@ -38,6 +38,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"parsing":                           testAccDataSource_parsing,
 			"parsingModality":                   testAccDataSource_parsingModality,
 			"bedrockDataAutomation":             testAccDataSource_bedrockDataAutomation,
+			"contextEnrichment":                 testAccDataSource_contextEnrichment,
 			"bedrockDataAutomationNoConfig":     testAccDataSource_bedrockDataAutomationNoConfig,
 			"customTransformation":              testAccDataSource_fullCustomTranformation,
 			"webConfiguration":                  testAccDataSource_webConfiguration,
