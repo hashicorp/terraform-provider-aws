@@ -190,7 +190,7 @@ Either `application_arn` or `application_id` is required.
 ### refresh_token_rotation
 
 * `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
-* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
+* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`. Defaults to `0`.
 
 ### token_validity_units
 
