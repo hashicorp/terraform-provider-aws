@@ -180,7 +180,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mailmanager v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.106.3
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.111.1
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.112.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.48.1
