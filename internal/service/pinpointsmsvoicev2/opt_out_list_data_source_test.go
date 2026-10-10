@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccPinpointSMSVoiceV2OptOutListDataSource_basic(t *testing.T) {
+func TestAccPinpointSMSVoiceV2OptoutListDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var optOutList awstypes.OptOutListInformation
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
