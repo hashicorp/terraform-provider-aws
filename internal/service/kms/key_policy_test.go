@@ -295,6 +295,171 @@ func TestAccKMSKeyPolicy_booleanCondition(t *testing.T) {
 	})
 }
 
+func TestKeyPolicyKeyIDToSet(t *testing.T) {
+	t.Parallel()
+
+	const (
+		keyID       = "1234abcd-12ab-34cd-56ef-1234567890ab"
+		keyARN      = "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab" //lintignore:AWSAT003,AWSAT005
+		mrkKeyID    = "mrk-1234abcd12ab34cd56ef1234567890ab"                                        //lintignore:AWSAT003,AWSAT005
+		mrkKeyARN   = "arn:aws:kms:eu-west-1:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab" //lintignore:AWSAT003,AWSAT005
+		otherKeyARN = "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ac" //lintignore:AWSAT003,AWSAT005
+		otherAcct   = "arn:aws:kms:us-east-2:111122224444:key/1234abcd-12ab-34cd-56ef-1234567890ab" //lintignore:AWSAT003,AWSAT005
+		aliasARN    = "arn:aws:kms:us-east-2:111122223333:alias/test"                               //lintignore:AWSAT003,AWSAT005
+	)
+
+	testCases := []struct {
+		name       string
+		keyIDOrARN string
+		keyID      string
+		keyARN     string
+		want       string
+	}{
+		{
+			name:   "empty",
+			keyID:  keyID,
+			keyARN: keyARN,
+			want:   keyID,
+		},
+		{
+			name:       "key ID",
+			keyIDOrARN: keyID,
+			keyID:      keyID,
+			keyARN:     keyARN,
+			want:       keyID,
+		},
+		{
+			name:       "key ARN",
+			keyIDOrARN: keyARN,
+			keyID:      keyID,
+			keyARN:     keyARN,
+			want:       keyARN,
+		},
+		{
+			name:       "multi-Region key ID",
+			keyIDOrARN: mrkKeyID,
+			keyID:      mrkKeyID,
+			keyARN:     mrkKeyARN,
+			want:       mrkKeyID,
+		},
+		{
+			name:       "multi-Region key ARN",
+			keyIDOrARN: mrkKeyARN,
+			keyID:      mrkKeyID,
+			keyARN:     mrkKeyARN,
+			want:       mrkKeyARN,
+		},
+		{
+			name:       "different key ARN",
+			keyIDOrARN: otherKeyARN,
+			keyID:      keyID,
+			keyARN:     keyARN,
+			want:       keyID,
+		},
+		{
+			name:       "same key ID different account ARN",
+			keyIDOrARN: otherAcct,
+			keyID:      keyID,
+			keyARN:     keyARN,
+			want:       keyID,
+		},
+		{
+			name:       "alias name",
+			keyIDOrARN: "alias/test",
+			keyID:      keyID,
+			keyARN:     keyARN,
+			want:       keyID,
+		},
+		{
+			name:       "alias ARN",
+			keyIDOrARN: aliasARN,
+			keyID:      keyID,
+			keyARN:     keyARN,
+			want:       keyID,
+		},
+		{
+			name:       "no key ARN returned",
+			keyIDOrARN: "",
+			keyID:      keyID,
+			want:       keyID,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfkms.KeyPolicyKeyIDToSet(testCase.keyIDOrARN, testCase.keyID, testCase.keyARN), testCase.want; got != want {
+				t.Errorf("KeyPolicyKeyIDToSet(%q, %q, %q) = %q, want %q", testCase.keyIDOrARN, testCase.keyID, testCase.keyARN, got, want)
+			}
+		})
+	}
+}
+
+func TestAccKMSKeyPolicy_keyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	keyResourceName := "aws_kms_key.test"
+	resourceName := "aws_kms_key_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPolicyConfig_keyARN(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, keyResourceName, &key),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, keyResourceName, names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check"},
+			},
+		},
+	})
+}
+
+func TestAccKMSKeyPolicy_multiRegionKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	keyResourceName := "aws_kms_key.test"
+	resourceName := "aws_kms_key_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPolicyConfig_keyARN(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, keyResourceName, &key),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, keyResourceName, names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccKeyPolicyConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -706,4 +871,31 @@ resource "aws_kms_key_policy" "test" {
   })
 }
 `, rName, isEnabled)
+}
+
+func testAccKeyPolicyConfig_keyARN(rName string, multiRegion bool) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  multi_region            = %[2]t
+}
+
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.arn
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [{
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        "AWS" : "*"
+      }
+      Action   = "kms:*"
+      Resource = "*"
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName, multiRegion)
 }
