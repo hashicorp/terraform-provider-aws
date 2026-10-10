@@ -151,7 +151,17 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VersionStages = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.PutSecretValue(ctx, input)
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*secretsmanager.PutSecretValueOutput, error) {
+			return conn.PutSecretValue(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if isKMSKeyCreatingError(err) {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Secrets Manager Secret (%s) value: %s", secretID, err)
@@ -161,7 +171,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
+		return findSecretVersionForExistence(ctx, conn, secretID, versionID)
 	})
 
 	if err != nil {
@@ -175,15 +185,10 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
-func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string, hasWriteOnly bool) (*secretVersionExistsOutput, error) {
-	if hasWriteOnly {
-		_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
-		if err != nil {
-			return nil, err
-		}
-		return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
-	}
-	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+// findSecretVersionForExistence uses ListSecretVersionIds, which (unlike GetSecretValue) doesn't
+// decrypt the value, so it doesn't depend on the KMS key being usable yet.
+func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretVersionExistsOutput, error) {
+	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
 		return nil, err
 	}
@@ -413,8 +418,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
-		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID, hasWriteOnly)
+		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID)
 
 		if err != nil {
 			return nil, err
@@ -476,7 +480,17 @@ func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanage
 }
 
 func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
-	output, err := conn.GetSecretValue(ctx, input)
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*secretsmanager.GetSecretValueOutput, error) {
+			return conn.GetSecretValue(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if isKMSKeyCreatingError(err) {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
@@ -683,4 +697,13 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff sdkv2.Resour
 	}
 
 	return nil
+}
+
+// isKMSKeyCreatingError reports whether Secrets Manager rejected a call because it still sees the
+// secret's KMS key as Creating. This happens for a short time after a multi-Region replica key is
+// created, even once KMS DescribeKey reports the key as Enabled.
+func isKMSKeyCreatingError(err error) bool {
+	return errs.IsAErrorMessageContains[*types.PreconditionNotMetException](err, "is creating") ||
+		errs.IsAErrorMessageContains[*types.EncryptionFailure](err, "is creating") ||
+		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "is creating")
 }

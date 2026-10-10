@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_secretsmanager_secret: Retry `KMSInvalidStateException` errors while a newly created KMS key, such as a multi-Region replica, is still `Creating`
+```
+
+```release-note:bug
+resource/aws_secretsmanager_secret_version: Retry `KMSInvalidStateException` errors while a newly created KMS key, such as a multi-Region replica, is still `Creating`
+```
