@@ -547,6 +547,37 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 			"target_id": framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
+			"certificate_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[certificateConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("s3"),
+							path.MatchRelative().AtName("secrets_manager"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"s3": s3ConfigurationBlock(ctx, true),
+						"secrets_manager": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerCertificateConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"secret_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"credential_provider_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[credentialProviderConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -1654,6 +1685,7 @@ func normalizeGatewayTargetOutputForState(out *bedrockagentcorecontrol.GetGatewa
 
 type gatewayTargetResourceModel struct {
 	framework.WithRegionModel
+	CertificateConfiguration        fwtypes.ListNestedObjectValueOf[certificateConfigurationModel]        `tfsdk:"certificate_configuration"`
 	CredentialProviderConfiguration fwtypes.ListNestedObjectValueOf[credentialProviderConfigurationModel] `tfsdk:"credential_provider_configuration"`
 	Description                     types.String                                                          `tfsdk:"description"`
 	GatewayIdentifier               types.String                                                          `tfsdk:"gateway_identifier"`
@@ -1663,6 +1695,86 @@ type gatewayTargetResourceModel struct {
 	TargetConfiguration             fwtypes.ListNestedObjectValueOf[targetConfigurationModel]             `tfsdk:"target_configuration"`
 	TargetID                        types.String                                                          `tfsdk:"target_id"`
 	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
+}
+
+type certificateConfigurationModel struct {
+	S3             fwtypes.ListNestedObjectValueOf[s3ConfigurationModel]                        `tfsdk:"s3"`
+	SecretsManager fwtypes.ListNestedObjectValueOf[secretsManagerCertificateConfigurationModel] `tfsdk:"secrets_manager"`
+}
+
+var (
+	_ fwflex.Expander  = certificateConfigurationModel{}
+	_ fwflex.Flattener = &certificateConfigurationModel{}
+)
+
+func (m *certificateConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.CertificateConfigurationMemberS3:
+		var model s3ConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.CertificateConfigurationMemberSecretsManager:
+		var model secretsManagerCertificateConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.SecretsManager, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("certificateConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m certificateConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.S3.IsNull():
+		model, d := m.S3.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.CertificateConfigurationMemberS3
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.SecretsManager.IsNull():
+		model, d := m.SecretsManager.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.CertificateConfigurationMemberSecretsManager
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type secretsManagerCertificateConfigurationModel struct {
+	SecretARN fwtypes.ARN `tfsdk:"secret_arn"`
 }
 
 type credentialProviderConfigurationModel struct {
