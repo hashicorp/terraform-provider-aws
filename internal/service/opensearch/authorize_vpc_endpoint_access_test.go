@@ -91,6 +91,79 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchAuthorizeVPCEndpointAccess_service(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
+	domainName := testAccRandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizeVPCEndpointAccessConfig_service(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, t, resourceName, &authorizevpcendpointaccess),
+					resource.TestCheckResourceAttr(resourceName, "service", string(awstypes.AWSServicePrincipalApplicationOpensearchserviceAmazonawsCom)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "service"),
+				// service_options is a create-only input that the API may not
+				// echo back verbatim; ignore it on import verification.
+				ImportStateVerifyIgnore: []string{"service_options"},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchAuthorizeVPCEndpointAccess_serviceWithOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
+	domainName := testAccRandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizeVPCEndpointAccessConfig_serviceWithOptions(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, t, resourceName, &authorizevpcendpointaccess),
+					resource.TestCheckResourceAttr(resourceName, "service", string(awstypes.AWSServicePrincipalApplicationOpensearchserviceAmazonawsCom)),
+					resource.TestCheckResourceAttr(resourceName, "service_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_options.0.supported_regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "service_options.0.supported_regions.*", acctest.Region()),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
@@ -100,7 +173,13 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context, t *testi
 				continue
 			}
 
-			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
+			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByPrincipal(
+				ctx,
+				conn,
+				rs.Primary.Attributes[names.AttrDomainName],
+				rs.Primary.Attributes["account"],
+				rs.Primary.Attributes["service"],
+			)
 			if retry.NotFound(err) {
 				continue
 			}
@@ -125,7 +204,13 @@ func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, t *testin
 
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
-		output, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
+		output, err := tfopensearch.FindAuthorizeVPCEndpointAccessByPrincipal(
+			ctx,
+			conn,
+			rs.Primary.Attributes[names.AttrDomainName],
+			rs.Primary.Attributes["account"],
+			rs.Primary.Attributes["service"],
+		)
 
 		if err != nil {
 			return err
@@ -154,4 +239,26 @@ resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
   account     = data.aws_caller_identity.current.account_id
 }
 `)
+}
+
+func testAccAuthorizeVPCEndpointAccessConfig_service(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConfig_base(rName, domainName), `
+resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
+  service     = "application.opensearchservice.amazonaws.com"
+}
+`)
+}
+
+func testAccAuthorizeVPCEndpointAccessConfig_serviceWithOptions(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConfig_base(rName, domainName), fmt.Sprintf(`
+resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
+  service     = "application.opensearchservice.amazonaws.com"
+
+  service_options {
+    supported_regions = [%[1]q]
+  }
+}
+`, acctest.Region()))
 }
