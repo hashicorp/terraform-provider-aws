@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatchomni
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -48,10 +49,6 @@ func newSpaceResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type spaceResource struct {
 	framework.ResourceWithModel[spaceResourceModel]
-}
-
-func (*spaceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_cloudwatchomni_space"
 }
 
 // ImportState imports by space ID. Note this passes through to "space_id" rather
@@ -109,7 +106,7 @@ func (r *spaceResource) Schema(ctx context.Context, request resource.SchemaReque
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -120,7 +117,7 @@ func (r *spaceResource) Schema(ctx context.Context, request resource.SchemaReque
 							Required:    true,
 							Description: "Encryption strategy (AWS_OWNED, CUSTOMER_MANAGED).",
 						},
-						"kms_key_arn": schema.StringAttribute{
+						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType:  fwtypes.ARNType,
 							Optional:    true,
 							Description: "ARN of the KMS key for CUSTOMER_MANAGED encryption.",
@@ -327,10 +324,18 @@ func (r *spaceResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	if _, err := conn.DeleteSpace(ctx, &input); err != nil {
 		// DeleteSpace cannot report "already gone" distinguishably (see
-		// findSpaceByID), so confirm absence via ListSpaces before surfacing.
-		if _, ferr := findSpaceByID(ctx, conn, id, region); retry.NotFound(ferr) {
+		// findSpaceByID), so confirm absence before surfacing the error.
+		_, ferr := findSpaceByID(ctx, conn, id, region)
+
+		if retry.NotFound(ferr) {
 			return
 		}
+
+		if ferr != nil {
+			smerr.AddError(ctx, &response.Diagnostics, errors.Join(err, ferr), smerr.ID, id)
+			return
+		}
+
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}

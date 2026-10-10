@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatchomni_test
@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -110,6 +111,11 @@ func testAccCloudWatchOmniSpace_disappears(t *testing.T) {
 					testAccCheckSpaceExists(ctx, resourceName, &space, t),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatchomni.ResourceSpace, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -274,6 +280,8 @@ func testAccSpaceConfig_basic(rName, domainID string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -293,7 +301,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
 resource "aws_cloudwatchomni_space" "test" {
@@ -307,6 +315,8 @@ resource "aws_cloudwatchomni_space" "test" {
 func testAccSpaceConfig_agentCore(rName, domainID string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test_data_access" {
   name = "%[1]s-data-access"
@@ -355,6 +365,8 @@ func testAccSpaceConfig_encryption(rName, domainID string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -382,7 +394,7 @@ resource "aws_kms_key" "test" {
         Sid    = "Enable IAM User Permissions"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"

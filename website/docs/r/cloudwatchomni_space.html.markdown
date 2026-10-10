@@ -116,17 +116,17 @@ resource "aws_cloudwatchomni_space" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the space. Must be 3-64 characters of lowercase letters, numbers and hyphens, must begin and end with a letter or number, and cannot contain consecutive hyphens.
-* `domain_id` - (Required) ID of the [CloudWatch Omni domain](cloudwatchomni_domain.html) the space belongs to. Changing this forces a new resource.
 * `data_access_role_arn` - (Required) ARN of the IAM role CloudWatch Omni assumes to access data. Must be in the same account as the space. Changing this forces a new resource.
+* `domain_id` - (Required) ID of the [CloudWatch Omni domain](cloudwatchomni_domain.html) the space belongs to. Changing this forces a new resource.
+* `name` - (Required) Name of the space. Must be 3-64 characters of lowercase letters, numbers and hyphens, must begin and end with a letter or number, and cannot contain consecutive hyphens.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_core_evaluation_role_arn` - (Optional) ARN of the IAM role used by AgentCore online evaluation. Changing this forces a new resource.
-* `encryption_configuration` - (Optional) Encryption of the space's data at rest. Omit for AWS owned encryption. [See below](#encryption_configuration).
+* `encryption_configuration` - (Optional) Encryption of the space's data at rest. Omit for AWS owned encryption. [See below](#encryption_configuration-block).
+* `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### encryption_configuration
+### `encryption_configuration` Block
 
 * `encryption_strategy` - (Required) Encryption strategy. Valid values are `AWS_OWNED` and `CUSTOMER_MANAGED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use. Required when `encryption_strategy` is `CUSTOMER_MANAGED`.
@@ -137,9 +137,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `space_id` - Unique ID of the space.
-* `space_arn` - ARN of the space.
 * `domain_arn` - ARN of the domain the space belongs to.
+* `space_arn` - ARN of the space.
+* `space_id` - Unique ID of the space.
 * `status` - Status of the space.
 
 ~> **NOTE:** This resource does not support tags. `CreateSpace` accepts tags, but CloudWatch Omni does not return them on read and provides no tag read or write operations, so tags could not be refreshed, updated, or imported.
