@@ -25,6 +25,7 @@ var (
 	FindNodegroupByTwoPartKey                  = findNodegroupByTwoPartKey
 	FindOIDCIdentityProviderConfigByTwoPartKey = findOIDCIdentityProviderConfigByTwoPartKey
 	FindPodIdentityAssociationByTwoPartKey     = findPodIdentityAssociationByTwoPartKey
+	IsClusterCreateErrorRetryable              = isClusterCreateErrorRetryable
 
 	ValidClusterName = validClusterName
 )
