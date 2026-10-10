@@ -1180,6 +1180,65 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 				},
 			},
 			{
+				Config: testAccDeliveryStream_icebergUpdatesUniqueKeys(rName, "my_column_2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "iceberg_configuration.0.destination_table_configuration.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.0", "my_column_2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDeliveryStream_icebergUpdatesMultipleTables(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "iceberg_configuration.0.destination_table_configuration.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.0", "my_column_2"),
+					resource.TestCheckResourceAttrPair(resourceName, "iceberg_configuration.0.destination_table_configuration.1.table_name", "aws_glue_catalog_table.test2", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.1.unique_keys.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDeliveryStream_icebergUpdatesUniqueKeys(rName, "my_column_2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "iceberg_configuration.0.destination_table_configuration.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.0", "my_column_2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDeliveryStream_icebergUpdatesNoTables(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
 				Config: testAccDeliveryStream_icebergUpdatesLambdaProcessor(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, t, resourceName, &stream),
@@ -1212,7 +1271,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace), // Changes to destination_table_configuration and append_only
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace), // Changes to append_only
 					},
 				},
 			},
@@ -4246,6 +4305,37 @@ resource "aws_glue_catalog_table" "test" {
       name = "my_column_1"
       type = "int"
     }
+
+    columns {
+      name = "my_column_2"
+      type = "int"
+    }
+  }
+}
+
+resource "aws_glue_catalog_table" "test2" {
+  name          = "${replace(%[1]q, "-", "_")}_2"
+  database_name = aws_glue_catalog_database.test.name
+  parameters = {
+    format = "parquet"
+  }
+
+  table_type = "EXTERNAL_TABLE"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+    }
+  }
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.bucket.id}/test2"
+
+    columns {
+      name = "my_column_1"
+      type = "int"
+    }
   }
 }
 `, rName))
@@ -4334,6 +4424,142 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       table_name             = aws_glue_catalog_table.test.name
       unique_keys            = ["my_column_1"]
       s3_error_output_prefix = "error"
+    }
+
+    processing_configuration {
+      processors {
+        type = "MetadataExtraction"
+
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{destinationDatabaseName: .databaseName, destinationTableName: .tableName, operation: .operation}"
+        }
+
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStream_icebergUpdatesUniqueKeys(rName, uniqueKey string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
+    }
+
+    destination_table_configuration {
+      database_name          = aws_glue_catalog_database.test.name
+      table_name             = aws_glue_catalog_table.test.name
+      unique_keys            = [%[2]q]
+      s3_error_output_prefix = "error"
+    }
+
+    processing_configuration {
+      processors {
+        type = "MetadataExtraction"
+
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{destinationDatabaseName: .databaseName, destinationTableName: .tableName, operation: .operation}"
+        }
+
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+      }
+    }
+  }
+}
+`, rName, uniqueKey))
+}
+
+func testAccDeliveryStream_icebergUpdatesMultipleTables(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
+    }
+
+    destination_table_configuration {
+      database_name          = aws_glue_catalog_database.test.name
+      table_name             = aws_glue_catalog_table.test.name
+      unique_keys            = ["my_column_2"]
+      s3_error_output_prefix = "error"
+    }
+
+    destination_table_configuration {
+      database_name = aws_glue_catalog_database.test.name
+      table_name    = aws_glue_catalog_table.test2.name
+    }
+
+    processing_configuration {
+      processors {
+        type = "MetadataExtraction"
+
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{destinationDatabaseName: .databaseName, destinationTableName: .tableName, operation: .operation}"
+        }
+
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStream_icebergUpdatesNoTables(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
     }
 
     processing_configuration {
