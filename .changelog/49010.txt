@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_mq_broker: Add `storage_size` argument and `pending_storage_size` attribute
+```
+
+```release-note:enhancement
+resource/aws_mq_broker: Increase default `update` timeout to 90 minutes
+```
+
+```release-note:enhancement
+data-source/aws_mq_broker: Add `storage_size` attribute
+```

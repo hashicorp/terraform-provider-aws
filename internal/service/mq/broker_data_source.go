@@ -252,6 +252,10 @@ func dataSourceBroker() *schema.Resource {
 						},
 					},
 				},
+				"storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				names.AttrStorageType: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -371,6 +375,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 		}
 	}
+	d.Set("storage_size", output.StorageSize)
 	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
