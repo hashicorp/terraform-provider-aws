@@ -24,7 +24,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newSpaceResource,
+			TypeName: "aws_cloudwatchomni_space",
+			Name:     "Space",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
