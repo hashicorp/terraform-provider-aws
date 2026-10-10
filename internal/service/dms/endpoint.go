@@ -15,6 +15,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/go-cty/cty"
@@ -811,11 +812,12 @@ func resourceEndpoint() *schema.Resource {
 					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
 				},
 				"secrets_manager_arn": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					ValidateFunc:  verify.ValidARN,
-					RequiredWith:  []string{"secrets_manager_access_role_arn"},
-					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validSecretsManagerSecretID,
+					DiffSuppressFunc: suppressSecretsManagerSecretIDDiffs,
+					RequiredWith:     []string{"secrets_manager_access_role_arn"},
+					ConflictsWith:    []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
 				},
 				"server_name": {
 					Type:          schema.TypeString,
@@ -2678,6 +2680,48 @@ func flattenOracleSettings(apiObject *awstypes.OracleSettings) map[string]any {
 	}
 
 	return tfMap
+}
+
+// suppressSecretsManagerSecretIDDiffs suppresses differences between equivalent
+// Secrets Manager secret identifiers, e.g. a friendly name or partial ARN in
+// configuration and the full ARN (with the random 6-character suffix) in state.
+func suppressSecretsManagerSecretIDDiffs(_, old, new string, _ *schema.ResourceData) bool {
+	if old == new {
+		return true
+	}
+	if old == "" || new == "" {
+		return false
+	}
+
+	return secretsManagerSecretIDMatchesFullARN(old, new) || secretsManagerSecretIDMatchesFullARN(new, old)
+}
+
+// secretsManagerSecretIDMatchesFullARN returns whether fullARN is a complete
+// Secrets Manager secret ARN that refers to the secret identified by id
+// (a friendly name or a partial ARN without the random suffix).
+func secretsManagerSecretIDMatchesFullARN(fullARN, id string) bool {
+	parsedARN, err := arn.Parse(fullARN)
+	if err != nil || parsedARN.Service != "secretsmanager" {
+		return false
+	}
+
+	name, ok := strings.CutPrefix(parsedARN.Resource, "secret:")
+	if !ok {
+		return false
+	}
+
+	// Secrets Manager appends a hyphen and six random characters to the secret name.
+	const suffixLen = len("-abcdef")
+	if len(name) <= suffixLen || name[len(name)-suffixLen] != '-' {
+		return false
+	}
+	name = name[:len(name)-suffixLen]
+
+	if strings.HasPrefix(id, "arn:") {
+		return id == strings.TrimSuffix(fullARN, parsedARN.Resource)+"secret:"+name
+	}
+
+	return id == name
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {

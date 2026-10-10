@@ -32,4 +32,7 @@ var (
 	ValidReplicationInstanceID     = validReplicationInstanceID
 	ValidReplicationSubnetGroupID  = validReplicationSubnetGroupID
 	ValidReplicationTaskID         = validReplicationTaskID
+	ValidSecretsManagerSecretID    = validSecretsManagerSecretID
+
+	SuppressSecretsManagerSecretIDDiffs = suppressSecretsManagerSecretIDDiffs
 )
