@@ -10,13 +10,13 @@ description: |-
 
 `aws_security_group` provides details about a specific Security Group.
 
-This resource can prove useful when a module accepts a Security Group id as
-an input variable and needs to, for example, determine the id of the
+This resource can prove useful when a module accepts a Security Group ID as
+an input variable and needs to, for example, determine the ID of the
 VPC that the security group belongs to.
 
 ## Example Usage
 
-The following example shows how one might accept a Security Group id as a variable
+The following example shows how one might accept a Security Group ID as a variable
 and use this data source to obtain the data necessary to create a subnet.
 
 ```terraform
@@ -38,11 +38,11 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
-* `id` - (Optional) Id of the specific security group to retrieve.
+* `id` - (Optional) ID of the specific security group to retrieve.
 * `name` - (Optional) Name that the desired security group must have.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired security group.
-* `vpc_id` - (Optional) Id of the VPC that the desired security group belongs to.
+* `vpc_id` - (Optional) ID of the VPC that the desired security group belongs to.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:

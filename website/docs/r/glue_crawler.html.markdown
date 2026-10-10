@@ -138,7 +138,7 @@ This resource supports the following arguments:
 * `configuration` (Optional) JSON string of configuration information. For more details see [Setting Crawler Configuration Options](https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 * `description` (Optional) Description of the crawler.
 * `delta_target` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
-* `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
+* `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [DynamoDB Target](#dynamodb-target) below.
 * `jdbc_target` (Optional) List of nested JDBC target arguments. See [JDBC Target](#jdbc-target) below.
 * `s3_target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
 * `catalog_target` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
@@ -156,7 +156,7 @@ This resource supports the following arguments:
 
 ~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
-### Dynamodb Target
+### DynamoDB Target
 
 * `path` - (Required) The name of the DynamoDB table to crawl.
 * `scan_all` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table.  defaults to `true`.

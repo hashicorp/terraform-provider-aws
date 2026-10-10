@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `copy_tags_to_snapshot` - (Optional) If set to true, tags are copied to any snapshot of the DB cluster that is created.
 * `deletion_protection` - (Optional) Value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
-* `enable_cloudwatch_logs_exports` - (Optional) List of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit` and `slowquery`.
+* `enable_cloudwatch_logs_exports` - (Optional) List of the log types this DB cluster is configured to export to CloudWatch Logs. Currently only supports `audit` and `slowquery`.
 * `engine` - (Optional) Name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engine_version` - (Optional) Database engine version.
 * `final_snapshot_identifier` - (Optional) Name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.

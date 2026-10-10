@@ -31,7 +31,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `aws_account_id` - AWS account id to which these options apply.
+* `aws_account_id` - AWS account ID to which these options apply.
 * `aws_region` - AWS region to which these options apply.
 
 ## Timeouts

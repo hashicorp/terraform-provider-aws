@@ -141,7 +141,7 @@ The `video_watermarks` object supports the following:
 
 * `horizontal_align` - The horizontal position of the watermark unless you specify a nonzero value for `horzontal_offset`.
 * `horizontal_offset` - The amount by which you want the horizontal position of the watermark to be offset from the position specified by `horizontal_align`.
-* `id` - A unique identifier for the settings for one watermark. The value of Id can be up to 40 characters long. You can specify settings for up to four watermarks.
+* `id` - A unique identifier for the settings for one watermark. The value of ID can be up to 40 characters long. You can specify settings for up to four watermarks.
 * `max_height` - The maximum height of the watermark.
 * `max_width` - The maximum width of the watermark.
 * `opacity` - A percentage that indicates how much you want a watermark to obscure the video in the location where it appears.

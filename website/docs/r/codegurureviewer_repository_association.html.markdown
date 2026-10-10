@@ -61,7 +61,7 @@ This configuration block supports the following:
 * `name` - (Required) The name of the third party source repository.
 * `owner` - (Required) The username for the account that owns the repository.
 
-### codecommit
+### `codecommit`
 
 * `name` - (Required) The name of the AWS CodeCommit repository.
 

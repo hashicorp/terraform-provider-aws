@@ -20,7 +20,7 @@ With this data source, you can apply default tags to resources not _directly_ ma
 data "aws_default_tags" "example" {}
 ```
 
-### Dynamically Apply Default Tags to Auto Scaling Group
+### Dynamically Apply Default Tags to Auto Scaling group
 
 ```terraform
 provider "aws" {

@@ -71,7 +71,7 @@ This resource supports the following arguments:
 
 ### target_table
 
-* `catalog_id` - (Optional, Forces new resource) The catalog id where the AWS Glue table exists.
+* `catalog_id` - (Optional, Forces new resource) The catalog ID where the AWS Glue table exists.
 * `database_name` - (Required, Forces new resource) Name of the database where the AWS Glue table exists.
 * `table_name` - (Required, Forces new resource) Name of the AWS Glue table.
 

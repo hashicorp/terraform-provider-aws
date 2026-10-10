@@ -51,7 +51,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Combination of attributes to create a unique id: `lb_name`,`certificate_name`
+* `id` - Combination of attributes to create a unique ID: `lb_name`,`certificate_name`
 
 ## Import
 

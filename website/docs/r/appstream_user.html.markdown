@@ -40,9 +40,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the appstream user.
+* `arn` - ARN of the AppStream user.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the user was created.
-* `id` - Unique ID of the appstream user.
+* `id` - Unique ID of the AppStream user.
 
 ## Import
 

@@ -51,7 +51,7 @@ resource "aws_iam_role" "assume" {
 The following arguments are required:
 
 * `editor_role_values` - (Required) The editor role values.
-* `workspace_id` - (Required) The workspace id.
+* `workspace_id` - (Required) The workspace ID.
 
 The following arguments are optional:
 

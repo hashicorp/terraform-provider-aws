@@ -23,7 +23,7 @@ resource "aws_lightsail_bucket" "example" {
 
 The following arguments are required:
 
-* `bundle_id` - (Required) Bundle ID to use for the bucket. A bucket bundle specifies the monthly cost, storage space, and data transfer quota for a bucket. Use the [get-bucket-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-bucket-bundles.html) cli command to get a list of bundle IDs that you can specify.
+* `bundle_id` - (Required) Bundle ID to use for the bucket. A bucket bundle specifies the monthly cost, storage space, and data transfer quota for a bucket. Use the [get-bucket-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-bucket-bundles.html) CLI command to get a list of bundle IDs that you can specify.
 * `name` - (Required) Name for the bucket.
 
 The following arguments are optional:

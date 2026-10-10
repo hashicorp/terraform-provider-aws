@@ -120,9 +120,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `created_at` - Creation time of the Form Type.
 * `created_by` - Creator of the Form Type.
-* `origin_domain_id` - Origin domain id of the Form Type.
-* `origin_project_id` - Origin project id of the Form Type.
-* `owning_project_id` - Owning project id of the Form Type.
+* `origin_domain_id` - Origin domain ID of the Form Type.
+* `origin_project_id` - Origin project ID of the Form Type.
+* `owning_project_id` - Owning project ID of the Form Type.
 * `revision` - Revision of the Form Type.
 
 ## Timeouts

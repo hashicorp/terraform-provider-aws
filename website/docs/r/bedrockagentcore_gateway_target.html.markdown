@@ -517,7 +517,7 @@ The `oauth` block supports the following:
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
 * `default_return_url` - (Optional) URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
 * `grant_type` - (Optional) OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
-* `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
+* `provider_arn` - (Required) ARN of the OAuth credential provider for OAuth authentication.
 * `scopes` - (Required) Set of OAuth scopes to request.
 
 ### `gateway_iam_role` Block

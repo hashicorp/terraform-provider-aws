@@ -83,7 +83,7 @@ This data source exports the following attributes in addition to the arguments a
 * `ramdisk_id` - RAM disk associated with the image, if any. Only applicable for machine images.
 * `root_device_name` - Device name of the root device.
 * `root_device_type` - Type of root device (ie: `ebs` or `instance-store`).
-* `root_snapshot_id` - Snapshot id associated with the root device, if any (only applies to `ebs` root devices).
+* `root_snapshot_id` - Snapshot ID associated with the root device, if any (only applies to `ebs` root devices).
 * `sriov_net_support` - Whether enhanced networking is enabled.
 * `state` - Current state of the AMI. If the state is `available`, the image is successfully registered and can be used to launch an instance.
 * `state_reason` - Describes a state change. Fields are `UNSET` if not available. See [`state_reason`](#state_reason) below.

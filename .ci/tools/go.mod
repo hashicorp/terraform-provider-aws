@@ -4,7 +4,7 @@ go 1.26.9
 
 require (
 	github.com/YakDriver/copyplop v0.10.0
-	github.com/YakDriver/swissshepherd v0.24.0
+	github.com/YakDriver/swissshepherd v0.27.0
 	github.com/golangci/golangci-lint/v2 v2.12.2
 	github.com/golangci/misspell v0.8.0
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b

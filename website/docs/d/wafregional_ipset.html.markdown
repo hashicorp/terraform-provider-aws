@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_wafregional_ipset
 
-`aws_wafregional_ipset` Retrieves a WAF Regional IP Set Resource Id.
+`aws_wafregional_ipset` Retrieves a WAF Regional IP Set Resource ID.
 
 ## Example Usage
 

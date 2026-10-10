@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_launch_template
 
-Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
+Provides an EC2 launch template resource. Can be used to create instances or Auto Scaling groups.
 
 ## Example Usage
 
@@ -160,7 +160,7 @@ Configure additional volumes of the instance besides specified by the AMI. It's 
   [AWS's Block Device Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
   to understand the implications of using these attributes.
 
-To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI ec2 describe-images command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
+To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI `ec2 describe-images` command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
 
 Each `block_device_mappings` supports the following:
 
@@ -422,12 +422,12 @@ The `network_performance_options` block supports the following:
 
 Attaches one or more [Network Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) to the instance.
 
-Check limitations for autoscaling group in [Creating an Auto Scaling Group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
+Check limitations for Auto Scaling group in [Creating an Auto Scaling group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
 
 Each `network_interfaces` block supports the following:
 
 * `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public IP address with the network interface. Boolean value, can be left unset.
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.

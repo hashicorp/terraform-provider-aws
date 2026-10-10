@@ -15,7 +15,7 @@ or greater can update their content once created, see [SSM Schema Features](http
 
 ## Example Usage
 
-### Create an ssm document in JSON format
+### Create an SSM document in JSON format
 
 ```terraform
 resource "aws_ssm_document" "foo" {
@@ -44,7 +44,7 @@ DOC
 }
 ```
 
-### Create an ssm document in YAML format
+### Create an SSM document in YAML format
 
 ```terraform
 resource "aws_ssm_document" "foo" {

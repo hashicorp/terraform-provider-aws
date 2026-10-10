@@ -3,12 +3,12 @@ subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_finding_ids"
 description: |-
-  Terraform data source for managing an AWS GuardDuty Finding Ids.
+  Terraform data source for managing an AWS GuardDuty Finding IDs.
 ---
 
 # Data Source: aws_guardduty_finding_ids
 
-Terraform data source for managing an AWS GuardDuty Finding Ids.
+Terraform data source for managing an AWS GuardDuty Finding IDs.
 
 ## Example Usage
 

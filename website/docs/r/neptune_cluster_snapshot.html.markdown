@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `license_model` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
-* `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storage_encrypted` - Specifies whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
 * `vpc_id` - The VPC ID associated with the DB cluster snapshot.

@@ -68,7 +68,7 @@ The following arguments are optional:
 #### idp
 
 * `entity_id` - (Required) The unique Entity ID of the application in SAML Identity Provider.
-* `metadata_content` - (Required) The Metadata of the SAML application in xml format.
+* `metadata_content` - (Required) The Metadata of the SAML application in XML format.
 
 ## Attribute Reference
 

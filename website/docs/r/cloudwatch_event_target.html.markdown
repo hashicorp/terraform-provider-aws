@@ -376,7 +376,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 ```
 
-### Cloudwatch Log Group Usage
+### CloudWatch Log Group Usage
 
 ```terraform
 resource "aws_cloudwatch_log_group" "example" {
@@ -580,7 +580,7 @@ The following arguments are optional:
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
 * `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker AI Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
-* `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
+* `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique ID.
 
 ### batch_target
 
@@ -613,7 +613,7 @@ The following arguments are optional:
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. Defaults to `1`.
-* `tags` - (Optional) A map of tags to assign to ecs resources.
+* `tags` - (Optional) A map of tags to assign to ECS resources.
 
 ### http_target
 

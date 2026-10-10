@@ -46,7 +46,7 @@ resource "aws_eip" "two" {
 }
 ```
 
-### Attaching an EIP to an Instance with a pre-assigned private ip (VPC Only)
+### Attaching an EIP to an Instance with a pre-assigned private IP (VPC Only)
 
 ```terraform
 resource "aws_vpc" "default" {
