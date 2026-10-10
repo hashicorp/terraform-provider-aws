@@ -12,7 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	tfterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -433,7 +433,7 @@ func TestPermissionDiffQualifiedFunctionName(t *testing.T) {
 				"statement_id":      "AllowExecution",
 			}
 			maps.Copy(config, testCase.config)
-			state := &tfterraform.InstanceState{
+			state := &terraformsdk.InstanceState{
 				ID: "AllowExecution",
 				Attributes: map[string]string{
 					names.AttrID:          "AllowExecution",
@@ -446,7 +446,7 @@ func TestPermissionDiffQualifiedFunctionName(t *testing.T) {
 				},
 			}
 
-			diff, err := tflambda.ResourcePermission().Diff(t.Context(), state, tfterraform.NewResourceConfigRaw(config), nil)
+			diff, err := tflambda.ResourcePermission().Diff(t.Context(), state, terraformsdk.NewResourceConfigRaw(config), nil)
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
