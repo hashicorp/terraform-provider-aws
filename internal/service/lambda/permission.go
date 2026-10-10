@@ -68,10 +68,11 @@ func resourcePermission() *schema.Resource {
 					ValidateFunc: validPermissionEventSourceToken(),
 				},
 				"function_name": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validFunctionName(),
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateFunc:     validFunctionName(),
+					DiffSuppressFunc: suppressQualifiedFunctionName,
 				},
 				"function_url_auth_type": {
 					Type:             schema.TypeString,
@@ -95,10 +96,11 @@ func resourcePermission() *schema.Resource {
 					ForceNew: true,
 				},
 				"qualifier": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ForceNew:     true,
-					ValidateFunc: validQualifier(),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateFunc:     validQualifier(),
+					DiffSuppressFunc: suppressQualifierInFunctionName,
 				},
 				"source_account": {
 					Type:         schema.TypeString,
@@ -380,6 +382,34 @@ func getFunctionNameFromARN(arn string) (string, error) {
 			arn)
 	}
 	return matches[5], nil
+}
+
+// Read stores function_name without a qualifier and sets qualifier from the policy statement.
+// When function_name is configured with a qualifier (a qualified ARN or "name:qualifier"),
+// suppress the resulting diffs on function_name and on an unconfigured qualifier.
+func suppressQualifiedFunctionName(_, old, new string, d *schema.ResourceData) bool {
+	oldQualifier, _ := d.GetChange("qualifier")
+
+	return functionNameHasQualifier(new, old, oldQualifier.(string))
+}
+
+func suppressQualifierInFunctionName(_, old, new string, d *schema.ResourceData) bool {
+	if new != "" {
+		return false
+	}
+
+	oldFunctionName, newFunctionName := d.GetChange("function_name")
+
+	return functionNameHasQualifier(newFunctionName.(string), oldFunctionName.(string), old)
+}
+
+// functionNameHasQualifier returns whether qualifiedFunctionName is functionName qualified by qualifier.
+func functionNameHasQualifier(qualifiedFunctionName, functionName, qualifier string) bool {
+	if functionName == "" || qualifier == "" {
+		return false
+	}
+
+	return qualifiedFunctionName == functionName+":"+qualifier
 }
 
 type policy struct {

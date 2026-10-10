@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_permission: Fix perpetual replacement when `function_name` is configured with a qualifier (a qualified function ARN or `name:qualifier`) and `qualifier` is not set
+```

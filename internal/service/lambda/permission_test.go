@@ -7,10 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	tfterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -252,6 +254,219 @@ func TestPermissionGetFunctionNameFromGovCloudARN(t *testing.T) {
 	}
 }
 
+func TestPermissionFunctionNameHasQualifier(t *testing.T) {
+	t.Parallel()
+
+	const (
+		functionARN = "arn:aws:lambda:us-west-2:123456789012:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
+	)
+
+	testCases := []struct {
+		name                  string
+		qualifiedFunctionName string
+		functionName          string
+		qualifier             string
+		want                  bool
+	}{
+		{
+			name: "empty",
+		},
+		{
+			name:                  "qualified ARN alias",
+			qualifiedFunctionName: functionARN + ":testalias",
+			functionName:          functionARN,
+			qualifier:             "testalias",
+			want:                  true,
+		},
+		{
+			name:                  "qualified ARN version",
+			qualifiedFunctionName: functionARN + ":223",
+			functionName:          functionARN,
+			qualifier:             "223",
+			want:                  true,
+		},
+		{
+			name:                  "qualified ARN $LATEST",
+			qualifiedFunctionName: functionARN + ":$LATEST",
+			functionName:          functionARN,
+			qualifier:             "$LATEST",
+			want:                  true,
+		},
+		{
+			name:                  "qualified name",
+			qualifiedFunctionName: "lambda_function_name:testalias",
+			functionName:          "lambda_function_name",
+			qualifier:             "testalias",
+			want:                  true,
+		},
+		{
+			name:                  "unqualified ARN",
+			qualifiedFunctionName: functionARN,
+			functionName:          functionARN,
+			qualifier:             "testalias",
+		},
+		{
+			name:                  "different qualifier",
+			qualifiedFunctionName: functionARN + ":otheralias",
+			functionName:          functionARN,
+			qualifier:             "testalias",
+		},
+		{
+			name:                  "different function",
+			qualifiedFunctionName: "arn:aws:lambda:us-west-2:123456789012:function:other_function_name:testalias", // lintignore:AWSAT003,AWSAT005 // unit test
+			functionName:          functionARN,
+			qualifier:             "testalias",
+		},
+		{
+			name:                  "different format",
+			qualifiedFunctionName: "lambda_function_name:testalias",
+			functionName:          functionARN,
+			qualifier:             "testalias",
+		},
+		{
+			name:                  "no qualifier",
+			qualifiedFunctionName: functionARN + ":",
+			functionName:          functionARN,
+		},
+		{
+			name:                  "no function name",
+			qualifiedFunctionName: ":testalias",
+			qualifier:             "testalias",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tflambda.FunctionNameHasQualifier(testCase.qualifiedFunctionName, testCase.functionName, testCase.qualifier), testCase.want; got != want {
+				t.Errorf("FunctionNameHasQualifier(%q, %q, %q) = %t, want %t", testCase.qualifiedFunctionName, testCase.functionName, testCase.qualifier, got, want)
+			}
+		})
+	}
+}
+
+func TestPermissionDiffQualifiedFunctionName(t *testing.T) {
+	t.Parallel()
+
+	const (
+		functionARN = "arn:aws:lambda:us-west-2:123456789012:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
+	)
+
+	testCases := []struct {
+		name          string
+		stateFunction string
+		stateQual     string
+		config        map[string]any
+		wantForceNew  bool
+	}{
+		{
+			name:          "qualified ARN, no qualifier",
+			stateFunction: functionARN,
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": functionARN + ":testalias",
+			},
+		},
+		{
+			name:          "qualified name, no qualifier",
+			stateFunction: "lambda_function_name",
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": "lambda_function_name:testalias",
+			},
+		},
+		{
+			name:          "qualified ARN, same qualifier",
+			stateFunction: functionARN,
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": functionARN + ":testalias",
+				"qualifier":     "testalias",
+			},
+		},
+		{
+			name:          "unqualified ARN, qualifier",
+			stateFunction: functionARN,
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": functionARN,
+				"qualifier":     "testalias",
+			},
+		},
+		{
+			name:          "qualified ARN, different alias",
+			stateFunction: functionARN,
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": functionARN + ":otheralias",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:          "unqualified ARN, qualifier removed",
+			stateFunction: functionARN,
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": functionARN,
+			},
+			wantForceNew: true,
+		},
+		{
+			name:          "qualified ARN, different function",
+			stateFunction: functionARN,
+			stateQual:     "testalias",
+			config: map[string]any{
+				"function_name": "arn:aws:lambda:us-west-2:123456789012:function:other_function_name:testalias", // lintignore:AWSAT003,AWSAT005 // unit test
+			},
+			wantForceNew: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			config := map[string]any{
+				names.AttrAction:    "lambda:InvokeFunction",
+				names.AttrPrincipal: "events.amazonaws.com",
+				"statement_id":      "AllowExecution",
+			}
+			maps.Copy(config, testCase.config)
+			state := &tfterraform.InstanceState{
+				ID: "AllowExecution",
+				Attributes: map[string]string{
+					names.AttrID:          "AllowExecution",
+					names.AttrAction:      "lambda:InvokeFunction",
+					"function_name":       testCase.stateFunction,
+					names.AttrPrincipal:   "events.amazonaws.com",
+					"qualifier":           testCase.stateQual,
+					"statement_id":        "AllowExecution",
+					"statement_id_prefix": "",
+				},
+			}
+
+			diff, err := tflambda.ResourcePermission().Diff(t.Context(), state, tfterraform.NewResourceConfigRaw(config), nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if got, want := diff.RequiresNew(), testCase.wantForceNew; got != want {
+				t.Errorf("RequiresNew() = %t, want %t", got, want)
+			}
+
+			// A replacement diff includes every attribute, so only check for suppressed diffs.
+			if !testCase.wantForceNew && diff != nil {
+				for _, k := range []string{"function_name", "qualifier"} {
+					if v, ok := diff.Attributes[k]; ok {
+						t.Errorf("unexpected %s diff: %#v", k, v)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestAccLambdaPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var statement tflambda.PolicyStatement
@@ -448,6 +663,76 @@ func TestAccLambdaPermission_qualifier(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccPermissionImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaPermission_qualifiedFunctionARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var statement tflambda.PolicyStatement
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_qualifiedFunctionARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(ctx, t, resourceName, &statement),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPermissionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaPermission_qualifiedFunctionName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var statement tflambda.PolicyStatement
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_qualifiedFunctionName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(ctx, t, resourceName, &statement),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -949,6 +1234,40 @@ resource "aws_lambda_permission" "test" {
 resource "aws_lambda_alias" "test" {
   name             = %[1]q
   description      = "a sample description"
+  function_name    = aws_lambda_function.test.function_name
+  function_version = "$LATEST"
+}
+`, rName))
+}
+
+func testAccPermissionConfig_qualifiedFunctionARN(rName string) string {
+	return acctest.ConfigCompose(testAccPermissionConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_permission" "test" {
+  statement_id  = "AllowExecutionWithQualifiedARN"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_alias.test.arn
+  principal     = "events.amazonaws.com"
+}
+
+resource "aws_lambda_alias" "test" {
+  name             = %[1]q
+  function_name    = aws_lambda_function.test.function_name
+  function_version = "$LATEST"
+}
+`, rName))
+}
+
+func testAccPermissionConfig_qualifiedFunctionName(rName string) string {
+	return acctest.ConfigCompose(testAccPermissionConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_permission" "test" {
+  statement_id  = "AllowExecutionWithQualifiedName"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.test.function_name}:${aws_lambda_alias.test.name}"
+  principal     = "events.amazonaws.com"
+}
+
+resource "aws_lambda_alias" "test" {
+  name             = %[1]q
   function_name    = aws_lambda_function.test.function_name
   function_version = "$LATEST"
 }
