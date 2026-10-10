@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Fix perpetual `source_dest_check` diff when the primary network interface is attached via a `primary_network_interface` block
+```
