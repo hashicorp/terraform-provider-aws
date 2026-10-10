@@ -15,6 +15,7 @@ var (
 	ResourceResourcePolicy         = resourceResourcePolicy
 	ResourceTag                    = resourceTag
 
+	EnablePolicyType                       = enablePolicyType
 	FindAccountByID                        = findAccountByID
 	FindAWSServiceAccessByServicePrincipal = findAWSServiceAccessByServicePrincipal // nosemgrep:ci.aws-in-var-name
 	FindOrganizationalUnitByID             = findOrganizationalUnitByID

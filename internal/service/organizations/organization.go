@@ -290,7 +290,31 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("master_account_email", org.MasterAccountEmail)
 	d.Set("master_account_id", org.MasterAccountId)
 
+	roots, err := findRoots(ctx, conn, &organizations.ListRootsInput{})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s) roots: %s", d.Id(), err)
+	}
+
+	if err := d.Set("roots", flattenRoots(roots)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
+	}
+
+	var enabledPolicyTypes []awstypes.PolicyType
+
+	for _, v := range roots[0].PolicyTypes {
+		if v.Status == awstypes.PolicyTypeStatusEnabled {
+			enabledPolicyTypes = append(enabledPolicyTypes, v.Type)
+		}
+	}
+
+	d.Set("enabled_policy_types", enabledPolicyTypes)
+
 	if _, ok := d.GetOk("return_organization_only"); ok {
+		// Set rather than left unset: a Computed list that has never been set is planned as unknown on every plan.
+		d.Set("accounts", nil)
+		d.Set("non_master_accounts", nil)
+
 		return diags
 	}
 
@@ -311,12 +335,6 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return aws.ToString(v.Id) != managementAccountID
 	})
 
-	roots, err := findRoots(ctx, conn, &organizations.ListRootsInput{})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s) roots: %s", d.Id(), err)
-	}
-
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
@@ -324,9 +342,6 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
-	}
-	if err := d.Set("roots", flattenRoots(roots)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 	}
 
 	var awsServiceAccessPrincipals []string
@@ -341,16 +356,6 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("aws_service_access_principals", awsServiceAccessPrincipals)
-
-	var enabledPolicyTypes []awstypes.PolicyType
-
-	for _, v := range roots[0].PolicyTypes {
-		if v.Status == awstypes.PolicyTypeStatusEnabled {
-			enabledPolicyTypes = append(enabledPolicyTypes, v.Type)
-		}
-	}
-
-	d.Set("enabled_policy_types", enabledPolicyTypes)
 
 	return diags
 }

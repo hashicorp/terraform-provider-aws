@@ -42,6 +42,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
 			"Identity":                          testAccOrganizationsOrganization_identitySerial,
 			"DataSource_returnOrganizationOnly": testAccOrganizationDataSource_returnOrganizationOnly,
+			"ReturnOrganizationOnly":            testAccOrganization_returnOrganizationOnly,
 		},
 		"Account": {
 			acctest.CtBasic:    testAccAccount_basic,
