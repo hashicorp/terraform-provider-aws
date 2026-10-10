@@ -232,6 +232,7 @@ This resource supports the following arguments:
 * `network_type` - (Optional) Network type of the cluster. Valid values are: `IPV4` or `DUAL`. Default value: `IPV4`. Only updating from `IPV4` to `DUAL` is allowed.
 * `public_access` - (Optional) Access control settings for brokers. See [connectivity_info public_access Argument Reference](#connectivity_info-public_access-argument-reference) below.
 * `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [connectivity_info vpc_connectivity Argument Reference](#connectivity_info-vpc_connectivity-argument-reference) below.
+* `zookeeper_client_access` - (Optional) Whether ZooKeeper client access is enabled. Defaults to `true`. Only applicable to Apache Kafka versions that use ZooKeeper. Note that because the value is not returned by the MSK API, it is not refreshed from AWS and cannot be verified on import.
 
 ### connectivity_info public_access Argument Reference
 
