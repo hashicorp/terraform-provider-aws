@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -363,6 +364,173 @@ func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.
 
 			var got tfbedrockagentcore.PrivateEndpointModel
 			diags := fwflex.Flatten(ctx, testCase.apiObject, &got)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
+			}
+			if diff := cmp.Diff(got, testCase.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+type certificateConfigurationResourceModel struct {
+	CertificateConfiguration fwtypes.ListNestedObjectValueOf[tfbedrockagentcore.CertificateConfigurationModel] `tfsdk:"certificate_configuration"`
+}
+
+func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexExpand(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.CertificateConfigurationMemberS3{},
+		awstypes.S3CertificateConfiguration{},
+		awstypes.CertificateConfigurationMemberSecretsManager{},
+		awstypes.SecretsManagerCertificateConfiguration{},
+	)
+	testCases := map[string]struct {
+		model    certificateConfigurationResourceModel
+		expected []awstypes.CertificateConfiguration
+	}{
+		"Null block omits field": {
+			model: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CertificateConfigurationModel](ctx),
+			},
+			expected: nil,
+		},
+		"S3": {
+			model: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
+					S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.S3ConfigurationModel{
+						BucketOwnerAccountID: types.StringValue("123456789012"),
+						URI:                  types.StringValue("s3://bucket1/private-ca.pem"),
+					}),
+					SecretsManager: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SecretsManagerCertificateConfigurationModel](ctx),
+				}),
+			},
+			expected: []awstypes.CertificateConfiguration{
+				&awstypes.CertificateConfigurationMemberS3{
+					Value: awstypes.S3CertificateConfiguration{
+						BucketOwnerAccountId: aws.String("123456789012"),
+						Uri:                  aws.String("s3://bucket1/private-ca.pem"),
+					},
+				},
+			},
+		},
+		"S3 no bucket owner": {
+			model: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
+					S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.S3ConfigurationModel{
+						BucketOwnerAccountID: types.StringNull(),
+						URI:                  types.StringValue("s3://bucket1/private-ca.pem"),
+					}),
+					SecretsManager: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SecretsManagerCertificateConfigurationModel](ctx),
+				}),
+			},
+			expected: []awstypes.CertificateConfiguration{
+				&awstypes.CertificateConfigurationMemberS3{
+					Value: awstypes.S3CertificateConfiguration{
+						Uri: aws.String("s3://bucket1/private-ca.pem"),
+					},
+				},
+			},
+		},
+		"SecretsManager": {
+			model: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
+					S3: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.S3ConfigurationModel](ctx),
+					SecretsManager: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SecretsManagerCertificateConfigurationModel{
+						SecretARN: fwtypes.ARNValue("arn:aws:secretsmanager:us-west-2:123456789012:secret:private-ca-AbCdEf"), //lintignore:AWSAT003,AWSAT005
+					}),
+				}),
+			},
+			expected: []awstypes.CertificateConfiguration{
+				&awstypes.CertificateConfigurationMemberSecretsManager{
+					Value: awstypes.SecretsManagerCertificateConfiguration{
+						SecretArn: aws.String("arn:aws:secretsmanager:us-west-2:123456789012:secret:private-ca-AbCdEf"), //lintignore:AWSAT003,AWSAT005
+					},
+				},
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got bedrockagentcorecontrol.UpdateGatewayTargetInput
+			diags := fwflex.Expand(ctx, testCase.model, &got)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
+			}
+			if diff := cmp.Diff(got.CertificateConfigurations, testCase.expected, ignoreExportedOpts); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexFlatten(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := map[string]struct {
+		apiObjects []awstypes.CertificateConfiguration
+		expected   certificateConfigurationResourceModel
+	}{
+		"Omitted field": {
+			apiObjects: nil,
+			expected: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CertificateConfigurationModel](ctx),
+			},
+		},
+		"S3": {
+			apiObjects: []awstypes.CertificateConfiguration{
+				&awstypes.CertificateConfigurationMemberS3{
+					Value: awstypes.S3CertificateConfiguration{
+						BucketOwnerAccountId: aws.String("123456789012"),
+						Uri:                  aws.String("s3://bucket1/private-ca.pem"),
+					},
+				},
+			},
+			expected: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
+					S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.S3ConfigurationModel{
+						BucketOwnerAccountID: types.StringValue("123456789012"),
+						URI:                  types.StringValue("s3://bucket1/private-ca.pem"),
+					}),
+					SecretsManager: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SecretsManagerCertificateConfigurationModel](ctx),
+				}),
+			},
+		},
+		"SecretsManager": {
+			apiObjects: []awstypes.CertificateConfiguration{
+				&awstypes.CertificateConfigurationMemberSecretsManager{
+					Value: awstypes.SecretsManagerCertificateConfiguration{
+						SecretArn: aws.String("arn:aws:secretsmanager:us-west-2:123456789012:secret:private-ca-AbCdEf"), //lintignore:AWSAT003,AWSAT005
+					},
+				},
+			},
+			expected: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
+					S3: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.S3ConfigurationModel](ctx),
+					SecretsManager: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SecretsManagerCertificateConfigurationModel{
+						SecretARN: fwtypes.ARNValue("arn:aws:secretsmanager:us-west-2:123456789012:secret:private-ca-AbCdEf"), //lintignore:AWSAT003,AWSAT005
+					}),
+				}),
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			apiObject := bedrockagentcorecontrol.GetGatewayTargetOutput{
+				CertificateConfigurations: testCase.apiObjects,
+			}
+			var got certificateConfigurationResourceModel
+			diags := fwflex.Flatten(ctx, &apiObject, &got)
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %s", diags[0].Summary())
 			}
@@ -1456,6 +1624,141 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointWithRoutingDomain(t *te
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccCertificateConfiguration_s3()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"s3": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"bucket_owner_account_id": knownvalue.Null(),
+							names.AttrURI:             knownvalue.StringExact("s3://" + rName + "/private-ca.pem"),
+						})}),
+						"secrets_manager": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				// UpdateGatewayTarget removes a certificate that is omitted from the request,
+				// so changing another argument must send it again.
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccCertificateConfiguration_s3()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetCertificateConfigurationCount(&gatewayTarget, 1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"s3": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"bucket_owner_account_id": knownvalue.Null(),
+							names.AttrURI:             knownvalue.StringExact("s3://" + rName + "/private-ca.pem"),
+						})}),
+						"secrets_manager": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccCertificateConfiguration_s3BucketOwner()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"s3": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"bucket_owner_account_id": tfknownvalue.AccountID(),
+							names.AttrURI:             knownvalue.StringExact("s3://" + rName + "/private-ca.pem"),
+						})}),
+						"secrets_manager": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccCertificateConfiguration_secretsManager()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"s3":              knownvalue.ListSizeExact(0),
+						"secrets_manager": knownvalue.ListSizeExact(1),
+					})})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("certificate_configuration").AtSliceIndex(0).AtMapKey("secrets_manager").AtSliceIndex(0).AtMapKey("secret_arn"), "aws_secretsmanager_secret.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetCertificateConfigurationCount(&gatewayTarget, 0),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 // TestAccBedrockAgentCoreGatewayTarget_mcpToolSchemaValidation confirms the new
 // mcp_tool_schema/resource_priority validators reject out-of-range priorities, an
 // empty inline payload, and an s3 source without a uri at plan time. These
@@ -2511,6 +2814,16 @@ func testAccCheckGatewayTargetHasRequestHeader(v *bedrockagentcorecontrol.GetGat
 	}
 }
 
+func testAccCheckGatewayTargetCertificateConfigurationCount(v *bedrockagentcorecontrol.GetGatewayTargetOutput, expected int) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if got := len(v.CertificateConfigurations); got != expected {
+			return fmt.Errorf("expected %d certificate configurations, got %d", expected, got)
+		}
+
+		return nil
+	}
+}
+
 func testAccGatewayTargetConfig_base(rName string) string {
 	return testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, "")
 }
@@ -3528,6 +3841,154 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, description, certificateConfiguration string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+}
+
+data "aws_iam_policy_document" "certificate" {
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.test.arn}/*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [aws_secretsmanager_secret.test.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.certificate.json
+}
+
+# Wait for the role policy to propagate before the gateway reads the certificate.
+resource "time_sleep" "test" {
+  create_duration = "30s"
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name            = %[1]q
+  role_arn        = aws_iam_role.test.arn
+  authorizer_type = "AWS_IAM"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "private-ca.pem"
+  content = "%[2]s"
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "%[2]s"
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  name               = %[1]q
+  description        = %[3]q
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "lambda"
+    }
+  }
+
+  target_configuration {
+    http {
+      passthrough {
+        endpoint      = "https://mcp.internal.example.com/mcp"
+        protocol_type = "MCP"
+      }
+    }
+  }
+
+  private_endpoint {
+    managed_vpc_resource {
+      vpc_identifier           = aws_vpc.test.id
+      subnet_ids               = aws_subnet.test[*].id
+      endpoint_ip_address_type = "IPV4"
+      security_group_ids       = [aws_security_group.test.id]
+    }
+  }
+
+%[4]s
+
+  depends_on = [
+    aws_s3_object.test,
+    aws_secretsmanager_secret_version.test,
+    time_sleep.test,
+  ]
+}
+`, rName, acctest.TLSPEMEscapeNewlines(caCertificate), description, certificateConfiguration))
+}
+
+func testAccCertificateConfiguration_s3() string {
+	return `  certificate_configuration {
+    s3 {
+      uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+    }
+  }`
+}
+
+func testAccCertificateConfiguration_s3BucketOwner() string {
+	return `  certificate_configuration {
+    s3 {
+      uri                     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+      bucket_owner_account_id = data.aws_caller_identity.current.account_id
+    }
+  }`
+}
+
+func testAccCertificateConfiguration_secretsManager() string {
+	return `  certificate_configuration {
+    secrets_manager {
+      secret_arn = aws_secretsmanager_secret.test.arn
+    }
+  }`
 }
 
 func testAccGatewayTargetConfig_baseMCPServerInVPC(rName string, subnetCount int) string {
