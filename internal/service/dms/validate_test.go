@@ -155,7 +155,7 @@ func TestValidSecretsManagerSecretID(t *testing.T) {
 		"friendly name with path":   {value: "/test/example/my-secret"},
 		"friendly name all charset": {value: "a-Z_0/9+=.@"},
 		"friendly name max length":  {value: strings.Repeat("a", 512)},
-		"empty":                     {value: "", wantErr: true},
+		"empty":                     {value: ""},
 		"name too long":             {value: strings.Repeat("a", 513), wantErr: true},
 		"name with space":           {value: "my secret", wantErr: true},
 		"name with invalid char":    {value: "my-secret!", wantErr: true},
@@ -176,7 +176,7 @@ func TestValidSecretsManagerSecretID(t *testing.T) {
 	}
 }
 
-func TestSuppressSecretsManagerSecretIDDiffs(t *testing.T) {
+func TestSecretsManagerSecretIDMatchesFullARN(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -185,30 +185,35 @@ func TestSuppressSecretsManagerSecretIDDiffs(t *testing.T) {
 	)
 
 	testCases := map[string]struct {
-		old, new string
-		want     bool
+		fullARN, id string
+		want        bool
 	}{
-		"identical":                         {old: fullARN, new: fullARN, want: true},
-		"full ARN in state, name in config": {old: fullARN, new: "test/example/my-secret", want: true},
-		"name in state, full ARN in config": {old: "test/example/my-secret", new: fullARN, want: true},
-		"full ARN in state, partial ARN":    {old: fullARN, new: partialARN, want: true},
-		"partial ARN in state, full ARN":    {old: partialARN, new: fullARN, want: true},
-		"different name":                    {old: fullARN, new: "test/example/other-secret"},
-		"name is prefix only":               {old: fullARN, new: "test/example/my"},
-		"different partial ARN account":     {old: fullARN, new: "arn:aws:secretsmanager:us-east-1:210987654321:secret:test/example/my-secret"},        //lintignore:AWSAT003,AWSAT005
-		"different full ARN suffix":         {old: fullARN, new: "arn:aws:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret-d4e5f6"}, //lintignore:AWSAT003,AWSAT005
-		"name vs partial ARN":               {old: partialARN, new: "test/example/my-secret"},
-		"new value removed":                 {old: fullARN, new: ""},
-		"new value added":                   {old: "", new: "test/example/my-secret"},
-		"non-Secrets Manager ARN":           {old: "arn:aws:ssm:us-east-1:123456789012:secret:my-secret-a1b2c3", new: "my-secret"}, //lintignore:AWSAT003,AWSAT005
+		"name":                        {fullARN: fullARN, id: "test/example/my-secret", want: true},
+		"partial ARN":                 {fullARN: fullARN, id: partialARN, want: true},
+		"GovCloud partial ARN":        {fullARN: "arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret-a1b2c3", id: "arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret", want: true}, //lintignore:AWSAT003,AWSAT005
+		"identical full ARN":          {fullARN: fullARN, id: fullARN},
+		"different name":              {fullARN: fullARN, id: "test/example/other-secret"},
+		"name is prefix only":         {fullARN: fullARN, id: "test/example/my"},
+		"name with suffix":            {fullARN: fullARN, id: "test/example/my-secret-a1b2c3"},
+		"partial ARN other account":   {fullARN: fullARN, id: "arn:aws:secretsmanager:us-east-1:210987654321:secret:test/example/my-secret"},        //lintignore:AWSAT003,AWSAT005
+		"partial ARN other region":    {fullARN: fullARN, id: "arn:aws:secretsmanager:us-west-2:123456789012:secret:test/example/my-secret"},        //lintignore:AWSAT003,AWSAT005
+		"partial ARN other partition": {fullARN: fullARN, id: "arn:aws-cn:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret"},     //lintignore:AWSAT003,AWSAT005
+		"full ARN other suffix":       {fullARN: fullARN, id: "arn:aws:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret-d4e5f6"}, //lintignore:AWSAT003,AWSAT005
+		"name too short for suffix":   {fullARN: "arn:aws:secretsmanager:us-east-1:123456789012:secret:-a1b2c3", id: ""},                            //lintignore:AWSAT003,AWSAT005
+		"not an ARN":                  {fullARN: "test/example/my-secret-a1b2c3", id: "test/example/my-secret"},
+		"non-Secrets Manager ARN":     {fullARN: "arn:aws:ssm:us-east-1:123456789012:secret:my-secret-a1b2c3", id: "my-secret"}, //lintignore:AWSAT003,AWSAT005
+		// A partial ARN whose name ends in a hyphen and six characters cannot be told
+		// apart from a full ARN, which is why only values returned by the API are
+		// treated as full ARNs.
+		"ambiguous partial ARN": {fullARN: "arn:aws:secretsmanager:us-east-1:123456789012:secret:db-source", id: "db", want: true}, //lintignore:AWSAT003,AWSAT005
 	}
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := tfdms.SuppressSecretsManagerSecretIDDiffs("secrets_manager_arn", testCase.old, testCase.new, nil), testCase.want; got != want {
-				t.Errorf("SuppressSecretsManagerSecretIDDiffs(%q, %q) = %t, want %t", testCase.old, testCase.new, got, want)
+			if got, want := tfdms.SecretsManagerSecretIDMatchesFullARN(testCase.fullARN, testCase.id), testCase.want; got != want {
+				t.Errorf("SecretsManagerSecretIDMatchesFullARN(%q, %q) = %t, want %t", testCase.fullARN, testCase.id, got, want)
 			}
 		})
 	}

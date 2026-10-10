@@ -34,5 +34,5 @@ var (
 	ValidReplicationTaskID         = validReplicationTaskID
 	ValidSecretsManagerSecretID    = validSecretsManagerSecretID
 
-	SuppressSecretsManagerSecretIDDiffs = suppressSecretsManagerSecretIDDiffs
+	SecretsManagerSecretIDMatchesFullARN = secretsManagerSecretIDMatchesFullARN
 )

@@ -94,14 +94,19 @@ func validSecretsManagerSecretID(v any, k string) (ws []string, es []error) {
 		return
 	}
 
+	// Like verify.ValidARN, allow an empty value.
+	if val == "" {
+		return
+	}
+
 	if strings.HasPrefix(val, "arn:") {
 		return verify.ValidARN(v, k)
 	}
 
-	if len(val) < 1 || len(val) > 512 {
-		es = append(es, fmt.Errorf("%q must be between 1 and 512 characters, got %d", k, len(val)))
+	if len(val) > 512 {
+		es = append(es, fmt.Errorf("%q must be at most 512 characters, got %d", k, len(val)))
 	}
-	if !regexache.MustCompile(`^[0-9A-Za-z/_+=.@-]*$`).MatchString(val) {
+	if !regexache.MustCompile(`^[0-9A-Za-z/_+=.@-]+$`).MatchString(val) {
 		es = append(es, fmt.Errorf("%q must be a valid ARN or a secret name containing only alphanumeric characters and /_+=.@- special characters", k))
 	}
 

@@ -812,12 +812,11 @@ func resourceEndpoint() *schema.Resource {
 					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
 				},
 				"secrets_manager_arn": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ValidateFunc:     validSecretsManagerSecretID,
-					DiffSuppressFunc: suppressSecretsManagerSecretIDDiffs,
-					RequiredWith:     []string{"secrets_manager_access_role_arn"},
-					ConflictsWith:    []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validSecretsManagerSecretID,
+					RequiredWith:  []string{"secrets_manager_access_role_arn"},
+					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
 				},
 				"server_name": {
 					Type:          schema.TypeString,
@@ -1629,7 +1628,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1644,7 +1643,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1685,7 +1684,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1699,7 +1698,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 
 			// ASM and TDE passwords aren't returned in API. Propagate state values.
 			tfMap := flattenOracleSettings(v)
@@ -1728,7 +1727,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1742,7 +1741,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1753,7 +1752,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1764,7 +1763,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -2682,18 +2681,23 @@ func flattenOracleSettings(apiObject *awstypes.OracleSettings) map[string]any {
 	return tfMap
 }
 
-// suppressSecretsManagerSecretIDDiffs suppresses differences between equivalent
-// Secrets Manager secret identifiers, e.g. a friendly name or partial ARN in
-// configuration and the full ARN (with the random 6-character suffix) in state.
-func suppressSecretsManagerSecretIDDiffs(_, old, new string, _ *schema.ResourceData) bool {
-	if old == new {
-		return true
+// setSecretsManagerSecretID sets secrets_manager_arn from the value returned by
+// the API. If the API returns the full ARN of the secret that the identifier
+// already in state (a friendly name or partial ARN) refers to, the state value is
+// kept so that configuring a friendly name or partial ARN does not cause a
+// perpetual diff.
+//
+// This is done on read rather than with a DiffSuppressFunc: a partial ARN or
+// name that itself ends in a hyphen and six characters (e.g. "db-source") is
+// syntactically indistinguishable from a full ARN, so comparing two configured
+// identifiers could suppress a change to a different secret. A value returned
+// as a full ARN by the API always carries the random suffix.
+func setSecretsManagerSecretID(d *schema.ResourceData, apiValue *string) {
+	v := aws.ToString(apiValue)
+	if old := d.Get("secrets_manager_arn").(string); old != "" && old != v && secretsManagerSecretIDMatchesFullARN(v, old) {
+		v = old
 	}
-	if old == "" || new == "" {
-		return false
-	}
-
-	return secretsManagerSecretIDMatchesFullARN(old, new) || secretsManagerSecretIDMatchesFullARN(new, old)
+	d.Set("secrets_manager_arn", v)
 }
 
 // secretsManagerSecretIDMatchesFullARN returns whether fullARN is a complete

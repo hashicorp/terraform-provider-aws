@@ -886,6 +886,9 @@ func TestAccDMSEndpoint_MySQL_secretName(t *testing.T) {
 				Config: testAccEndpointConfig_mySQLSecretID(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
