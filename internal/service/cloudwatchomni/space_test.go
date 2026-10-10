@@ -24,6 +24,13 @@ import (
 // ("ConflictException: A space already exists for account <id> in region
 // <region>"), so tests sharing a region cannot run concurrently. Running them
 // in parallel makes whichever test loses the race fail on CreateSpace.
+// envVarDomainID supplies an existing CloudWatch Omni domain to create test
+// spaces under. The tests cannot create one: an account may hold only a single
+// domain, and in an Organization with CloudWatch Omni trusted access
+// account-level domain creation is refused and spaces must use the
+// organization domain.
+const envVarDomainID = "AWS_CLOUDWATCHOMNI_DOMAIN_ID"
+
 func TestAccCloudWatchOmniSpace_serial(t *testing.T) {
 	t.Parallel()
 
@@ -43,6 +50,7 @@ func testAccCloudWatchOmniSpace_basic(t *testing.T) {
 
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
+	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -55,7 +63,7 @@ func testAccCloudWatchOmniSpace_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_basic(rName),
+				Config: testAccSpaceConfig_basic(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &space, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -84,6 +92,7 @@ func testAccCloudWatchOmniSpace_disappears(t *testing.T) {
 
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
+	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -96,7 +105,7 @@ func testAccCloudWatchOmniSpace_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_basic(rName),
+				Config: testAccSpaceConfig_basic(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &space, t),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatchomni.ResourceSpace, resourceName),
@@ -112,6 +121,7 @@ func testAccCloudWatchOmniSpace_agentCore(t *testing.T) {
 
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
+	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -124,7 +134,7 @@ func testAccCloudWatchOmniSpace_agentCore(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_agentCore(rName),
+				Config: testAccSpaceConfig_agentCore(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &space, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -140,6 +150,7 @@ func testAccCloudWatchOmniSpace_encryption(t *testing.T) {
 
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
+	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -152,7 +163,7 @@ func testAccCloudWatchOmniSpace_encryption(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_encryption(rName),
+				Config: testAccSpaceConfig_encryption(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &space, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -170,6 +181,7 @@ func testAccCloudWatchOmniSpace_update(t *testing.T) {
 
 	var space1, space2 awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
+	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -183,14 +195,14 @@ func testAccCloudWatchOmniSpace_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_basic(rName),
+				Config: testAccSpaceConfig_basic(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &space1, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
-				Config: testAccSpaceConfig_basic(rNameUpdated),
+				Config: testAccSpaceConfig_basic(rNameUpdated, domainID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &space2, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
@@ -258,13 +270,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-// Test configurations with actual domain ID
-const testAccSpaceConfig_domainID = "d-es4p6cp202xhibofkxuis906h" // koffir-demo domain in eu-west-1
-
-func testAccSpaceConfig_basic(rName string) string {
+func testAccSpaceConfig_basic(rName, domainID string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -293,13 +301,12 @@ resource "aws_cloudwatchomni_space" "test" {
   domain_id            = %[2]q
   data_access_role_arn = aws_iam_role.test.arn
 }
-`, rName, testAccSpaceConfig_domainID)
+`, rName, domainID)
 }
 
-func testAccSpaceConfig_agentCore(rName string) string {
+func testAccSpaceConfig_agentCore(rName, domainID string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_iam_role" "test_data_access" {
   name = "%[1]s-data-access"
@@ -341,13 +348,12 @@ resource "aws_cloudwatchomni_space" "test" {
   data_access_role_arn           = aws_iam_role.test_data_access.arn
   agent_core_evaluation_role_arn = aws_iam_role.test_agent_core.arn
 }
-`, rName, testAccSpaceConfig_domainID)
+`, rName, domainID)
 }
 
-func testAccSpaceConfig_encryption(rName string) string {
+func testAccSpaceConfig_encryption(rName, domainID string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -410,5 +416,5 @@ resource "aws_cloudwatchomni_space" "test" {
     kms_key_arn         = aws_kms_key.test.arn
   }
 }
-`, rName, testAccSpaceConfig_domainID)
+`, rName, domainID)
 }

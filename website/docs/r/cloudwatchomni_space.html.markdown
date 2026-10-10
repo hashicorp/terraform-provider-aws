@@ -34,9 +34,14 @@ resource "aws_iam_role" "example" {
   })
 }
 
+resource "aws_cloudwatchomni_domain" "example" {
+  name               = "example"
+  identity_providers = ["IAM"]
+}
+
 resource "aws_cloudwatchomni_space" "example" {
   name                 = "example"
-  domain_id            = "d-1234567890abcdef0"
+  domain_id            = aws_cloudwatchomni_domain.example.domain_id
   data_access_role_arn = aws_iam_role.example.arn
 }
 ```
@@ -48,7 +53,7 @@ Supply `agent_core_evaluation_role_arn` to let the space run AgentCore online ev
 ```terraform
 resource "aws_cloudwatchomni_space" "example" {
   name                           = "example"
-  domain_id                      = "d-1234567890abcdef0"
+  domain_id                      = aws_cloudwatchomni_domain.example.domain_id
   data_access_role_arn           = aws_iam_role.data_access.arn
   agent_core_evaluation_role_arn = aws_iam_role.agent_core.arn
 }
@@ -97,7 +102,7 @@ resource "aws_kms_key" "example" {
 
 resource "aws_cloudwatchomni_space" "example" {
   name                 = "example"
-  domain_id            = "d-1234567890abcdef0"
+  domain_id            = aws_cloudwatchomni_domain.example.domain_id
   data_access_role_arn = aws_iam_role.example.arn
 
   encryption_configuration {
@@ -112,7 +117,7 @@ resource "aws_cloudwatchomni_space" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the space. Must be 3-64 characters of lowercase letters, numbers and hyphens, must begin and end with a letter or number, and cannot contain consecutive hyphens.
-* `domain_id` - (Required) ID of the domain the space belongs to. Changing this forces a new resource.
+* `domain_id` - (Required) ID of the [CloudWatch Omni domain](cloudwatchomni_domain.html) the space belongs to. Changing this forces a new resource.
 * `data_access_role_arn` - (Required) ARN of the IAM role CloudWatch Omni assumes to access data. Must be in the same account as the space. Changing this forces a new resource.
 
 The following arguments are optional:
