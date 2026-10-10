@@ -25,11 +25,57 @@ resource "aws_cloudwatch_otel_enrichment" "example" {
 }
 ```
 
+### Filter Enrichment by Namespace and Metric
+
+By default every namespace that CloudWatch supports is enriched. Narrow that scope with `include_filters` and `exclude_filters`. The configuration below enriches all of `AWS/EC2` except two network metrics, plus exactly two `AWS/RDS` metrics, and nothing else.
+
+```terraform
+resource "aws_observabilityadmin_telemetry_enrichment" "example" {
+}
+
+resource "aws_cloudwatch_otel_enrichment" "example" {
+  include_filters {
+    namespace = "AWS/EC2"
+  }
+
+  include_filters {
+    namespace    = "AWS/RDS"
+    metric_names = ["CPUUtilization", "DatabaseConnections"]
+  }
+
+  exclude_filters {
+    namespace    = "AWS/EC2"
+    metric_names = ["NetworkPacketsIn", "NetworkPacketsOut"]
+  }
+
+  depends_on = [aws_observabilityadmin_telemetry_enrichment.example]
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
+* `exclude_filters` - (Optional) Namespaces and metric names to leave unenriched. [See below](#exclude_filters-block).
+* `include_filters` - (Optional) Namespaces and metric names to enrich. [See below](#include_filters-block).
 * `region` - (Optional) AWS region where this resource is managed.
+
+Filters are evaluated as follows:
+
+* `include_filters` is applied first, then the `exclude_filters` match set is subtracted from the result. Exclusion always wins, so a metric matched by both is not enriched.
+* An inactive direction is permissive. With no `include_filters`, every supported namespace is in scope; with no `exclude_filters`, nothing is removed.
+* Namespaces and metric names are matched exactly and case-sensitively. There are no wildcards or prefixes, so `AWS/EC2` matches only `AWS/EC2`.
+* At most 100 selectors are allowed across `include_filters` and `exclude_filters` **combined**. Two lists of 60 selectors each satisfy the per-list limit but are rejected together.
+
+### `exclude_filters` Block
+
+* `metric_names` - (Optional) Names of the metrics to select within the namespace, up to 100. Omit to match every metric in the namespace.
+* `namespace` - (Required) Namespace of the metrics to select. Must be 1-255 characters and must not begin with a colon.
+
+### `include_filters` Block
+
+* `metric_names` - (Optional) Names of the metrics to select within the namespace, up to 100. Omit to match every metric in the namespace.
+* `namespace` - (Required) Namespace of the metrics to select. Must be 1-255 characters and must not begin with a colon.
 
 ## Attribute Reference
 
@@ -42,6 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
+* `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
 ## Import
