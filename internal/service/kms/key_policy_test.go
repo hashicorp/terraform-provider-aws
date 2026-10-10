@@ -301,7 +301,7 @@ func TestKeyPolicyKeyIDToSet(t *testing.T) {
 	const (
 		keyID       = "1234abcd-12ab-34cd-56ef-1234567890ab"
 		keyARN      = "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab" //lintignore:AWSAT003,AWSAT005
-		mrkKeyID    = "mrk-1234abcd12ab34cd56ef1234567890ab"                                        //lintignore:AWSAT003,AWSAT005
+		mrkKeyID    = "mrk-1234abcd12ab34cd56ef1234567890ab"
 		mrkKeyARN   = "arn:aws:kms:eu-west-1:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab" //lintignore:AWSAT003,AWSAT005
 		otherKeyARN = "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ac" //lintignore:AWSAT003,AWSAT005
 		otherAcct   = "arn:aws:kms:us-east-2:111122224444:key/1234abcd-12ab-34cd-56ef-1234567890ab" //lintignore:AWSAT003,AWSAT005
