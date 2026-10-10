@@ -36,6 +36,10 @@ type tfMapOfString struct {
 	FieldInner fwtypes.MapValueOf[basetypes.StringValue] `tfsdk:"field_inner"`
 }
 
+type tfMapOf[T attr.Value] struct {
+	Field1 fwtypes.MapValueOf[T] `tfsdk:"field1"`
+}
+
 type tfNestedMapOfString struct {
 	FieldOuter fwtypes.ListNestedObjectValueOf[tfMapOfString] `tfsdk:"field_outer"`
 }
@@ -50,6 +54,10 @@ type tfMapOfMapOfString struct {
 
 type awsMapOfString struct {
 	FieldInner map[string]string
+}
+
+type awsMapOf[T any] struct {
+	Field1 map[string]T
 }
 
 type awsMapOfMapOfString struct {
@@ -243,6 +251,72 @@ func TestExpandMaps(t *testing.T) {
 			},
 			Target:     &awsSingleStringValue{},
 			WantTarget: &awsSingleStringValue{},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+func TestExpandMapOfString(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"single value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+				}),
+			},
+			Target: &awsMapOf[string]{},
+			WantTarget: &awsMapOf[string]{
+				Field1: map[string]string{
+					"x": "y",
+				},
+			},
+		},
+		"multiple value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+					"y": types.StringValue("z"),
+				}),
+			},
+			Target: &awsMapOf[string]{},
+			WantTarget: &awsMapOf[string]{
+				Field1: map[string]string{
+					"x": "y",
+					"y": "z",
+				},
+			},
+		},
+		"empty value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{}),
+			},
+			Target: &awsMapOf[string]{},
+			WantTarget: &awsMapOf[string]{
+				Field1: map[string]string{},
+			},
+		},
+		"null value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+			Target: &awsMapOf[string]{},
+			WantTarget: &awsMapOf[string]{
+				Field1: nil,
+			},
+		},
+		"invalid conversion": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+				}),
+			},
+			Target:     &awsMapOf[int32]{},
+			WantTarget: &awsMapOf[int32]{},
 		},
 	}
 
