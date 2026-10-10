@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -344,8 +345,8 @@ func statusOTelEnrichment(conn *cloudwatch.Client) retry.StateRefreshFunc {
 
 func waitOTelEnrichmentReady(ctx context.Context, conn *cloudwatch.Client, timeout time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(awstypes.OTelEnrichmentStatusStopped)},
-		Target:     []string{string(awstypes.OTelEnrichmentStatusRunning)},
+		Pending:    enum.Slice(awstypes.OTelEnrichmentStatusStopped),
+		Target:     enum.Slice(awstypes.OTelEnrichmentStatusRunning),
 		Refresh:    statusOTelEnrichment(conn),
 		Timeout:    timeout,
 		MinTimeout: 2 * time.Second,
@@ -361,8 +362,8 @@ func waitOTelEnrichmentReady(ctx context.Context, conn *cloudwatch.Client, timeo
 
 func waitOTelEnrichmentDeleted(ctx context.Context, conn *cloudwatch.Client, timeout time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(awstypes.OTelEnrichmentStatusRunning)},
-		Target:     []string{string(awstypes.OTelEnrichmentStatusStopped), ""},
+		Pending:    enum.Slice(awstypes.OTelEnrichmentStatusRunning),
+		Target:     append(enum.Slice(awstypes.OTelEnrichmentStatusStopped), ""),
 		Refresh:    statusOTelEnrichment(conn),
 		Timeout:    timeout,
 		MinTimeout: 2 * time.Second,
