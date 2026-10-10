@@ -415,9 +415,60 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
 }
 ```
 
+### Self-hosted MCP server with a private certificate authority
+
+Use `certificate_configuration` when the MCP server presents a TLS certificate issued by a private certificate authority (CA). The gateway reads the PEM-encoded CA certificate with its execution role and trusts that CA for TLS connections to the target.
+
+```terraform
+data "aws_iam_policy_document" "private_ca" {
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.example.arn}/private-ca.pem"]
+  }
+}
+
+resource "aws_iam_role_policy" "private_ca" {
+  name   = "example-private-ca"
+  role   = aws_iam_role.gateway_role.id
+  policy = data.aws_iam_policy_document.private_ca.json
+}
+
+resource "aws_bedrockagentcore_gateway_target" "example" {
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+  name               = "my-private-mcp-with-private-ca"
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://mcp.internal.example.com/mcp"
+      }
+    }
+  }
+
+  private_endpoint {
+    managed_vpc_resource {
+      vpc_identifier           = aws_vpc.example.id
+      subnet_ids               = aws_subnet.example[*].id
+      endpoint_ip_address_type = "IPV4"
+      security_group_ids       = [aws_security_group.mcp_lattice.id]
+    }
+  }
+
+  certificate_configuration {
+    s3 {
+      uri = "s3://${aws_s3_bucket.example.bucket}/private-ca.pem"
+    }
+  }
+
+  # The gateway reads the certificate when it creates or updates the target, so grant access first.
+  depends_on = [aws_iam_role_policy.private_ca]
+}
+```
+
 ### Self-hosted MCP server with routing through an internal ALB
 
-Use `routing_domain` when the MCP server has a private TLS certificate. Place an internal ALB with a public ACM certificate in front of the server and set `routing_domain` to the ALB DNS name.
+Alternatively, when the MCP server has a private TLS certificate, place an internal ALB with a public ACM certificate in front of the server and set `routing_domain` to the ALB DNS name.
 
 ```terraform
 resource "aws_bedrockagentcore_gateway_target" "example" {
@@ -478,11 +529,36 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `certificate_configuration` - (Optional) Private certificate authority (CA) certificate that the gateway trusts for TLS connections to the target. Supported for `mcp_server`, `open_api_schema`, and `passthrough` targets that also configure `private_endpoint`. Without this block, the gateway trusts only public CAs. See [`certificate_configuration` Block](#certificate_configuration-block) below.
 * `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration` Block](#credential_provider_configuration-block) below.
 * `description` - (Optional) Description of the gateway target.
 * `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration` Block](#metadata_configuration-block) below.
 * `private_endpoint` - (Optional) Configuration for private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through Amazon VPC Lattice and never traverses the public internet. See [`private_endpoint` Block](#private_endpoint-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `certificate_configuration` Block
+
+The certificate must be a PEM-encoded X.509 CA certificate. For the full requirements, see [Connect to targets that use a private certificate authority](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-vpc-egress.html#gateway-private-certificate).
+
+The `certificate_configuration` block supports exactly one of the following:
+
+* `s3` - (Optional) CA certificate stored as an object in Amazon S3. See [`certificate_configuration.s3` Block](#certificate_configurations3-block) below.
+* `secrets_manager` - (Optional) CA certificate stored as a secret in AWS Secrets Manager. See [`certificate_configuration.secrets_manager` Block](#certificate_configurationsecrets_manager-block) below.
+
+~> **Note:** The gateway reads the CA certificate with its execution role when the target is created or updated, and the apply fails if the gateway can't read or validate it. Grant that role `s3:GetObject` on the object or `secretsmanager:GetSecretValue` on the secret, plus permission to decrypt with the AWS KMS customer managed key that encrypts it, if any. IAM changes take time to propagate, so granting the permission in the same apply can still cause a failure. To rotate the certificate, reference a new S3 object or secret.
+
+### `certificate_configuration.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Required) S3 URI of the PEM-encoded CA certificate, for example `s3://example-bucket/private-ca.pem`. The object must be in the same Region as the gateway.
+
+### `certificate_configuration.secrets_manager` Block
+
+The `secrets_manager` block supports the following:
+
+* `secret_arn` - (Required) ARN of the Secrets Manager secret that stores the PEM-encoded CA certificate as a string.
 
 ### `credential_provider_configuration` Block
 
