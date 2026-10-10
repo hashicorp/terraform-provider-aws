@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidEndpointID(t *testing.T) {
@@ -150,12 +152,12 @@ const (
 	testRegion      = "us-east-1"     //lintignore:AWSAT003
 	testRegionAlt   = "us-west-2"     //lintignore:AWSAT003
 	testRegionGC    = "us-gov-west-1" //lintignore:AWSAT003
-	testAccount     = "123456789012"
+	testAccount     = acctest.Ct12Digit
 	testAccountAlt  = "210987654321"
 )
 
 func secretARN(partition, service, region, account, resource string) string {
-	return strings.Join([]string{"arn", partition, service, region, account, resource}, ":")
+	return strings.Join([]string{names.AttrARN, partition, service, region, account, resource}, ":")
 }
 
 func TestValidSecretsManagerSecretID(t *testing.T) {
