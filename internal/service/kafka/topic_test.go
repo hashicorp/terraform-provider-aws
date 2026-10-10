@@ -182,6 +182,61 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 	})
 }
 
+func TestAccKafkaTopic_partitionsReduce(t *testing.T) {
+	ctx := acctest.Context(t)
+	var topic kafka.DescribeTopicOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_topic.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_basic(rName, clusterName, 2, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &topic),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkTopicARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configs_actual"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateIdFunc:                    testAccTopicImportStateIDFunc(resourceName),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore:              []string{"configs"},
+			},
+			// Reduce partitions to 1
+			{
+				Config: testAccTopicConfig_basic(rName, clusterName, 1, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &topic),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccTopicImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName)
 }
@@ -222,7 +277,6 @@ func testAccCheckTopicExists(ctx context.Context, t *testing.T, n string, v *kaf
 		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		output, err := tfkafka.FindTopicByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_arn"], rs.Primary.Attributes[names.AttrName])
-
 		if err != nil {
 			return err
 		}
