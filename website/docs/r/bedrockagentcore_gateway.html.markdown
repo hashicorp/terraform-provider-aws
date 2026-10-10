@@ -265,7 +265,7 @@ The `session_configuration` block supports the following:
 
 The `streaming_configuration` block supports the following:
 
-* `enable_response_streaming` - (Optional) Boolean indicating whether response streaming is enabled for the gateway.
+* `enable_response_streaming` - (Optional) Whether to enable response streaming for the gateway.
 
 ## Attribute Reference
 
