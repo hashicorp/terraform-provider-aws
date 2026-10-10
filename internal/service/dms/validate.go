@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -99,7 +100,7 @@ func validSecretsManagerSecretID(v any, k string) (ws []string, es []error) {
 		return
 	}
 
-	if strings.HasPrefix(val, "arn:") {
+	if arn.IsARN(val) {
 		return verify.ValidARN(v, k)
 	}
 

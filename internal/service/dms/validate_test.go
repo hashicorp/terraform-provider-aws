@@ -141,6 +141,23 @@ func TestValidReplicationTaskID(t *testing.T) {
 	}
 }
 
+// Test ARN components are declared once, with lintignore, and composed by
+// secretARN so that individual test cases do not need their own directives.
+const (
+	testPartition   = "aws"           //lintignore:AWSAT005
+	testPartitionGC = "aws-us-gov"    //lintignore:AWSAT005
+	testPartitionCN = "aws-cn"        //lintignore:AWSAT005
+	testRegion      = "us-east-1"     //lintignore:AWSAT003
+	testRegionAlt   = "us-west-2"     //lintignore:AWSAT003
+	testRegionGC    = "us-gov-west-1" //lintignore:AWSAT003
+	testAccount     = "123456789012"
+	testAccountAlt  = "210987654321"
+)
+
+func secretARN(partition, service, region, account, resource string) string {
+	return strings.Join([]string{"arn", partition, service, region, account, resource}, ":")
+}
+
 func TestValidSecretsManagerSecretID(t *testing.T) {
 	t.Parallel()
 
@@ -148,9 +165,9 @@ func TestValidSecretsManagerSecretID(t *testing.T) {
 		value   string
 		wantErr bool
 	}{
-		"full ARN":                  {value: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-a1b2c3"},            //lintignore:AWSAT003,AWSAT005
-		"partial ARN":               {value: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret"},                   //lintignore:AWSAT003,AWSAT005
-		"GovCloud ARN":              {value: "arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret-a1b2c3"}, //lintignore:AWSAT003,AWSAT005
+		"full ARN":                  {value: secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:my-secret-a1b2c3")},
+		"partial ARN":               {value: secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:my-secret")},
+		"GovCloud ARN":              {value: secretARN(testPartitionGC, "secretsmanager", testRegionGC, testAccount, "secret:my-secret-a1b2c3")},
 		"friendly name":             {value: "my-secret"},
 		"friendly name with path":   {value: "/test/example/my-secret"},
 		"friendly name all charset": {value: "a-Z_0/9+=.@"},
@@ -159,8 +176,8 @@ func TestValidSecretsManagerSecretID(t *testing.T) {
 		"name too long":             {value: strings.Repeat("a", 513), wantErr: true},
 		"name with space":           {value: "my secret", wantErr: true},
 		"name with invalid char":    {value: "my-secret!", wantErr: true},
-		"invalid ARN":               {value: "arn:aws:secretsmanager", wantErr: true},
-		"ARN with invalid account":  {value: "arn:aws:secretsmanager:us-east-1:12345:secret:my-secret", wantErr: true}, //lintignore:AWSAT003,AWSAT005
+		"invalid ARN":               {value: "arn:" + testPartition + ":secretsmanager", wantErr: true},
+		"ARN with invalid account":  {value: secretARN(testPartition, "secretsmanager", testRegion, "12345", "secret:my-secret"), wantErr: true},
 	}
 
 	for name, testCase := range testCases {
@@ -179,33 +196,42 @@ func TestValidSecretsManagerSecretID(t *testing.T) {
 func TestSecretsManagerSecretIDMatchesFullARN(t *testing.T) {
 	t.Parallel()
 
-	const (
-		fullARN    = "arn:aws:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret-a1b2c3" //lintignore:AWSAT003,AWSAT005
-		partialARN = "arn:aws:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret"        //lintignore:AWSAT003,AWSAT005
+	var (
+		fullARN        = secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:test/example/my-secret-a1b2c3")
+		partialARN     = secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:test/example/my-secret")
+		govCloudFull   = secretARN(testPartitionGC, "secretsmanager", testRegionGC, testAccount, "secret:my-secret-a1b2c3")
+		govCloudShort  = secretARN(testPartitionGC, "secretsmanager", testRegionGC, testAccount, "secret:my-secret")
+		otherAccount   = secretARN(testPartition, "secretsmanager", testRegion, testAccountAlt, "secret:test/example/my-secret")
+		otherRegion    = secretARN(testPartition, "secretsmanager", testRegionAlt, testAccount, "secret:test/example/my-secret")
+		otherPartition = secretARN(testPartitionCN, "secretsmanager", testRegion, testAccount, "secret:test/example/my-secret")
+		otherSuffix    = secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:test/example/my-secret-d4e5f6")
+		emptyName      = secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:-a1b2c3")
+		otherService   = secretARN(testPartition, "ssm", testRegion, testAccount, "secret:my-secret-a1b2c3")
+		ambiguous      = secretARN(testPartition, "secretsmanager", testRegion, testAccount, "secret:db-source")
 	)
 
 	testCases := map[string]struct {
 		fullARN, id string
 		want        bool
 	}{
-		"name":                        {fullARN: fullARN, id: "test/example/my-secret", want: true},
+		"friendly name":               {fullARN: fullARN, id: "test/example/my-secret", want: true},
 		"partial ARN":                 {fullARN: fullARN, id: partialARN, want: true},
-		"GovCloud partial ARN":        {fullARN: "arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret-a1b2c3", id: "arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret", want: true}, //lintignore:AWSAT003,AWSAT005
+		"GovCloud partial ARN":        {fullARN: govCloudFull, id: govCloudShort, want: true},
 		"identical full ARN":          {fullARN: fullARN, id: fullARN},
 		"different name":              {fullARN: fullARN, id: "test/example/other-secret"},
 		"name is prefix only":         {fullARN: fullARN, id: "test/example/my"},
 		"name with suffix":            {fullARN: fullARN, id: "test/example/my-secret-a1b2c3"},
-		"partial ARN other account":   {fullARN: fullARN, id: "arn:aws:secretsmanager:us-east-1:210987654321:secret:test/example/my-secret"},        //lintignore:AWSAT003,AWSAT005
-		"partial ARN other region":    {fullARN: fullARN, id: "arn:aws:secretsmanager:us-west-2:123456789012:secret:test/example/my-secret"},        //lintignore:AWSAT003,AWSAT005
-		"partial ARN other partition": {fullARN: fullARN, id: "arn:aws-cn:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret"},     //lintignore:AWSAT003,AWSAT005
-		"full ARN other suffix":       {fullARN: fullARN, id: "arn:aws:secretsmanager:us-east-1:123456789012:secret:test/example/my-secret-d4e5f6"}, //lintignore:AWSAT003,AWSAT005
-		"name too short for suffix":   {fullARN: "arn:aws:secretsmanager:us-east-1:123456789012:secret:-a1b2c3", id: ""},                            //lintignore:AWSAT003,AWSAT005
+		"partial ARN other account":   {fullARN: fullARN, id: otherAccount},
+		"partial ARN other region":    {fullARN: fullARN, id: otherRegion},
+		"partial ARN other partition": {fullARN: fullARN, id: otherPartition},
+		"full ARN other suffix":       {fullARN: fullARN, id: otherSuffix},
+		"name too short for suffix":   {fullARN: emptyName, id: ""},
 		"not an ARN":                  {fullARN: "test/example/my-secret-a1b2c3", id: "test/example/my-secret"},
-		"non-Secrets Manager ARN":     {fullARN: "arn:aws:ssm:us-east-1:123456789012:secret:my-secret-a1b2c3", id: "my-secret"}, //lintignore:AWSAT003,AWSAT005
+		"non-Secrets Manager ARN":     {fullARN: otherService, id: "my-secret"},
 		// A partial ARN whose name ends in a hyphen and six characters cannot be told
 		// apart from a full ARN, which is why only values returned by the API are
 		// treated as full ARNs.
-		"ambiguous partial ARN": {fullARN: "arn:aws:secretsmanager:us-east-1:123456789012:secret:db-source", id: "db", want: true}, //lintignore:AWSAT003,AWSAT005
+		"ambiguous partial ARN": {fullARN: ambiguous, id: "db", want: true},
 	}
 
 	for name, testCase := range testCases {

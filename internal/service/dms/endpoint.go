@@ -2721,7 +2721,7 @@ func secretsManagerSecretIDMatchesFullARN(fullARN, id string) bool {
 	}
 	name = name[:len(name)-suffixLen]
 
-	if strings.HasPrefix(id, "arn:") {
+	if arn.IsARN(id) {
 		return id == strings.TrimSuffix(fullARN, parsedARN.Resource)+"secret:"+name
 	}
 
