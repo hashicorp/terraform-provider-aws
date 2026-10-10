@@ -163,10 +163,10 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
+	d.Set("custom_suffix", serviceLinkedRoleReadCustomSuffix(d, customSuffix))
 	d.Set(names.AttrARN, role.Arn)
 	d.Set("aws_service_name", serviceName)
 	d.Set("create_date", aws.ToTime(role.CreateDate).Format(time.RFC3339))
-	d.Set("custom_suffix", customSuffix)
 	d.Set(names.AttrDescription, role.Description)
 	d.Set(names.AttrName, role.RoleName)
 	d.Set(names.AttrPath, role.Path)
@@ -175,6 +175,19 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	setTagsOut(ctx, role.Tags)
 
 	return diags
+}
+
+// serviceLinkedRoleReadCustomSuffix returns the value to store in custom_suffix on read.
+// The suffix cannot be reliably derived from the role name, as some services' default role
+// names already contain an underscore (e.g. AWSServiceRoleForHealth_Organizations), so the
+// name-derived value is only used on import, when there is no prior state.
+// Must be called before aws_service_name is set.
+func serviceLinkedRoleReadCustomSuffix(d *schema.ResourceData, derivedCustomSuffix string) string {
+	if d.Get("aws_service_name").(string) == "" {
+		return derivedCustomSuffix
+	}
+
+	return d.Get("custom_suffix").(string)
 }
 
 func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
