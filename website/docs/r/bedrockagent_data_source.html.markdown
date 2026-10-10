@@ -3,12 +3,12 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_data_source"
 description: |-
-  Terraform resource for managing an AWS Agents for Amazon Bedrock Data Source.
+  Manages an AWS Agents for Amazon Bedrock Data Source.
 ---
 
 # Resource: aws_bedrockagent_data_source
 
-Terraform resource for managing an AWS Agents for Amazon Bedrock Data Source.
+Manages an AWS Agents for Amazon Bedrock Data Source.
 
 ## Example Usage
 
@@ -364,10 +364,10 @@ The `web_configuration` configuration block supports the following arguments:
 The `crawler_configuration` configuration block supports the following arguments:
 
 * `crawler_limits` - (Optional) Configuration of crawl limits for the web URLs. See [`crawler_limits` Block](#crawler_limits-block) for details.
-* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude object types that match the pattern.
-* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include object types that match the pattern.
+* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude URLs that match the pattern.
+* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include URLs that match the pattern.
 * `scope` - (Optional) Scope of what is crawled for your URLs.
-* `user_agent` - (Optional) String used to identify the crawler or bot when it accesses a web server. Default value is `bedrockbot_UUID`.
+* `user_agent` - (Optional) Custom suffix appended to the `bedrockbot_UUID` user agent header that the crawler uses when it accesses a web server. Must be between 15 and 40 characters.
 
 ### `crawler_limits` Block
 
@@ -412,7 +412,7 @@ The `vector_ingestion_configuration` configuration block supports the following 
 
 The `chunking_configuration` configuration block supports the following arguments:
 
-* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
+* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
 * `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires `chunking_strategy` as `FIXED_SIZE`. See [`fixed_size_chunking_configuration` Block](#fixed_size_chunking_configuration-block) for details.
 * `hierarchical_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires `chunking_strategy` as `HIERARCHICAL`. See [`hierarchical_chunking_configuration` Block](#hierarchical_chunking_configuration-block) for details.
 * `semantic_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires `chunking_strategy` as `SEMANTIC`. See [`semantic_chunking_configuration` Block](#semantic_chunking_configuration-block) for details.
@@ -489,7 +489,7 @@ The `parsing_configuration` configuration block supports the following arguments
 
 * `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` Block](#bedrock_data_automation_configuration-block) for details.
 * `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` Block](#bedrock_foundation_model_configuration-block) for details.
-* `parsing_strategy` - (Required) Parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
+* `parsing_strategy` - (Required) Parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`, `SMART_PARSING`, `MULTI_MODAL_EMBEDDINGS`.
 
 ### `bedrock_data_automation_configuration` Block
 
