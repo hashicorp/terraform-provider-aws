@@ -4,6 +4,7 @@
 package iam
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -50,6 +51,38 @@ type iamPolicyStatementCondition struct {
 }
 
 type iamPolicyStatementConditionSet []iamPolicyStatementCondition
+
+// UnmarshalJSON accepts a policy document whose "Statement" element is either
+// an array of statements or a single statement object, as both forms are valid
+// IAM policy grammar. Marshalling always emits "Statement" as an array.
+func (s *iamPolicyDoc) UnmarshalJSON(b []byte) error {
+	type iamPolicyDocAlias iamPolicyDoc // prevents recursion into this method
+	var data struct {
+		iamPolicyDocAlias
+		Statement json.RawMessage `json:"Statement,omitempty"`
+	}
+
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	doc := iamPolicyDoc(data.iamPolicyDocAlias)
+
+	if raw := bytes.TrimSpace(data.Statement); len(raw) > 0 && raw[0] == '{' {
+		var statement iamPolicyStatement
+		if err := json.Unmarshal(raw, &statement); err != nil {
+			return err
+		}
+		doc.Statements = []*iamPolicyStatement{&statement}
+	} else if len(raw) > 0 {
+		if err := json.Unmarshal(raw, &doc.Statements); err != nil {
+			return err
+		}
+	}
+
+	*s = doc
+	return nil
+}
 
 func (s *iamPolicyDoc) Merge(newDoc *iamPolicyDoc) {
 	// adopt newDoc's Id

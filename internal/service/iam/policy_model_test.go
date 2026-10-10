@@ -519,3 +519,120 @@ func TestIAMPolicyStatementPrincipalSet_UnmarshalJSON(t *testing.T) { // nosemgr
 		})
 	}
 }
+
+func TestIAMPolicyDoc_UnmarshalJSON(t *testing.T) { // nosemgrep:ci.iam-in-func-name
+	t.Parallel()
+
+	testcases := map[string]struct {
+		b       string
+		want    *tfiam.IAMPolicyDoc
+		wantErr bool
+	}{
+		"statement array": {
+			b: `{"Version": "2012-10-17", "Statement": [{"Sid": "One", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "*"}, {"Sid": "Two", "Effect": "Deny", "Action": ["s3:PutObject", "s3:DeleteObject"], "Resource": "*"}]}`,
+			want: &tfiam.IAMPolicyDoc{
+				Version: "2012-10-17",
+				Statements: []*tfiam.IAMPolicyStatement{
+					{Sid: "One", Effect: "Allow", Actions: "s3:GetObject", Resources: "*"},
+					{Sid: "Two", Effect: "Deny", Actions: []any{"s3:PutObject", "s3:DeleteObject"}, Resources: "*"},
+				},
+			},
+		},
+		"statement object": {
+			b: `{"Version": "2012-10-17", "Id": "Example", "Statement": {"Effect": "Allow", "Action": ["acm:DescribeCertificate", "acm:ListCertificates"], "Resource": "*"}}`,
+			want: &tfiam.IAMPolicyDoc{
+				Version: "2012-10-17",
+				Id:      "Example",
+				Statements: []*tfiam.IAMPolicyStatement{
+					{Effect: "Allow", Actions: []any{"acm:DescribeCertificate", "acm:ListCertificates"}, Resources: "*"},
+				},
+			},
+		},
+		"statement object with whitespace": {
+			b: `{"Statement":
+				{"Effect": "Allow", "Action": "*", "Resource": "*"}}`,
+			want: &tfiam.IAMPolicyDoc{
+				Statements: []*tfiam.IAMPolicyStatement{
+					{Effect: "Allow", Actions: "*", Resources: "*"},
+				},
+			},
+		},
+		"empty statement array": {
+			b: `{"Version": "2012-10-17", "Statement": []}`,
+			want: &tfiam.IAMPolicyDoc{
+				Version:    "2012-10-17",
+				Statements: []*tfiam.IAMPolicyStatement{},
+			},
+		},
+		"no statement": {
+			b: `{"Version": "2012-10-17"}`,
+			want: &tfiam.IAMPolicyDoc{
+				Version: "2012-10-17",
+			},
+		},
+		"null statement": {
+			b: `{"Version": "2012-10-17", "Statement": null}`,
+			want: &tfiam.IAMPolicyDoc{
+				Version: "2012-10-17",
+			},
+		},
+		"invalid json": {
+			b:       `{"Statement": {`,
+			wantErr: true,
+		},
+		"invalid statement type": {
+			b:       `{"Statement": "Allow"}`,
+			wantErr: true,
+		},
+		"invalid statement object": {
+			b:       `{"Statement": {"Principal": ["AWS"]}}`,
+			wantErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := &tfiam.IAMPolicyDoc{}
+			err := json.Unmarshal([]byte(tc.b), got)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("json.Unmarshal() error = %v, wantErr %t", err, tc.wantErr)
+			}
+			if tc.wantErr {
+				return
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("json.Unmarshal() = %#v, want %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestIAMPolicyDoc_mergeSingleStatementObject(t *testing.T) { // nosemgrep:ci.iam-in-func-name
+	t.Parallel()
+
+	sources := []string{
+		`{"Version": "2012-10-17", "Statement": [{"Sid": "Array", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "*"}]}`,
+		`{"Version": "2012-10-17", "Statement": {"Sid": "Object", "Effect": "Allow", "Action": "acm:ListCertificates", "Resource": "*"}}`,
+	}
+
+	merged := &tfiam.IAMPolicyDoc{}
+	for _, source := range sources {
+		doc := &tfiam.IAMPolicyDoc{}
+		if err := json.Unmarshal([]byte(source), doc); err != nil {
+			t.Fatalf("json.Unmarshal(%s): %s", source, err)
+		}
+		merged.Merge(doc)
+	}
+
+	got, err := json.Marshal(merged)
+	if err != nil {
+		t.Fatalf("json.Marshal(): %s", err)
+	}
+
+	want := `{"Version":"2012-10-17","Statement":[{"Sid":"Array","Effect":"Allow","Action":"s3:GetObject","Resource":"*"},{"Sid":"Object","Effect":"Allow","Action":"acm:ListCertificates","Resource":"*"}]}`
+	if string(got) != want {
+		t.Errorf("json.Marshal() = %s, want %s", got, want)
+	}
+}
