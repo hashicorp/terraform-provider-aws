@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_ssm_service_setting
+```
+```release-note:enhancement
+resource/aws_ssm_service_setting: Add resource identity support
+```

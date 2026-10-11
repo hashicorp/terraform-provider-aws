@@ -33,6 +33,7 @@ From October through December 2026, our areas of focus will include the followin
 - **AWS End User Messaging protect configurations** ([#39605](https://github.com/hashicorp/terraform-provider-aws/issues/39605))
 
 ## Enhancements to Existing Services
+
 Alongside new service coverage, we will continue expanding and improving existing AWS resources, with particular focus on highly requested community and customer asks.
 
 - [Round out Lambda MicroVMs with image hooks, logging, and resource settings, plus an image version data source](https://github.com/hashicorp/terraform-provider-aws/issues/48526)
