@@ -393,6 +393,9 @@ func testAccDataSource_parsingModality(t *testing.T) {
 
 func testAccDataSource_contextEnrichment(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
