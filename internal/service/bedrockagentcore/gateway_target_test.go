@@ -402,7 +402,7 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexExpand(t *
 			model: certificateConfigurationResourceModel{
 				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
 					S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.S3ConfigurationModel{
-						BucketOwnerAccountID: types.StringValue("123456789012"),
+						BucketOwnerAccountID: types.StringValue(acctest.Ct12Digit),
 						URI:                  types.StringValue("s3://bucket1/private-ca.pem"),
 					}),
 					SecretsManager: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SecretsManagerCertificateConfigurationModel](ctx),
@@ -411,7 +411,7 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexExpand(t *
 			expected: []awstypes.CertificateConfiguration{
 				&awstypes.CertificateConfigurationMemberS3{
 					Value: awstypes.S3CertificateConfiguration{
-						BucketOwnerAccountId: aws.String("123456789012"),
+						BucketOwnerAccountId: aws.String(acctest.Ct12Digit),
 						Uri:                  aws.String("s3://bucket1/private-ca.pem"),
 					},
 				},
@@ -488,7 +488,7 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexFlatten(t 
 			apiObjects: []awstypes.CertificateConfiguration{
 				&awstypes.CertificateConfigurationMemberS3{
 					Value: awstypes.S3CertificateConfiguration{
-						BucketOwnerAccountId: aws.String("123456789012"),
+						BucketOwnerAccountId: aws.String(acctest.Ct12Digit),
 						Uri:                  aws.String("s3://bucket1/private-ca.pem"),
 					},
 				},
@@ -496,7 +496,7 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexFlatten(t 
 			expected: certificateConfigurationResourceModel{
 				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
 					S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.S3ConfigurationModel{
-						BucketOwnerAccountID: types.StringValue("123456789012"),
+						BucketOwnerAccountID: types.StringValue(acctest.Ct12Digit),
 						URI:                  types.StringValue("s3://bucket1/private-ca.pem"),
 					}),
 					SecretsManager: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SecretsManagerCertificateConfigurationModel](ctx),
