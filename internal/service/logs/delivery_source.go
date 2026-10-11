@@ -95,7 +95,7 @@ func (r *deliverySourceResource) Schema(ctx context.Context, request resource.Sc
 // Especially for eks capabilities that go into updating status prevent another delivery source modification
 // at the same time.
 func deliverySourceMutexLock(model *deliverySourceResourceModel) func() {
-	resourceKey := fmt.Sprintf("logs-delivery-source:%s", model.ResourceARN.ValueString())
+	resourceKey := fmt.Sprintf("logs-resource:%s", model.ResourceARN.ValueString())
 
 	conns.GlobalMutexKV.Lock(resourceKey)
 
