@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -90,6 +91,25 @@ func testAccTelemetryEvaluationForOrganization_disappears(t *testing.T) {
 	})
 }
 
+func testAccTelemetryEvaluationForOrganization_allRegionsAndRegionsConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTelemetryEvaluationForOrganizationConfig_conflicts(),
+				ExpectError: regexache.MustCompile(`("all_regions": conflicts with regions|"regions": conflicts with all_regions)`),
+			},
+		},
+	})
+}
+
 func testAccCheckTelemetryEvaluationForOrganizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
@@ -153,5 +173,14 @@ func testAccTelemetryEvaluationForOrganizationPreCheck(ctx context.Context, t *t
 func testAccTelemetryEvaluationForOrganizationConfig_basic() string {
 	return `
 resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {}
+`
+}
+
+func testAccTelemetryEvaluationForOrganizationConfig_conflicts() string {
+	return `
+resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {
+  all_regions = true
+  regions     = ["us-east-1"]
+}
 `
 }
