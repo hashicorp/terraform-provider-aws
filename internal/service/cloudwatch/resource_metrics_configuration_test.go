@@ -128,7 +128,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/metric_selection/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:   config.StringVariable(rName),
-					"include_metrics": acctest.SetOfStringsVariable("CacheHits"),
+					"include_metrics": acctest.SetOfStringsVariable("valkey.memory.used"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
@@ -140,7 +140,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("CacheHits"),
+						knownvalue.StringExact("valkey.memory.used"),
 					})),
 				},
 			},
@@ -149,7 +149,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/metric_selection/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:   config.StringVariable(rName),
-					"include_metrics": acctest.SetOfStringsVariable("CacheMisses", "CacheHits"),
+					"include_metrics": acctest.SetOfStringsVariable("valkey.memory.used", "valkey.commands.processed"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
@@ -161,8 +161,8 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("CacheHits"),
-						knownvalue.StringExact("CacheMisses"),
+						knownvalue.StringExact("valkey.memory.used"),
+						knownvalue.StringExact("valkey.commands.processed"),
 					})),
 				},
 			},
