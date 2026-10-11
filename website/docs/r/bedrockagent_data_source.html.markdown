@@ -340,7 +340,7 @@ The `monthly` configuration block supports the following arguments:
 The `day_of_month` configuration block supports the following arguments:
 
 * `day_number` - (Optional) Specific day of the month, from 1 to 28.
-* `last_day_of_month` - (Required) Configure this option to run the monthly sync on the last calendar day of each month. See [`last_day_of_month` Block](#last_day_of_month-block) for details.
+* `last_day_of_month` - (Optional) Configure this option to run the monthly sync on the last calendar day of each month. See [`last_day_of_month` Block](#last_day_of_month-block) for details.
 
 ### `last_day_of_month` Block
 
@@ -557,7 +557,7 @@ The `context_enrichment_configuration` configuration block supports the followin
 The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
 
 * `enrichment_strategy_configuration` - (Required, Forces new resource) Strategy used to enrich the context of data source documents. See [`context_enrichment_configuration.bedrock_foundation_model_configuration.enrichment_strategy_configuration` Block](#context_enrichment_configurationbedrock_foundation_model_configurationenrichment_strategy_configuration-block) for details.
-* `model_arn` - (Required, Forces new resource) ARN of the foundation model used for context enrichment.
+* `model_arn` - (Required, Forces new resource) ARN of the cross-Region inference profile used for context enrichment.
 
 ### `context_enrichment_configuration.bedrock_foundation_model_configuration.enrichment_strategy_configuration` Block
 
