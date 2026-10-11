@@ -43,28 +43,19 @@ resource "aws_networkmanager_core_network" "example" {
 
 ### With Base Policy Document
 
-Use `base_policy_document` with `create_base_policy` only when the final policy references attachment IDs or prefix list association names. These references create a Terraform dependency cycle because the attachments and prefix list associations depend on the core network. Apply the final policy after creating those resources with the separate [`aws_networkmanager_core_network_policy_attachment` resource](networkmanager_core_network_policy_attachment.html).
+A base policy is only needed when the final policy references resources that depend on the core network, which would otherwise create a dependency cycle in Terraform. The main case is a policy that references a [prefix list association](networkmanager_prefix_list_association.html) alias; static routes to attachment IDs are the other. Create the core network with `create_base_policy` and `base_policy_document`, then apply the final policy with the [`aws_networkmanager_core_network_policy_attachment` resource](networkmanager_core_network_policy_attachment.html) once those resources exist. Do not combine `policy_document` with that resource on the same core network.
 
 ```terraform
-data "aws_region" "current" {}
-
-resource "aws_vpc" "example" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "example" {
-  vpc_id     = aws_vpc.example.id
-  cidr_block = "10.0.0.0/24"
-}
-
 resource "aws_networkmanager_global_network" "example" {}
 
 data "aws_networkmanager_core_network_policy_document" "base" {
+  version = "2025.11"
+
   core_network_configuration {
     asn_ranges = ["65022-65534"]
 
     edge_locations {
-      location = data.aws_region.current.region
+      location = "us-west-2"
     }
   }
 
@@ -79,22 +70,30 @@ resource "aws_networkmanager_core_network" "example" {
   base_policy_document = data.aws_networkmanager_core_network_policy_document.base.json
 }
 
-resource "aws_networkmanager_vpc_attachment" "example" {
-  core_network_id = aws_networkmanager_core_network.example.id
-  subnet_arns     = [aws_subnet.example.arn]
-  vpc_arn         = aws_vpc.example.arn
+resource "aws_ec2_managed_prefix_list" "example" {
+  name           = "example"
+  address_family = "IPv4"
+  max_entries    = 5
 
-  tags = {
-    segment = "segment"
+  entry {
+    cidr = "10.0.0.0/8"
   }
 }
 
+resource "aws_networkmanager_prefix_list_association" "example" {
+  core_network_id   = aws_networkmanager_core_network.example.id
+  prefix_list_arn   = aws_ec2_managed_prefix_list.example.arn
+  prefix_list_alias = "exampleprefixlist"
+}
+
 data "aws_networkmanager_core_network_policy_document" "example" {
+  version = "2025.11"
+
   core_network_configuration {
     asn_ranges = ["65022-65534"]
 
     edge_locations {
-      location = data.aws_region.current.region
+      location = "us-west-2"
     }
   }
 
@@ -102,28 +101,25 @@ data "aws_networkmanager_core_network_policy_document" "example" {
     name = "segment"
   }
 
-  attachment_policies {
-    rule_number     = 100
-    condition_logic = "or"
+  routing_policies {
+    routing_policy_name      = "allowprefixlist"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
 
-    conditions {
-      type     = "tag-value"
-      operator = "equals"
-      key      = "segment"
-      value    = "segment"
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-prefix-list"
+          value = aws_networkmanager_prefix_list_association.example.prefix_list_alias
+        }
+
+        action {
+          type = "allow"
+        }
+      }
     }
-
-    action {
-      association_method = "constant"
-      segment            = "segment"
-    }
-  }
-
-  segment_actions {
-    action                  = "create-route"
-    segment                 = "segment"
-    destination_cidr_blocks = ["0.0.0.0/0"]
-    destinations            = [aws_networkmanager_vpc_attachment.example.id]
   }
 }
 
@@ -141,40 +137,40 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `base_policy_document` - (Optional, conflicts with `base_policy_regions` and `policy_document`) Base policy document, applied and set to `LIVE` on create. Use with `create_base_policy` when the final policy references attachment IDs or prefix list association names. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
-* `base_policy_regions` - (Optional, **Deprecated**, conflicts with `base_policy_document` and `policy_document`) Regions to add to the base policy. Use `base_policy_document` instead. This argument will be removed in the next major version of the provider.
-* `create_base_policy` - (Optional, conflicts with `policy_document`) Whether to create and apply a base policy on create or update. Use with `base_policy_document` when the final policy references attachment IDs or prefix list association names. See [With Base Policy Document](#with-base-policy-document).
+* `base_policy_document` - (Optional, conflicts with `base_policy_regions` and `policy_document`) Base policy document, applied and set to `LIVE` on create when `create_base_policy` is `true`. See [With Base Policy Document](#with-base-policy-document).
+* `base_policy_regions` - (Optional, conflicts with `base_policy_document` and `policy_document`) List of regions to add to the base policy. The base policy created by setting the `create_base_policy` argument to `true` requires one or more regions to be set in the `edge-locations`, `location` key. If `base_policy_regions` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
+* `create_base_policy` - (Optional, conflicts with `policy_document`) Whether to create and apply a base policy on create or update, using `base_policy_document` or `base_policy_regions`. Only needed when the final policy references prefix list associations or attachment IDs. See [With Base Policy Document](#with-base-policy-document).
 * `description` - (Optional) Description of the core network.
-* `policy_document` - (Optional, conflicts with `base_policy_document`, `base_policy_regions`, and `create_base_policy`) Core network policy document, applied and set to `LIVE`. Preferred way to manage the core network policy. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
+* `policy_document` - (Optional, conflicts with `base_policy_document`, `base_policy_regions`, and `create_base_policy`) Core network policy document, applied and set to `LIVE`. Preferred way to manage the core network policy. Removing this argument stops managing the policy with this resource; the current `LIVE` policy is not changed. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
 * `tags` - (Optional) Key-value tags for the core network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ID of the core network.
-* `arn` - ARN of the core network.
-* `created_at` - Timestamp when the core network was created.
-* `edges` - Edges created by the `LIVE` core network policy. See [`edges`](#edges) below.
-* `segments` - Segments created by the `LIVE` core network policy. See [`segments`](#segments) below.
-* `state` - State of the core network.
+* `arn` - Core Network ARN.
+* `created_at` - Timestamp when a core network was created.
+* `edges` - One or more blocks detailing the edges within a core network. [Detailed below](#edges-block).
+* `id` - Core Network ID.
+* `segments` - One or more blocks detailing the segments within a core network. [Detailed below](#segments-block).
+* `state` - Current state of a core network.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### `edges`
+### `edges` Block
 
-`edges` supports the following attributes:
+The `edges` configuration block supports the following arguments:
 
-* `asn` - ASN of the core network edge.
-* `edge_location` - Region where the core network edge is located.
-* `inside_cidr_blocks` - Inside CIDR blocks used by the core network edge.
+* `asn` - ASN of a core network edge.
+* `edge_location` - Region where a core network edge is located.
+* `inside_cidr_blocks` - Inside IP addresses used for core network edges.
 
-### `segments`
+### `segments` Block
 
-`segments` supports the following attributes:
+The `segments` configuration block supports the following arguments:
 
-* `edge_locations` - Regions containing edges for the segment.
-* `name` - Name of the segment.
-* `shared_segments` - Names of segments shared with the segment.
+* `edge_locations` - Regions where the edges are located.
+* `name` - Name of a core network segment.
+* `shared_segments` - Shared segments of a core network.
 
 ## Timeouts
 

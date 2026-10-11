@@ -173,6 +173,25 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 					}),
 				),
 			},
+			{
+				// Removing policy_document stops managing the policy; the LIVE policy is left in place.
+				Config: testAccCoreNetworkConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "65022",
+						"edge_location":        acctest.Region(),
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#":  "1",
+						"edge_locations.0":  acctest.Region(),
+						names.AttrName:      updatedSegmentValue,
+						"shared_segments.#": "0",
+					}),
+				),
+			},
 		},
 	})
 }

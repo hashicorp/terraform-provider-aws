@@ -88,8 +88,6 @@ func resourceCoreNetwork() *schema.Resource {
 					ConflictsWith: []string{"base_policy_regions", "policy_document"},
 				},
 				"base_policy_regions": {
-					Deprecated: "base_policy_regions is deprecated. Use base_policy_document instead. " +
-						"This argument will be removed in the next major version of the provider.",
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem: &schema.Schema{
@@ -203,21 +201,15 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	// if the user supplies a full policy document at create time, the core network
-	// is created with that policy set to LIVE. This conflicts with create_base_policy
-	// as no interim base policy is needed when the policy document does not reference
-	// attachment IDs or prefix list associations.
+	// The core network is created with this policy set to LIVE.
 	if v, ok := d.GetOk("policy_document"); ok {
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	// check if the user wants to create a base policy document
-	// this creates the core network with a starting policy document set to LIVE
-	// this is required for the first terraform apply if there attachments to the core network
-	// and the policy document references attachment IDs or prefix list associations
+	// A base policy is created and set to LIVE so that attachments and prefix list associations
+	// can be created before the final policy, which references them, is applied.
 	if _, ok := d.GetOk("create_base_policy"); ok {
-		// if user supplies a full base_policy_document for maximum flexibility, use it. Otherwise, use regions list
-		// var policyDocumentTarget string
+		// Use base_policy_document if supplied. Otherwise, build one from the regions list.
 		if v, ok := d.GetOk("base_policy_document"); ok {
 			input.PolicyDocument = aws.String(v.(string))
 		} else {
@@ -331,14 +323,12 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("policy_document") {
-		err := putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
-
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+		// Removing policy_document stops managing the policy with this resource.
+		// The current LIVE policy is left in place, as a core network cannot be left without a policy.
+		if v, ok := d.GetOk("policy_document"); ok {
+			if err := updateCoreNetworkPolicy(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
 		}
 	}
 
@@ -356,19 +346,26 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "Formatting Core Network Base Policy: %s", err)
 			}
 
-			err = putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
-
-			if err != nil {
+			if err := updateCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
 	return append(diags, resourceCoreNetworkRead(ctx, d, meta)...)
+}
+
+// updateCoreNetworkPolicy puts and executes a policy and waits for the core network to be updated.
+func updateCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, coreNetworkID, policyDocument string, timeout time.Duration) error {
+	if err := putAndExecuteCoreNetworkPolicy(ctx, conn, coreNetworkID, policyDocument); err != nil {
+		return err
+	}
+
+	if _, err := waitCoreNetworkUpdated(ctx, conn, coreNetworkID, timeout); err != nil {
+		return fmt.Errorf("waiting for Network Manager Core Network (%s) update: %w", coreNetworkID, err)
+	}
+
+	return nil
 }
 
 func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -398,11 +395,12 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
-	if d.HasChange("policy_document") {
-		if o, n := d.GetChange("policy_document"); !verify.JSONStringsEqual(o.(string), n.(string)) {
-			d.SetNewComputed("edges")
-			d.SetNewComputed("segments")
-		}
+	// A new policy changes edges and segments. Removing policy_document leaves the LIVE policy in place.
+	// ResourceDiff.HasChange compares the raw configuration with the normalized state and ignores
+	// DiffSuppressFunc, so the documents must be compared semantically.
+	if o, n := d.GetChange("policy_document"); n.(string) != "" && !verify.JSONStringsEqual(o.(string), n.(string)) {
+		d.SetNewComputed("edges")
+		d.SetNewComputed("segments")
 	}
 
 	return nil
