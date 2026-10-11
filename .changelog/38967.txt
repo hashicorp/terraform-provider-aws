@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_eks_cluster: Fix forced replacement of an existing cluster when an `access_config` block is added without `bootstrap_cluster_creator_admin_permissions`
+```
+
+```release-note:bug
+resource/aws_eks_cluster: Fix `access_config.bootstrap_cluster_creator_admin_permissions` being sent as `false` on create when omitted from the `access_config` block instead of using the documented default of `true`
+```
