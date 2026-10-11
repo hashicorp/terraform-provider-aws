@@ -1591,7 +1591,7 @@ func (m syncScheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.SyncScheduleMemberDaily
-		diags.Append(fwflex.Expand(ctx, model, &r)...)
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1604,7 +1604,7 @@ func (m syncScheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.SyncScheduleMemberMonthly
-		diags.Append(fwflex.Expand(ctx, model, &r)...)
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1617,7 +1617,7 @@ func (m syncScheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.SyncScheduleMemberWeekly
-		diags.Append(fwflex.Expand(ctx, model, &r)...)
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1685,7 +1685,7 @@ func (m dayOfMonthModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.DayOfMonthMemberLastDayOfMonth
-		diags.Append(fwflex.Expand(ctx, model, &r)...)
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}

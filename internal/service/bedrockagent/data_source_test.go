@@ -8,12 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,7 +27,7 @@ func testAccDataSource_basic(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -39,6 +43,34 @@ func testAccDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_deletion_policy"), tfknownvalue.StringExact(awstypes.DataDeletionPolicyDelete)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"confluence_configuration":                       knownvalue.ListSizeExact(0),
+						"managed_knowledge_base_connector_configuration": knownvalue.ListSizeExact(0),
+						"s3_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"bucket_arn":              knownvalue.NotNull(),
+							"bucket_owner_account_id": knownvalue.Null(),
+							"inclusion_prefixes":      knownvalue.Null(),
+						})}),
+						"salesforce_configuration":  knownvalue.ListSizeExact(0),
+						"share_point_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:              tfknownvalue.StringExact(awstypes.DataSourceTypeS3),
+						"web_configuration":         knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("server_side_encryption_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_ingestion_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -53,7 +85,7 @@ func testAccDataSource_full(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -101,7 +133,7 @@ func testAccDataSource_fullSemantic(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -150,7 +182,7 @@ func testAccDataSource_fullHierarchical(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -200,7 +232,7 @@ func testAccDataSource_fullCustomTranformation(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -248,7 +280,7 @@ func testAccDataSource_parsing(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -303,7 +335,7 @@ func testAccDataSource_parsingModality(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v1"
@@ -361,7 +393,7 @@ func testAccDataSource_parsingModality(t *testing.T) {
 
 func testAccDataSource_contextEnrichment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	// Graph construction models are reachable only through a cross-Region inference profile.
@@ -408,7 +440,7 @@ func testAccDataSource_disappears(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -443,7 +475,7 @@ func testAccDataSource_update(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -508,7 +540,7 @@ func testAccDataSource_webConfiguration(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
@@ -548,7 +580,7 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v1"
@@ -593,7 +625,7 @@ func testAccDataSource_bedrockDataAutomationNoConfig(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 	foundationModel := "amazon.titan-embed-text-v1"
@@ -631,7 +663,7 @@ func testAccDataSource_bedrockDataAutomationNoConfig(t *testing.T) {
 
 func testAccDataSource_managedKBConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 
@@ -645,8 +677,36 @@ func testAccDataSource_managedKBConnector_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_managedKBConnector_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "MANAGED_KNOWLEDGE_BASE_CONNECTOR"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_deletion_policy"), tfknownvalue.StringExact(awstypes.DataDeletionPolicyDelete)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"confluence_configuration": knownvalue.ListSizeExact(0),
+						"managed_knowledge_base_connector_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"connector_parameters":              knownvalue.NotNull(),
+							"deletion_protection_configuration": knownvalue.ListSizeExact(0),
+							"media_extraction_configuration":    knownvalue.ListSizeExact(1),
+							"sync_schedule":                     knownvalue.ListSizeExact(0),
+						})}),
+						"s3_configuration":          knownvalue.ListSizeExact(0),
+						"salesforce_configuration":  knownvalue.ListSizeExact(0),
+						"share_point_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:              tfknownvalue.StringExact(awstypes.DataSourceTypeManagedKnowledgeBaseConnector),
+						"web_configuration":         knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("server_side_encryption_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_ingestion_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -662,7 +722,7 @@ func testAccDataSource_managedKBConnector_basic(t *testing.T) {
 
 func testAccDataSource_managedKBConnector_mediaExtraction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSource types.DataSource
+	var dataSource awstypes.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
 
@@ -704,6 +764,81 @@ func testAccDataSource_managedKBConnector_mediaExtraction(t *testing.T) {
 	})
 }
 
+func testAccDataSource_managedKBConnector_syncSchedule(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource awstypes.DataSource
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_managedKBConnector_syncScheduleWeekly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"managed_knowledge_base_connector_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"sync_schedule": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"daily":   knownvalue.ListSizeExact(0),
+								"monthly": knownvalue.ListSizeExact(0),
+								"weekly": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"day_of_week": tfknownvalue.StringExact(awstypes.DayOfWeekMonday),
+								})}),
+							})}),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"data_source_configuration.0.managed_knowledge_base_connector_configuration.0.connector_parameters",
+				},
+			},
+			{
+				Config: testAccDataSourceConfig_managedKBConnector_syncScheduleMonthly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"managed_knowledge_base_connector_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"sync_schedule": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"daily": knownvalue.ListSizeExact(0),
+								"monthly": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"day_of_month": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"day_number":        knownvalue.Null(),
+										"last_day_of_month": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{})}),
+									})}),
+								})}),
+								"weekly": knownvalue.ListSizeExact(0),
+							})}),
+						})}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
@@ -730,7 +865,7 @@ func testAccCheckDataSourceDestroy(ctx context.Context, t *testing.T) resource.T
 	}
 }
 
-func testAccCheckDataSourceExists(ctx context.Context, t *testing.T, n string, v *types.DataSource) resource.TestCheckFunc {
+func testAccCheckDataSourceExists(ctx context.Context, t *testing.T, n string, v *awstypes.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1359,6 +1494,88 @@ resource "aws_bedrockagent_data_source" "test" {
 
       deletion_protection_configuration {
         deletion_protection_status = "DISABLED"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_managedKBConnector_syncScheduleWeekly(rName string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_managedKBConnector_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = aws_s3_bucket.test.bucket
+          bucketOwnerAccountId = data.aws_caller_identity.current.account_id
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
+        }
+      }
+
+      sync_schedule {
+        weekly {
+          day_of_week = "MONDAY"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_managedKBConnector_syncScheduleMonthly(rName string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_managedKBConnector_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = aws_s3_bucket.test.bucket
+          bucketOwnerAccountId = data.aws_caller_identity.current.account_id
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
+        }
+      }
+
+      sync_schedule {
+        monthly {
+          day_of_month {
+            last_day_of_month {}
+          }
+        }
       }
     }
   }
