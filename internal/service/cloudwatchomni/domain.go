@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -62,6 +63,9 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"custom_endpoint_urls": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"domain_endpoint_url": schema.StringAttribute{
 				Computed: true,
@@ -72,6 +76,9 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"domain_id": framework.IDAttribute(),
 			"identity_center_application_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"identity_providers": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringEnumType[awstypes.IdentityProvider](),
@@ -214,10 +221,6 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	} else {
-		// Computed attributes without UseStateForUnknown are unknown in the plan.
-		plan.CustomEndpointURLs = state.CustomEndpointURLs
-		plan.IdentityCenterApplicationARN = state.IdentityCenterApplicationARN
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
