@@ -55,7 +55,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selections"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection"), knownvalue.ListSizeExact(0)),
 				},
 			},
 		},
@@ -115,7 +115,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selections").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("CacheHits"),
 					})),
 				},
@@ -132,7 +132,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selections").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("CacheHits"),
 						knownvalue.StringExact("CacheMisses"),
 					})),
@@ -151,7 +151,7 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selections"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection"), knownvalue.ListSizeExact(0)),
 				},
 			},
 		},
@@ -265,7 +265,7 @@ func testAccResourceMetricsConfigurationConfig_metricSelections(rName, includeMe
 resource "aws_cloudwatch_resource_metrics_configuration" "test" {
   resource_arn = aws_elasticache_replication_group.test.arn
 
-  metric_selections {
+  metric_selection {
     include_metrics = [%[1]s]
   }
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -54,7 +55,7 @@ func (r *resourceMetricsConfigurationResource) Schema(ctx context.Context, req r
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"metric_selections": schema.ListNestedBlock{
+			"metric_selection": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceMetricSelectionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -79,14 +80,15 @@ func (r *resourceMetricsConfigurationResource) Schema(ctx context.Context, req r
 }
 
 func (r *resourceMetricsConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().CloudWatchClient(ctx)
-
 	var plan resourceMetricsConfigurationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().CloudWatchClient(ctx)
+
+	resourceARN := fwflex.StringValueFromFramework(ctx, plan.ResourceARN)
 	var input cloudwatch.CreateResourceMetricsConfigurationInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -95,7 +97,7 @@ func (r *resourceMetricsConfigurationResource) Create(ctx context.Context, req r
 
 	_, err := conn.CreateResourceMetricsConfiguration(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
@@ -103,44 +105,35 @@ func (r *resourceMetricsConfigurationResource) Create(ctx context.Context, req r
 }
 
 func (r *resourceMetricsConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().CloudWatchClient(ctx)
-
 	var state resourceMetricsConfigurationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findResourceMetricsConfigurationByARN(ctx, conn, state.ResourceARN.ValueString())
+	conn := r.Meta().CloudWatchClient(ctx)
+
+	resourceARN := fwflex.StringValueFromFramework(ctx, state.ResourceARN)
+	out, err := findResourceMetricsConfigurationByARN(ctx, conn, resourceARN)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	// Terraform represents an absent block as an empty list, but the API omits
-	// MetricSelections entirely when no selection filter is set, which flattens
-	// to a null list. Normalize so that omitting the block does not produce a
-	// perpetual diff.
-	if state.MetricSelections.IsNull() {
-		state.MetricSelections = fwtypes.NewListNestedObjectValueOfEmpty[resourceMetricSelectionModel](ctx)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceMetricsConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().CloudWatchClient(ctx)
-
 	var plan, state resourceMetricsConfigurationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -148,7 +141,10 @@ func (r *resourceMetricsConfigurationResource) Update(ctx context.Context, req r
 		return
 	}
 
+	conn := r.Meta().CloudWatchClient(ctx)
+
 	if !plan.MetricSelections.Equal(state.MetricSelections) {
+		resourceARN := fwflex.StringValueFromFramework(ctx, plan.ResourceARN)
 		var input cloudwatch.UpdateResourceMetricsConfigurationInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
@@ -159,7 +155,7 @@ func (r *resourceMetricsConfigurationResource) Update(ctx context.Context, req r
 		// empty plan value is expanded to a nil slice intentionally.
 		_, err := conn.UpdateResourceMetricsConfiguration(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 			return
 		}
 	}
@@ -168,38 +164,49 @@ func (r *resourceMetricsConfigurationResource) Update(ctx context.Context, req r
 }
 
 func (r *resourceMetricsConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().CloudWatchClient(ctx)
-
 	var state resourceMetricsConfigurationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().CloudWatchClient(ctx)
+
+	resourceARN := fwflex.StringValueFromFramework(ctx, state.ResourceARN)
 	input := cloudwatch.DeleteResourceMetricsConfigurationInput{
-		ResourceArn: state.ResourceARN.ValueStringPointer(),
+		ResourceArn: aws.String(resourceARN),
 	}
-
 	_, err := conn.DeleteResourceMetricsConfiguration(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 }
 
+func (r *resourceMetricsConfigurationResource) flatten(ctx context.Context, out *awstypes.ResourceMetricsConfiguration, data *resourceMetricsConfigurationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// Terraform represents an absent block as an empty list, but the API omits
+	// MetricSelections entirely when no selection filter is set, which flattens
+	// to a null list. Normalize so that omitting the block does not produce a
+	// perpetual diff.
+	if len(out.MetricSelections) == 0 {
+		out.MetricSelections = nil
+	}
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	return diags
+}
+
 func findResourceMetricsConfiguration(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetResourceMetricsConfigurationInput) (*awstypes.ResourceMetricsConfiguration, error) {
 	out, err := conn.GetResourceMetricsConfiguration(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
 		return nil, smarterr.NewError(err)
 	}
 
@@ -225,7 +232,7 @@ func findResourceMetricsConfigurationByARN(ctx context.Context, conn *cloudwatch
 
 type resourceMetricsConfigurationResourceModel struct {
 	framework.WithRegionModel
-	MetricSelections fwtypes.ListNestedObjectValueOf[resourceMetricSelectionModel] `tfsdk:"metric_selections"`
+	MetricSelections fwtypes.ListNestedObjectValueOf[resourceMetricSelectionModel] `tfsdk:"metric_selection"`
 	ResourceARN      fwtypes.ARN                                                   `tfsdk:"resource_arn"`
 }
 

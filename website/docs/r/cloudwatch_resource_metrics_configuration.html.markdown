@@ -10,7 +10,7 @@ description: |-
 
 Manages a CloudWatch resource metrics configuration. Creating a configuration makes CloudWatch collect detailed metrics for the targeted AWS resource.
 
-Each AWS resource can have at most one resource metrics configuration. Detailed metrics incur charges, so limit collection with `metric_selections` when you only need a subset of metrics. See [Amazon CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/) for details.
+Each AWS resource can have at most one resource metrics configuration. Detailed metrics incur charges, so limit collection with `metric_selection` when you only need a subset of metrics. See [Amazon CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/) for details.
 
 ~> **Note:** Not every AWS resource type is eligible for detailed metrics. At the time of writing, only Amazon ElastiCache replication groups are supported. Targeting any other resource type, including ElastiCache serverless caches and cache clusters, returns a `ValidationError` with the message `Unsupported resource type`.
 
@@ -18,7 +18,7 @@ Each AWS resource can have at most one resource metrics configuration. Detailed 
 
 ### Collect All Detailed Metrics
 
-Omit `metric_selections` to collect every detailed metric that is available for the resource.
+Omit `metric_selection` to collect every detailed metric that is available for the resource.
 
 ```terraform
 resource "aws_elasticache_replication_group" "example" {
@@ -40,7 +40,7 @@ resource "aws_cloudwatch_resource_metrics_configuration" "example" {
 resource "aws_cloudwatch_resource_metrics_configuration" "example" {
   resource_arn = aws_elasticache_replication_group.example.arn
 
-  metric_selections {
+  metric_selection {
     include_metrics = [
       "CacheHits",
       "CacheMisses",
@@ -58,10 +58,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `metric_selections` - (Optional) Configuration block that limits which metrics CloudWatch collects. At most one block is supported. When omitted, CloudWatch collects all available detailed metrics for the resource. See [`metric_selections`](#metric_selections-block) below.
+* `metric_selection` - (Optional) Configuration block that limits which metrics CloudWatch collects. At most one block is supported. When omitted, CloudWatch collects all available detailed metrics for the resource. See [`metric_selection`](#metric_selection-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `metric_selections` Block
+### `metric_selection` Block
 
 * `include_metrics` - (Required) Set of metric names to collect for the resource. CloudWatch collects only the metrics listed here. Between 1 and 500 names, each between 1 and 255 characters. For the metrics published by ElastiCache, see [Monitoring use with CloudWatch Metrics](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/CacheMetrics.html).
 
