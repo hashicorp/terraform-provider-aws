@@ -175,7 +175,7 @@ func testAccTelemetryEvaluationConfig_conflicts(alternateRegion string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_evaluation" "test" {
   all_regions = true
-  regions     = [ %[1]q ]
+  regions     = [%[1]q]
 }
 `, alternateRegion))
 }
