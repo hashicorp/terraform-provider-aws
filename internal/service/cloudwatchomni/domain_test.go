@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,6 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchomni "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+var (
+	checkDomainARN = tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`domain/d-[0-9a-z]+$`))
 )
 
 func testAccCloudWatchOmniDomain_basic(t *testing.T) {
@@ -40,7 +45,10 @@ func testAccCloudWatchOmniDomain_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &v),
 				),
@@ -50,7 +58,7 @@ func testAccCloudWatchOmniDomain_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`domain/d-[0-9a-z]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkDomainARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_endpoint_urls"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_endpoint_url"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_id"), knownvalue.StringRegexp(regexache.MustCompile(`^d-[0-9a-z]+$`))),
@@ -63,6 +71,10 @@ func testAccCloudWatchOmniDomain_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -89,7 +101,10 @@ func testAccCloudWatchOmniDomain_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatchomni.ResourceDomain, resourceName),
@@ -107,7 +122,7 @@ func testAccCloudWatchOmniDomain_disappears(t *testing.T) {
 
 func testAccCloudWatchOmniDomain_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Domain
+	var v awstypes.Domain
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatchomni_domain.test"
@@ -122,19 +137,24 @@ func testAccCloudWatchOmniDomain_name(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_basic(rName1),
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName1),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, t, resourceName, &v1),
+					testAccCheckDomainExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName1)),
 				},
 			},
 			{
-				Config: testAccDomainConfig_basic(rName2),
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, t, resourceName, &v2),
-					testAccCheckDomainNotRecreated(&v1, &v2),
+					testAccCheckDomainExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -161,24 +181,29 @@ func testAccCloudWatchOmniDomain_identityCenter(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &v1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_identityCenter(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/identity_provider_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &v2),
-					testAccCheckDomainNotRecreated(&v1, &v2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -200,6 +225,10 @@ func testAccCloudWatchOmniDomain_identityCenter(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/identity_provider_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -255,40 +284,4 @@ func testAccCheckDomainExists(ctx context.Context, t *testing.T, n string, v *aw
 
 		return nil
 	}
-}
-
-func testAccCheckDomainNotRecreated(before, after *awstypes.Domain) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := before.DomainId, after.DomainId; *before != *after {
-			return fmt.Errorf("CloudWatch Omni Domain recreated: %s -> %s", *before, *after)
-		}
-
-		return nil
-	}
-}
-
-func testAccDomainConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatchomni_domain" "test" {
-  name               = %[1]q
-  identity_providers = ["IAM"]
-}
-`, rName)
-}
-
-func testAccDomainConfig_identityCenter(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_cloudwatchomni_domain" "test" {
-  name               = %[1]q
-  identity_providers = ["IAM", "IDC"]
-
-  identity_provider_configuration {
-    identity_center_configuration {
-      identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-    }
-  }
-}
-`, rName)
 }
