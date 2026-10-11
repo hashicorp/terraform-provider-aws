@@ -46,10 +46,6 @@ func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error
 	return &domainResource{}, nil
 }
 
-const (
-	domainDeletedTimeout = 10 * time.Minute
-)
-
 type domainResource struct {
 	framework.ResourceWithModel[domainResourceModel]
 	framework.WithImportByIdentity
@@ -245,6 +241,9 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
+	const (
+		domainDeletedTimeout = 10 * time.Minute
+	)
 	if _, err := tfresource.RetryUntilNotFound(ctx, domainDeletedTimeout, func(ctx context.Context) (any, error) {
 		return findDomainByID(ctx, conn, domainID)
 	}); err != nil {
