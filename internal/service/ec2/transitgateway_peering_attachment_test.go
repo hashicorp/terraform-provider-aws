@@ -32,7 +32,7 @@ func TestFlattenTransitGatewayPeeringAttachmentOptions(t *testing.T) {
 			want:      nil,
 		},
 		"empty": {
-			// The API can return a present-but-empty Options object (for example when a field is in the wire response but not yet modeled in the SDK). 
+			// The API can return a present-but-empty Options object (for example when a field is in the wire response but not yet modeled in the SDK).
 			// This must flatten to no block, otherwise the provider would detect drift against a configuration with no options block and force a replacement.
 			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{},
 			want:      nil,
