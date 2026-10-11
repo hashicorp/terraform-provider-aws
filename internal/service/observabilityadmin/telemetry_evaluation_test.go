@@ -172,10 +172,10 @@ resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
 }
 
 func testAccTelemetryEvaluationConfig_conflicts(alternateRegion string) string {
-	return `
+	return fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_evaluation" "test" {
   all_regions = true
-  regions     = [ "` + alternateRegion + `" ]
+  regions     = [ %[1]q ]
 }
-`
+`, alternateRegion)
 }
