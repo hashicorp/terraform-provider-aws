@@ -16,7 +16,7 @@ Each AWS resource can have at most one resource metrics configuration. Detailed 
 
 ## Example Usage
 
-### Collect All Detailed Metrics
+### Basic Usage
 
 Omit `metric_selection` to collect every detailed metric that is available for the resource.
 
@@ -62,7 +62,7 @@ The following arguments are optional:
 
 ### `metric_selection` Block
 
-* `include_metrics` - (Required) Set of metric names to collect for the resource. CloudWatch collects only the metrics listed here. Between 1 and 500 names, each between 1 and 255 characters. For the metrics published by ElastiCache, see [Monitoring use with CloudWatch Metrics](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/CacheMetrics.html).
+* `include_metrics` - (Required) Set of metric names to collect for the resource. CloudWatch collects only the metrics listed here. Between 1 and 500 names, each between 1 and 255 characters. For the OpenTelemetry metrics published by ElastiCache, see [OpenTelemetry metrics](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/otel-metrics.html).
 
 ## Attribute Reference
 
