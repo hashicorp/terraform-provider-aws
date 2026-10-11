@@ -98,7 +98,7 @@ func testAccTelemetryEvaluation_allRegionsAndRegionsConflict(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTelemetryEvaluationConfig_conflicts(),
+				Config:      testAccTelemetryEvaluationConfig_conflicts(acctest.AlternateRegion()),
 				ExpectError: regexache.MustCompile(`(Attribute "regions" cannot be specified when "all_regions" is specified|Attribute "all_regions" cannot be specified when "regions" is specified)`),
 			},
 		},
@@ -171,11 +171,11 @@ resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
 `
 }
 
-func testAccTelemetryEvaluationConfig_conflicts() string {
+func testAccTelemetryEvaluationConfig_conflicts(alternateRegion string) string {
 	return `
 resource "aws_observabilityadmin_telemetry_evaluation" "test" {
   all_regions = true
-  regions     = ["us-east-1"]
+  regions     = [ "` + alternateRegion + `" ]
 }
 `
 }

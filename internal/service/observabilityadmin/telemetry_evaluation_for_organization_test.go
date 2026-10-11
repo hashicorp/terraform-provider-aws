@@ -103,7 +103,7 @@ func testAccTelemetryEvaluationForOrganization_allRegionsAndRegionsConflict(t *t
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTelemetryEvaluationForOrganizationConfig_conflicts(),
+				Config:      testAccTelemetryEvaluationForOrganizationConfig_conflicts(acctest.AlternateRegion()),
 				ExpectError: regexache.MustCompile(`("all_regions": conflicts with regions|"regions": conflicts with all_regions)`),
 			},
 		},
@@ -176,11 +176,11 @@ resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {
 `
 }
 
-func testAccTelemetryEvaluationForOrganizationConfig_conflicts() string {
+func testAccTelemetryEvaluationForOrganizationConfig_conflicts(alternateRegion string) string {
 	return `
 resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {
   all_regions = true
-  regions     = ["us-east-1"]
+  regions     = ["` + alternateRegion + `"]
 }
 `
 }
