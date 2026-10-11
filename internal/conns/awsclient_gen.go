@@ -159,6 +159,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
+	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -206,6 +207,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/polly"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/service/pricingplanmanager"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
@@ -891,6 +893,10 @@ func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Cl
 	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
 }
 
+func (c *AWSClient) LambdaWebClient(ctx context.Context) *lambdaweb.Client {
+	return errs.Must(client[*lambdaweb.Client](ctx, c, names.LambdaWeb, make(map[string]any)))
+}
+
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {
 	return errs.Must(client[*launchwizard.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
@@ -1081,6 +1087,10 @@ func (c *AWSClient) PollyClient(ctx context.Context) *polly.Client {
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing.Client {
 	return errs.Must(client[*pricing.Client](ctx, c, names.Pricing, make(map[string]any)))
+}
+
+func (c *AWSClient) PricingPlanManagerClient(ctx context.Context) *pricingplanmanager.Client {
+	return errs.Must(client[*pricingplanmanager.Client](ctx, c, names.PricingPlanManager, make(map[string]any)))
 }
 
 func (c *AWSClient) QBusinessClient(ctx context.Context) *qbusiness.Client {

@@ -23,11 +23,10 @@ import (
 
 func TestAccBedrockAgentCoreGatewayRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
 	var v bedrockagentcorecontrol.GetGatewayRuleOutput
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameRuntime := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -43,8 +42,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayRule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &v),
@@ -67,8 +64,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayRule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    testAccGatewayRuleImportStateIDFunc(resourceName),
@@ -83,8 +78,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayRule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -104,8 +97,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayRule/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -124,10 +115,9 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreGatewayRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameRuntime := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -144,8 +134,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -166,8 +154,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccGatewayRuleImportStateIDFunc),
@@ -183,8 +169,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -205,8 +189,6 @@ func TestAccBedrockAgentCoreGatewayRule_Identity_regionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
-					"image_uri":     config.StringVariable(rImageUri),
-					"rNameRuntime":  config.StringVariable(rNameRuntime),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

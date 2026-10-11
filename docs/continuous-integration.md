@@ -516,17 +516,6 @@ make provider-markdown-lint
 !!! note
     Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
-#### misspell
-
-Use `go-misspell` to check the provider code for misspellings:
-
-```console
-make go-misspell
-```
-
-!!! note
-    Install [tools](#before-running-tests) before running this check.
-
 #### Swiss Shepherd
 
 Swiss Shepherd checks provider documentation for quality and consistency against the provider's schema.

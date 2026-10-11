@@ -44,7 +44,6 @@ import (
 // @Testing(generator="testAccRandomAgentRuntimeName(t)")
 // @Testing(importStateIdAttributes="agent_runtime_id;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(preCheck="testAccAgentRuntimeEndpointPreCheck")
-// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeEndpointResource{}
 

@@ -161,6 +161,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -210,6 +211,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -442,6 +444,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		lambda.ServicePackage(ctx),
 		lambdacore.ServicePackage(ctx),
 		lambdamicrovms.ServicePackage(ctx),
+		lambdaweb.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
 		lexv2models.ServicePackage(ctx),
@@ -491,6 +494,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
+		pricingplanmanager.ServicePackage(ctx),
 		qbusiness.ServicePackage(ctx),
 		qldb.ServicePackage(ctx),
 		quicksight.ServicePackage(ctx),
