@@ -108,16 +108,16 @@ func testAccOTelEnrichment_filters(t *testing.T) {
 				Config: testAccOtelEnrichmentConfig_filters(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOTelEnrichmentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_filters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filters.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "include_filters.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "include_filter.*", map[string]string{
 						names.AttrNamespace: "AWS/EC2",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "include_filters.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "include_filter.*", map[string]string{
 						names.AttrNamespace: "AWS/RDS",
 						"metric_names.#":    "2",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exclude_filters.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exclude_filter.*", map[string]string{
 						names.AttrNamespace: "AWS/EC2",
 						"metric_names.#":    "1",
 					}),
@@ -146,8 +146,8 @@ func testAccOTelEnrichment_filtersUpdate(t *testing.T) {
 				Config: testAccOtelEnrichmentConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOTelEnrichmentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_filters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
 				),
 			},
 			// Add filters in place; this must not restart enrichment.
@@ -160,8 +160,8 @@ func testAccOTelEnrichment_filtersUpdate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOTelEnrichmentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_filters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "1"),
 				),
 			},
 			// Narrow to a single include selector and drop the excludes.
@@ -169,9 +169,9 @@ func testAccOTelEnrichment_filtersUpdate(t *testing.T) {
 				Config: testAccOtelEnrichmentConfig_filtersIncludeOnly(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOTelEnrichmentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filters.#", "0"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "include_filters.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "include_filter.*", map[string]string{
 						names.AttrNamespace: "AWS/Lambda",
 					}),
 				),
@@ -181,8 +181,8 @@ func testAccOTelEnrichment_filtersUpdate(t *testing.T) {
 				Config: testAccOtelEnrichmentConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOTelEnrichmentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_filters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
 				),
 			},
 		},
@@ -273,16 +273,16 @@ resource "aws_observabilityadmin_telemetry_enrichment" "test" {
 }
 
 resource "aws_cloudwatch_otel_enrichment" "test" {
-  include_filters {
+  include_filter {
     namespace = "AWS/EC2"
   }
 
-  include_filters {
+  include_filter {
     namespace    = "AWS/RDS"
     metric_names = ["CPUUtilization", "DatabaseConnections"]
   }
 
-  exclude_filters {
+  exclude_filter {
     namespace    = "AWS/EC2"
     metric_names = ["NetworkPacketsIn"]
   }
@@ -298,7 +298,7 @@ resource "aws_observabilityadmin_telemetry_enrichment" "test" {
 }
 
 resource "aws_cloudwatch_otel_enrichment" "test" {
-  include_filters {
+  include_filter {
     namespace = "AWS/Lambda"
   }
 

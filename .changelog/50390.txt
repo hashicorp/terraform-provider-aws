@@ -1,3 +1,7 @@
 ```release-note:enhancement
-resource/aws_cloudwatch_otel_enrichment: Add `include_filters` and `exclude_filters` arguments
+resource/aws_cloudwatch_otel_enrichment: Add `include_filter` and `exclude_filter` arguments
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_otel_enrichment: Add `timeouts.update` with a default value of `5m`
 ```

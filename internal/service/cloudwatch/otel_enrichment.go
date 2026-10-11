@@ -34,11 +34,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Maximum selectors allowed across include_filters and exclude_filters
-// combined. The service enforces the combined total, not a per-list budget, so
-// two lists of 60 satisfy each list's own limit but are rejected together.
-const otelEnrichmentMaxFilters = 100
-
 // @FrameworkResource("aws_cloudwatch_otel_enrichment", name="OTel Enrichment")
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true, hasNoPreExistingResource=true, generator=false)
@@ -63,9 +58,6 @@ func (r *otelEnrichmentResource) Schema(ctx context.Context, req resource.Schema
 	filterBlock := func() schema.SetNestedBlock {
 		return schema.SetNestedBlock{
 			CustomType: fwtypes.NewSetNestedObjectTypeOf[otelEnrichmentMetricSelectorModel](ctx),
-			Validators: []validator.Set{
-				setvalidator.SizeAtMost(otelEnrichmentMaxFilters),
-			},
 			NestedObject: schema.NestedBlockObject{
 				Attributes: map[string]schema.Attribute{
 					"metric_names": schema.SetAttribute{
@@ -93,8 +85,8 @@ func (r *otelEnrichmentResource) Schema(ctx context.Context, req resource.Schema
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
-			"exclude_filters": filterBlock(),
-			"include_filters": filterBlock(),
+			"exclude_filter": filterBlock(),
+			"include_filter": filterBlock(),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -113,6 +105,11 @@ func (r *otelEnrichmentResource) ValidateConfig(ctx context.Context, req resourc
 		return
 	}
 
+	// Maximum selectors allowed across include_filter and exclude_filter
+	// combined. The service enforces the combined total, not a per-list budget, so
+	// two lists of 60 satisfy each list's own limit but are rejected together.
+	const otelEnrichmentMaxFilters = 100
+
 	// Unknown values are only resolved at apply time, so the total cannot be
 	// checked yet.
 	if data.IncludeFilters.IsUnknown() || data.ExcludeFilters.IsUnknown() {
@@ -124,7 +121,7 @@ func (r *otelEnrichmentResource) ValidateConfig(ctx context.Context, req resourc
 	if total > otelEnrichmentMaxFilters {
 		smerr.AddOne(ctx, &resp.Diagnostics, diag.NewErrorDiagnostic(
 			"Too many enrichment filters",
-			fmt.Sprintf("CloudWatch allows at most %d selectors across include_filters and exclude_filters combined, but %d were configured.",
+			fmt.Sprintf("CloudWatch allows at most %d selectors across include_filter and exclude_filter combined, but %d were configured.",
 				otelEnrichmentMaxFilters, total),
 		))
 	}
@@ -379,9 +376,9 @@ func waitOTelEnrichmentDeleted(ctx context.Context, conn *cloudwatch.Client, tim
 
 type otelEnrichmentResourceModel struct {
 	framework.WithRegionModel
-	ExcludeFilters fwtypes.SetNestedObjectValueOf[otelEnrichmentMetricSelectorModel] `tfsdk:"exclude_filters"`
+	ExcludeFilters fwtypes.SetNestedObjectValueOf[otelEnrichmentMetricSelectorModel] `tfsdk:"exclude_filter"`
 	ID             types.String                                                      `tfsdk:"id"`
-	IncludeFilters fwtypes.SetNestedObjectValueOf[otelEnrichmentMetricSelectorModel] `tfsdk:"include_filters"`
+	IncludeFilters fwtypes.SetNestedObjectValueOf[otelEnrichmentMetricSelectorModel] `tfsdk:"include_filter"`
 	Timeouts       timeouts.Value                                                    `tfsdk:"timeouts"`
 }
 
