@@ -42,9 +42,8 @@ resource "aws_cloudwatch_resource_metrics_configuration" "example" {
 
   metric_selection {
     include_metrics = [
-      "CacheHits",
-      "CacheMisses",
-      "CurrConnections",
+      "valkey.memory.used",
+      "valkey.commands.processed",
     ]
   }
 }
