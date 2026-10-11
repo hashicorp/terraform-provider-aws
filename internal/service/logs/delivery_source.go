@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -90,6 +91,19 @@ func (r *deliverySourceResource) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
+// deliverySourceMutexLock acquires locks on resource arn to prevent concurrent modification conflicts.
+// Especially for eks capabilities that go into updating status prevent another delivery source modification
+// at the same time.
+func deliverySourceMutexLock(model *deliverySourceResourceModel) func() {
+	resourceKey := fmt.Sprintf("logs-delivery-source:%s", model.ResourceARN.ValueString())
+
+	conns.GlobalMutexKV.Lock(resourceKey)
+
+	return func() {
+		conns.GlobalMutexKV.Unlock(resourceKey)
+	}
+}
+
 func (r *deliverySourceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data deliverySourceResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -109,8 +123,8 @@ func (r *deliverySourceResource) Create(ctx context.Context, request resource.Cr
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
+	defer deliverySourceMutexLock(&data)()
 	output, err := conn.PutDeliverySource(ctx, &input)
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Source (%s)", name), err.Error())
 
@@ -178,6 +192,7 @@ func (r *deliverySourceResource) Delete(ctx context.Context, request resource.De
 	input := cloudwatchlogs.DeleteDeliverySourceInput{
 		Name: aws.String(name),
 	}
+	defer deliverySourceMutexLock(&data)()
 	_, err := conn.DeleteDeliverySource(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
