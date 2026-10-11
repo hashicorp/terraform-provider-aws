@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -49,10 +50,18 @@ func TestAccCloudWatchResourceMetricsConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceMetricsConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceMetricsConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection"), knownvalue.ListSizeExact(0)),
@@ -78,13 +87,19 @@ func TestAccCloudWatchResourceMetricsConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceMetricsConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceMetricsConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceResourceMetricsConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -110,10 +125,19 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 		CheckDestroy:             testAccCheckResourceMetricsConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceMetricsConfigurationConfig_metricSelections(rName, `"CacheHits"`),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/metric_selection/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"include_metrics": acctest.SetOfStringsVariable("CacheHits"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metric_selection").AtSliceIndex(0).AtMapKey("include_metrics"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("CacheHits"),
@@ -122,7 +146,11 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 			},
 			// Add a metric to the selection.
 			{
-				Config: testAccResourceMetricsConfigurationConfig_metricSelections(rName, `"CacheHits", "CacheMisses"`),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/metric_selection/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"include_metrics": acctest.SetOfStringsVariable("CacheMisses", "CacheHits"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
 				),
@@ -141,7 +169,10 @@ func TestAccCloudWatchResourceMetricsConfiguration_metricSelections(t *testing.T
 			// Removing the block clears the filter so that all available detailed
 			// metrics are collected again.
 			{
-				Config: testAccResourceMetricsConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceMetricsConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceMetricsConfigurationExists(ctx, t, resourceName),
 				),
@@ -237,37 +268,4 @@ func testAccPreCheckResourceMetricsConfiguration(ctx context.Context, t *testing
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccResourceMetricsConfigurationConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id = %[1]q
-  description          = "terraform-provider-aws acceptance testing"
-  engine               = "valkey"
-  node_type            = "cache.t3.small"
-  num_cache_clusters   = 1
-  apply_immediately    = true
-}
-`, rName)
-}
-
-func testAccResourceMetricsConfigurationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccResourceMetricsConfigurationConfig_base(rName), `
-resource "aws_cloudwatch_resource_metrics_configuration" "test" {
-  resource_arn = aws_elasticache_replication_group.test.arn
-}
-`)
-}
-
-func testAccResourceMetricsConfigurationConfig_metricSelections(rName, includeMetrics string) string {
-	return acctest.ConfigCompose(testAccResourceMetricsConfigurationConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudwatch_resource_metrics_configuration" "test" {
-  resource_arn = aws_elasticache_replication_group.test.arn
-
-  metric_selection {
-    include_metrics = [%[1]s]
-  }
-}
-`, includeMetrics))
 }
