@@ -5,7 +5,6 @@ package cloudwatch
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -289,14 +287,10 @@ func normalizeOTelEnrichmentFilters(ctx context.Context, data *otelEnrichmentRes
 	}
 }
 
-func findOTelEnrichmentStatus(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetOTelEnrichmentInput) (*cloudwatch.GetOTelEnrichmentOutput, error) {
+// findOTelEnrichmentRaw does not map any status to NotFound.
+func findOTelEnrichmentRaw(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.GetOTelEnrichmentInput) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	out, err := conn.GetOTelEnrichment(ctx, input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
 		return nil, smarterr.NewError(err)
 	}
 
@@ -307,42 +301,39 @@ func findOTelEnrichmentStatus(ctx context.Context, conn *cloudwatch.Client, inpu
 	return out, nil
 }
 
+// findOTelEnrichment maps Stopped status to NotFound.
 func findOTelEnrichment(ctx context.Context, conn *cloudwatch.Client) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	var input cloudwatch.GetOTelEnrichmentInput
-	out, err := findOTelEnrichmentStatus(ctx, conn, &input)
+	out, err := findOTelEnrichmentRaw(ctx, conn, &input)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
-	if out.Status != awstypes.OTelEnrichmentStatusRunning {
+	if status := out.Status; status == awstypes.OTelEnrichmentStatusStopped {
 		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: errors.New("OTel enrichment not running"),
+			Message: string(status),
 		})
 	}
 
 	return out, nil
 }
 
-func statusOTelEnrichment(conn *cloudwatch.Client) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		var input cloudwatch.GetOTelEnrichmentInput
-		out, err := findOTelEnrichmentStatus(ctx, conn, &input)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-
-		return out, string(out.Status), nil
-	}
-}
-
 func waitOTelEnrichmentReady(ctx context.Context, conn *cloudwatch.Client, timeout time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.OTelEnrichmentStatusStopped),
-		Target:     enum.Slice(awstypes.OTelEnrichmentStatusRunning),
-		Refresh:    statusOTelEnrichment(conn),
+		Pending: enum.Slice(awstypes.OTelEnrichmentStatusStopped),
+		Target:  enum.Slice(awstypes.OTelEnrichmentStatusRunning),
+		Refresh: func(ctx context.Context) (any, string, error) {
+			var input cloudwatch.GetOTelEnrichmentInput
+			out, err := findOTelEnrichmentRaw(ctx, conn, &input)
+			if retry.NotFound(err) {
+				return nil, "", nil
+			}
+			if err != nil {
+				return nil, "", smarterr.NewError(err)
+			}
+
+			return out, string(out.Status), nil
+		},
 		Timeout:    timeout,
 		MinTimeout: 2 * time.Second,
 	}
@@ -357,9 +348,19 @@ func waitOTelEnrichmentReady(ctx context.Context, conn *cloudwatch.Client, timeo
 
 func waitOTelEnrichmentDeleted(ctx context.Context, conn *cloudwatch.Client, timeout time.Duration) (*cloudwatch.GetOTelEnrichmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.OTelEnrichmentStatusRunning),
-		Target:     append(enum.Slice(awstypes.OTelEnrichmentStatusStopped), ""),
-		Refresh:    statusOTelEnrichment(conn),
+		Pending: enum.Slice(awstypes.OTelEnrichmentStatusRunning),
+		Target:  []string{},
+		Refresh: func(ctx context.Context) (any, string, error) {
+			out, err := findOTelEnrichment(ctx, conn)
+			if retry.NotFound(err) {
+				return nil, "", nil
+			}
+			if err != nil {
+				return nil, "", smarterr.NewError(err)
+			}
+
+			return out, string(out.Status), nil
+		},
 		Timeout:    timeout,
 		MinTimeout: 2 * time.Second,
 	}

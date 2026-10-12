@@ -12,6 +12,8 @@ Manages AWS CloudWatch OTel enrichment. This is a singleton resource that enable
 
 ~> **NOTE:** This resource requires the `aws_observabilityadmin_telemetry_enrichment` resource to be configured first. Without telemetry enrichment enabled, OTel enrichment will not function properly even if the API accepts the configuration.
 
+~> **NOTE:** Creating this Terraform resource starts AWS CloudWatch OTel enrichment and deleting this Terraform resource stops AWS CloudWatch OTel enrichment.
+
 ## Example Usage
 
 ### Enable OTel Enrichment
