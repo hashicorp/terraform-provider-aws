@@ -17,10 +17,10 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Domain": {
-			acctest.CtBasic:        testAccCloudWatchOmniDomain_basic,
-			acctest.CtDisappears:   testAccCloudWatchOmniDomain_disappears,
-			acctest.CtName:         testAccCloudWatchOmniDomain_name,
-			"identityCenter":       testAccCloudWatchOmniDomain_identityCenter,
+			acctest.CtBasic:        testAccDomain_basic,
+			acctest.CtDisappears:   testAccDomain_disappears,
+			acctest.CtName:         testAccDomain_name,
+			"identityCenter":       testAccDomain_identityCenter,
 			"Identity":             testAccCloudWatchOmniDomain_identitySerial,
 			"List_basic":           testAccDomain_List_basic,
 			"List_includeResource": testAccDomain_List_includeResource,

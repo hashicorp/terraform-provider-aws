@@ -31,7 +31,7 @@ var (
 	checkDomainID                 = knownvalue.StringRegexp(regexache.MustCompile(`^d-[0-9a-z]{1,25}$`))
 )
 
-func testAccCloudWatchOmniDomain_basic(t *testing.T) {
+func testAccDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Domain
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -87,7 +87,7 @@ func testAccCloudWatchOmniDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOmniDomain_disappears(t *testing.T) {
+func testAccDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Domain
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -122,7 +122,7 @@ func testAccCloudWatchOmniDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOmniDomain_name(t *testing.T) {
+func testAccDomain_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Domain
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -174,7 +174,7 @@ func testAccCloudWatchOmniDomain_name(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOmniDomain_identityCenter(t *testing.T) {
+func testAccDomain_identityCenter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.Domain
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
