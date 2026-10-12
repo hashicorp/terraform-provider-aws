@@ -14,6 +14,7 @@ Invoicing
 Network Manager
 Organizations
 Pricing Calculator
+Pricing Plan Manager
 Roles Anywhere
 Route 53
 Route 53 Domains

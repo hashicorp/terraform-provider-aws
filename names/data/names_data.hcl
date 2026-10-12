@@ -1710,7 +1710,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_", "cloudwatch_resource_metrics_"]
   brand                    = "AWS"
 }
 
@@ -5322,7 +5322,7 @@ service "lambdaweb" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ListWebFunctions"
+    endpoint_api_call = "GetWebAccountSettings"
   }
 
   resource_prefix {
@@ -7080,6 +7080,41 @@ service "pricing" {
 
   provider_package_correct = "pricing"
   doc_prefix               = ["pricing_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
+service "pricingplanmanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pricing-plan-manager"
+    aws_cli_v2_command_no_dashes = "pricingplanmanager"
+  }
+
+  sdk {
+    id            = "Pricing Plan Manager"
+    arn_namespace = "pricingplanmanager"
+  }
+
+  names {
+    provider_name_upper = "PricingPlanManager"
+    human_friendly      = "Pricing Plan Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListSubscriptions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+    endpoint_no_fips_support = true
+  }
+
+  resource_prefix {
+    correct = "aws_pricingplanmanager_"
+  }
+
+  provider_package_correct = "pricingplanmanager"
+  doc_prefix               = ["pricingplanmanager_"]
   brand                    = "AWS"
 
   is_global = true
