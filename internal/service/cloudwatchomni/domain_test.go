@@ -26,7 +26,9 @@ import (
 )
 
 var (
-	checkDomainARN = tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`domain/d-[0-9a-z]+$`))
+	checkDomainARN                = tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`domain/d-[0-9a-z]{1,25}`))
+	checkDomainARNAlternateRegion = tfknownvalue.RegionalARNAlternateRegionRegexp("cloudwatch", regexache.MustCompile(`domain/d-[0-9a-z]{1,25}`))
+	checkDomainID                 = knownvalue.StringRegexp(regexache.MustCompile(`^d-[0-9a-z]{1,25}$`))
 )
 
 func testAccCloudWatchOmniDomain_basic(t *testing.T) {
@@ -61,7 +63,7 @@ func testAccCloudWatchOmniDomain_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkDomainARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_endpoint_urls"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_endpoint_url"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_id"), knownvalue.StringRegexp(regexache.MustCompile(`^d-[0-9a-z]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_id"), checkDomainID),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_application_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_provider_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
