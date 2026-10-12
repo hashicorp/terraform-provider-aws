@@ -42,7 +42,6 @@ func newOTelEnrichmentResource(_ context.Context) (resource.ResourceWithConfigur
 	r := &otelEnrichmentResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
@@ -89,7 +88,6 @@ func (r *otelEnrichmentResource) Schema(ctx context.Context, req resource.Schema
 			"include_filter": filterBlock(),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
