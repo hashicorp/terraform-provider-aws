@@ -76,7 +76,7 @@ func (l *domainListResource) List(ctx context.Context, request list.ListRequest,
 					}
 				}
 
-				result.DisplayName = id
+				result.DisplayName = aws.ToString(item.Name)
 			})
 
 			if !yield(result) {

@@ -61,7 +61,7 @@ func testAccDomain_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatchomni_domain.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_cloudwatchomni_domain.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), checkDomainID),
+					querycheck.ExpectResourceDisplayName("aws_cloudwatchomni_domain.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					tfquerycheck.ExpectNoResourceObject("aws_cloudwatchomni_domain.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 				},
 			},
@@ -110,7 +110,7 @@ func testAccDomain_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatchomni_domain.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_cloudwatchomni_domain.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), checkDomainID),
+					querycheck.ExpectResourceDisplayName("aws_cloudwatchomni_domain.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_cloudwatchomni_domain.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkDomainARN),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("custom_endpoint_urls"), knownvalue.ListSizeExact(1)),
