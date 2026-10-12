@@ -113,6 +113,77 @@ func TestAccDirectoryServiceDataGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccDirectoryServiceDataGroup_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	samAccountName := fmt.Sprintf(
+		"%s%s",
+		acctest.ResourcePrefix,
+		acctest.RandStringFromCharSet(t, 64-len(acctest.ResourcePrefix), "abcdefghijklmnopqrstuvwxyz0123456789"),
+	)
+	resourceName := "aws_directoryservicedata_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck: acctest.ErrorCheck(t, names.DirectoryServiceDataServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "Global", "Security"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_scope", "Global"),
+					resource.TestCheckResourceAttr(resourceName, "group_type", "Security"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "Universal", "Security"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_scope", "Universal"),
+					resource.TestCheckResourceAttr(resourceName, "group_type", "Security"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "Universal", "Distribution"),
+				ConfigPlanChecks:  resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_scope", "Universal"),
+					resource.TestCheckResourceAttr(resourceName, "group_type", "Distribution"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "DomainLocal", "Security"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_scope", "DomainLocal"),
+					resource.TestCheckResourceAttr(resourceName, "group_type", "Security"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DirectoryServiceDataClient(ctx)
@@ -176,5 +247,32 @@ resource "aws_directoryservicedata_group" "test" {
   sam_account_name = %[2]q
 }
 `, domainName, samAccountName),
+	)
+}
+
+func testAccGroupConfig_updated(rName, domainName, samAccountName, groupScope, groupType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name                         = %[1]q
+  password                     = "SuperSecretPassw0rd"
+  type                         = "MicrosoftAD"
+  edition                      = "Standard"
+  enable_directory_data_access = true
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_directoryservicedata_group" "test" {
+  directory_id     = aws_directory_service_directory.test.id
+  sam_account_name = %[2]q
+  group_scope      = %[3]q
+  group_type       = %[4]q
+}
+		`, domainName, samAccountName, groupScope, groupType),
 	)
 }
