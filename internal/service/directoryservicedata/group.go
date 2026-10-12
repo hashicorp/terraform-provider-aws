@@ -35,7 +35,9 @@ import (
 // @IdentityAttribute("sam_account_name")
 // @ImportIDHandler("groupImportID")
 // @Testing(hasNoPreExistingResource=true)
-
+// @Testing(generator=false)
+// @Testing(domainTfVar="directoryDomain")
+// @Testing(importStateIdAttributes="directory_id;sam_account_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &groupResource{}, nil
 }
