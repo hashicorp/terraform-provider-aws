@@ -271,7 +271,7 @@ func findDomainByID(ctx context.Context, conn *cloudwatchomni.Client, id string)
 
 func findDomain(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwatchomni.GetDomainInput) (*awstypes.Domain, error) {
 	out, err := conn.GetDomain(ctx, input)
-if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
