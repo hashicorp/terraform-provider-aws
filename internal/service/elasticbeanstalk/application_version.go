@@ -7,7 +7,9 @@ package elasticbeanstalk
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +18,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -46,9 +50,15 @@ func resourceApplicationVersion() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrBucket, "image_configuration.0.source"},
+					RequiredWith: []string{names.AttrKey},
+				},
+				"build_arn": {
 					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Computed: true,
 				},
 				names.AttrDescription: {
 					Type:     schema.TypeString,
@@ -59,10 +69,93 @@ func resourceApplicationVersion() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
-				names.AttrKey: {
-					Type:     schema.TypeString,
-					Required: true,
+				"image_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
 					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"build": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								ForceNew:     true,
+								MaxItems:     1,
+								RequiredWith: []string{names.AttrBucket, names.AttrKey},
+								ExactlyOneOf: []string{"image_configuration.0.source", "image_configuration.0.build"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"architecture": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ArchitectureType](),
+										},
+										"buildpack": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"code_build_service_role": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"compute_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ComputeType](),
+										},
+										"dockerfile_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"timeout_in_minutes": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(5, 480),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ImageBuildType](),
+										},
+									},
+								},
+							},
+							names.AttrSource: {
+								Type:         schema.TypeList,
+								Optional:     true,
+								ForceNew:     true,
+								MaxItems:     1,
+								ExactlyOneOf: []string{"image_configuration.0.source", "image_configuration.0.build"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrURI: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"image_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKey: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"image_configuration.0.source"},
+					RequiredWith:  []string{names.AttrBucket},
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
@@ -90,12 +183,19 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 		ApplicationName: aws.String(d.Get("application").(string)),
 		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		Process:         aws.Bool(d.Get("process").(bool)),
-		SourceBundle: &awstypes.S3Location{
-			S3Bucket: aws.String(d.Get(names.AttrBucket).(string)),
+		Tags:            getTagsIn(ctx),
+		VersionLabel:    aws.String(name),
+	}
+
+	if v, ok := d.GetOk(names.AttrBucket); ok {
+		input.SourceBundle = &awstypes.S3Location{
+			S3Bucket: aws.String(v.(string)),
 			S3Key:    aws.String(d.Get(names.AttrKey).(string)),
-		},
-		Tags:         getTagsIn(ctx),
-		VersionLabel: aws.String(name),
+		}
+	}
+
+	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]any)) > 0 {
+		input.ImageConfiguration = expandImageConfiguration(v.([]any))
 	}
 
 	_, err := conn.CreateApplicationVersion(ctx, input)
@@ -105,6 +205,19 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(name)
+
+	// Elastic Beanstalk rejects deploying or deleting a version while its image
+	// build runs, and stops the build after timeout_in_minutes.
+	if v, ok := d.GetOk("image_configuration.0.build"); ok && len(v.([]any)) > 0 && d.Get("process").(bool) {
+		timeout := time.Duration(int64(d.Get("image_configuration.0.build.0.timeout_in_minutes").(int)) * int64(time.Minute))
+		if timeout == 0 {
+			timeout = applicationVersionImageBuildDefaultTimeout
+		}
+
+		if _, err := waitApplicationVersionImageBuilt(ctx, conn, d.Get("application").(string), name, timeout+applicationVersionImageBuildTimeoutMargin); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Application Version (%s) image build: %s", name, err)
+		}
+	}
 
 	return append(diags, resourceApplicationVersionRead(ctx, d, meta)...)
 }
@@ -126,7 +239,11 @@ func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set(names.AttrARN, applicationVersion.ApplicationVersionArn)
+	d.Set("build_arn", applicationVersion.BuildArn)
 	d.Set(names.AttrDescription, applicationVersion.Description)
+	if applicationVersion.ImageSource != nil {
+		d.Set("image_uri", applicationVersion.ImageSource.Uri)
+	}
 
 	return diags
 }
@@ -200,6 +317,67 @@ func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
+// Expand helpers
+
+func expandImageConfiguration(tfList []any) *awstypes.ImageConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+	result := &awstypes.ImageConfiguration{}
+
+	if v, ok := tfMap[names.AttrSource].([]any); ok && len(v) > 0 {
+		result.Source = expandImageSource(v)
+	}
+	if v, ok := tfMap["build"].([]any); ok && len(v) > 0 {
+		result.Build = expandImageBuildConfiguration(v)
+	}
+
+	return result
+}
+
+func expandImageSource(tfList []any) *awstypes.ImageSource {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+	return &awstypes.ImageSource{
+		Uri: aws.String(tfMap[names.AttrURI].(string)),
+	}
+}
+
+func expandImageBuildConfiguration(tfList []any) *awstypes.ImageBuildConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+	result := &awstypes.ImageBuildConfiguration{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		result.Type = awstypes.ImageBuildType(v)
+	}
+	if v, ok := tfMap["dockerfile_location"].(string); ok && v != "" {
+		result.DockerfileLocation = aws.String(v)
+	}
+	if v, ok := tfMap["buildpack"].(string); ok && v != "" {
+		result.Buildpack = aws.String(v)
+	}
+	if v, ok := tfMap["architecture"].(string); ok && v != "" {
+		result.Architecture = awstypes.ArchitectureType(v)
+	}
+	if v, ok := tfMap["code_build_service_role"].(string); ok && v != "" {
+		result.CodeBuildServiceRole = aws.String(v)
+	}
+	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
+		result.ComputeType = awstypes.ComputeType(v)
+	}
+	if v, ok := tfMap["timeout_in_minutes"].(int); ok && v > 0 {
+		result.TimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	return result
+}
+
 func findApplicationVersionByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, versionLabel string) (*awstypes.ApplicationVersionDescription, error) {
 	input := &elasticbeanstalk.DescribeApplicationVersionsInput{
 		ApplicationName: aws.String(applicationName),
@@ -237,4 +415,53 @@ func findApplicationVersions(ctx context.Context, conn *elasticbeanstalk.Client,
 	}
 
 	return output, nil
+}
+
+const (
+	applicationVersionImageBuildDefaultTimeout = 60 * time.Minute
+	applicationVersionImageBuildTimeoutMargin  = 10 * time.Minute
+)
+
+func statusApplicationVersion(conn *elasticbeanstalk.Client, applicationName, versionLabel string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findApplicationVersionByTwoPartKey(ctx, conn, applicationName, versionLabel)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// The service reports statuses in upper case, unlike the SDK's enum values.
+		return output, strings.ToUpper(string(output.Status)), nil
+	}
+}
+
+func waitApplicationVersionImageBuilt(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, versionLabel string, timeout time.Duration) (*awstypes.ApplicationVersionDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			strings.ToUpper(string(awstypes.ApplicationVersionStatusUnprocessed)),
+			strings.ToUpper(string(awstypes.ApplicationVersionStatusBuilding)),
+			strings.ToUpper(string(awstypes.ApplicationVersionStatusProcessing)),
+		},
+		Target:     []string{strings.ToUpper(string(awstypes.ApplicationVersionStatusProcessed))},
+		Refresh:    statusApplicationVersion(conn, applicationName, versionLabel),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApplicationVersionDescription); ok {
+		if strings.EqualFold(string(output.Status), string(awstypes.ApplicationVersionStatusFailed)) {
+			retry.SetLastError(err, fmt.Errorf("image build failed, see AWS CodeBuild build %s", aws.ToString(output.BuildArn)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
