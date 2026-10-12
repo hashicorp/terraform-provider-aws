@@ -7,8 +7,8 @@ resource "aws_directoryservicedata_group" "test" {
 
   directory_id     = aws_directory_service_directory.test.id
   sam_account_name = "tf-acc-test-group"
-  group_scope = "Global"
-  group_type = "Security"
+  group_scope      = "Global"
+  group_type       = "Security"
 }
 
 resource "aws_directory_service_directory" "test" {
