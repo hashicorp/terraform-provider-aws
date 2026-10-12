@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudwatchomni_domain
+```
+
+```release-note:new-list-resource
+aws_cloudwatchomni_domain
+```
