@@ -3,12 +3,12 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_flow"
 description: |-
-  Terraform resource for managing an AWS Bedrock Agents Flow.
+  Manages an AWS Bedrock Agents Flow.
 ---
 
 # Resource: aws_bedrockagent_flow
 
-Terraform resource for managing an AWS Bedrock Agents Flow.
+Manages an AWS Bedrock Agents Flow.
 
 ## Example Usage
 
@@ -157,7 +157,7 @@ The `definition` configuration block supports the following arguments:
 
 The `definition.connection` configuration block supports the following arguments:
 
-* `configuration` - (Required) Configuration of the connection. See [`definition.connection.configuration` Block](#definitionconnectionconfiguration-block) for details.
+* `configuration` - (Optional) Configuration of the connection. See [`definition.connection.configuration` Block](#definitionconnectionconfiguration-block) for details.
 * `name` - (Required) Name for the connection that you can reference.
 * `source` - (Required) Node that the connection starts at.
 * `target` - (Required) Node that the connection ends at.
@@ -187,7 +187,7 @@ The `definition.connection.configuration.data` configuration block supports the 
 
 The `definition.node` configuration block supports the following arguments:
 
-* `configuration` - (Required) Configurations for the node. See [`definition.node.configuration` Block](#definitionnodeconfiguration-block) for details.
+* `configuration` - (Optional) Configurations for the node. See [`definition.node.configuration` Block](#definitionnodeconfiguration-block) for details.
 * `input` - (Optional) Information about an input into the node. See [`definition.node.input` Block](#definitionnodeinput-block) for details.
 * `name` - (Required) Name for the node.
 * `output` - (Optional) Information about an output from the node. See [`definition.node.output` Block](#definitionnodeoutput-block) for details.
@@ -201,12 +201,12 @@ The `definition.node.configuration` configuration block supports the following a
 * `collector` - (Optional) Configurations for a collector node in your flow. Collects an iteration of inputs and consolidates them into an array of outputs. This block has no arguments.
 * `condition` - (Optional) Configurations for a Condition node in your flow. Sets conditions that lead to different branches of the flow. See [`definition.node.configuration.condition` Block](#definitionnodeconfigurationcondition-block) for details.
 * `inline_code` - (Optional) Configurations for an inline code node in your flow. See [`definition.node.configuration.inline_code` Block](#definitionnodeconfigurationinline_code-block) for details.
-* `input` - (Optional) Configurations for an input flow node in your flow. The node `inputs` can't be specified for this node. This block has no arguments.
+* `input` - (Optional) Configurations for an input flow node in your flow. The `definition.node.input` block can't be specified for this node. This block has no arguments.
 * `iterator` - (Optional) Configurations for an iterator node in your flow. Takes an input that is an array and iteratively sends each item of the array as an output to the following node. The size of the array is also returned in the output. The output flow node at the end of the flow iteration returns a response for each member of the array. To return only one response, you can include a collector node downstream from the iterator node. This block has no arguments.
-* `knowledge_base` - (Optional) Configurations for a knowledge base node in your flow. Queries a knowledge base and returns the retrieved results or generated response. See [`definition.node.configuration.knowledge_base` Block](#definitionnodeconfigurationknowledge_base-block) for details.
+* `knowledge_base` - (Optional) Configurations for a knowledge base node in your flow. Queries a knowledge base and returns a response generated from the retrieved results. See [`definition.node.configuration.knowledge_base` Block](#definitionnodeconfigurationknowledge_base-block) for details.
 * `lambda_function` - (Optional) Configurations for a Lambda function node in your flow. Invokes a Lambda function. See [`definition.node.configuration.lambda_function` Block](#definitionnodeconfigurationlambda_function-block) for details.
 * `lex` - (Optional) Configurations for a Lex node in your flow. Invokes an Amazon Lex bot to identify the intent of the input and return the intent as the output. See [`definition.node.configuration.lex` Block](#definitionnodeconfigurationlex-block) for details.
-* `output` - (Optional) Configurations for an output flow node in your flow. The node `outputs` can't be specified for this node. This block has no arguments.
+* `output` - (Optional) Configurations for an output flow node in your flow. The `definition.node.output` block can't be specified for this node. This block has no arguments.
 * `prompt` - (Optional) Configurations for a prompt node in your flow. Runs a prompt and generates the model response as the output. You can use a prompt from Prompt management or you can configure one in this node. See [`definition.node.configuration.prompt` Block](#definitionnodeconfigurationprompt-block) for details.
 * `retrieval` - (Optional) Configurations for a Retrieval node in your flow. Retrieves data from an Amazon S3 location and returns it as the output. See [`definition.node.configuration.retrieval` Block](#definitionnodeconfigurationretrieval-block) for details.
 * `storage` - (Optional) Configurations for a Storage node in your flow. Stores an input in an Amazon S3 location. See [`definition.node.configuration.storage` Block](#definitionnodeconfigurationstorage-block) for details.
@@ -244,7 +244,7 @@ The `definition.node.configuration.knowledge_base` configuration block supports 
 * `guardrail_configuration` - (Optional) Configuration of a guardrail for knowledge base query and response generation. See [`definition.node.configuration.knowledge_base.guardrail_configuration` Block](#definitionnodeconfigurationknowledge_baseguardrail_configuration-block) for details.
 * `inference_configuration` - (Optional) Configuration of model inference for knowledge base query and response generation. See [`definition.node.configuration.knowledge_base.inference_configuration` Block](#definitionnodeconfigurationknowledge_baseinference_configuration-block) for details.
 * `knowledge_base_id` - (Required) Unique identifier of the knowledge base to query.
-* `model_id` - (Required) Unique identifier of the model or inference profile to use to generate a response from the query results. Omit this field to return the retrieved results as an array.
+* `model_id` - (Required) Unique identifier of the model or inference profile to use to generate a response from the query results.
 * `number_of_results` - (Optional) Maximum number of results to retrieve from the knowledge base. Valid values are between 1 and 100.
 
 ### `definition.node.configuration.knowledge_base.guardrail_configuration` Block
@@ -258,7 +258,7 @@ The `definition.node.configuration.knowledge_base.guardrail_configuration` confi
 
 The `definition.node.configuration.knowledge_base.inference_configuration` configuration block supports the following arguments:
 
-* `text` - (Optional) Inference configurations for a text prompt. See [`definition.node.configuration.knowledge_base.inference_configuration.text` Block](#definitionnodeconfigurationknowledge_baseinference_configurationtext-block) for details.
+* `text` - (Required) Inference configurations for a text prompt. See [`definition.node.configuration.knowledge_base.inference_configuration.text` Block](#definitionnodeconfigurationknowledge_baseinference_configurationtext-block) for details.
 
 ### `definition.node.configuration.knowledge_base.inference_configuration.text` Block
 
@@ -280,7 +280,7 @@ The `definition.node.configuration.lambda_function` configuration block supports
 The `definition.node.configuration.lex` configuration block supports the following arguments:
 
 * `bot_alias_arn` - (Required) ARN of the Amazon Lex bot alias to invoke.
-* `locale_id` - (Required) Region to invoke the Amazon Lex bot in.
+* `locale_id` - (Required) Locale to use when invoking the Amazon Lex bot, such as `en_US`.
 
 ### `definition.node.configuration.prompt` Block
 
@@ -317,7 +317,7 @@ The `definition.node.configuration.prompt.source_configuration.inline` configura
 
 The `definition.node.configuration.prompt.source_configuration.inline.inference_configuration` configuration block supports the following arguments:
 
-* `text` - (Optional) Inference configurations for a text prompt. See [`definition.node.configuration.prompt.source_configuration.inline.inference_configuration.text` Block](#definitionnodeconfigurationpromptsource_configurationinlineinference_configurationtext-block) for details.
+* `text` - (Required) Inference configurations for a text prompt. See [`definition.node.configuration.prompt.source_configuration.inline.inference_configuration.text` Block](#definitionnodeconfigurationpromptsource_configurationinlineinference_configurationtext-block) for details.
 
 ### `definition.node.configuration.prompt.source_configuration.inline.inference_configuration.text` Block
 
@@ -340,7 +340,7 @@ The `definition.node.configuration.prompt.source_configuration.inline.template_c
 The `definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat` configuration block supports the following arguments:
 
 * `input_variable` - (Optional) Variables in the prompt template. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.input_variable` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchatinput_variable-block) for details.
-* `message` - (Optional) Messages in the chat for the prompt. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.message` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchatmessage-block) for details.
+* `message` - (Required) Messages in the chat for the prompt. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.message` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchatmessage-block) for details.
 * `system` - (Optional) System prompts that provide context to the model or describe how it should behave. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.system` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchatsystem-block) for details.
 * `tool_configuration` - (Optional) Configuration information for the tools that the model can use when generating a response. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.tool_configuration` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchattool_configuration-block) for details.
 
@@ -374,7 +374,7 @@ The `definition.node.configuration.prompt.source_configuration.inline.template_c
 
 The `definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.system` configuration block supports the following arguments:
 
-* `cache_point` - (Optional) Cache checkpoint within a tool designation. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.system.cache_point` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchatsystemcache_point-block) for details.
+* `cache_point` - (Optional) Cache checkpoint within the system prompt. See [`definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.system.cache_point` Block](#definitionnodeconfigurationpromptsource_configurationinlinetemplate_configurationchatsystemcache_point-block) for details.
 * `text` - (Optional) Text in the system prompt.
 
 ### `definition.node.configuration.prompt.source_configuration.inline.template_configuration.chat.system.cache_point` Block
@@ -467,7 +467,7 @@ The `definition.node.configuration.retrieval` configuration block supports the f
 
 The `definition.node.configuration.retrieval.service_configuration` configuration block supports the following arguments:
 
-* `s3` - (Optional) Configurations for the Amazon S3 location from which to retrieve data to return as the output from the node. See [`definition.node.configuration.retrieval.service_configuration.s3` Block](#definitionnodeconfigurationretrievalservice_configurations3-block) for details.
+* `s3` - (Required) Configurations for the Amazon S3 location from which to retrieve data to return as the output from the node. See [`definition.node.configuration.retrieval.service_configuration.s3` Block](#definitionnodeconfigurationretrievalservice_configurations3-block) for details.
 
 ### `definition.node.configuration.retrieval.service_configuration.s3` Block
 
@@ -485,7 +485,7 @@ The `definition.node.configuration.storage` configuration block supports the fol
 
 The `definition.node.configuration.storage.service_configuration` configuration block supports the following arguments:
 
-* `s3` - (Optional) Configurations for the Amazon S3 location in which to store the input into the node. See [`definition.node.configuration.storage.service_configuration.s3` Block](#definitionnodeconfigurationstorageservice_configurations3-block) for details.
+* `s3` - (Required) Configurations for the Amazon S3 location in which to store the input into the node. See [`definition.node.configuration.storage.service_configuration.s3` Block](#definitionnodeconfigurationstorageservice_configurations3-block) for details.
 
 ### `definition.node.configuration.storage.service_configuration.s3` Block
 
