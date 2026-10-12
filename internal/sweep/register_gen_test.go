@@ -64,6 +64,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -146,6 +147,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -264,6 +266,7 @@ func registerSweepers() {
 	dax.RegisterSweepers()
 	deploy.RegisterSweepers()
 	devicefarm.RegisterSweepers()
+	devopsagent.RegisterSweepers()
 	directconnect.RegisterSweepers()
 	directoryservicedata.RegisterSweepers()
 	dlm.RegisterSweepers()
@@ -346,6 +349,7 @@ func registerSweepers() {
 	pinpoint.RegisterSweepers()
 	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()
+	pricingplanmanager.RegisterSweepers()
 	qbusiness.RegisterSweepers()
 	qldb.RegisterSweepers()
 	quicksight.RegisterSweepers()

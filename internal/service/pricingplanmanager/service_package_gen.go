@@ -7,6 +7,8 @@ package pricingplanmanager
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pricingplanmanager"
@@ -25,7 +27,30 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newSubscriptionResource,
+			TypeName: "aws_pricingplanmanager_subscription",
+			Name:     "Subscription",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newSubscriptionResourceAsListResource,
+			TypeName: "aws_pricingplanmanager_subscription",
+			Name:     "Subscription",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalARNIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
