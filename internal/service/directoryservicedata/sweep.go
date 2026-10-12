@@ -95,7 +95,7 @@ func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 				for _, group := range page.Groups {
 					samAccountName := aws.ToString(group.SAMAccountName)
-					sweepResources = append(sweepResources, framework.NewSweepResource(newGroupResource, client, 
+					sweepResources = append(sweepResources, framework.NewSweepResource(newGroupResource, client,
 						framework.NewAttribute("directory_id", directoryID), framework.NewAttribute("sam_account_name", samAccountName)))
 				}
 			}

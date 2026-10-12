@@ -133,9 +133,9 @@ func TestAccDirectoryServiceDataGroup_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, names.DirectoryServiceDataServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectoryServiceDataServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: testAccCheckGroupDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "Global", "Security"),
@@ -158,7 +158,7 @@ func TestAccDirectoryServiceDataGroup_update(t *testing.T) {
 			},
 			{
 				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "Universal", "Distribution"),
-				ConfigPlanChecks:  resource.ConfigPlanChecks{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
