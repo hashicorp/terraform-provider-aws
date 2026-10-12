@@ -713,6 +713,10 @@ func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.Re
 
 		output, err := conn.DescribeDocumentPermission(ctx, input)
 
+		if errs.IsA[*awstypes.InvalidDocumentOperation](err) {
+			output, err = &ssm.DescribeDocumentPermissionOutput{}, nil
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
 		}
