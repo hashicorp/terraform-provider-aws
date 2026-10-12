@@ -1707,7 +1707,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			InstanceId: aws.String(d.Id()),
 		}
 
-		// The non-configured placement attributes are Computed and may hold stale values from state.
 		rawConfig := d.GetRawConfig()
 		if v := rawConfig.GetAttr("placement_group"); v.IsKnown() && !v.IsNull() {
 			input.GroupName = aws.String(d.Get("placement_group").(string))
