@@ -45,11 +45,19 @@ Check: testAccCheckThingExists(ctx, resourceName, &v) // v's type declared separ
 Check: acctest.CheckExists(ctx, resourceName, findThingByID)
 ```
 
+**Making a consumer generic exposes differences that were never decided.** When one implementation replaces several, every difference between them must be resolved or promoted to a field. A difference nobody chose is not a requirement, and the shared implementation should pick one answer. A field is warranted when two resources *need* to differ, not when two *happen* to differ. Harvesting every observed difference into options produces the same accreted surface as adding fields one at a time, reached faster and all at once.
+
 **"Safely" is a requirement.** A derivation is acceptable only if a wrong result fails loudly, preferably as a compile or generation error. A heuristic that's usually right and silently wrong the rest of the time is worse than an authored value, which at least gets reviewed. An ambiguous derivation refuses rather than guesses.
+
+The bar is that failure is *certain*, not that it's immediate. A wrong value that becomes a compile error only once generated code exists is still checked, because regenerating and compiling are enforced rather than remembered. Latency is a cost worth reducing, not what makes a derivation unsafe. What fails this test is a wrong result that compiles and merely behaves incorrectly, with nothing asserting the difference.
 
 Derivation rules and defaults are still written somewhere, as generator logic or policy. What goes away is the per-resource declaration. Region behavior works this way: the default is real code, and most registrations never mention region.
 
 A default pays off most when adopting it also deletes existing authored values. One that only helps new resources leaves the surface as large as it was.
+
+**A default decides what absence means, so it has to be the value whose wrong application shows.** Ask what a wrong default produces. If it produces activity — behavior that runs and can fail, an assertion that can break — absence is self-checking, and "intentionally default" versus "forgot to set it" is a distinction without a consequence. If it produces inactivity, nothing fails and the two are indistinguishable.
+
+Defaults that omit are therefore the hazardous direction. One that skips a test scenario loses coverage invisibly, because nothing runs and no one can tell an unsupported scenario from an overlooked one. Orient the default so silence is the safe answer: absence means the scenario is exercised, and skipping is authored where a reviewer sees it. Where the common case genuinely is "off," defaulting can't be made safe, and the fact should be derived from something already true about the resource.
 
 ### 1. Model only what survives elimination
 
@@ -57,7 +65,7 @@ A fact belongs in a model when it describes the resource rather than our impleme
 
 The first test does most of the work. A fact about the resource stays true if we rewrite the Go; a fact about our implementation doesn't. The Terraform type name, taggability, and identity composition are resource facts. A factory's name, or the Go type a finder happens to return, is implementation. If a model needs an implementation detail, it binds to it by checked reference (principle 3) and never transcribes it.
 
-Test policy fails the first test too. Whether a resource's tests skip a scenario describes our tests, not the resource, so it belongs with the tests.
+Test policy fails the first test too. Whether a resource's tests skip a scenario describes our tests, not the resource, so it belongs with the tests. Keeping it there also means a test-only change stays inside test files, so a reviewer can see at a glance that nothing a practitioner depends on moved.
 
 The last test is about the consumer's shape, not how many consumers there are. Practitioners depend on a resource's type name and identity whether one consumer reads them or five do. And a single consumer is enough when it's shared: a list resource's operation and result collection fill slots every list resource has, so modeling them lets one implementation serve many resources. That's what makes principle 4 possible. A flag that makes one resource behave differently from its peers is the special case to refuse. "Important to us" isn't enough; "fills a uniform slot" or "visible to practitioners" is.
 
@@ -66,6 +74,8 @@ The last test is about the consumer's shape, not how many consumers there are. P
 Each fact has exactly one authority, either the declarative model or the imperative implementation. Every other copy is generated from it or checked against it by a compiler, a failing generator, a lint pass, or a test.
 
 The line is declarative versus imperative, not Go versus not-Go. A `resource.Spec{…}` literal in a `.go` file is model; `findThingByID` is implementation. Both are Go.
+
+A view that aggregates facts from many authorities — an index, a census, a registry — is a derived copy and belongs to whatever generates it. Authoring one alongside the declarations it summarizes creates the duplication this principle exists to prevent.
 
 Having some facts in the model and others in the implementation is normal. Magic Modules has handwritten resources and injected code, and a CloudFormation schema describes shape while its handlers stay implementations. The defect is one fact owned in several places with nothing to notice when they disagree:
 
@@ -126,7 +136,7 @@ A new field or capability answers five questions in the change that proposes it:
 - **Authority:** who owns this fact, and what keeps every other copy correct?
 - **Consumers:** what reads it? If one thing, is that consumer shared across many resources, or should the fact live inside it?
 - **Validation:** what rejects a bad value, and at build, generate, or run time?
-- **Failure mode:** what happens when it's absent, misspelled, or stale? Silence isn't an acceptable answer.
+- **Failure mode:** what happens when it's absent, misspelled, or stale? Silence isn't an acceptable answer, unless absence is a default whose wrong application is visible (principle 0).
 - **Lifetime:** is this permanent resource semantics, compatibility history, or temporary machinery, and how will we know when it can be removed?
 
 Lifetime matters because the fields most likely to become permanent are the ones meant to be temporary. Compatibility and migration facts record a moment. Without a stated end condition, nothing ever says they're obsolete, and they look exactly like permanent resource semantics.
