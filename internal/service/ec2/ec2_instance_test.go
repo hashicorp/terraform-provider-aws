@@ -1266,6 +1266,78 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_placementGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, "null", "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, "aws_placement_group.test.name", "1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "placement_group_id", "aws_placement_group.test", "placement_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, "aws_placement_group.test.name", "2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v3),
+					testAccCheckInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "2"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, `""`, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "placement_group_id", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -8390,6 +8462,33 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_placementGroupUpdate(rName, placementGroup, partitionNumber string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name            = %[1]q
+  strategy        = "partition"
+  partition_count = 4
+}
+
+# Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = "c5.large"
+  subnet_id                   = aws_subnet.test.id
+  associate_public_ip_address = true
+  placement_group             = %[2]s
+  placement_partition_number  = %[3]s
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, placementGroup, partitionNumber))
 }
 
 func testAccInstanceConfig_ipv6Error(rName string) string {
