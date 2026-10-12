@@ -12,6 +12,8 @@ Provides a CloudFormation Stack resource.
 
 ## Example Usage
 
+### JSON Template
+
 ```terraform
 resource "aws_cloudformation_stack" "network" {
   name = "networking-stack"
@@ -47,6 +49,41 @@ resource "aws_cloudformation_stack" "network" {
     }
   })
 }
+```
+
+### YAML Template
+
+YAML-formatted CloudFormation templates are also supported via `template_body`. Use Terraform's [`file` function](https://developer.hashicorp.com/terraform/language/functions/file) to load a YAML template from a file, or pass the YAML string directly.
+
+```terraform
+resource "aws_cloudformation_stack" "network" {
+  name = "networking-stack"
+
+  parameters = {
+    VPCCidr = "10.0.0.0/16"
+  }
+
+  template_body = file("${path.module}/template.yaml")
+}
+```
+
+Where `template.yaml` contains a standard CloudFormation YAML template:
+
+```yaml
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  VPCCidr:
+    Type: String
+    Default: "10.0.0.0/16"
+    Description: "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
+Resources:
+  myVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidr
+      Tags:
+        - Key: Name
+          Value: Primary_CF_VPC
 ```
 
 ## Argument Reference
