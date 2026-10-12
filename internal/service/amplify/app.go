@@ -975,7 +975,7 @@ func suppressCustomHeadersDiff(k, old, new string, d *schema.ResourceData) bool 
 // normalizeCustomHeaders unwraps a custom_headers value to its header-rule list, wrapped or bare.
 func normalizeCustomHeaders(s string) (any, error) {
 	var wrapped struct {
-		CustomHeaders any `yaml:"customHeaders" json:"customHeaders"`
+		CustomHeaders any `json:"customHeaders" yaml:"customHeaders"`
 	}
 	if err := tfyaml.DecodeFromString(s, &wrapped); err == nil && wrapped.CustomHeaders != nil {
 		return wrapped.CustomHeaders, nil
