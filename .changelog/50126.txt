@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_timestreaminfluxdb_db_backup
+```
+
+```release-note:new-data-source
+aws_timestreaminfluxdb_db_backups
+```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_instance: Add `db_backup_configuration` and `restore` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_cluster: Add `db_backup_configuration` and `restore` configuration blocks
+```
