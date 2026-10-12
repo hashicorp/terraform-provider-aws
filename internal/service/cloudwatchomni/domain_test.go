@@ -67,7 +67,7 @@ func testAccDomain_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_application_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_provider_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact(string(awstypes.IdentityProviderIam)),
+						tfknownvalue.StringExact(awstypes.IdentityProviderIam),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 				},
@@ -113,6 +113,9 @@ func testAccDomain_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -146,6 +149,11 @@ func testAccDomain_name(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName1)),
 				},
@@ -198,6 +206,18 @@ func testAccDomain_identityCenter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &v1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_application_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_provider_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.IdentityProviderIam),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/identity_provider_configuration/"),
@@ -221,8 +241,8 @@ func testAccDomain_identityCenter(t *testing.T) {
 						compare.ValuesSame(),
 					),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact(string(awstypes.IdentityProviderIam)),
-						knownvalue.StringExact(string(awstypes.IdentityProviderIdc)),
+						tfknownvalue.StringExact(awstypes.IdentityProviderIam),
+						tfknownvalue.StringExact(awstypes.IdentityProviderIdc),
 					})),
 				},
 			},
@@ -236,6 +256,27 @@ func testAccDomain_identityCenter(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "domain_id"),
 				ImportStateVerifyIdentifierAttribute: "domain_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &v1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_application_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_provider_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.IdentityProviderIam),
+					})),
+				},
 			},
 		},
 	})
