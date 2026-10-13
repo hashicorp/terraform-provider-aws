@@ -131,8 +131,6 @@ The following arguments are optional:
 * `encryption_strategy` - (Required) Encryption strategy. Valid values are `AWS_OWNED` and `CUSTOMER_MANAGED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use. Required when `encryption_strategy` is `CUSTOMER_MANAGED`.
 
-~> **NOTE:** Specifying `encryption_strategy = "AWS_OWNED"` is equivalent to omitting the block entirely. The service reports AWS owned encryption as the absence of a customer managed key, so the block is normalized away and will not appear in state.
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -145,6 +143,32 @@ This resource exports the following attributes in addition to the arguments abov
 ~> **NOTE:** This resource does not support tags. `CreateSpace` accepts tags, but CloudWatch Omni does not return them on read and provides no tag read or write operations, so tags could not be refreshed, updated, or imported.
 
 ## Import
+
+In Terraform v1.12.0 and later, you can use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatchomni_space.example
+  identity = {
+    space_id = "12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_cloudwatchomni_space" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `space_id` (String) Space ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a CloudWatch Omni Space using the `space_id`. For example:
 
