@@ -61,6 +61,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newGroupResourceAsListResource,
+			TypeName: "aws_directoryservicedata_group",
+			Name:     "Group",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute("sam_account_name", true),
+			}),
+		},
+		{
 			Factory:  newUserResourceAsListResource,
 			TypeName: "aws_directoryservicedata_user",
 			Name:     "User",
