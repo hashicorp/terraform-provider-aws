@@ -45,6 +45,10 @@ func (l *spaceListResource) List(ctx context.Context, request list.ListRequest, 
 				return
 			}
 
+			if aws.ToString(item.Region) != conn.Options().Region {
+				continue
+			}
+
 			arn := aws.ToString(item.SpaceArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 			id := aws.ToString(item.SpaceId)
