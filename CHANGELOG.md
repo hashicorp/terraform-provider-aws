@@ -24,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster: Add `publicly_accessible` argument ([#50354](https://github.com/hashicorp/terraform-provider-aws/issues/50354))
 * resource/aws_resiliencehubv2_input_source: Add `resource_configuration.eks.label_selector` argument ([#50075](https://github.com/hashicorp/terraform-provider-aws/issues/50075))
 * resource/aws_resiliencehubv2_policy: Add `sharing_enabled` argument ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+* resource/aws_s3files_file_system: Support `misconfigured` lifecycle state during create and delete ([#50336](https://github.com/hashicorp/terraform-provider-aws/issues/50336))
 * resource/aws_ssm_service_setting: Add resource identity support ([#50359](https://github.com/hashicorp/terraform-provider-aws/issues/50359))
 * resource/aws_wafv2_rule_group: Add `monetize` action to the rule `action` block and add the `monetization_config` argument ([#48419](https://github.com/hashicorp/terraform-provider-aws/issues/48419))
 * resource/aws_wafv2_web_acl: Add `monetize` action to the rule `action` block and add the `monetization_config` argument ([#48419](https://github.com/hashicorp/terraform-provider-aws/issues/48419))
