@@ -282,6 +282,23 @@ func testAccSpace_encryptionCreateAWS_OWNED(t *testing.T) { // nosemgrep:ci.aws-
 					})})),
 				},
 			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
+				},
+			},
 		},
 	})
 }
@@ -350,6 +367,23 @@ func testAccSpace_encryptionCreateCUSTOMER_MANAGED(t *testing.T) {
 						"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
 						names.AttrKMSKeyARN:   knownvalue.Null(),
 					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
 				},
 			},
 		},

@@ -231,9 +231,13 @@ func (r *spaceResource) Update(ctx context.Context, request resource.UpdateReque
 
 		if !new.EncryptionConfiguration.Equal(old.EncryptionConfiguration) {
 			var encryptionConfig awstypes.EncryptionConfiguration
-			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.EncryptionConfiguration, &encryptionConfig))
-			if response.Diagnostics.HasError() {
-				return
+			if new.EncryptionConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+				encryptionConfig.EncryptionStrategy = awstypes.EncryptionStrategyAwsOwned
+			} else {
+				smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.EncryptionConfiguration, &encryptionConfig))
+				if response.Diagnostics.HasError() {
+					return
+				}
 			}
 			input.EncryptionConfiguration = &encryptionConfig
 		}
