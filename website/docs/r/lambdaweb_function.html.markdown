@@ -158,6 +158,7 @@ The following arguments are optional:
 
 * `environment_variables` - (Optional) Map of environment variables, up to 32 KB across all names and values.
 * `execution_role_arn` - (Required) ARN of the IAM execution role. The trust principal must be `lambda.amazonaws.com`.
+* `egress_network_connector_arn` - (Optional) Version-qualified ARN of a Lambda network connector (for example `aws_lambdacore_network_connector.example.latest_version_arn`) that routes outbound traffic through your VPC. The connector must have `WebFunction` as its associated compute resource type and be in the same account and Region. Revisions that reference a connector can be served only by `HomeRegion` endpoints. Changing or removing it creates a new revision.
 * `max_concurrency_per_environment` - (Optional) Maximum concurrent requests per execution environment (1-128, default 64).
 * `telemetry_config` - (Optional) Telemetry configuration. The service assigns default telemetry (a log group and `INFO` log levels) to every revision; Terraform tracks this block as written, so leaving it out does not produce drift against those defaults. [See below](#telemetry_config-block).
 * `timeout_seconds` - (Optional) Request timeout in seconds (3-900, default 30).

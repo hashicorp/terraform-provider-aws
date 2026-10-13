@@ -234,6 +234,18 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 											int64validator.Between(1, 128),
 										},
 									},
+									// VPC egress. The API takes only a version-qualified connector
+									// ARN, which pins the revision to that connector version, and
+									// accepts it only for HomeRegion endpoints.
+									"egress_network_connector_arn": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(
+												regexache.MustCompile(`^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:network-connector:[0-9A-Za-z_-]+:\d+$`),
+												"must be a version-qualified Lambda network connector ARN (ending in :<version>)",
+											),
+										},
+									},
 									"environment_variables": schema.MapAttribute{
 										CustomType:  fwtypes.MapOfStringType,
 										Optional:    true,
@@ -1010,6 +1022,7 @@ type runtimeConfigModel struct {
 
 type serviceConfigModel struct {
 	ExecutionRoleARN             fwtypes.ARN                                           `tfsdk:"execution_role_arn"`
+	EgressNetworkConnectorARN    types.String                                          `tfsdk:"egress_network_connector_arn"`
 	TimeoutSeconds               types.Int64                                           `tfsdk:"timeout_seconds"`
 	MaxConcurrencyPerEnvironment types.Int64                                           `tfsdk:"max_concurrency_per_environment"`
 	EnvironmentVariables         fwtypes.MapOfString                                   `tfsdk:"environment_variables"`

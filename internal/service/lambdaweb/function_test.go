@@ -210,6 +210,50 @@ func TestAccLambdaWebFunction_endpointFollowsLatestRevision(t *testing.T) {
 	})
 }
 
+func TestAccLambdaWebFunction_egressNetworkConnector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var function lambdaweb.GetWebFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function.test"
+	connectorResourceName := "aws_lambdacore_network_connector.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_egressNetworkConnector(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FunctionStateActive)),
+					resource.TestCheckResourceAttrPair(resourceName, "revision_config.0.service_config.0.egress_network_connector_arn", connectorResourceName, "latest_version_arn"),
+					resource.TestCheckResourceAttr(connectorResourceName, "latest_version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     rName,
+			},
+			{
+				// Removing the reference creates a revision on the default
+				// public egress path.
+				Config: testAccFunctionConfig_egressNetworkConnector(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					resource.TestCheckNoResourceAttr(resourceName, "revision_config.0.service_config.0.egress_network_connector_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaWebFunction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var function lambdaweb.GetWebFunctionOutput
@@ -480,6 +524,124 @@ resource "aws_lambdaweb_function" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFunctionConfig_egressNetworkConnector(rName string, attach bool) string {
+	connectorARN := "null"
+	if attach {
+		connectorARN = "aws_lambdacore_network_connector.test.latest_version_arn"
+	}
+
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_base(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_iam_role" "operator" {
+  name = "%[1]s-operator"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "operator" {
+  name = "%[1]s-operator"
+  role = aws_iam_role.operator.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "CreateENI"
+        Effect = "Allow"
+        Action = "ec2:CreateNetworkInterface"
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:ec2:*:*:network-interface/*",
+          "arn:${data.aws_partition.current.partition}:ec2:*:*:subnet/*",
+          "arn:${data.aws_partition.current.partition}:ec2:*:*:security-group/*",
+        ]
+      },
+      {
+        Sid      = "TagENI"
+        Effect   = "Allow"
+        Action   = "ec2:CreateTags"
+        Resource = "arn:${data.aws_partition.current.partition}:ec2:*:*:network-interface/*"
+        Condition = {
+          StringEquals = {
+            "ec2:ManagedResourceOperator" = "network-connectors.lambda.amazonaws.com"
+          }
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_lambdacore_network_connector" "test" {
+  name          = %[1]q
+  operator_role = aws_iam_role.operator.arn
+
+  configuration {
+    vpc_egress_configuration {
+      associated_compute_resource_types = ["WebFunction"]
+      network_protocol                  = "IPv4"
+      subnet_ids                        = aws_subnet.test[*].id
+      security_group_ids                = [aws_security_group.test.id]
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.operator]
+}
+
+resource "aws_lambdaweb_function" "test" {
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = %[1]q
+
+  revision_config {
+    build_config {
+      runtime_config {
+        runtime = "nodejs24.x"
+      }
+
+      code_config {
+        s3_object {
+          bucket = aws_s3_object.test.bucket
+          key    = aws_s3_object.test.key
+        }
+      }
+    }
+
+    service_config {
+      execution_role_arn           = aws_iam_role.test.arn
+      egress_network_connector_arn = %[2]s
+    }
+  }
+
+  endpoint_config {
+    endpoint_name = "default"
+    endpoint_type = "HomeRegion"
+    auth_type     = "ApplicationManaged"
+    regions       = [data.aws_region.current.region]
+  }
+}
+`, rName, connectorARN))
 }
 
 func testAccFunctionConfig_base(rName string) string {
