@@ -537,7 +537,11 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 }
 
 // isKMSKeyUnavailable excludes other DecryptionFailure causes, such as missing kms:Decrypt permission.
+// A newly created key that is still "is creating" is transient (KMS eventual consistency), not unavailable.
 func isKMSKeyUnavailable(err error) bool {
+	if errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "is creating") {
+		return false
+	}
 	return errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: KMSInvalidStateException") ||
 		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: DisabledException")
 }

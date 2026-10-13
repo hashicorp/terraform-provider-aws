@@ -357,6 +357,9 @@ func TestIsKMSKeyUnavailable(t *testing.T) {
 			err:      &types.DecryptionFailure{Message: aws.String(prefix + " is disabled. (Service: AWSKMS; Status Code: 400; Error Code: DisabledException)")},
 			expected: true,
 		},
+		"creating": {
+			err: &types.DecryptionFailure{Message: aws.String(prefix + " is creating. (Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)")},
+		},
 		"access denied": {
 			err: &types.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: Access to KMS is not allowed (Service: AWSKMS; Status Code: 400; Error Code: AccessDeniedException)")},
 		},
