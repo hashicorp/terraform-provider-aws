@@ -324,6 +324,72 @@ func TestExpandMapOfString(t *testing.T) {
 	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
+func TestExpandMapOfStringPointer(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"single value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+				}),
+			},
+			Target: &awsMapOf[*string]{},
+			WantTarget: &awsMapOf[*string]{
+				Field1: map[string]*string{
+					"x": aws.String("y"),
+				},
+			},
+		},
+		"multiple values": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+					"y": types.StringValue("z"),
+				}),
+			},
+			Target: &awsMapOf[*string]{},
+			WantTarget: &awsMapOf[*string]{
+				Field1: map[string]*string{
+					"x": aws.String("y"),
+					"y": aws.String("z"),
+				},
+			},
+		},
+		"empty value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{}),
+			},
+			Target: &awsMapOf[*string]{},
+			WantTarget: &awsMapOf[*string]{
+				Field1: map[string]*string{},
+			},
+		},
+		"null value": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+			Target: &awsMapOf[*string]{},
+			WantTarget: &awsMapOf[*string]{
+				Field1: nil,
+			},
+		},
+		"invalid conversion": {
+			Source: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+				}),
+			},
+			Target:     &awsMapOf[int32]{},
+			WantTarget: &awsMapOf[int32]{},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
 func TestExpandMapOfInt32(t *testing.T) {
 	t.Parallel()
 
