@@ -25,8 +25,6 @@ func TestAccBedrockAgentCoreGatewayRule_List_basic(t *testing.T) {
 	resourceName1 := "aws_bedrockagentcore_gateway_rule.test[0]"
 	resourceName2 := "aws_bedrockagentcore_gateway_rule.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -45,8 +43,6 @@ func TestAccBedrockAgentCoreGatewayRule_List_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
-					"image_uri":      config.StringVariable(rImageUri),
-					"rNameRuntime":   config.StringVariable(rNameRuntime),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -64,8 +60,6 @@ func TestAccBedrockAgentCoreGatewayRule_List_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
-					"image_uri":      config.StringVariable(rImageUri),
-					"rNameRuntime":   config.StringVariable(rNameRuntime),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_gateway_rule.test", identity1.Checks()),
@@ -85,8 +79,6 @@ func TestAccBedrockAgentCoreGatewayRule_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_bedrockagentcore_gateway_rule.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -104,8 +96,6 @@ func TestAccBedrockAgentCoreGatewayRule_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					"image_uri":      config.StringVariable(rImageUri),
-					"rNameRuntime":   config.StringVariable(rNameRuntime),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -120,8 +110,6 @@ func TestAccBedrockAgentCoreGatewayRule_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					"image_uri":      config.StringVariable(rImageUri),
-					"rNameRuntime":   config.StringVariable(rNameRuntime),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_bedrockagentcore_gateway_rule.test", identity1.Checks()),

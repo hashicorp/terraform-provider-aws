@@ -36,6 +36,7 @@ import (
 // @Testing(preCheck="testAccPreCheckTransitGateway")
 // @Testing(serialize=true)
 // @Testing(generator=false)
+// @Testing(identityTest=false)
 func resourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,

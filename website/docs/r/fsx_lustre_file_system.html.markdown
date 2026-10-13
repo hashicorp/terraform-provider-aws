@@ -87,7 +87,7 @@ The `root_squash_configuration` configuration block supports the following argum
 The `data_read_cache_configuration` configuration block supports the following arguments:
 
 * `size` - (Optional) Size of the file system's SSD read cache, in gibibytes (GiB). Required when the `sizing_mode` is `USER_PROVISIONED`.
-* `sizing_mode` - (Required) Sizing mode for the cache. Valud values are `NO_CACHE`, `USER_PROVISIONED`, and `PROPORTIONAL_TO_THROUGHPUT_CAPACITY`.
+* `sizing_mode` - (Required) Sizing mode for the cache. Valid values are `NO_CACHE`, `USER_PROVISIONED`, and `PROPORTIONAL_TO_THROUGHPUT_CAPACITY`.
 
 ## Attribute Reference
 
