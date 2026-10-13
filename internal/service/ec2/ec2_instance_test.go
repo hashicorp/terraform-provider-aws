@@ -7219,6 +7219,49 @@ func TestAccEC2Instance_spot_instanceMarketOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_spot_placementGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_spot_placementGroupUpdate(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+				},
+			},
+			{
+				// Spot Instances can't always be stopped, so a placement change replaces the instance.
+				Config: testAccInstanceConfig_spot_placementGroupUpdate(rName, "aws_placement_group.test.name"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.InstanceId), aws.ToString(after.InstanceId); before != after {
@@ -11468,6 +11511,36 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_spot_placementGroupUpdate(rName, placementGroup string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
+		fmt.Sprintf(`
+# Spread placement groups support burstable instance types; cluster placement groups don't.
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "spread"
+}
+
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+
+  instance_market_options {
+    market_type = "spot"
+  }
+
+  instance_type   = data.aws_ec2_instance_type_offering.available.instance_type
+  placement_group = %[2]s
+
+  depends_on = [aws_placement_group.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, placementGroup))
 }
 
 func testAccInstanceConfig_secondaryNetworkInterface_multiple(rName, instanceType string) string {
