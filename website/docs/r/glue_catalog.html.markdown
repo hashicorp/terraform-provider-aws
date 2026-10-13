@@ -122,6 +122,10 @@ The following arguments are optional:
 * `data_lake_access` - (Optional) Whether data lake access is enabled.
 * `data_transfer_role` - (Optional) ARN of the IAM role used for data transfer.
 * `kms_key` - (Optional) ARN of the KMS key used for encryption.
+* `managed_workgroup_name` - (Read-Only) Managed workgroup name.
+* `managed_workgroup_status` - (Read-Only) Managed workgroup status.
+* `redshift_database_name` - (Read-Only) Redshift database name.
+* `status_message` - (Read-Only) Status message.
 
 #### `iceberg_optimization_properties` Block
 
@@ -163,13 +167,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `create_time` - Time at which the catalog was created.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `update_time` - Time at which the catalog was last updated.
-
-The `catalog_properties[0].data_lake_access_properties[0]` block also exports:
-
-* `managed_workgroup_name` - Managed workgroup name.
-* `managed_workgroup_status` - Managed workgroup status.
-* `redshift_database_name` - Redshift database name.
-* `status_message` - Status message.
 
 ## Timeouts
 
