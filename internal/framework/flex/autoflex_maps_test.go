@@ -7,6 +7,7 @@ package flex
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -276,7 +277,7 @@ func TestExpandMapOfString(t *testing.T) {
 				},
 			},
 		},
-		"multiple value": {
+		"multiple values": {
 			Source: &tfMapOf[types.String]{
 				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
@@ -616,6 +617,88 @@ func TestFlattenMaps(t *testing.T) {
 	}
 
 	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenMapOfString(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"single value": {
+			Source: &awsMapOf[string]{
+				Field1: map[string]string{
+					"x": "y",
+				},
+			},
+			Target: &tfMapOf[types.String]{},
+			WantTarget: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+				}),
+			},
+		},
+		"multiple values": {
+			Source: &awsMapOf[string]{
+				Field1: map[string]string{
+					"x": "y",
+					"y": "z",
+				},
+			},
+			Target: &tfMapOf[types.String]{},
+			WantTarget: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+					"y": types.StringValue("z"),
+				}),
+			},
+		},
+		"empty value": {
+			Source: &awsMapOf[string]{
+				Field1: map[string]string{},
+			},
+			Target: &tfMapOf[types.String]{},
+			WantTarget: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfEmpty[types.String](ctx),
+			},
+		},
+		"null value": {
+			Source: &awsMapOf[string]{
+				Field1: nil,
+			},
+			Target: &tfMapOf[types.String]{},
+			WantTarget: &tfMapOf[types.String]{
+				Field1: fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+		},
+		"invalid conversion": {
+			Source: &awsMapOf[string]{
+				Field1: map[string]string{
+					"x": "y",
+				},
+			},
+			Target:        &tfMapOf[types.Int32]{},
+			ExpectedDiags: diagInvalidMapElementType(types.StringType, "x", types.Int32Type),
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+// This error message is copied from `basetypes.NewMapValue`
+// https://github.com/hashicorp/terraform-plugin-framework/blob/00badb1b0584b22f3799c474b9f1cea4b49e5163/types/basetypes/map_value.go#L70
+// If the error message changes, this will need to be updated.
+func diagInvalidMapElementType(sourceElementType attr.Type, key string, targetElementType attr.Type) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.NewErrorDiagnostic(
+			"Invalid Map Element Type",
+			"While creating a Map value, an invalid element was detected. "+
+				"A Map must use the single, given element type. "+
+				"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+				fmt.Sprintf("Map Element Type: %s\n", targetElementType.String())+
+				fmt.Sprintf("Map Key (%s) Element Type: %s", key, sourceElementType.String()),
+		),
+	}
 }
 
 func TestFlattenMapBlock(t *testing.T) {
