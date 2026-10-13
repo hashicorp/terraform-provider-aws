@@ -92,7 +92,6 @@ func TestAccDirectoryServiceDataGroup_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_directoryservicedata_group.test[0]"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
 	samAccountNamePrefix := fmt.Sprintf(
 		"%s%s",
@@ -118,7 +117,6 @@ func TestAccDirectoryServiceDataGroup_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					"resource_count":       config.IntegerVariable(1),
 					"directoryDomain":      config.StringVariable(domainName),
 					"samAccountNamePrefix": config.StringVariable(samAccountNamePrefix),
@@ -134,7 +132,6 @@ func TestAccDirectoryServiceDataGroup_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Group/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					"resource_count":       config.IntegerVariable(1),
 					"directoryDomain":      config.StringVariable(domainName),
 					"samAccountNamePrefix": config.StringVariable(samAccountNamePrefix),
@@ -147,6 +144,7 @@ func TestAccDirectoryServiceDataGroup_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("distinguished_name"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("group_scope"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("group_type"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("sam_account_name"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("sid"), knownvalue.NotNull()),
 					}),
