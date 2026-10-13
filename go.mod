@@ -93,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.72.4
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.75.1
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.47.4
-	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.50.3
+	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.67.3
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.78.0
