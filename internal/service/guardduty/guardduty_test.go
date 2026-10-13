@@ -35,6 +35,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"additional_configuration":                     testAccDetectorFeature_additionalConfiguration,
 			"additional_configuration_new_order":           testAccDetectorFeature_additionalConfiguration_newOrder,
 			"additional_configuration_migrate_list_to_set": testAccDetectorFeature_additionalConfiguration_migrateListToSet,
+			"additional_configuration_rds_data_risk":       testAccDetectorFeature_additionalConfiguration_rdsDataRisk,
 		},
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,
@@ -65,14 +66,16 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"malwareProtection":             testAccOrganizationConfiguration_malwareprotection,
 		},
 		"OrganizationConfigurationFeature": {
-			acctest.CtBasic:            testAccOrganizationConfigurationFeature_basic,
-			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
-			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
+			acctest.CtBasic:                          testAccOrganizationConfigurationFeature_basic,
+			"additional_configuration":               testAccOrganizationConfigurationFeature_additionalConfiguration,
+			"additional_configuration_rds_data_risk": testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk,
+			"multiple":                               testAccOrganizationConfigurationFeature_multiple,
 		},
 		"MemberDetectorFeature": {
-			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
-			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
-			"multiple":                 testAccMemberDetectorFeature_multiple,
+			acctest.CtBasic:                          testAccMemberDetectorFeature_basic,
+			"additional_configuration":               testAccMemberDetectorFeature_additionalConfiguration,
+			"additional_configuration_rds_data_risk": testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk,
+			"multiple":                               testAccMemberDetectorFeature_multiple,
 		},
 		"ThreatIntelSet": {
 			acctest.CtBasic:      testAccThreatIntelSet_basic,

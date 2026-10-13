@@ -32,9 +32,13 @@ func testAccDetectorFeature_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
@@ -137,6 +141,68 @@ func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
 						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
 						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+				),
+			},
+		},
+	})
+}
+
+func testAccDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector_feature.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_rdsDataRisk("ENABLED", "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "RDS_DATA_RISK", names.AttrStatus: "ENABLED"}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_rdsDataRisk("ENABLED", "DISABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "RDS_DATA_RISK", names.AttrStatus: "DISABLED"}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},
@@ -321,6 +387,25 @@ resource "aws_guardduty_detector_feature" "test" {
   %[1]s
 }
 `, additionalConfigs.String())
+}
+
+func testAccDetectorFeatureConfig_additionalConfiguration_rdsDataRisk(featureStatus, additionalConfigurationStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+
+resource "aws_guardduty_detector_feature" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "RDS_LOGIN_EVENTS"
+  status      = %[1]q
+
+  additional_configuration {
+    name   = "RDS_DATA_RISK"
+    status = %[2]q
+  }
+}
+`, featureStatus, additionalConfigurationStatus)
 }
 
 func testAccDetectorFeatureConfig_multiple(status1, status2, status3 string) string {
