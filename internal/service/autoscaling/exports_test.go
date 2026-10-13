@@ -26,6 +26,7 @@ var (
 	FindTrafficSourceAttachmentByThreePartKey = findTrafficSourceAttachmentByThreePartKey
 
 	ExpandCapacityReservationSpecification = expandCapacityReservationSpecification
+	InitialLifecycleHookNeedsReplacement   = initialLifecycleHookNeedsReplacement
 
 	InstanceHealthStatusHealthy = instanceHealthStatusHealthy
 	TagResourceTypeGroup        = tagResourceTypeGroup

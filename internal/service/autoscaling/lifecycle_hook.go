@@ -128,13 +128,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 		input.RoleARN = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
-		func(ctx context.Context) (any, error) {
-			return conn.PutLifecycleHook(ctx, &input)
-		},
-		errCodeValidationError, "Unable to publish test message to notification target")
-
-	if err != nil {
+	if err := putLifecycleHook(ctx, conn, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Auto Scaling Lifecycle Hook (%s): %s", name, err)
 	}
 
@@ -177,21 +171,36 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Lifecycle Hook: %s", d.Id())
-	input := autoscaling.DeleteLifecycleHookInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		LifecycleHookName:    aws.String(d.Id()),
-	}
-	_, err := conn.DeleteLifecycleHook(ctx, &input)
-
-	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No Lifecycle Hook found") {
-		return diags
-	}
-
-	if err != nil {
+	if err := deleteLifecycleHook(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Lifecycle Hook (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func putLifecycleHook(ctx context.Context, conn *autoscaling.Client, input *autoscaling.PutLifecycleHookInput) error {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
+		func(ctx context.Context) (any, error) {
+			return conn.PutLifecycleHook(ctx, input)
+		},
+		errCodeValidationError, "Unable to publish test message to notification target")
+
+	return err
+}
+
+func deleteLifecycleHook(ctx context.Context, conn *autoscaling.Client, asgName, hookName string) error {
+	input := autoscaling.DeleteLifecycleHookInput{
+		AutoScalingGroupName: aws.String(asgName),
+		LifecycleHookName:    aws.String(hookName),
+	}
+
+	_, err := conn.DeleteLifecycleHook(ctx, &input)
+
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No Lifecycle Hook found") {
+		return nil
+	}
+
+	return err
 }
 
 func findLifecycleHook(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLifecycleHooksInput) (*awstypes.LifecycleHook, error) {
