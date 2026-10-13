@@ -527,8 +527,8 @@ github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.50.4 h1:+qOKY5eW7mwAEUWoI
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.50.4/go.mod h1:1C6Uc76IPws0N2nYeWJKxNoabSXbTdkDpAUnqAz4VCI=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.84.1 h1:LgsiaI6xfyBrEwso2XsZFZpqnmtjmqIJUN8p/mIkkH4=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.84.1/go.mod h1:/had+BOeuoD/E3LQR4PxHLZase9U7VOdXkC/+4425FA=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.34.3 h1:IwmI7DtaKLGqnylV+ZDeL6cbHsP1iVd6A88R0pZ6Y1w=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.34.3/go.mod h1:r03lOaBGGB9/PgHisSe/uzjMNfArdAeOPHN4+Gd9lo0=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.34.4 h1:QO2ZIY2GUP69ENrtk9UDZTw3gbzSsIHLrxWmQfJP0l8=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.34.4/go.mod h1:2aD1U2q8C1Bh9JDlWILUzAaWnxBtCdxwqspftQWlH9s=
 github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.39.3 h1:joy1tNTqxHZrRqftO9KNR3nvs+PA8fScpuCyOjLjf0M=
 github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.39.3/go.mod h1:g2sxfF7aZI7U51fpy1l89g9uBSHWECszZNL8mGoszDU=
 github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.47.3 h1:PVDe/23HwXF7mKhn+0IZmUIiYsDcaYU2ax1fafk9oAE=
