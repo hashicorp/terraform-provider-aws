@@ -1,8 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}

@@ -10,8 +10,6 @@ provider "aws" {
   }
 }
 
-data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {

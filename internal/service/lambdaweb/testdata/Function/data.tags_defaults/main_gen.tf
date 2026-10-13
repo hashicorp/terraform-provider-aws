@@ -12,8 +12,6 @@ data "aws_lambdaweb_function" "test" {
   function_name = aws_lambdaweb_function.test.function_name
 }
 
-data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
