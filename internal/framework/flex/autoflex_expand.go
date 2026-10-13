@@ -964,6 +964,10 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int32Typable:
+		diags.Append(expandMapOfInt32(ctx, expander, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
 		diags.Append(expandMapOfString(ctx, expander, v, vTo)...)
 		return diags
@@ -1088,6 +1092,58 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 						logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
 					})
 					var to map[string]*string
+					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+			}
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+
+	return diags
+}
+
+// expandMapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API value.
+func expandMapOfInt32(ctx context.Context, _ *autoExpander, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Map:
+		switch tMapKey := vTo.Type().Key(); tMapKey.Kind() {
+		case reflect.String: // key
+			switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+			case reflect.Int32:
+				//
+				// types.Map(OfInt32) -> map[string]int32.
+				//
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
+				})
+				var to map[string]int32
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+
+			case reflect.Pointer:
+				switch k := tMapElem.Elem().Kind(); k {
+				case reflect.Int32:
+					//
+					// types.Map(OfInt32) -> map[string]*int32.
+					//
+					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+						logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
+					})
+					var to map[string]*int32
 					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 					if diags.HasError() {
 						return diags
