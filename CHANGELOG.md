@@ -5,6 +5,7 @@ FEATURES:
 * **New List Resource:** `aws_cloudwatchomni_domain` ([#50329](https://github.com/hashicorp/terraform-provider-aws/issues/50329))
 * **New List Resource:** `aws_devopsagent_agent_space` ([#47795](https://github.com/hashicorp/terraform-provider-aws/issues/47795))
 * **New List Resource:** `aws_pricingplanmanager_subscription` ([#49235](https://github.com/hashicorp/terraform-provider-aws/issues/49235))
+* **New List Resource:** `aws_ram_principal_association` ([#50427](https://github.com/hashicorp/terraform-provider-aws/issues/50427))
 * **New List Resource:** `aws_ssm_service_setting` ([#50359](https://github.com/hashicorp/terraform-provider-aws/issues/50359))
 * **New Resource:** `aws_cloudwatch_resource_metrics_configuration` ([#50254](https://github.com/hashicorp/terraform-provider-aws/issues/50254))
 * **New Resource:** `aws_cloudwatchomni_domain` ([#50329](https://github.com/hashicorp/terraform-provider-aws/issues/50329))
@@ -21,9 +22,11 @@ ENHANCEMENTS:
 * resource/aws_observabilityadmin_telemetry_evaluation: Add `all_regions` and `regions` attributes ([#50402](https://github.com/hashicorp/terraform-provider-aws/issues/50402))
 * resource/aws_opensearch_domain: Increase default `timeouts.delete` value to `120m` ([#46969](https://github.com/hashicorp/terraform-provider-aws/issues/46969))
 * resource/aws_quicksight_custom_permissions: Add `action`, `analysis`, `automate`, `chat_agent`, `create_chat_agents`, `dashboard`, `flow`, `knowledge_base`, `perform_flow_ui_task`, `publish_without_approval`, `research`, `space`, `use_agent_web_search`, and `use_bedrock_models` to `capabilities` configuration block ([#47135](https://github.com/hashicorp/terraform-provider-aws/issues/47135))
+* resource/aws_ram_principal_association: Add resource identity support ([#50427](https://github.com/hashicorp/terraform-provider-aws/issues/50427))
 * resource/aws_rds_cluster: Add `publicly_accessible` argument ([#50354](https://github.com/hashicorp/terraform-provider-aws/issues/50354))
 * resource/aws_resiliencehubv2_input_source: Add `resource_configuration.eks.label_selector` argument ([#50075](https://github.com/hashicorp/terraform-provider-aws/issues/50075))
 * resource/aws_resiliencehubv2_policy: Add `sharing_enabled` argument ([#50241](https://github.com/hashicorp/terraform-provider-aws/issues/50241))
+* resource/aws_s3files_file_system: Support `misconfigured` lifecycle state during create and delete ([#50336](https://github.com/hashicorp/terraform-provider-aws/issues/50336))
 * resource/aws_ssm_service_setting: Add resource identity support ([#50359](https://github.com/hashicorp/terraform-provider-aws/issues/50359))
 * resource/aws_wafv2_rule_group: Add `monetize` action to the rule `action` block and add the `monetization_config` argument ([#48419](https://github.com/hashicorp/terraform-provider-aws/issues/48419))
 * resource/aws_wafv2_web_acl: Add `monetize` action to the rule `action` block and add the `monetization_config` argument ([#48419](https://github.com/hashicorp/terraform-provider-aws/issues/48419))
@@ -31,6 +34,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_agentregistry_registry: Fix validation of `custom_claim`-only custom JWT authorizers ([#50298](https://github.com/hashicorp/terraform-provider-aws/issues/50298))
+* resource/aws_api_gateway_method: Fix `deserialization failed, expected string, got null` failure during Read ([#50444](https://github.com/hashicorp/terraform-provider-aws/issues/50444))
 * resource/aws_ecs_cluster_capacity_providers: Fix delete handling for inactive clusters ([#50374](https://github.com/hashicorp/terraform-provider-aws/issues/50374))
 * resource/aws_observabilityadmin_telemetry_rule: Fix updates when `all_regions` is enabled ([#50150](https://github.com/hashicorp/terraform-provider-aws/issues/50150))
 * resource/aws_opensearch_domain: Remove hardcoded enum validation for `cluster_config.warm_type` to support newer instance types (e.g., `oi2.large.search`) ([#46969](https://github.com/hashicorp/terraform-provider-aws/issues/46969))
