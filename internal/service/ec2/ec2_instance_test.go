@@ -8484,7 +8484,6 @@ resource "aws_instance" "test" {
   placement_group             = %[2]s
   placement_partition_number  = %[3]s
 
-  # Not every step references the placement group, so keep it from being destroyed while still in use.
   depends_on = [aws_placement_group.test]
 
   tags = {
