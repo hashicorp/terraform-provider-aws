@@ -272,6 +272,7 @@ check "schema_docs" {
   ordering    = true
 
   nested_object_attributes = true
+  allow_inline_read_only   = true
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
