@@ -40,7 +40,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_List_basic(t *testing.T) {
 			testAccPreCheckOptOutList(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
+		CheckDestroy:             testAccCheckOptoutListDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -98,7 +98,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_List_includeResource(t *testing.T) {
 			testAccPreCheckOptOutList(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
+		CheckDestroy:             testAccCheckOptoutListDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -134,7 +134,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_pinpointsmsvoicev2_opt_out_list.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("sms-voice", "opt-out-list/"+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -168,7 +168,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_List_regionOverride(t *testing.T) {
 			testAccPreCheckOptOutList(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
+		CheckDestroy:             testAccCheckOptoutListDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup

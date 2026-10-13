@@ -58,6 +58,8 @@ func (l *optOutListListResource) List(ctx context.Context, request list.ListRequ
 					return
 				}
 
+				data.setID()
+
 				result.DisplayName = name
 			})
 
