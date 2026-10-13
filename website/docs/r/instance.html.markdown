@@ -230,7 +230,7 @@ This resource supports the following arguments:
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `network_interface` - (Optional, **Deprecated** to specify the primary network interface, use `primary_network_interface`, to attach additional network interfaces, use `aws_network_interface_attachment` resources) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
-* `placement_group` - (Optional) Placement Group to start the instance in. Conflicts with `placement_group_id`. Updates to this field will trigger a stop/start of the EC2 instance. Set to `""` to remove the instance from its placement group.
+* `placement_group` - (Optional) Placement Group to start the instance in. Conflicts with `placement_group_id`. Updates to this field will trigger a stop/start of the EC2 instance.
 * `placement_group_id` - (Optional) Placement Group ID to start the instance in. Conflicts with `placement_group`. Updates to this field will trigger a stop/start of the EC2 instance.
 * `placement_partition_number` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`. Updates to this field will trigger a stop/start of the EC2 instance.
 * `primary_network_interface` - (Optional) The primary network interface. See [Primary Network Interface](#primary-network-interface) below.
