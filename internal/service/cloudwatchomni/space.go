@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -156,6 +157,9 @@ func (r *spaceResource) Create(ctx context.Context, request resource.CreateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateSpace(ctx, &input)
 	if err != nil {
