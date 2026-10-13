@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 * `attached_channels` - Channels attached to Input.
 * `destinations` - Destination settings for PUSH type inputs. See [`destinations` Block](#destinations-block) for more details.
 * `input_class` - Input class.
-* `input_devices` - Settings for the devices.
+* `input_devices` - Settings for the devices. See [`input_devices` Block](#input_devices-block) for more details.
 * `input_partner_ids` - IDs for all Inputs which are partners of this one.
 * `input_source_type` - Source type of the input.
 * `media_connect_flows` - MediaConnect Flows. See [`media_connect_flows` Block](#media_connect_flows-block) for more details.
@@ -58,6 +58,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availability_zone` - Availability Zone.
 * `network_interface_id` - Network interface ID.
+
+### `input_devices` Block
+
+* `id` - ID of the device.
 
 ### `media_connect_flows` Block
 
