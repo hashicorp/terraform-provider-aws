@@ -138,6 +138,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 		},
 		{
+			Factory:  newOptOutListResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
+			Name:     "Opt-out List",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newPoolResourceAsListResource,
 			TypeName: "aws_pinpointsmsvoicev2_pool",
 			Name:     "Pool",
