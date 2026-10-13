@@ -89,6 +89,36 @@ resource "aws_eventbridgev2_event_bus" "example" {
 
 ~> **Note:** When removing `encryption_configuration` or changing the KMS key, keep the previous key enabled until the update completes. EventBridge must be able to use the current key to update the event bus.
 
+### Sharing with Another Account
+
+Share an event bus with other accounts using AWS Resource Access Manager (AWS RAM) and one of the EventBridge V2 managed permissions: `AWSRAMEventBridgeEventBusV2PublishOnly`, `AWSRAMEventBridgeEventBusV2SubscribeOnly`, `AWSRAMEventBridgeEventBusV2EventSourceAccess`, or `AWSRAMEventBridgeEventBusV2FullAccess`. See [Sharing a Custom Event Bus with other accounts](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-sharing.html).
+
+```terraform
+data "aws_partition" "current" {}
+
+resource "aws_eventbridgev2_event_bus" "example" {
+  name = "example"
+}
+
+resource "aws_ram_resource_share" "example" {
+  name                      = "example"
+  allow_external_principals = true
+  permission_arns           = ["arn:${data.aws_partition.current.partition}:ram::aws:permission/AWSRAMEventBridgeEventBusV2SubscribeOnly"]
+}
+
+resource "aws_ram_resource_association" "example" {
+  resource_arn       = aws_eventbridgev2_event_bus.example.arn
+  resource_share_arn = aws_ram_resource_share.example.arn
+}
+
+resource "aws_ram_principal_association" "example" {
+  principal          = "444455556666"
+  resource_share_arn = aws_ram_resource_share.example.arn
+}
+```
+
+The consumer account uses the shared event bus by its ARN, for example as the `event_bus_arn` of an [`aws_eventbridgev2_subscriber`](eventbridgev2_subscriber.html) or [`aws_eventbridgev2_event_source`](eventbridgev2_event_source.html). AWS RAM manages the event bus's `AWS_RAM` resource policy. To grant access without AWS RAM, or to add an explicit `Deny`, a condition key, or another grant that the managed permissions don't cover, use [`aws_eventbridgev2_resource_policy`](eventbridgev2_resource_policy.html).
+
 ## Argument Reference
 
 The following arguments are required:

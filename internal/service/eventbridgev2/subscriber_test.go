@@ -194,6 +194,50 @@ func TestAccEventBridgeV2Subscriber_update(t *testing.T) {
 	})
 }
 
+func TestAccEventBridgeV2Subscriber_sharedEventBus(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridgev2.DescribeSubscriberOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eventbridgev2_subscriber.test"
+	busResourceName := "aws_eventbridgev2_event_bus.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckSubscriberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberConfig_sharedEventBus(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("event_bus_arn"), busResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.SubscriberStateRunning)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"batch_configuration",
+					"log_configuration",
+					"retry_policy",
+					"transformer",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckSubscriberDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -302,6 +346,62 @@ resource "aws_eventbridgev2_subscriber" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
+}
+
+func testAccSubscriberConfig_sharedEventBus(rName string) string {
+	return acctest.ConfigCompose(testAccEventBusConfig_shared(rName), fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "events.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "sqs:SendMessage"
+      Effect   = "Allow"
+      Resource = aws_sqs_queue.test.arn
+    }]
+  })
+}
+
+resource "aws_eventbridgev2_subscriber" "test" {
+  name          = %[1]q
+  event_bus_arn = aws_eventbridgev2_event_bus.test.arn
+
+  filter_configuration {
+    filter {
+      scope   = "METADATA"
+      pattern = jsonencode({ source = ["example"] })
+    }
+  }
+
+  invoke_configuration {
+    role_arn   = aws_iam_role.test.arn
+    target_arn = aws_sqs_queue.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_ram_resource_association.test, aws_ram_principal_association.test]
 }
 `, rName))
 }
