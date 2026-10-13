@@ -179,35 +179,47 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	id := groupResourceID(plan.DirectoryID.ValueString(), plan.SAMAccountName.ValueString())
 
-	scopeChanged := !plan.GroupScope.Equal(state.GroupScope)
-	typeChanged := !plan.GroupType.Equal(state.GroupType)
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	if scopeChanged || typeChanged {
-		input := directoryservicedata.UpdateGroupInput{
-			DirectoryId:    plan.DirectoryID.ValueStringPointer(),
-			SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-			UpdateType:     awstypes.UpdateTypeReplace,
-		}
+	if diff.HasChanges() {
+		// AWS requires group scope and type changes to be sent in separate requests.
+		var inputs []directoryservicedata.UpdateGroupInput
 
-		if scopeChanged {
-			if plan.GroupScope.IsNull() || plan.GroupScope.IsUnknown() {
-				smerr.AddError(ctx, &resp.Diagnostics, smarterr.Errorf("cannot update group scope to a null or unknown value"), smerr.ID, id)
+		if !plan.GroupScope.IsUnknown() && !plan.GroupScope.Equal(state.GroupScope) {
+			if plan.GroupScope.IsNull() {
+				smerr.AddError(ctx, &resp.Diagnostics, smarterr.Errorf("cannot update group scope to a null value"), smerr.ID, id)
 				return
 			}
-			input.GroupScope = awstypes.GroupScope(plan.GroupScope.ValueString())
+			inputs = append(inputs, directoryservicedata.UpdateGroupInput{
+				DirectoryId:    plan.DirectoryID.ValueStringPointer(),
+				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
+				GroupScope:     awstypes.GroupScope(plan.GroupScope.ValueString()),
+				UpdateType:     awstypes.UpdateTypeReplace,
+			})
 		}
-		if typeChanged {
-			if plan.GroupType.IsNull() || plan.GroupType.IsUnknown() {
-				smerr.AddError(ctx, &resp.Diagnostics, smarterr.Errorf("cannot update group type to a null or unknown value"), smerr.ID, id)
+		if !plan.GroupType.IsUnknown() && !plan.GroupType.Equal(state.GroupType) {
+			if plan.GroupType.IsNull() {
+				smerr.AddError(ctx, &resp.Diagnostics, smarterr.Errorf("cannot update group type to a null value"), smerr.ID, id)
 				return
 			}
-			input.GroupType = awstypes.GroupType(plan.GroupType.ValueString())
+			inputs = append(inputs, directoryservicedata.UpdateGroupInput{
+				DirectoryId:    plan.DirectoryID.ValueStringPointer(),
+				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
+				GroupType:      awstypes.GroupType(plan.GroupType.ValueString()),
+				UpdateType:     awstypes.UpdateTypeReplace,
+			})
 		}
 
-		_, err := conn.UpdateGroup(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
-			return
+		for _, input := range inputs {
+			_, err := conn.UpdateGroup(ctx, &input)
+			if err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+				return
+			}
 		}
 	}
 

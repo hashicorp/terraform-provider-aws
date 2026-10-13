@@ -180,6 +180,30 @@ func TestAccDirectoryServiceDataGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "group_type", "Security"),
 				),
 			},
+			{
+				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "Universal", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_scope", "Universal"),
+					resource.TestCheckResourceAttr(resourceName, "group_type", "Security"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_updated(rName, domainName, samAccountName, "", "Distribution"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_scope", "Universal"),
+					resource.TestCheckResourceAttr(resourceName, "group_type", "Distribution"),
+				),
+			},
 		},
 	})
 }
@@ -251,6 +275,14 @@ resource "aws_directoryservicedata_group" "test" {
 }
 
 func testAccGroupConfig_updated(rName, domainName, samAccountName, groupScope, groupType string) string {
+	groupScopeConfig, groupTypeConfig := "", ""
+	if groupScope != "" {
+		groupScopeConfig = fmt.Sprintf("group_scope = %q", groupScope)
+	}
+	if groupType != "" {
+		groupTypeConfig = fmt.Sprintf("group_type = %q", groupType)
+	}
+
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -270,9 +302,9 @@ resource "aws_directory_service_directory" "test" {
 resource "aws_directoryservicedata_group" "test" {
   directory_id     = aws_directory_service_directory.test.id
   sam_account_name = %[2]q
-  group_scope      = %[3]q
-  group_type       = %[4]q
+  %[3]s
+  %[4]s
 }
-		`, domainName, samAccountName, groupScope, groupType),
+		`, domainName, samAccountName, groupScopeConfig, groupTypeConfig),
 	)
 }
