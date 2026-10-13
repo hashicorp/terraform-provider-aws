@@ -153,9 +153,9 @@ func resourceInstance() *schema.Resource {
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
 				// as part of Update and there is already a public_ip value in state.
-				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64", "placement_group", "placement_group_id", "placement_partition_number") {
+				if diff.Id() != "" && (diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") || instancePlacementHasChanges(diff)) {
 					// user_data is stored in state as a hash.
-					if diff.HasChange("user_data") && !diff.HasChanges(names.AttrInstanceType, "placement_group", "placement_group_id", "placement_partition_number") {
+					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) && !instancePlacementHasChanges(diff) {
 						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
 							return nil
 						}
@@ -231,25 +231,35 @@ func resourceInstance() *schema.Resource {
 				return true
 			}),
 			customdiff.ComputedIf("placement_group", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.Id() != "" && diff.HasChange("placement_group_id") && diff.GetRawConfig().GetAttr("placement_group").IsNull()
+				return diff.Id() != "" && instancePlacementHasChange(diff, "placement_group_id") && diff.GetRawConfig().GetAttr("placement_group").IsNull()
 			}),
 			customdiff.ComputedIf("placement_group_id", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.Id() != "" && diff.HasChange("placement_group") && diff.GetRawConfig().GetAttr("placement_group_id").IsNull()
+				return diff.Id() != "" && instancePlacementHasChange(diff, "placement_group") && diff.GetRawConfig().GetAttr("placement_group_id").IsNull()
 			}),
 			customdiff.ComputedIf("placement_partition_number", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.Id() != "" && diff.HasChanges("placement_group", "placement_group_id") && diff.GetRawConfig().GetAttr("placement_partition_number").IsNull()
+				return diff.Id() != "" && (instancePlacementHasChange(diff, "placement_group") || instancePlacementHasChange(diff, "placement_group_id")) && diff.GetRawConfig().GetAttr("placement_partition_number").IsNull()
 			}),
 			// Updating placement requires stopping the instance, which isn't supported for all Spot Instances.
-			customdiff.ForceNewIf("placement_group", isSpotInstanceChange("placement_group")),
-			customdiff.ForceNewIf("placement_group_id", isSpotInstanceChange("placement_group_id")),
-			customdiff.ForceNewIf("placement_partition_number", isSpotInstanceChange("placement_partition_number")),
+			customdiff.ForceNewIf("placement_group", isSpotInstancePlacementChange("placement_group")),
+			customdiff.ForceNewIf("placement_group_id", isSpotInstancePlacementChange("placement_group_id")),
+			customdiff.ForceNewIf("placement_partition_number", isSpotInstancePlacementChange("placement_partition_number")),
 		),
 	}
 }
 
-func isSpotInstanceChange(key string) customdiff.ResourceConditionFunc {
+// instancePlacementHasChange reports whether the planned diff changes a placement attribute.
+// Unlike HasChange, it ignores an explicit empty string, which the SDK treats as unset for Optional+Computed attributes.
+func instancePlacementHasChange(diff *schema.ResourceDiff, key string) bool {
+	return len(diff.GetChangedKeysPrefix(key)) > 0
+}
+
+func instancePlacementHasChanges(diff *schema.ResourceDiff) bool {
+	return instancePlacementHasChange(diff, "placement_group") || instancePlacementHasChange(diff, "placement_group_id") || instancePlacementHasChange(diff, "placement_partition_number")
+}
+
+func isSpotInstancePlacementChange(key string) customdiff.ResourceConditionFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-		return diff.Id() != "" && diff.HasChange(key) && diff.Get("instance_lifecycle").(string) == string(awstypes.InstanceLifecycleSpot)
+		return diff.Id() != "" && instancePlacementHasChange(diff, key) && diff.Get("instance_lifecycle").(string) == string(awstypes.InstanceLifecycleSpot)
 	}
 }
 
