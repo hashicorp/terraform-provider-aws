@@ -38,6 +38,8 @@ The following arguments are optional:
 * `group_type` - (Optional) Type of the AD group. Valid values are `Distribution` and `Security`. If omitted, the value is read from AWS. See [AD group types](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups#how-active-directory-security-groups-work)
 * `region` - (Optional) Region where the group is managed. Defaults to the provider region.
 
+Changes to `group_scope` and `group_type` in the same apply are sent to AWS as separate requests, with the scope updated first.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
