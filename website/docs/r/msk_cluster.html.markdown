@@ -213,7 +213,7 @@ This resource supports the following arguments:
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See [encryption_info Argument Reference](#encryption_info-argument-reference) below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See [open_monitoring Argument Reference](#open_monitoring-argument-reference) below.
-* `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See [logging_info Argument Reference](#logging_info-argument-reference) below.
+* `logging_info` - (Optional) Configuration block for streaming broker and authorizer logs to Cloudwatch/S3/Kinesis Firehose. See [logging_info Argument Reference](#logging_info-argument-reference) below.
 * `rebalancing` - (Optional) Configuration block for intelligent rebalancing. See [rebalancing Argument Reference](#rebalancing-argument-reference) below. Only applicable to MSK Provisioned clusters with Express brokers.
 * `storage_mode` - (Optional) Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -315,6 +315,7 @@ This resource supports the following arguments:
 #### logging_info Argument Reference
 
 * `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [logging_info broker_logs Argument Reference](#logging_info-broker_logs-argument-reference) below.
+* `authorizer_logs` - (Optional) Configuration block for Authorizer Logs settings for logging info. See [logging_info authorizer_logs Argument Reference](#logging_info-authorizer_logs-argument-reference) below.
 
 #### logging_info broker_logs Argument Reference
 
@@ -335,6 +336,28 @@ This resource supports the following arguments:
 #### logging_info broker_logs s3 Argument Reference
 
 * `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to S3.
+* `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
+* `prefix` - (Optional) Prefix to append to the folder name.
+
+#### logging_info authorizer_logs Argument Reference
+
+* `cloudwatch_logs` - (Optional) Configuration block for CloudWatch Logs settings. See [logging_info authorizer_logs cloudwatch_logs Argument Reference](#logging_info-authorizer_logs-cloudwatch_logs-argument-reference) below.
+* `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings. See [logging_info authorizer_logs firehose Argument Reference](#logging_info-authorizer_logs-firehose-argument-reference) below.
+* `s3` - (Optional) Configuration block for S3 settings. See [logging_info authorizer_logs s3 Argument Reference](#logging_info-authorizer_logs-s3-argument-reference) below.
+
+#### logging_info authorizer_logs cloudwatch_logs Argument Reference
+
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming authorizer logs to CloudWatch Logs.
+* `log_group` - (Optional) Name of the CloudWatch Log Group to deliver logs to.
+
+#### logging_info authorizer_logs firehose Argument Reference
+
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming authorizer logs to Kinesis Data Firehose.
+* `delivery_stream` - (Optional) Name of the Kinesis Data Firehose delivery stream to deliver logs to.
+
+#### logging_info authorizer_logs s3 Argument Reference
+
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming authorizer logs to S3.
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `prefix` - (Optional) Prefix to append to the folder name.
 
