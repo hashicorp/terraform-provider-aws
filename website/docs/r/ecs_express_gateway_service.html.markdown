@@ -106,6 +106,7 @@ The following arguments are optional:
 
 * `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
 * `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`.
+* `cpu_architecture` - (Optional) CPU architecture of the tasks. Valid values are `X86_64` and `ARM64`. Defaults to `X86_64`.
 * `health_check_path` - (Optional) Path for health check requests. Defaults to `/`.
 * `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192. Defaults to `2048`.
 * `network_configuration` - (Optional) Network configuration for the service. See [`network_configuration` Block](#network_configuration-block) below.
