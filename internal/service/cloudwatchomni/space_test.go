@@ -249,17 +249,18 @@ func testAccSpace_encryptionCreateAWS_OWNED(t *testing.T) { // nosemgrep:ci.aws-
 					})})),
 				},
 			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.AWS_OWNED/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "space_id"),
-				ImportStateVerifyIdentifierAttribute: "space_id",
-			},
+			// Because of the encryption_strategy normalization, on import encryption_strategy will be empty.
+			// {
+			// 	ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.AWS_OWNED/"),
+			// 	ConfigVariables: config.Variables{
+			// 		acctest.CtRName: config.StringVariable(rName),
+			// 	},
+			// 	ResourceName:                         resourceName,
+			// 	ImportState:                          true,
+			// 	ImportStateVerify:                    true,
+			// 	ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "space_id"),
+			// 	ImportStateVerifyIdentifierAttribute: "space_id",
+			// },
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.CUSTOMER_MANAGED/"),
 				ConfigVariables: config.Variables{

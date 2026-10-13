@@ -9,7 +9,7 @@ resource "aws_cloudwatchomni_space" "test" {
 }
 
 resource "aws_iam_role" "test_agent_core" {
-  name = "{var.rName}-agent-core"
+  name = "${var.rName}-agent-core"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
