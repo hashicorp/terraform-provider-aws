@@ -46,12 +46,20 @@ This data source exports the following attributes in addition to the arguments a
 * `regional_domain_names` - Map of Region to that Region's independent domain name.
 * `regions` - Regions the endpoint spans.
 * `revision_weights` - Revisions the endpoint routes to, each with `revision_id` and `weight`. Under `auto_deployment_mode = "Disabled"` these are the weights a canary or blue/green shift set; under `LatestRevision` the service reports its own ephemeral routing.
-* `scaling_config` - Scaling limits of the endpoint, an object with a single `max_environments` attribute: the maximum number of concurrent execution environments.
+* `scaling_config` - Scaling limits of the endpoint. [See below](#scaling_config-block).
 * `state` - Current state of the endpoint.
 * `state_reason` - Reason for the current state, which names the failing Region when a `MultiRegion` or `PerRegion` endpoint could not deploy everywhere.
-* `throttle_config` - Request throttling of the endpoint, an object with a single `rate_limit` attribute: the maximum request rate in requests per second.
+* `throttle_config` - Request throttling of the endpoint. [See below](#throttle_config-block).
 
 ### `revision_weights` Block
 
 * `revision_id` - ID of the revision traffic is routed to.
 * `weight` - Percentage of traffic served by that revision.
+
+### `scaling_config` Block
+
+* `max_environments` - Maximum number of concurrent execution environments.
+
+### `throttle_config` Block
+
+* `rate_limit` - Maximum request rate, in requests per second.

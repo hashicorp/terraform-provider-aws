@@ -46,9 +46,9 @@ resource "aws_lambdaweb_resource_policy" "example" {
 
 This resource supports the following arguments:
 
-* `resource_arn` - (Required) ARN of the Lambda Web function the policy is attached to. Must be a web function ARN (`arn:aws:lambda:<region>:<account>:web-function/<name>`). Changing this forces a new resource.
 * `policy` - (Required) Resource-based IAM policy document as JSON. Terraform normalizes the document, so equivalent policies that differ only in key order or whitespace do not produce spurious diffs.
 * `region` - (Optional) Region where this resource is managed. Defaults to the provider's configured region.
+* `resource_arn` - (Required) ARN of the Lambda Web function the policy is attached to. Must be a web function ARN (`arn:aws:lambda:<region>:<account>:web-function/<name>`). Changing this forces a new resource.
 
 ## Attribute Reference
 
@@ -58,7 +58,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Lambda Web resource policy using the function `resource_arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambdaweb_resource_policy.example
+  identity = {
+    "resource_arn" = "arn:aws:lambda:us-east-1:123456789012:web-function/example"
+  }
+}
+
+resource "aws_lambdaweb_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `resource_arn` (String) ARN of the Lambda Web function the policy is attached to.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Lambda Web resource policy using the function `resource_arn`. For example:
 
 ```terraform
 import {

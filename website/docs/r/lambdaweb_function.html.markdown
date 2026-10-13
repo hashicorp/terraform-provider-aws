@@ -129,11 +129,11 @@ The following arguments are optional:
 * `build_config` - (Required) Code source and runtime. [See below](#build_config-block).
 * `description` - (Optional) Description of the revision.
 * `kms_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the function's code and environment variables. Must be a key ARN (`arn:<partition>:kms:<region>:<account>:key/<key-id>`); alias ARNs are rejected.
+* `service_config` - (Required) Execution environment configuration. [See below](#service_config-block).
 
 ~> **Note:** The key policy must allow the `lambda.amazonaws.com` service principal to use the key **without conditions** (the configuration verified end to end, including multi-Region replication, grants `kms:Encrypt`, `kms:Decrypt`, `kms:GenerateDataKey*`, `kms:DescribeKey` and `kms:CreateGrant`). The service does not propagate the calling account as source context, so a statement conditioned on `aws:SourceAccount` does not match: function creation fails with `AccessDeniedException`, or the endpoint answers `HTTP 500` at runtime while the function, revision and endpoint all report `Active`.
 
 ~> **Note:** A revision encrypted with a single-Region customer managed key cannot be deployed to the other Regions of a `MultiRegion` or `PerRegion` endpoint: those Regions report `Failed to deploy all the specified revision(s)` while the home Region goes `Active`, so the endpoint ends up `Failed` even though the function and the revision report `Active`. Either keep `kms_key_arn` with a `HomeRegion` endpoint, or use an [AWS KMS multi-Region key](https://docs.aws.amazon.com/kms/latest/developerguide/multi-region-keys-overview.html) replicated into every Region of the endpoint, which is verified to work.
-* `service_config` - (Required) Execution environment configuration. [See below](#service_config-block).
 
 #### `build_config` Block
 
@@ -156,9 +156,9 @@ The following arguments are optional:
 
 #### `service_config` Block
 
+* `egress_network_connector_arn` - (Optional) Version-qualified ARN of a Lambda network connector (for example `aws_lambdacore_network_connector.example.latest_version_arn`) that routes outbound traffic through your VPC. The connector must have `WebFunction` as its associated compute resource type and be in the same account and Region. Revisions that reference a connector can be served only by `HomeRegion` endpoints. Changing or removing it creates a new revision.
 * `environment_variables` - (Optional) Map of environment variables, up to 32 KB across all names and values.
 * `execution_role_arn` - (Required) ARN of the IAM execution role. The trust principal must be `lambda.amazonaws.com`.
-* `egress_network_connector_arn` - (Optional) Version-qualified ARN of a Lambda network connector (for example `aws_lambdacore_network_connector.example.latest_version_arn`) that routes outbound traffic through your VPC. The connector must have `WebFunction` as its associated compute resource type and be in the same account and Region. Revisions that reference a connector can be served only by `HomeRegion` endpoints. Changing or removing it creates a new revision.
 * `max_concurrency_per_environment` - (Optional) Maximum concurrent requests per execution environment (1-128, default 64).
 * `telemetry_config` - (Optional) Telemetry configuration. The service assigns default telemetry (a log group and `INFO` log levels) to every revision; Terraform tracks this block as written, so leaving it out does not produce drift against those defaults. [See below](#telemetry_config-block).
 * `timeout_seconds` - (Optional) Request timeout in seconds (3-900, default 30).
@@ -183,8 +183,16 @@ The following arguments are optional:
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
 * `regions` - (Optional) List of Regions for the endpoint. The maximum number of Regions per endpoint is a service quota, enforced by the API. Required for `PerRegion` endpoints, which need at least 2 distinct Regions: the home Region is added automatically, so list at least one other Region. Changing this forces a new resource to be created.
-* `scaling_config` - (Optional) Scaling limits for the endpoint, an object (assigned with `=`, not a block) with a single `max_environments` attribute: the maximum number of concurrent execution environments, minimum 2. When unset, the service applies account-level defaults and reports no value.
-* `throttle_config` - (Optional) Request throttling for the endpoint, an object (assigned with `=`, not a block) with a single `rate_limit` attribute: the maximum request rate in requests per second, quantized (`0`, `100`-`1000` in steps of 100, `2000`-`10000` in steps of 1000). When unset, the service applies account-level defaults and reports no value.
+* `scaling_config` - (Optional) Scaling limits for the endpoint, an object assigned with `=`. When unset, the service applies account-level defaults and reports no value. [See below](#scaling_config-block).
+* `throttle_config` - (Optional) Request throttling for the endpoint, an object assigned with `=`. When unset, the service applies account-level defaults and reports no value. [See below](#throttle_config-block).
+
+#### `scaling_config` Block
+
+* `max_environments` - (Required) Maximum number of concurrent execution environments the endpoint may scale to, minimum 2.
+
+#### `throttle_config` Block
+
+* `rate_limit` - (Required) Maximum request rate for the endpoint, in requests per second. The service only accepts quantized values: `0`, `100`-`1000` in steps of 100, and `2000`-`10000` in steps of 1000.
 
 ## Attribute Reference
 
