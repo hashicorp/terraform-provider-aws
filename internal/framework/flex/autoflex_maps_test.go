@@ -81,6 +81,10 @@ type awsMapOfListOfString struct {
 	Field1 map[string][]string
 }
 
+type awsMapOfListOfInt32 struct {
+	Field1 map[string][]int32
+}
+
 type awsMapOfInt struct {
 	Field1 map[string]int
 }
@@ -527,6 +531,83 @@ func TestExpandMapOfInt32Pointer(t *testing.T) {
 			},
 			Target:     &awsMapOf[string]{},
 			WantTarget: &awsMapOf[string]{},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{})
+}
+
+func TestExpandMapOfListOfString(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"single value": {
+			Source: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("y"),
+						types.StringValue("z"),
+					}),
+				}),
+			},
+			Target: &awsMapOfListOfString{},
+			WantTarget: &awsMapOfListOfString{
+				Field1: map[string][]string{
+					"x": {"y", "z"},
+				},
+			},
+		},
+		"multiple values": {
+			Source: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("y"),
+						types.StringValue("z"),
+					}),
+					"a": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("b"),
+						types.StringValue("c"),
+					}),
+				}),
+			},
+			Target: &awsMapOfListOfString{},
+			WantTarget: &awsMapOfListOfString{
+				Field1: map[string][]string{
+					"x": {"y", "z"},
+					"a": {"b", "c"},
+				},
+			},
+		},
+		"empty value": {
+			Source: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{}),
+			},
+			Target: &awsMapOfListOfString{},
+			WantTarget: &awsMapOfListOfString{
+				Field1: map[string][]string{},
+			},
+		},
+		"null value": {
+			Source: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfNull[fwtypes.ListValueOf[types.String]](ctx),
+			},
+			Target: &awsMapOfListOfString{},
+			WantTarget: &awsMapOfListOfString{
+				Field1: nil,
+			},
+		},
+		"invalid conversion": {
+			Source: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("y"),
+					}),
+				}),
+			},
+			Target:     &awsMapOfListOfInt32{},
+			WantTarget: &awsMapOfListOfInt32{},
 		},
 	}
 
