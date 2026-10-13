@@ -12,8 +12,8 @@ Manages the resource policy of an Amazon EventBridge V2 event bus. Use a resourc
 
 There are two ways to give another account access to an event bus:
 
-* **AWS Resource Access Manager (AWS RAM)** (recommended). Share the event bus with one of the EventBridge V2 managed permissions; see [Sharing a Custom Event Bus with other accounts](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-sharing.html). AWS RAM writes the event bus's `AWS_RAM` policy for you, gives you one place to see and revoke what you have shared, and works with AWS Organizations.
-* **A resource policy managed by this resource.** Use it when you need an explicit `Deny`, a condition key, or a grant that no managed permission expresses, either on its own or alongside an AWS RAM share. AWS RAM does not see this policy, so you own tracking it.
+* **AWS Resource Access Manager (AWS RAM)** (recommended). Share the event bus with one of the EventBridge V2 managed permissions; see [Sharing with Another Account](eventbridgev2_event_bus.html#sharing-with-another-account). AWS RAM writes the event bus's `AWS_RAM` policy for you, gives you one place to see and revoke what you have shared, and works with AWS Organizations. The event bus also appears in the other account's [`aws_eventbridgev2_event_buses`](../d/eventbridgev2_event_buses.html) results.
+* **A resource policy managed by this resource.** Use it when you need an explicit `Deny`, a condition key, or a grant that no managed permission expresses, either on its own or alongside an AWS RAM share. AWS RAM does not see this policy, so you own tracking it. An event bus shared only through a resource policy is not listed by `aws_eventbridgev2_event_buses` in the other account; give that account the event bus ARN instead.
 
 EventBridge evaluates both policies when it authorizes a caller from another account, and an explicit `Deny` in either policy overrides an `Allow` in the other. The other account also needs the same actions in its own identity policies. See [Write a custom resource policy](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-sharing.html#eb-custom-bus-access-policy).
 
