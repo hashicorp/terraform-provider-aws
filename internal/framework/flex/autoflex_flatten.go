@@ -930,6 +930,48 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				}
 			}
 
+		case reflect.Int32:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]int32 -> types.Map(OfInt32).
+				//
+				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.Int32Type))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().(map[string]int32)
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+					logAttrKeySourceSize: len(from),
+				})
+				elements := make(map[string]attr.Value, len(from))
+				for k, v := range from {
+					elements[k] = types.Int32Value(v)
+				}
+				map_, d := types.MapValue(types.Int32Type, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromMap(ctx, map_)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:

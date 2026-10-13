@@ -751,45 +751,71 @@ func TestFlattenMapOfString(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
-// This error message is copied from `basetypes.NewMapValue`
-// https://github.com/hashicorp/terraform-plugin-framework/blob/00badb1b0584b22f3799c474b9f1cea4b49e5163/types/basetypes/map_value.go#L70
-// If the error message changes, this will need to be updated.
-func diagInvalidMapElementType(sourceElementType attr.Type, key string, targetElementType attr.Type) diag.Diagnostics {
-	return diag.Diagnostics{
-		diag.NewErrorDiagnostic(
-			"Invalid Map Element Type",
-			"While creating a Map value, an invalid element was detected. "+
-				"A Map must use the single, given element type. "+
-				"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-				fmt.Sprintf("Map Element Type: %s\n", targetElementType.String())+
-				fmt.Sprintf("Map Key (%s) Element Type: %s", key, sourceElementType.String()),
-		),
+func TestFlattenMapOfInt32(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"single value": {
+			Source: &awsMapOf[int32]{
+				Field1: map[string]int32{
+					"x": 42,
+				},
+			},
+			Target: &tfMapOf[types.Int32]{},
+			WantTarget: &tfMapOf[types.Int32]{
+				Field1: fwtypes.NewMapValueOfMust[types.Int32](ctx, map[string]attr.Value{
+					"x": types.Int32Value(42),
+				}),
+			},
+		},
+		"multiple values": {
+			Source: &awsMapOf[int32]{
+				Field1: map[string]int32{
+					"x": 42,
+					"y": 43,
+				},
+			},
+			Target: &tfMapOf[types.Int32]{},
+			WantTarget: &tfMapOf[types.Int32]{
+				Field1: fwtypes.NewMapValueOfMust[types.Int32](ctx, map[string]attr.Value{
+					"x": types.Int32Value(42),
+					"y": types.Int32Value(43),
+				}),
+			},
+		},
+		"empty value": {
+			Source: &awsMapOf[int32]{
+				Field1: map[string]int32{},
+			},
+			Target: &tfMapOf[types.Int32]{},
+			WantTarget: &tfMapOf[types.Int32]{
+				Field1: fwtypes.NewMapValueOfEmpty[types.Int32](ctx),
+			},
+		},
+		"null value": {
+			Source: &awsMapOf[int32]{
+				Field1: nil,
+			},
+			Target: &tfMapOf[types.Int32]{},
+			WantTarget: &tfMapOf[types.Int32]{
+				Field1: fwtypes.NewMapValueOfNull[types.Int32](ctx),
+			},
+		},
+		"invalid conversion": {
+			Source: &awsMapOf[int32]{
+				Field1: map[string]int32{
+					"x": 42,
+				},
+			},
+			Target:        &tfMapOf[types.String]{},
+			ExpectedDiags: diagInvalidMapElementType(types.Int32Type, "x", types.StringType),
+		},
 	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
-
-// func TestFlattenMapOfInt32(t *testing.T) {
-// 	t.Parallel()
-
-// 	ctx := context.Background()
-
-// 	testCases := autoFlexTestCases{
-// 		"map of int32": {
-// 			Source: &awsMapOf[int32]{
-// 				Field1: map[string]int32{
-// 					"x": 42,
-// 				},
-// 			},
-// 			Target: &tfMapOf[types.Int32]{},
-// 			WantTarget: &tfMapOf[types.Int32]{
-// 				Field1: fwtypes.NewMapValueOfMust[types.Int32](ctx, map[string]attr.Value{
-// 					"x": types.Int32Value(42),
-// 				}),
-// 			},
-// 		},
-// 	}
-
-// 	runAutoFlattenTestCases(t, testCases, runChecks{})
-// }
 
 func TestFlattenMapBlock(t *testing.T) {
 	t.Parallel()
@@ -930,4 +956,20 @@ func TestFlattenMapBlock(t *testing.T) {
 		},
 	}
 	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+// This error message is copied from `basetypes.NewMapValue`
+// https://github.com/hashicorp/terraform-plugin-framework/blob/00badb1b0584b22f3799c474b9f1cea4b49e5163/types/basetypes/map_value.go#L70
+// If the error message changes, this will need to be updated.
+func diagInvalidMapElementType(sourceElementType attr.Type, key string, targetElementType attr.Type) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.NewErrorDiagnostic(
+			"Invalid Map Element Type",
+			"While creating a Map value, an invalid element was detected. "+
+				"A Map must use the single, given element type. "+
+				"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+				fmt.Sprintf("Map Element Type: %s\n", targetElementType.String())+
+				fmt.Sprintf("Map Key (%s) Element Type: %s", key, sourceElementType.String()),
+		),
+	}
 }
