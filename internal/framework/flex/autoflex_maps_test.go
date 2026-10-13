@@ -253,6 +253,17 @@ func TestExpandMaps(t *testing.T) {
 			Target:     &awsSingleStringValue{},
 			WantTarget: &awsSingleStringValue{},
 		},
+		"incompatible map value type": {
+			Source: &tfMapOfMapOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+			Target:     &awsMapOfInt{},
+			WantTarget: &awsMapOfInt{},
+		},
 	}
 
 	runAutoExpandTestCases(t, testCases, runChecks{})
