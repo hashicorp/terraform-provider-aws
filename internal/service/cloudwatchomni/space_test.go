@@ -62,7 +62,7 @@ func testAccSpace_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_access_role_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("space_arn"), checkSpaceARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("space_id"), checkSpaceID),
@@ -178,7 +178,7 @@ func testAccSpace_name(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Space/name/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"name":          config.StringVariable(name1),
+					acctest.CtName:  config.StringVariable(name1),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, t, resourceName, &space),
@@ -196,7 +196,7 @@ func testAccSpace_name(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Space/name/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"name":          config.StringVariable(name2),
+					acctest.CtName:  config.StringVariable(name2),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, t, resourceName, &space),
@@ -214,7 +214,7 @@ func testAccSpace_name(t *testing.T) {
 	})
 }
 
-func testAccSpace_encryptionCreateAWS_OWNED(t *testing.T) {
+func testAccSpace_encryptionCreateAWS_OWNED(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
