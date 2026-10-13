@@ -40,6 +40,7 @@ resource "aws_cloudwatchomni_domain" "test" {
   name               = var.rName
   identity_providers = ["IAM"]
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

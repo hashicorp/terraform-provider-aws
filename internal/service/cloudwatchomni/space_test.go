@@ -29,33 +29,6 @@ var (
 	checkSpaceID  = knownvalue.StringRegexp(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`))
 )
 
-// TestAccCloudWatchOmniSpace_serial serializes every Space test.
-//
-// CloudWatch Omni permits exactly one space per account per region
-// ("ConflictException: A space already exists for account <id> in region
-// <region>"), so tests sharing a region cannot run concurrently. Running them
-// in parallel makes whichever test loses the race fail on CreateSpace.
-// envVarDomainID supplies an existing CloudWatch Omni domain to create test
-// spaces under. The tests cannot create one: an account may hold only a single
-// domain, and in an Organization with CloudWatch Omni trusted access
-// account-level domain creation is refused and spaces must use the
-// organization domain.
-const envVarDomainID = "AWS_CLOUDWATCHOMNI_DOMAIN_ID"
-
-func TestAccCloudWatchOmniSpace_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccSpace_basic,
-		acctest.CtDisappears: testAccSpace_disappears,
-		"agentCore":          testAccCloudWatchOmniSpace_agentCore,
-		"encryption":         testAccCloudWatchOmniSpace_encryption,
-		"update":             testAccCloudWatchOmniSpace_update,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccSpace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var space awstypes.Space
@@ -85,6 +58,7 @@ func testAccSpace_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_core_evaluation_role_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_access_role_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_id"), knownvalue.NotNull()),
@@ -148,12 +122,10 @@ func testAccSpace_disappears(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOmniSpace_agentCore(t *testing.T) {
+func testAccSpace_agentCore(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
-	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -166,24 +138,32 @@ func testAccCloudWatchOmniSpace_agentCore(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_agentCore(rName, domainID),
+				ConfigDirectory: config.StaticDirectory("testdata/Space/agent_core_evaluation_role_arn/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, t, resourceName, &space),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "agent_core_evaluation_role_arn"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_core_evaluation_role_arn"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})
 }
 
-func testAccCloudWatchOmniSpace_encryption(t *testing.T) {
+func testAccSpace_name(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
-	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	name1, name2 := rName, acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -195,27 +175,50 @@ func testAccCloudWatchOmniSpace_encryption(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_encryption(rName, domainID),
+				ConfigDirectory: config.StaticDirectory("testdata/Space/name/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"name":          config.StringVariable(name1),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, t, resourceName, &space),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_strategy", "CUSTOMER_MANAGED"),
-					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_arn"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(name1)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/name/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"name":          config.StringVariable(name2),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(name2)),
+				},
 			},
 		},
 	})
 }
 
-func testAccCloudWatchOmniSpace_update(t *testing.T) {
+func testAccSpace_encryptionCreateAWS_OWNED(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var space1, space2 awstypes.Space
+	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
-	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -227,18 +230,125 @@ func testAccCloudWatchOmniSpace_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_basic(rName, domainID),
+				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.AWS_OWNED/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, t, resourceName, &space1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
+						names.AttrKMSKeyARN:   knownvalue.Null(),
+					})})),
+				},
 			},
 			{
-				Config: testAccSpaceConfig_basic(rNameUpdated, domainID),
+				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.AWS_OWNED/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "space_id"),
+				ImportStateVerifyIdentifierAttribute: "space_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.CUSTOMER_MANAGED/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, t, resourceName, &space2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyCustomerManaged),
+						names.AttrKMSKeyARN:   knownvalue.NotNull(),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func testAccSpace_encryptionCreateCUSTOMER_MANAGED(t *testing.T) {
+	ctx := acctest.Context(t)
+	var space awstypes.Space
+	resourceName := "aws_cloudwatchomni_space.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.CUSTOMER_MANAGED/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyCustomerManaged),
+						names.AttrKMSKeyARN:   knownvalue.NotNull(),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.CUSTOMER_MANAGED/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "space_id"),
+				ImportStateVerifyIdentifierAttribute: "space_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/encryption_strategy.AWS_OWNED/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
+						names.AttrKMSKeyARN:   knownvalue.Null(),
+					})})),
+				},
 			},
 		},
 	})
@@ -286,159 +396,4 @@ func testAccCheckSpaceExists(ctx context.Context, t *testing.T, n string, v *aws
 
 		return nil
 	}
-}
-
-func testAccSpaceConfig_basic(rName, domainID string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudwatch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchAgentServerPolicy"
-}
-
-resource "aws_cloudwatchomni_space" "test" {
-  name                 = %[1]q
-  domain_id            = %[2]q
-  data_access_role_arn = aws_iam_role.test.arn
-}
-`, rName, domainID)
-}
-
-func testAccSpaceConfig_agentCore(rName, domainID string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test_data_access" {
-  name = "%[1]s-data-access"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudwatch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_iam_role" "test_agent_core" {
-  name = "%[1]s-agent-core"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudwatch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_cloudwatchomni_space" "test" {
-  name                           = %[1]q
-  domain_id                      = %[2]q
-  data_access_role_arn           = aws_iam_role.test_data_access.arn
-  agent_core_evaluation_role_arn = aws_iam_role.test_agent_core.arn
-}
-`, rName, domainID)
-}
-
-func testAccSpaceConfig_encryption(rName, domainID string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudwatch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_kms_key" "test" {
-  description = %[1]q
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow CloudWatch Omni Service"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudwatch.amazonaws.com"
-        }
-        Action = [
-          "kms:Decrypt",
-          "kms:DescribeKey",
-          "kms:Encrypt",
-          "kms:GenerateDataKey*",
-          "kms:ReEncrypt*"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_cloudwatchomni_space" "test" {
-  name                 = %[1]q
-  domain_id            = %[2]q
-  data_access_role_arn = aws_iam_role.test.arn
-
-  encryption_configuration {
-    encryption_strategy = "CUSTOMER_MANAGED"
-    kms_key_arn         = aws_kms_key.test.arn
-  }
-}
-`, rName, domainID)
 }

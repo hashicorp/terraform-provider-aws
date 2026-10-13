@@ -27,9 +27,13 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 			"List_regionOverride":  testAccDomain_List_regionOverride,
 		},
 		"Space": {
-			acctest.CtBasic:      testAccSpace_basic,
-			acctest.CtDisappears: testAccSpace_disappears,
-			"Identity":           testAccCloudWatchOmniSpace_identitySerial,
+			acctest.CtBasic:               testAccSpace_basic,
+			acctest.CtDisappears:          testAccSpace_disappears,
+			"agentCore":                   testAccSpace_agentCore,
+			acctest.CtName:                testAccSpace_name,
+			"encryption.AWS_OWNED":        testAccSpace_encryptionCreateAWS_OWNED,
+			"encryption.CUSTOMER_MANAGED": testAccSpace_encryptionCreateCUSTOMER_MANAGED,
+			"Identity":                    testAccCloudWatchOmniSpace_identitySerial,
 		},
 	}
 
