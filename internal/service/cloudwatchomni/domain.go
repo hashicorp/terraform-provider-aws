@@ -80,7 +80,7 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z]+(-[0-9a-z]+)*$`), "must contain only lowercase letters, numbers, and single hyphens, and must begin and end with a letter or number"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`), "use lowercase letters, numbers, and hyphens. Start and end with a letter or number."),
 				},
 			},
 		},
@@ -258,7 +258,7 @@ func (r *domainResource) flatten(ctx context.Context, domain *awstypes.Domain, d
 		domain.IdentityProviderConfiguration = nil
 	}
 
-	return fwflex.Flatten(ctx, domain, data, fwflex.WithIgnoredFieldNamesAppend("Region"))
+	return fwflex.Flatten(ctx, domain, data)
 }
 
 func findDomainByID(ctx context.Context, conn *cloudwatchomni.Client, id string) (*awstypes.Domain, error) {

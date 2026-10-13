@@ -7,14 +7,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,7 +30,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,8 +45,15 @@ import (
 // silently fails to detect drift, cannot be changed in place, cannot survive
 // import, and cannot honour provider default_tags. Revisit once the service adds
 // tag read APIs.
-//
+
 // @FrameworkResource("aws_cloudwatchomni_space", name="Space")
+// @IdentityAttribute("space_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types;awstypes;awstypes.Space")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
+// @Testing(importStateIdAttribute="space_id")
+// @Testing(tagsTest=false)
 func newSpaceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &spaceResource{}
 
@@ -49,28 +62,18 @@ func newSpaceResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type spaceResource struct {
 	framework.ResourceWithModel[spaceResourceModel]
-}
-
-// ImportState imports by space ID. Note this passes through to "space_id" rather
-// than "id": the resource has no "id" attribute, and Read looks the space up by
-// "space_id".
-func (*spaceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("space_id"), request, response)
+	framework.WithImportByIdentity
 }
 
 func (r *spaceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrName: schema.StringAttribute{
-				Required:    true,
-				Description: "Name of the space (3-64 characters).",
-			},
-			"domain_id": schema.StringAttribute{
-				Required: true,
+			"agent_core_evaluation_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "ID of the domain to create the space in.",
 			},
 			"data_access_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -78,31 +81,31 @@ func (r *spaceResource) Schema(ctx context.Context, request resource.SchemaReque
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "ARN of the IAM role for data access.",
 			},
-			"agent_core_evaluation_role_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+			"domain_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"domain_id": schema.StringAttribute{
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "ARN of the IAM role for AgentCore online evaluation.",
 			},
-			"space_id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Unique ID of the space.",
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 64),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`), "use lowercase letters, numbers, and hyphens. Start and end with a letter or number."),
+				},
 			},
-			"space_arn": schema.StringAttribute{
-				Computed:    true,
-				Description: "ARN of the space.",
-			},
-			"domain_arn": schema.StringAttribute{
-				Computed:    true,
-				Description: "ARN of the domain.",
-			},
+			"space_arn": framework.ARNAttributeComputedOnly(),
+			"space_id":  framework.IDAttribute(),
 			names.AttrStatus: schema.StringAttribute{
-				Computed:    true,
-				Description: "Status of the space.",
+				CustomType: fwtypes.StringEnumType[awstypes.SpaceStatus](),
+				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -114,39 +117,28 @@ func (r *spaceResource) Schema(ctx context.Context, request resource.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"encryption_strategy": schema.StringAttribute{
-							Required:    true,
-							Description: "Encryption strategy (AWS_OWNED, CUSTOMER_MANAGED).",
+							CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
+							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.EncryptionStrategyCustomerManaged,
+									path.MatchRelative().AtParent().AtName(names.AttrKMSKeyARN),
+								),
+								tfstringvalidator.ConflictsWithWhenEquals(
+									awstypes.EncryptionStrategyAwsOwned,
+									path.MatchRelative().AtParent().AtName(names.AttrKMSKeyARN),
+								),
+							},
 						},
 						names.AttrKMSKeyARN: schema.StringAttribute{
-							CustomType:  fwtypes.ARNType,
-							Optional:    true,
-							Description: "ARN of the KMS key for CUSTOMER_MANAGED encryption.",
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
 						},
 					},
 				},
-				Description: "Encryption configuration for the space's data at rest.",
 			},
 		},
-		Description: "Manages a CloudWatch Omni Space.",
 	}
-}
-
-type spaceResourceModel struct {
-	framework.WithRegionModel
-	Name                       types.String                                                  `tfsdk:"name"`
-	DomainID                   types.String                                                  `tfsdk:"domain_id"`
-	DataAccessRoleARN          fwtypes.ARN                                                   `tfsdk:"data_access_role_arn"`
-	AgentCoreEvaluationRoleARN fwtypes.ARN                                                   `tfsdk:"agent_core_evaluation_role_arn"`
-	EncryptionConfiguration    fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
-	SpaceID                    types.String                                                  `tfsdk:"space_id"`
-	SpaceARN                   types.String                                                  `tfsdk:"space_arn"`
-	DomainARN                  types.String                                                  `tfsdk:"domain_arn"`
-	Status                     types.String                                                  `tfsdk:"status"`
-}
-
-type encryptionConfigurationModel struct {
-	EncryptionStrategy types.String `tfsdk:"encryption_strategy"`
-	KMSKeyARN          fwtypes.ARN  `tfsdk:"kms_key_arn"`
 }
 
 func (r *spaceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -158,6 +150,7 @@ func (r *spaceResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().CloudWatchOmniClient(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input cloudwatchomni.CreateSpaceInput
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
@@ -166,38 +159,16 @@ func (r *spaceResource) Create(ctx context.Context, request resource.CreateReque
 
 	output, err := conn.CreateSpace(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.Space, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output.Space, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	normalizeEncryptionConfiguration(ctx, output.Space, &data)
-
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
-}
-
-// normalizeEncryptionConfiguration drops the encryption_configuration block when
-// the API reports the implicit service default.
-//
-// CreateSpace/GetSpace always return an encryptionConfiguration, defaulting to
-// AWS_OWNED with no KMS key even when the caller omitted the block entirely.
-// Flattening that verbatim turns an omitted block into a one-element list,
-// which Terraform rejects as "Provider produced inconsistent result after
-// apply" and would otherwise cause a perpetual diff. Omitting the block and
-// explicitly specifying AWS_OWNED are equivalent to the service, so the
-// absent form is canonical.
-func normalizeEncryptionConfiguration(ctx context.Context, space *awstypes.Space, data *spaceResourceModel) {
-	if space == nil || space.EncryptionConfiguration == nil {
-		return
-	}
-	if space.EncryptionConfiguration.EncryptionStrategy == awstypes.EncryptionStrategyAwsOwned &&
-		aws.ToString(space.EncryptionConfiguration.KmsKeyArn) == "" {
-		data.EncryptionConfiguration = fwtypes.NewListNestedObjectValueOfEmpty[encryptionConfigurationModel](ctx)
-	}
 }
 
 func (r *spaceResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -209,32 +180,133 @@ func (r *spaceResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	conn := r.Meta().CloudWatchOmniClient(ctx)
 
-	output, err := findSpaceByID(ctx, conn, data.SpaceID.ValueString(), r.Meta().Region(ctx))
+	spaceID := fwflex.StringValueFromFramework(ctx, data.SpaceID)
+	output, err := findSpaceByID(ctx, conn, spaceID)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.SpaceID.ValueString())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, spaceID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	normalizeEncryptionConfiguration(ctx, output, &data)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
 
-	// GetSpace returns domainArn but not domainId, so recover the ID from the ARN.
-	// Without this, domain_id would be null after import (the configured value is
-	// only otherwise preserved because it is already present in prior state).
-	if domainID, ok := domainIDFromARN(aws.ToString(output.DomainArn)); ok {
-		data.DomainID = fwflex.StringValueToFramework(ctx, domainID)
+func (r *spaceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new spaceResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	conn := r.Meta().CloudWatchOmniClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		spaceID := fwflex.StringValueFromFramework(ctx, new.SpaceID)
+		input := cloudwatchomni.UpdateSpaceInput{
+			SpaceId: aws.String(spaceID),
+		}
+
+		if !new.Name.Equal(old.Name) {
+			input.Name = fwflex.StringFromFramework(ctx, new.Name)
+		}
+
+		if !new.EncryptionConfiguration.Equal(old.EncryptionConfiguration) {
+			var encryptionConfig awstypes.EncryptionConfiguration
+			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.EncryptionConfiguration, &encryptionConfig))
+			if response.Diagnostics.HasError() {
+				return
+			}
+			input.EncryptionConfiguration = &encryptionConfig
+		}
+
+		output, err := conn.UpdateSpace(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, spaceID)
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output.Space, &new))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+}
+
+func (r *spaceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data spaceResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudWatchOmniClient(ctx)
+
+	spaceID := fwflex.StringValueFromFramework(ctx, data.SpaceID)
+	input := cloudwatchomni.DeleteSpaceInput{
+		SpaceId: aws.String(spaceID),
+	}
+	if _, err := conn.DeleteSpace(ctx, &input); err != nil {
+		// DeleteSpace cannot report "already gone" distinguishably (see
+		// findSpaceByID), so confirm absence before surfacing the error.
+		_, ferr := findSpaceByID(ctx, conn, spaceID)
+
+		if retry.NotFound(ferr) {
+			return
+		}
+
+		if ferr != nil {
+			smerr.AddError(ctx, &response.Diagnostics, errors.Join(err, ferr), smerr.ID, spaceID)
+			return
+		}
+
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, spaceID)
+		return
+	}
+
+	const timeout = 5 * time.Minute
+	_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+		return findSpaceByID(ctx, conn, spaceID)
+	})
+
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, spaceID)
+		return
+	}
+}
+
+func (r *spaceResource) flatten(ctx context.Context, space *awstypes.Space, data *spaceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// Drop the encryption_configuration block when the API reports the implicit service default.
+	if data.EncryptionConfiguration.IsNull() && space.EncryptionConfiguration != nil && space.EncryptionConfiguration.EncryptionStrategy == awstypes.EncryptionStrategyAwsOwned {
+		space.EncryptionConfiguration = nil
+	}
+	diags.Append(fwflex.Flatten(ctx, space, data)...)
+	// Recover the domain ID from the ARN.
+	if domainID, ok := domainIDFromARN(aws.ToString(space.DomainArn)); ok {
+		data.DomainID = fwflex.StringValueToFramework(ctx, domainID)
+	}
+	return diags
 }
 
 // domainIDFromARN extracts the domain ID from a domain ARN of the form
@@ -260,123 +332,31 @@ func domainIDFromARN(domainARN string) (string, bool) {
 	return id, true
 }
 
-func (r *spaceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new spaceResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
-	if response.Diagnostics.HasError() {
-		return
-	}
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().CloudWatchOmniClient(ctx)
-
-	if !new.Name.Equal(old.Name) || !new.EncryptionConfiguration.Equal(old.EncryptionConfiguration) {
-		var input cloudwatchomni.UpdateSpaceInput
-		input.SpaceId = fwflex.StringFromFramework(ctx, new.SpaceID)
-
-		if !new.Name.Equal(old.Name) {
-			input.Name = fwflex.StringFromFramework(ctx, new.Name)
-		}
-
-		if !new.EncryptionConfiguration.Equal(old.EncryptionConfiguration) {
-			var encryptionConfig awstypes.EncryptionConfiguration
-			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.EncryptionConfiguration, &encryptionConfig))
-			if response.Diagnostics.HasError() {
-				return
-			}
-			input.EncryptionConfiguration = &encryptionConfig
-		}
-
-		output, err := conn.UpdateSpace(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.SpaceID.ValueString())
-			return
-		}
-
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.Space, &new))
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		normalizeEncryptionConfiguration(ctx, output.Space, &new)
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
-}
-
-func (r *spaceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data spaceResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().CloudWatchOmniClient(ctx)
-	region := r.Meta().Region(ctx)
-	id := data.SpaceID.ValueString()
-
-	input := cloudwatchomni.DeleteSpaceInput{
-		SpaceId: fwflex.StringFromFramework(ctx, data.SpaceID),
-	}
-
-	if _, err := conn.DeleteSpace(ctx, &input); err != nil {
-		// DeleteSpace cannot report "already gone" distinguishably (see
-		// findSpaceByID), so confirm absence before surfacing the error.
-		_, ferr := findSpaceByID(ctx, conn, id, region)
-
-		if retry.NotFound(ferr) {
-			return
-		}
-
-		if ferr != nil {
-			smerr.AddError(ctx, &response.Diagnostics, errors.Join(err, ferr), smerr.ID, id)
-			return
-		}
-
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
-		return
-	}
-
-	if _, err := waitSpaceDeleted(ctx, conn, id, region, spaceDeletedTimeout); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
-		return
-	}
-}
-
-const spaceDeletedTimeout = 5 * time.Minute
-
-// waitSpaceDeleted blocks until the space is absent from ListSpaces.
+// findSpaceByID resolves a space scoped to the given region.
 //
-// There is no observable DELETING state: a space disappears from ListSpaces
-// once deleted. Deletion has been observed to be effectively synchronous, so
-// this normally returns on the first poll; it exists to absorb eventual
-// consistency.
-//
-//nolint:unparam // Mirrors the (*output, error) waiter convention; output is always nil.
-func waitSpaceDeleted(ctx context.Context, conn *cloudwatchomni.Client, id, region string, timeout time.Duration) (*awstypes.Space, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{"EXISTS"},
-		Target:  []string{},
-		Refresh: func(ctx context.Context) (any, string, error) {
-			out, err := findSpaceByID(ctx, conn, id, region)
-			if retry.NotFound(err) {
-				return nil, "", nil
-			}
-			if err != nil {
-				return nil, "", err
-			}
-			return out, "EXISTS", nil
-		},
-		Timeout:    timeout,
-		MinTimeout: 2 * time.Second,
+// ListSpaces is account-wide and returns spaces from every region, and unlike
+// GetSpace it reliably reports absence, so it is used as the existence oracle.
+// Only once the space is known to exist in this region is GetSpace called for
+// the full detail, which means a 403 from GetSpace surfaces as a real error
+// rather than being mistaken for deletion.
+func findSpaceByID(ctx context.Context, conn *cloudwatchomni.Client, id string) (*awstypes.Space, error) {
+	var inputLS cloudwatchomni.ListSpacesInput
+	spaces, err := findSpaces(ctx, conn, &inputLS, tfslices.WithFilter(func(v awstypes.SpaceSummary) bool {
+		return aws.ToString(v.SpaceId) == id && aws.ToString(v.Region) == conn.Options().Region
+	}))
+	if err != nil {
+		return nil, err
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	space, err := tfresource.AssertSingleValueResult(spaces)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, err
+	inputGS := cloudwatchomni.GetSpaceInput{
+		SpaceId: space.SpaceId,
+	}
+	return findSpace(ctx, conn, &inputGS)
 }
 
 // findSpace performs the raw GetSpace call.
@@ -400,40 +380,41 @@ func findSpace(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwat
 	return output.Space, nil
 }
 
-// findSpaceByID resolves a space scoped to the given region.
-//
-// ListSpaces is account-wide and returns spaces from every region, and unlike
-// GetSpace it reliably reports absence, so it is used as the existence oracle.
-// Only once the space is known to exist in this region is GetSpace called for
-// the full detail, which means a 403 from GetSpace surfaces as a real error
-// rather than being mistaken for deletion.
-func findSpaceByID(ctx context.Context, conn *cloudwatchomni.Client, id, region string) (*awstypes.Space, error) {
-	var found bool
+func findSpaces(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwatchomni.ListSpacesInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SpaceSummary]) ([]awstypes.SpaceSummary, error) {
+	return tfslices.CollectAndConcatWithError(listSpacePages(ctx, conn, input), optFns...)
+}
 
-	pages := cloudwatchomni.NewListSpacesPaginator(conn, &cloudwatchomni.ListSpacesInput{})
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
+func listSpacePages(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwatchomni.ListSpacesInput, optFns ...func(*cloudwatchomni.Options)) iter.Seq2[[]awstypes.SpaceSummary, error] {
+	return func(yield func([]awstypes.SpaceSummary, error) bool) {
+		pages := cloudwatchomni.NewListSpacesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Omni Spaces: %w", err))
+				return
+			}
 
-		for _, item := range page.Items {
-			if aws.ToString(item.SpaceId) == id && aws.ToString(item.Region) == region {
-				found = true
-				break
+			if !yield(page.Items, nil) {
+				return
 			}
 		}
-
-		if found {
-			break
-		}
 	}
+}
 
-	if !found {
-		return nil, &retry.NotFoundError{
-			Message: fmt.Sprintf("CloudWatch Omni Space (%s) not found in region %s", id, region),
-		}
-	}
+type spaceResourceModel struct {
+	framework.WithRegionModel
+	AgentCoreEvaluationRoleARN fwtypes.ARN                                                   `tfsdk:"agent_core_evaluation_role_arn"`
+	DataAccessRoleARN          fwtypes.ARN                                                   `tfsdk:"data_access_role_arn"`
+	DomainARN                  types.String                                                  `tfsdk:"domain_arn"`
+	DomainID                   types.String                                                  `tfsdk:"domain_id"`
+	EncryptionConfiguration    fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
+	Name                       types.String                                                  `tfsdk:"name"`
+	SpaceARN                   types.String                                                  `tfsdk:"space_arn"`
+	SpaceID                    types.String                                                  `tfsdk:"space_id"`
+	Status                     fwtypes.StringEnum[awstypes.SpaceStatus]                      `tfsdk:"status"`
+}
 
-	return findSpace(ctx, conn, &cloudwatchomni.GetSpaceInput{SpaceId: aws.String(id)})
+type encryptionConfigurationModel struct {
+	EncryptionStrategy fwtypes.StringEnum[awstypes.EncryptionStrategy] `tfsdk:"encryption_strategy"`
+	KMSKeyARN          fwtypes.ARN                                     `tfsdk:"kms_key_arn"`
 }

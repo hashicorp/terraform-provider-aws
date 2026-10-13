@@ -8,14 +8,25 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchomni "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+var (
+	checkSpaceARN = tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`space/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))
+	checkSpaceID  = knownvalue.StringRegexp(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`))
 )
 
 // TestAccCloudWatchOmniSpace_serial serializes every Space test.
@@ -35,8 +46,8 @@ func TestAccCloudWatchOmniSpace_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccCloudWatchOmniSpace_basic,
-		acctest.CtDisappears: testAccCloudWatchOmniSpace_disappears,
+		acctest.CtBasic:      testAccSpace_basic,
+		acctest.CtDisappears: testAccSpace_disappears,
 		"agentCore":          testAccCloudWatchOmniSpace_agentCore,
 		"encryption":         testAccCloudWatchOmniSpace_encryption,
 		"update":             testAccCloudWatchOmniSpace_update,
@@ -45,12 +56,10 @@ func TestAccCloudWatchOmniSpace_serial(t *testing.T) {
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccCloudWatchOmniSpace_basic(t *testing.T) {
+func testAccSpace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
-	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -63,20 +72,34 @@ func testAccCloudWatchOmniSpace_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_basic(rName, domainID),
+				ConfigDirectory: config.StaticDirectory("testdata/Space/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &space, t),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "data_access_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "space_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "space_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_arn"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_access_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("domain_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("space_arn"), checkSpaceARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("space_id"), checkSpaceID),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.SpaceStatusActive)),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Space/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -87,12 +110,10 @@ func testAccCloudWatchOmniSpace_basic(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOmniSpace_disappears(t *testing.T) {
+func testAccSpace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var space awstypes.Space
 	resourceName := "aws_cloudwatchomni_space.test"
-	domainID := acctest.SkipIfEnvVarNotSet(t, envVarDomainID)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -105,12 +126,18 @@ func testAccCloudWatchOmniSpace_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpaceConfig_basic(rName, domainID),
+				ConfigDirectory: config.StaticDirectory("testdata/Space/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &space, t),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatchomni.ResourceSpace, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -141,7 +168,7 @@ func testAccCloudWatchOmniSpace_agentCore(t *testing.T) {
 			{
 				Config: testAccSpaceConfig_agentCore(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &space, t),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_core_evaluation_role_arn"),
 				),
@@ -170,7 +197,7 @@ func testAccCloudWatchOmniSpace_encryption(t *testing.T) {
 			{
 				Config: testAccSpaceConfig_encryption(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &space, t),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_strategy", "CUSTOMER_MANAGED"),
@@ -202,14 +229,14 @@ func testAccCloudWatchOmniSpace_update(t *testing.T) {
 			{
 				Config: testAccSpaceConfig_basic(rName, domainID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &space1, t),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccSpaceConfig_basic(rNameUpdated, domainID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &space2, t),
+					testAccCheckSpaceExists(ctx, t, resourceName, &space2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
@@ -226,7 +253,7 @@ func testAccCheckSpaceDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			_, err := tfcloudwatchomni.FindSpaceByID(ctx, conn, rs.Primary.Attributes["space_id"], acctest.Region())
+			_, err := tfcloudwatchomni.FindSpaceByID(ctx, conn, rs.Primary.Attributes["space_id"])
 			if retry.NotFound(err) {
 				continue
 			}
@@ -241,7 +268,7 @@ func testAccCheckSpaceDestroy(ctx context.Context, t *testing.T) resource.TestCh
 	}
 }
 
-func testAccCheckSpaceExists(ctx context.Context, n string, v *awstypes.Space, t *testing.T) resource.TestCheckFunc {
+func testAccCheckSpaceExists(ctx context.Context, t *testing.T, n string, v *awstypes.Space) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -250,7 +277,7 @@ func testAccCheckSpaceExists(ctx context.Context, n string, v *awstypes.Space, t
 
 		conn := acctest.ProviderMeta(ctx, t).CloudWatchOmniClient(ctx)
 
-		output, err := tfcloudwatchomni.FindSpaceByID(ctx, conn, rs.Primary.Attributes["space_id"], acctest.Region())
+		output, err := tfcloudwatchomni.FindSpaceByID(ctx, conn, rs.Primary.Attributes["space_id"])
 		if err != nil {
 			return err
 		}
