@@ -149,7 +149,7 @@ This resource supports the following arguments:
 
 ### `spec` Block
 
-* `grpc_route` - (Optional) GRPC routing information for the route. See [`spec.grpc_route` Block](#specgrpc_route-block) for details.
+* `grpc_route` - (Optional) gRPC routing information for the route. See [`spec.grpc_route` Block](#specgrpc_route-block) for details.
 * `http2_route` - (Optional) HTTP/2 routing information for the route. See [`spec.http2_route` Block](#spechttp2_route-block) for details.
 * `http_route` - (Optional) HTTP routing information for the route. See [`spec.http_route` Block](#spechttp_route-block) for details.
 * `priority` - (Optional) Priority for the route, between `0` and `1000`. Routes are matched based on the specified value, where `0` is the highest priority.

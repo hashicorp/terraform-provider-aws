@@ -49,7 +49,7 @@ The following arguments are optional:
 ### Protocol
 
 * `nfs` - Network File System (NFS) protocol that DataSync uses to access your FSx ONTAP file system. See [NFS](#nfs) below.
-* `smb` - Server Message Block (SMB) protocol that DataSync uses to access your FSx ONTAP file system. See [SMB] (#smb) below.
+* `smb` - Server Message Block (SMB) protocol that DataSync uses to access your FSx ONTAP file system. See [SMB](#smb) below.
 
 ### NFS
 

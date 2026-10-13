@@ -21,7 +21,7 @@ data "aws_bedrock_use_case_for_model_access" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source does not support any arguments.
 
 ## Attribute Reference
 

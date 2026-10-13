@@ -89,23 +89,23 @@ jobs:
           path: |
             ${{ env.GOBIN_PATH }}
             ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum', '.ci/tools/main.go') }}
+      # Install every tool imported by .ci/tools/main.go, the single source of
+      # truth for the toolset. Do not hardcode the list here: readers trust an
+      # exact cache hit to contain every tool they need.
       - name: Install tools
         if: steps.cache-tools.outputs.cache-hit != 'true'
         run: |
           cd .ci/tools
-          go install \
-            github.com/YakDriver/copyplop \
-            github.com/YakDriver/swissshepherd \
-            github.com/golangci/golangci-lint/v2/cmd/golangci-lint \
-            github.com/hashicorp/go-changelog/cmd/changelog-build \
-            github.com/katbyte/tctest \
-            github.com/katbyte/terrafmt \
-            github.com/pavius/impi/cmd/impi \
-            github.com/rhysd/actionlint/cmd/actionlint \
-            github.com/terraform-linters/tflint \
-            golang.org/x/tools/cmd/stringer \
-            mvdan.cc/gofumpt
+          # -e: the imports are main packages, which go list otherwise rejects.
+          tools=$(go list -e -tags tools -f '{{join .Imports " "}}' .)
+          if [[ -z "$tools" ]]; then
+            echo "::error::No tools found in .ci/tools/main.go"
+            exit 1
+          fi
+          echo "Installing: $tools"
+          # shellcheck disable=SC2086
+          go install $tools
       - name: Save tools cache
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: steps.cache-tools.outputs.cache-hit != 'true'
@@ -115,7 +115,7 @@ jobs:
           path: |
             ${{ env.GOBIN_PATH }}
             ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+          key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum', '.ci/tools/main.go') }}
 
   go_build:
     name: go build

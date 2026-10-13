@@ -131,7 +131,7 @@ The following arguments are optional:
 * `data_point_drill_up_down_option` - (Optional) Drill-down options of data points in a dashboard. See [`data_point_drill_up_down_option`](#data_point_drill_up_down_option-block).
 * `data_point_menu_label_option` - (Optional) Data point menu label options of a dashboard. See [`data_point_menu_label_option`](#data_point_menu_label_option-block).
 * `data_point_tooltip_option` - (Optional) Data point tool tip options of a dashboard. See [`data_point_tooltip_option`](#data_point_tooltip_option-block).
-* `export_to_csv_option` - (Optional) Export to .csv option. See [`export_to_csv_option`](#export_to_csv_option-block).
+* `export_to_csv_option` - (Optional) Export to `.csv` option. See [`export_to_csv_option`](#export_to_csv_option-block).
 * `export_with_hidden_fields_option` - (Optional) Whether hidden fields are exported with a dashboard. See [`export_with_hidden_fields_option`](#export_with_hidden_fields_option-block).
 * `sheet_controls_option` - (Optional) Sheet controls option. See [`sheet_controls_option`](#sheet_controls_option-block).
 * `sheet_layout_element_maximization_option` - (Optional) Sheet layout maximization options of a dashboard. See [`sheet_layout_element_maximization_option`](#sheet_layout_element_maximization_option-block).

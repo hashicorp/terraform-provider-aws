@@ -12,7 +12,7 @@ Provides information for multiple EC2 Transit Gateway Route Tables, such as thei
 
 ## Example Usage
 
-The following shows outputting all Transit Gateway Route Table Ids.
+The following shows outputting all Transit Gateway Route Table IDs.
 
 ```terraform
 data "aws_ec2_transit_gateway_route_tables" "example" {}

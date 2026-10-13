@@ -49,8 +49,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `created_by` - Creator of the project.
-* `domain_id` - Id of the project's DataZone domain.
-* `id` - Id of the project.
+* `domain_id` - ID of the project's DataZone domain.
+* `id` - ID of the project.
 * `name` - Name of the project.
 * `created_at` - Timestamp of when the project was made.
 * `description` - Description of the project.
