@@ -11,5 +11,5 @@ while IFS= read -r line; do
 done < <(grep -E '^[[:space:]]+github\.com/aws/aws-sdk-go-v2' go.mod| grep -v indirect | cut -f2 | cut -d ' ' -f1)
 for val in "${StringArray[@]}"; do
   go get $val && go mod tidy
-  git add --update && git commit --message "go get $val."
+  git add --update && git commit --message "go get $val." || true
 done
