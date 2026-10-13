@@ -185,8 +185,6 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
-// findSecretVersionForExistence uses ListSecretVersionIds, which (unlike GetSecretValue) doesn't
-// decrypt the value, so it doesn't depend on the KMS key being usable yet.
 func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretVersionExistsOutput, error) {
 	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
@@ -699,9 +697,6 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff sdkv2.Resour
 	return nil
 }
 
-// isKMSKeyCreatingError reports whether Secrets Manager rejected a call because it still sees the
-// secret's KMS key as Creating. This happens for a short time after a multi-Region replica key is
-// created, even once KMS DescribeKey reports the key as Enabled.
 func isKMSKeyCreatingError(err error) bool {
 	return errs.IsAErrorMessageContains[*types.PreconditionNotMetException](err, "is creating") ||
 		errs.IsAErrorMessageContains[*types.EncryptionFailure](err, "is creating") ||
