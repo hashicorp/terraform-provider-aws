@@ -171,7 +171,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return findSecretVersionForExistence(ctx, conn, secretID, versionID)
+		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
 	})
 
 	if err != nil {
@@ -185,8 +185,15 @@ type secretVersionExistsOutput struct {
 	VersionStages []string
 }
 
-func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretVersionExistsOutput, error) {
-	_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string, hasWriteOnly bool) (*secretVersionExistsOutput, error) {
+	if hasWriteOnly {
+		_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+		if err != nil {
+			return nil, err
+		}
+		return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
+	}
+	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +423,8 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID)
+		hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID, hasWriteOnly)
 
 		if err != nil {
 			return nil, err
@@ -697,6 +705,7 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff sdkv2.Resour
 	return nil
 }
 
+// KMS is eventually consistent: https://docs.aws.amazon.com/kms/latest/developerguide/accessing-kms.html#programming-eventual-consistency
 func isKMSKeyCreatingError(err error) bool {
 	return errs.IsAErrorMessageContains[*types.PreconditionNotMetException](err, "is creating") ||
 		errs.IsAErrorMessageContains[*types.EncryptionFailure](err, "is creating") ||
