@@ -39,7 +39,7 @@ func (l *groupListResource) ListResourceConfigSchema(ctx context.Context, reques
 		Attributes: map[string]listschema.Attribute{
 			"directory_id": listschema.StringAttribute{
 				Required:    true,
-				Description: "ID of the Directory to list Users from.",
+				Description: "ID of the Directory to list Groups from.",
 			},
 		},
 	}
