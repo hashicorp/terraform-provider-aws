@@ -307,7 +307,7 @@ func (principalAssociationImportID) Parse(id string) (string, map[string]any, er
 		false,
 	)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("parsing ID %q (expected RESOURCE-SHARE-ARN,PRINCIPAL): %w", id, err)
 	}
 
 	result := map[string]any{
