@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_amplify_app: Increase the maximum length of `access_token` and `oauth_token` from 255 and 1000 to 4096 to match the Amplify `CreateApp`/`UpdateApp` API limits. This allows the longer stateless GitHub App installation tokens (`ghs_APPID_JWT`, ~520 characters) rolled out by GitHub to be used.
+```
