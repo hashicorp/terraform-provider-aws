@@ -172,7 +172,7 @@ The `tag_scope_term` configuration block supports the following arguments:
 * `comparator` - (Optional) Operator to use in the condition.
 * `key` - (Optional) Tag key to use in the condition. The only valid value is `TAG`.
 * `tag_values` - (Optional) Tag keys or tag key and value pairs to use in the condition. See [`s3_job_definition.scoping.excludes.and.tag_scope_term.tag_values` Block](#s3_job_definitionscopingexcludesandtag_scope_termtag_values-block) for details.
-* `target` - (Optional) Type of object to apply the condition to. The only valid value is `S3_OBJECT`.
+* `target` - (Optional) Type of object to apply the condition to. The only valid value is `S3_OBJECT`. The AWS API requires this argument when `tag_scope_term` is used.
 
 ### `s3_job_definition.scoping.excludes.and.tag_scope_term.tag_values` Block
 
@@ -209,7 +209,7 @@ The `tag_scope_term` configuration block supports the following arguments:
 * `comparator` - (Optional) Operator to use in the condition.
 * `key` - (Optional) Tag key to use in the condition. The only valid value is `TAG`.
 * `tag_values` - (Optional) Tag keys or tag key and value pairs to use in the condition. See [`s3_job_definition.scoping.includes.and.tag_scope_term.tag_values` Block](#s3_job_definitionscopingincludesandtag_scope_termtag_values-block) for details.
-* `target` - (Optional) Type of object to apply the condition to. The only valid value is `S3_OBJECT`.
+* `target` - (Optional) Type of object to apply the condition to. The only valid value is `S3_OBJECT`. The AWS API requires this argument when `tag_scope_term` is used.
 
 ### `s3_job_definition.scoping.includes.and.tag_scope_term.tag_values` Block
 
