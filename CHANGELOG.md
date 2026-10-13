@@ -31,6 +31,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_agentregistry_registry: Fix validation of `custom_claim`-only custom JWT authorizers ([#50298](https://github.com/hashicorp/terraform-provider-aws/issues/50298))
+* resource/aws_api_gateway_method: Fix `deserialization failed, expected string, got null` failure during Read ([#50444](https://github.com/hashicorp/terraform-provider-aws/issues/50444))
 * resource/aws_ecs_cluster_capacity_providers: Fix delete handling for inactive clusters ([#50374](https://github.com/hashicorp/terraform-provider-aws/issues/50374))
 * resource/aws_observabilityadmin_telemetry_rule: Fix updates when `all_regions` is enabled ([#50150](https://github.com/hashicorp/terraform-provider-aws/issues/50150))
 * resource/aws_opensearch_domain: Remove hardcoded enum validation for `cluster_config.warm_type` to support newer instance types (e.g., `oi2.large.search`) ([#46969](https://github.com/hashicorp/terraform-provider-aws/issues/46969))
