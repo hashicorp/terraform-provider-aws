@@ -50,6 +50,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_eventbridgev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSubscriberResource,
 			TypeName: "aws_eventbridgev2_subscriber",
 			Name:     "Subscriber",
@@ -80,6 +90,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_eventbridgev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 		},
 		{
 			Factory:  newSubscriberResourceAsListResource,
