@@ -935,18 +935,7 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: data.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var out map[string][]string
-				diags.Append(data.ElementsAs(ctx, &out, false)...)
-
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(out))
-				return diags
+				return expandWithElementsAs[map[string][]string](ctx, data, vTo)
 			}
 		}
 
@@ -958,23 +947,12 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 		}
 		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
 		case reflect.Map:
-			//
-			// types.Map(OfMap[types.String]) -> map[string]map[string]string.
-			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: data.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var out map[string]map[string]string
-				diags.Append(data.ElementsAs(ctx, &out, false)...)
-
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(out))
-				return diags
+				//
+				// types.Map(OfMap[types.String]) -> map[string]map[string]string.
+				//
+				return expandWithElementsAs[map[string]map[string]string](ctx, data, vTo)
 
 			case reflect.Pointer:
 				switch k := tMapElem.Elem().Elem().Kind(); k {
@@ -982,18 +960,7 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 					//
 					// types.Map(OfMap[types.String]) -> map[string]map[string]*string.
 					//
-					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-						logAttrKeySourceSize: data.Length(fwtypes.CollectionLengthUnhandledAsZero),
-					})
-					var to map[string]map[string]*string
-					diags.Append(data.ElementsAs(ctx, &to, false)...)
-
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
+					return expandWithElementsAs[map[string]map[string]*string](ctx, data, vTo)
 				}
 			}
 		}
