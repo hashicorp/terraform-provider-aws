@@ -341,7 +341,7 @@ func TestSecretVersionForceNewXXX(t *testing.T) {
 func TestIsKMSKeyCreatingError(t *testing.T) {
 	t.Parallel()
 
-	const creating = "arn:aws:kms:eu-north-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab is creating. (Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)"
+	const creating = "arn:aws:kms:eu-north-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab is creating. (Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)" //lintignore:AWSAT003,AWSAT005
 
 	testcases := map[string]struct {
 		err      error
@@ -363,7 +363,7 @@ func TestIsKMSKeyCreatingError(t *testing.T) {
 			expected: true,
 		},
 		"GetSecretValue key pending deletion": {
-			err: &awstypes.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: arn:aws:kms:eu-north-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab is pending deletion.")},
+			err: &awstypes.DecryptionFailure{Message: aws.String("Secrets Manager can't decrypt the secret value: arn:aws:kms:eu-north-1:123456789012:key/mrk-1234abcd12ab34cd56ef1234567890ab is pending deletion.")}, //lintignore:AWSAT003,AWSAT005
 		},
 		"other error type": {
 			err: &awstypes.InvalidRequestException{Message: aws.String(creating)},
