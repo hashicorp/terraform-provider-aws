@@ -17,8 +17,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_eventbridgev2_event_bus", sweepEventBuses, "aws_eventbridgev2_event_source")
+	awsv2.Register("aws_eventbridgev2_event_bus", sweepEventBuses, "aws_eventbridgev2_event_source", "aws_eventbridgev2_subscriber")
 	awsv2.Register("aws_eventbridgev2_event_source", sweepEventSources)
+	awsv2.Register("aws_eventbridgev2_subscriber", sweepSubscribers)
 }
 
 func sweepEventBuses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -60,6 +61,28 @@ func sweepEventSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		for _, v := range page.EventSources {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newEventSourceResource, client,
 				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.EventSourceArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSubscribers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EventBridgeV2Client(ctx)
+	var input eventbridgev2.ListSubscribersInput
+	var sweepResources []sweep.Sweepable
+
+	pages := eventbridgev2.NewListSubscribersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Subscribers {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newSubscriberResource, client,
+				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.SubscriberArn))),
 			)
 		}
 	}
