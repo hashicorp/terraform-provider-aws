@@ -37,8 +37,8 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "auth0" {
   name = "auth0-oauth-provider"
 
   credential_provider_vendor = "CustomOauth2"
-  custom_oauth2_provider_config {
-    custom {
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
       client_id_wo                  = "auth0-client-id"
       client_secret_wo              = "auth0-client-secret"
       client_credentials_wo_version = 1
@@ -108,7 +108,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `atlassian_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -117,15 +117,15 @@ Exactly one of the following provider configuration blocks must be specified:
 
 ### `custom_oauth2_provider_config` Block
 
-* `client_authentication_method` - (Optional) Client authentication method used with the token endpoint. Valid values: `CLIENT_SECRET_BASIC`, `CLIENT_SECRET_POST`, `AWS_IAM_ID_TOKEN_JWT`.
+* `client_authentication_method` - (Optional) Client authentication method used with the token endpoint. Valid values: `CLIENT_SECRET_BASIC`, `CLIENT_SECRET_POST`, `AWS_IAM_ID_TOKEN_JWT`, `PRIVATE_KEY_JWT`.
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL` or `client_authentication_method` is `AWS_IAM_ID_TOKEN_JWT` or `PRIVATE_KEY_JWT`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
 * `client_secret_source` - (Optional) Source type of the client secret. Valid values: `MANAGED` (the service manages the secret) or `EXTERNAL` (you manage the secret in AWS Secrets Manager). Use `EXTERNAL` together with `client_secret_config`.
 * `client_secret_wo` - (Optional, Write-Only) Write-only OAuth2 client secret. Conflicts with `client_secret`. If set, requires `client_id_wo` and `client_credentials_wo_version` to be set.
-* `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth2_provider_config.custom_oauth2_provider_config.oauth_discovery` Block](#oauth2_provider_configcustom_oauth2_provider_configoauth_discovery-block) below.
+* `oauth_discovery` - (Required) OAuth discovery configuration. See [`oauth2_provider_config.custom_oauth2_provider_config.oauth_discovery` Block](#oauth2_provider_configcustom_oauth2_provider_configoauth_discovery-block) below.
 * `on_behalf_of_token_exchange_config` - (Optional) On-behalf-of token exchange configuration, enabling RFC 8693 token exchange or RFC 7523 JWT authorization grant flows. See [`on_behalf_of_token_exchange_config` Block](#on_behalf_of_token_exchange_config-block) below.
 * `private_endpoint` - (Optional) Default private endpoint for the custom OAuth2 provider, enabling secure connectivity through a VPC Lattice resource configuration. See [`private_endpoint` Block](#private_endpoint-block) below.
 * `private_endpoint_override` - (Optional) Private endpoint overrides for the custom OAuth2 provider configuration. See [`private_endpoint_override` Block](#private_endpoint_override-block) below.
@@ -134,7 +134,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `github_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -144,7 +144,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `google_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -153,11 +153,11 @@ Exactly one of the following provider configuration blocks must be specified:
 
 ### `included_oauth2_provider_config` Block
 
--> **Note:** `included_oauth2_provider_config` currently supports only vendors that have fixed, AWS-known OAuth2 endpoints (for example `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`), which require nothing beyond `client_id` and `client_secret`. Isolated-tenant vendors such as `OktaOauth2`, `PingOneOauth2`, and `OneLoginOauth2` require provider-specific endpoints (`issuer`, `authorization_endpoint`, `token_endpoint`) that are not yet exposed by this resource, and will fail at create time with a `Missing TokenEndpoint` error. Support for those fields is planned in a follow-up.
+-> **Note:** Vendors that have fixed, AWS-known OAuth2 endpoints (for example `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`) require nothing beyond `client_id` and `client_secret`. Isolated-tenant vendors such as `OktaOauth2`, `PingOneOauth2`, and `OneLoginOauth2` also require provider-specific endpoints, which are set with the `issuer`, `authorization_endpoint`, and `token_endpoint` arguments.
 
 * `authorization_endpoint` - (Optional) OAuth2 authorization endpoint URL.
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -169,7 +169,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `linkedin_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -179,7 +179,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `microsoft_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -192,7 +192,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `salesforce_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -202,7 +202,7 @@ Exactly one of the following provider configuration blocks must be specified:
 ### `slack_oauth2_provider_config` Block
 
 * `client_credentials_wo_version` - (Optional) Version used together with the write-only credentials. Required when `client_id_wo` and `client_secret_wo` are set. Changing this value triggers an update to `client_id_wo` and `client_secret_wo`.
-* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret`.
+* `client_id` - (Optional) OAuth2 client ID. Conflicts with `client_id_wo`. Must be used together with `client_secret` unless `client_secret_source` is `EXTERNAL`.
 * `client_id_wo` - (Optional, Write-Only) Write-only OAuth2 client ID. Conflicts with `client_id`. If set, requires `client_secret_wo` and `client_credentials_wo_version` to be set.
 * `client_secret` - (Optional) OAuth2 client secret. Conflicts with `client_secret_wo`. Must be used together with `client_id`.
 * `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config` Block](#client_secret_config-block) below.
@@ -249,7 +249,7 @@ Exactly one of the following provider configuration blocks must be specified:
 
 ### `managed_vpc_resource` Block
 
-* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values: `IPV4`, `DUALSTACK`.
+* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values: `IPV4`, `IPV6`.
 * `routing_domain` - (Optional) Routing domain for the managed VPC resource.
 * `security_group_ids` - (Optional) Set of up to 5 security group IDs for the managed VPC resource.
 * `subnet_ids` - (Required) Set of subnet IDs for the managed VPC resource.
@@ -258,7 +258,7 @@ Exactly one of the following provider configuration blocks must be specified:
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration.
 
 ### `private_key_jwt_config` Block
 
@@ -269,7 +269,7 @@ Exactly one of the following provider configuration blocks must be specified:
 
 ### `private_key_source` Block
 
-* `kms_key_source` - (Optional) AWS KMS key source configuration for the signing key. See [`kms_key_source` Block](#kms_key_source-block) below.
+* `kms_key_source` - (Required) AWS KMS key source configuration for the signing key. See [`kms_key_source` Block](#kms_key_source-block) below.
 
 ### `kms_key_source` Block
 
@@ -378,7 +378,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
--> **Note:** OAuth2 client credentials are input-only in the AgentCore API and are not returned by the read operation. On import, `client_id`, `client_secret`, `client_secret_source`, `client_secret_config`, and the write-only `client_id_wo`/`client_secret_wo`/`client_credentials_wo_version` arguments cannot be recovered from the service, so the first `terraform plan` after import shows them as additions. Run `terraform apply` once to reconcile state from your configuration; subsequent plans are clean.
+-> **Note:** This resource does not read OAuth2 client credentials back from the AgentCore API. On import, `client_id`, `client_secret`, `client_secret_source`, `client_secret_config`, `client_credentials_wo_version`, and the Microsoft `tenant_id` and `tenant_id_wo_version` arguments are not populated, so the first `terraform plan` after import shows them as additions. Run `terraform apply` once to reconcile state from your configuration; subsequent plans are clean.
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
@@ -403,7 +403,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "example" {
 
 #### Optional
 
-* `account_id` (String) Account ID where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore OAuth2 Credential Provider using `name`. For example:

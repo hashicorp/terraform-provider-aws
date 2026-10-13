@@ -3,11 +3,11 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_alias"
 description: |-
-  Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Alias.
+  Manages an AWS Agents for Amazon Bedrock Agent Alias.
 ---
 # Resource: aws_bedrockagent_agent_alias
 
-Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Alias.
+Manages an AWS Agents for Amazon Bedrock Agent Alias.
 
 ## Example Usage
 
@@ -60,10 +60,11 @@ resource "aws_iam_role_policy" "example" {
 }
 
 resource "aws_bedrockagent_agent" "example" {
-  agent_name              = "my-agent-name"
-  agent_resource_role_arn = aws_iam_role.example.arn
-  idle_ttl                = 500
-  foundation_model        = "anthropic.claude-v2"
+  agent_name                  = "my-agent-name"
+  agent_resource_role_arn     = aws_iam_role.example.arn
+  idle_session_ttl_in_seconds = 500
+  foundation_model            = "anthropic.claude-v2"
+  instruction                 = "You are a friendly assistant who helps answer questions."
 }
 
 resource "aws_bedrockagent_agent_alias" "example" {

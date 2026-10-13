@@ -125,7 +125,7 @@ The following arguments are optional:
 
 #### custom_data_identifier Configuration Block
 
-* `name` - (Required) Name of the custom data idenfitier
+* `name` - (Required) Name of the custom data identifier
 * `regex` - (Required) Regular expression to match sensitive data
 
 ## Attribute Reference

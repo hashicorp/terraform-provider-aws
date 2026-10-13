@@ -29,7 +29,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Arn of the queue.
+* `arn` - The ARN of the queue.
 * `name` - The same as `id`.
 * `status` - The status of the queue.
 * `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

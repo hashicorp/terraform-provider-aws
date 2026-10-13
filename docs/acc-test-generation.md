@@ -93,12 +93,14 @@ Multiple `@Testing(requireEnvVarValue)` annotations are allowed.
 
 Some resource types require alternate providers configured either for an alternate AWS account or an alternate region.
 If the test uses multiple regions, consider using the `region` attribute on resource in the alternate region instead of a separate provider instance.
+To use the `region` attribute, use the annotation `@Testing(altRegionTfVars=true)`.
+This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` and set the Terraform variable `secondary_region` to the alternate region.
 
 To specify a provider instance configured for an alternate account, use the annotation `@Testing(useAlternateAccount=true)`.
-This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` as well as initializing a provider instance with the alias `awsalternate`.
+This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` and initialize a provider instance with the alias `awsalternate`.
 
 To specify a provider instance configured for an alternate region, use the annotation `@Testing(altRegionProvider=true)`.
-This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` as well as initializing a provider instance with the alias `awsalternate`.
+This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` and initialize a provider instance with the alias `awsalternate`.
 
 #### Exists and Destroy Checks
 

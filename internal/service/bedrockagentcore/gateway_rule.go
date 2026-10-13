@@ -48,8 +48,6 @@ import (
 // @IdentityAttribute("gateway_identifier")
 // @IdentityAttribute("rule_id")
 // @ImportIDHandler("gatewayRuleImportID")
-// Requires reading the AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI environmengt variable.
-// @Testing(identityTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc=testAccGatewayRuleImportStateIDFunc)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetGatewayRuleOutput")

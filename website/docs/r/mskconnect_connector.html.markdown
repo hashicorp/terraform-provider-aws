@@ -200,7 +200,7 @@ The `s3` configuration block supports the following arguments:
 
 ### `plugin` Block
 
-The `plugin` configuration block supports the following argumens:
+The `plugin` configuration block supports the following arguments:
 
 * `custom_plugin` - (Required) Details about a custom plugin. See [`custom_plugin` Block](#custom_plugin-block) for details.
 

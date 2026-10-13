@@ -51,7 +51,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the package association.
+* `id` - The ID of the package association.
 
 ## Timeouts
 
