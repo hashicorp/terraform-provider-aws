@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_cloudfront_origin_access_identities
 
-Use this data source to get ARNs, ids and S3 canonical user IDs of Amazon CloudFront origin access identities.
+Use this data source to get ARNs, IDs and S3 canonical user IDs of Amazon CloudFront origin access identities.
 
 ## Example Usage
 
@@ -39,5 +39,5 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `iam_arns` - Set of ARNs of the matched origin access identities.
-* `ids` - Set of ids of the matched origin access identities.
+* `ids` - Set of IDs of the matched origin access identities.
 * `s3_canonical_user_ids` - Set of S3 canonical user IDs of the matched origin access identities.

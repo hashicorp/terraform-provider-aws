@@ -587,7 +587,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 
-### oidc
+### OIDC
 
 * `issuer` - Issuer URL for the OpenID Connect identity provider.
 

@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `default_network_acl_id` - ID of the network ACL created by default on VPC creation.
 * `default_route_table_id` - ID of the route table created by default on VPC creation.
 * `default_security_group_id` - ID of the security group created by default on VPC creation.
-* `dhcp_options_id` - DHCP options id of the desired VPC.
+* `dhcp_options_id` - DHCP options ID of the desired VPC.
 * `enable_dns_hostnames` - Whether the VPC has DNS hostname support.
 * `enable_dns_support` - Whether the VPC has DNS support.
 * `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for the VPC.

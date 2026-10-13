@@ -110,7 +110,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Id of the Glossary.
+* `id` - ID of the Glossary.
 
 ## Import
 
@@ -142,7 +142,7 @@ resource "aws_datazone_glossary" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using a comma-delimited string combining the domain id, glossary id, and the id of the project it's under. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using a comma-delimited string combining the domain ID, glossary ID, and the ID of the project it's under. For example:
 
 ```terraform
 import {
@@ -151,7 +151,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DataZone Glossary using the import Datazone Glossary using a comma-delimited string combining the domain id, glossary id, and the id of the project it's under. For example:
+Using `terraform import`, import DataZone Glossary using the import DataZone Glossary using a comma-delimited string combining the domain ID, glossary ID, and the ID of the project it's under. For example:
 
 ```console
 % terraform import aws_datazone_glossary.example domain-id,glossary-id,owning-project-identifier

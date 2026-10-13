@@ -74,7 +74,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - partition id.
+* `id` - partition ID.
 * `creation_time` - The time at which the partition was created.
 * `last_analyzed_time` - The last time at which column statistics were computed for this partition.
 * `last_accessed_time` - The last time at which the partition was accessed.
