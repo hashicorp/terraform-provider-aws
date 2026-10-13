@@ -59,6 +59,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
 		},
+		{
+			Factory:  newSpaceResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_space",
+			Name:     "Space",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("space_id", true)),
+		},
 	})
 }
 

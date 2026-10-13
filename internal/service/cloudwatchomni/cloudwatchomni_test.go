@@ -34,6 +34,9 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 			"encryption.AWS_OWNED":        testAccSpace_encryptionCreateAWS_OWNED,
 			"encryption.CUSTOMER_MANAGED": testAccSpace_encryptionCreateCUSTOMER_MANAGED,
 			"Identity":                    testAccCloudWatchOmniSpace_identitySerial,
+			"List_basic":                  testAccSpace_List_basic,
+			"List_includeResource":        testAccSpace_List_includeResource,
+			"List_regionOverride":         testAccSpace_List_regionOverride,
 		},
 	}
 
