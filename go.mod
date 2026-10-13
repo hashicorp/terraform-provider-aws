@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/accountaccess v1.6.4
 	github.com/aws/aws-sdk-go-v2/service/acm v1.50.4
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.56.3
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/amp v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.48.3
