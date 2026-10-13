@@ -480,7 +480,7 @@ func resourceInferenceComponentRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	output, err := findInferenceComponentByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker Inference Component (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

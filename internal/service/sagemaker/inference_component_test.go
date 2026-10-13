@@ -103,11 +103,11 @@ func TestAccSageMakerInferenceComponent_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceComponentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceComponentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccInferenceComponentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -116,20 +116,20 @@ func TestAccSageMakerInferenceComponent_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInferenceComponentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccInferenceComponentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccInferenceComponentConfig_tags1(rName, "key2", "value2"),
+				Config: testAccInferenceComponentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -245,7 +245,7 @@ func TestAccSageMakerInferenceComponent_dataCacheConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.data_cache_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "specification.0.data_cache_config.0.enable_caching", "true"),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.data_cache_config.0.enable_caching", acctest.CtTrue),
 				),
 			},
 			{
