@@ -10,7 +10,6 @@ resource "aws_cloudwatchomni_space" "test" {
   data_access_role_arn = aws_iam_role.test.arn
 }
 
-data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {

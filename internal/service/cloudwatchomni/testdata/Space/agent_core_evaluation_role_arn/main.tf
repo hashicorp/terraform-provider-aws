@@ -25,7 +25,6 @@ resource "aws_iam_role" "test_agent_core" {
   })
 }
 
-data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
