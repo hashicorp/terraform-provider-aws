@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambdacore_network_connector: Add `latest_version` and `latest_version_arn` attributes
+```
