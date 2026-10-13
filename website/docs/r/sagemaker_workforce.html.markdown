@@ -40,7 +40,7 @@ resource "aws_cognito_user_pool_domain" "example" {
 }
 ```
 
-### Oidc Usage
+### OIDC Usage
 
 ```terraform
 resource "aws_sagemaker_workforce" "example" {
@@ -67,7 +67,7 @@ This resource supports the following arguments:
 * `workforce_name` - (Required) The name of the Workforce (must be unique).
 * `cognito_config` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
 * `oidc_config` - (Optional) Use this parameter to configure a private workforce using your own OIDC Identity Provider. Conflicts with `cognito_config`. see [OIDC Config](#oidc-config) details below.
-* `source_ip_config` - (Optional) A list of IP address ranges Used to create an allow list of IP addresses for a private workforce. By default, a workforce isn't restricted to specific IP addresses. see [Source Ip Config](#source-ip-config) details below.
+* `source_ip_config` - (Optional) A list of IP address ranges Used to create an allow list of IP addresses for a private workforce. By default, a workforce isn't restricted to specific IP addresses. see [Source IP Config](#source-ip-config) details below.
 * `workforce_vpc_config` - (Optional) configure a workforce using VPC. see [Workforce VPC Config](#workforce-vpc-config) details below.
 
 ### Cognito Config
@@ -75,7 +75,7 @@ This resource supports the following arguments:
 * `client_id` - (Required) The client ID for your Amazon Cognito user pool.
 * `user_pool` - (Required) ID for your Amazon Cognito user pool.
 
-### Oidc Config
+### OIDC Config
 
 * `authentication_request_extra_params` - (Optional) A string to string map of identifiers specific to the custom identity provider (IdP) being used.
 * `authorization_endpoint` - (Required) The OIDC IdP authorization endpoint used to configure your private workforce.
@@ -88,7 +88,7 @@ This resource supports the following arguments:
 * `token_endpoint` - (Required) The OIDC IdP token endpoint used to configure your private workforce.
 * `user_info_endpoint` - (Required) The OIDC IdP user information endpoint used to configure your private workforce.
 
-### Source Ip Config
+### Source IP Config
 
 * `cidrs` - (Required) A list of up to 10 CIDR values.
 

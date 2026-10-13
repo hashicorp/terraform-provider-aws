@@ -55,11 +55,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Combination of attributes to create a unique id: `disk_name`,`instance_name`.
+* `id` - Combination of attributes to create a unique ID: `disk_name`,`instance_name`.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_disk_attachment` using the id attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_disk_attachment` using the `id` attribute. For example:
 
 ```terraform
 import {
@@ -68,7 +68,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_lightsail_disk_attachment` using the id attribute. For example:
+Using `terraform import`, import `aws_lightsail_disk_attachment` using the `id` attribute. For example:
 
 ```console
 % terraform import aws_lightsail_disk_attachment.example example-disk,example-instance

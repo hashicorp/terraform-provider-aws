@@ -38,36 +38,36 @@ resource "aws_glue_catalog_database" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
-* `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
+* `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission` Block](#create_table_default_permission-block) below.
 * `description` - (Optional) Description of the database.
-* `federated_database` - (Optional) Configuration block that references an entity outside the AWS Glue Data Catalog. See [`federated_database`](#federated_database) below.
+* `federated_database` - (Optional) Configuration block that references an entity outside the AWS Glue Data Catalog. See [`federated_database` Block](#federated_database-block) below.
 * `location_uri` - (Optional) Location of the database (for example, an HDFS path).
 * `name` - (Required) Name of the database. The acceptable characters are lowercase letters, numbers, and the underscore character.
 * `parameters` - (Optional) List of key-value pairs that define parameters and properties of the database.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `target_database` - (Optional) Configuration block for a target database for resource linking. See [`target_database`](#target_database) below.
+* `target_database` - (Optional) Configuration block for a target database for resource linking. See [`target_database` Block](#target_database-block) below.
 
-### federated_database
+### `federated_database` Block
 
 * `connection_name` - (Optional) Name of the connection to the external metastore.
 * `identifier` - (Optional) Unique identifier for the federated database.
 
-### target_database
+### `target_database` Block
 
 * `catalog_id` - (Required) ID of the Data Catalog in which the database resides.
 * `database_name` - (Required) Name of the catalog database.
 * `region` - (Optional) Region of the target database.
 
-### create_table_default_permission
+### `create_table_default_permission` Block
 
-* `permissions` - (Optional) The permissions that are granted to the principal.
-* `principal` - (Optional) The principal who is granted permissions.. See [`principal`](#principal) below.
+* `permissions` - (Optional) Permissions that are granted to the principal.
+* `principal` - (Optional) Principal who is granted permissions.. See [`principal` Block](#principal-block) below.
 
-#### principal
+#### `principal` Block
 
-* `data_lake_principal_identifier` - (Optional) An identifier for the Lake Formation principal.
+* `data_lake_principal_identifier` - (Optional) Identifier for the Lake Formation principal.
 
 ## Attribute Reference
 
@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Glue Catalog Database.
 * `id` - Catalog ID and name of the database.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

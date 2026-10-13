@@ -431,7 +431,7 @@ Exactly one of the following action blocks must be specified:
 * `name` - (Required) Name of the header to match against. The name must be an exact match, including case.
 * `success_values` - (Required) Values in the response header with the specified name that indicate a successful login attempt.
 
-### json
+### JSON
 
 * `failure_strings` - (Required) Strings in the body of the response that indicate a failed login attempt.
 * `identifier` - (Required) Identifier for the value to match against in the JSON.

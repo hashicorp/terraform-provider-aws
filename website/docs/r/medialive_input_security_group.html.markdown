@@ -45,7 +45,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - InputSecurityGroup Id.
+* `id` - InputSecurityGroup ID.
 * `arn` - ARN of the InputSecurityGroup.
 * `inputs` - The list of inputs currently using this InputSecurityGroup.
 

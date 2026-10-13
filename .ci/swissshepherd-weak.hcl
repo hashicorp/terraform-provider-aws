@@ -230,6 +230,35 @@ check "banned_glosses" {
   severity         = "error"
 }
 
+check "prose_casing" {
+  enabled  = true
+  severity = "warning"
+
+  enforce_casing = [
+    "ACL", "ACM", "ACMPCA", "Amazon WorkSpaces", "AMI", "API Gateway",
+    "App Mesh", "App Runner", "AppConfig", "AppFabric", "AppFlow",
+    "Application Auto Scaling", "AppStream", "AppSync", "ARN", "ASG", "ASN",
+    "Auto Scaling group", "Auto Scaling groups", "AWS Auto Scaling",
+    "AWS WorkSpaces", "BGP", "BYOIP", "CIDR", "CloudFormation", "CloudFront",
+    "CloudHSM", "CloudTrail", "CloudWatch", "CMK", "CNAME", "CodeArtifact",
+    "CodeBuild", "CodeCatalyst", "CodeCommit", "CodeConnections",
+    "CodeDeploy", "CodeGuru", "CodePipeline", "CoIP", "CSV", "DataBrew",
+    "DataSync", "DataZone", "DAX", "DB", "DHCP", "DKIM", "DLM", "DMS",
+    "DNSSEC", "DocDB", "DynamoDB", "EBS", "EC2", "EC2 Auto Scaling", "ECMP",
+    "ECR", "ECS", "EFS", "EIP", "EKS", "ElastiCache", "Elasticsearch", "ELB",
+    "EMR", "EventBridge", "FIFO", "FMS", "FQDNs", "FSx", "GameLift", "GCM",
+    "GraphQL", "gRPC", "GuardDuty", "HAProxy", "HSM", "HVM", "IAM", "IoT",
+    "IPAM", "IPSet", "iSCSI", "JDBC", "KMS", "Lake Formation", "MFA",
+    "MicroVMs", "MSK", "MWAA", "MySQL", "NFS", "OAuth", "OIDC", "OpsWorks",
+    "PHP", "PITR", "POSIX", "QLDB", "QuickSight", "RabbitMQ", "RDS", "RFC",
+    "SageMaker", "SASL", "Security Hub", "SFN", "SMB", "SMS", "SMTP", "SNS",
+    "SQS", "SSM", "SSO", "STS", "SWF", "TTL", "VGW", "VoIP", "VPC", "VPN",
+    "WAF", "WAFv2", "WorkLink", "WorkMail", "XSS", "YAML",
+  ]
+
+  skip_frontmatter = true
+}
+
 check "schema_docs" {
   enabled = true
 
@@ -243,6 +272,7 @@ check "schema_docs" {
   ordering    = true
 
   nested_object_attributes = true
+  allow_inline_read_only   = true
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
@@ -447,16 +477,6 @@ check "schema_docs" {
     "data_source/aws_emr_release_labels",
     "data_source/aws_emr_supported_instance_types",
     "data_source/aws_emrcontainers_virtual_cluster",
-    "data_source/aws_globalaccelerator_accelerator",
-    "data_source/aws_globalaccelerator_custom_routing_accelerator",
-    "data_source/aws_glue_catalog",
-    "data_source/aws_glue_catalog_table",
-    "data_source/aws_glue_data_catalog_encryption_settings",
-    "data_source/aws_glue_registry",
-    "data_source/aws_glue_script",
-    "data_source/aws_grafana_workspace",
-    "data_source/aws_guardduty_detector",
-    "data_source/aws_guardduty_finding_ids",
     "data_source/aws_iam_access_keys",
     "data_source/aws_iam_group",
     "data_source/aws_iam_openid_connect_provider",
@@ -1124,60 +1144,6 @@ check "schema_docs" {
     "resource/aws_evidently_launch",
     "resource/aws_evidently_project",
     "resource/aws_evidently_segment",
-    "resource/aws_gamelift_alias",
-    "resource/aws_gamelift_build",
-    "resource/aws_gamelift_fleet",
-    "resource/aws_gamelift_game_server_group",
-    "resource/aws_gamelift_game_session_queue",
-    "resource/aws_gamelift_script",
-    "resource/aws_glacier_vault_lock",
-    "resource/aws_glacier_vault",
-    "resource/aws_globalaccelerator_accelerator",
-    "resource/aws_globalaccelerator_cross_account_attachment",
-    "resource/aws_globalaccelerator_custom_routing_accelerator",
-    "resource/aws_globalaccelerator_custom_routing_endpoint_group",
-    "resource/aws_globalaccelerator_custom_routing_listener",
-    "resource/aws_globalaccelerator_endpoint_group",
-    "resource/aws_globalaccelerator_listener",
-    "resource/aws_glue_catalog_database",
-    "resource/aws_glue_catalog_table_optimizer",
-    "resource/aws_glue_catalog",
-    "resource/aws_glue_classifier",
-    "resource/aws_glue_connection",
-    "resource/aws_glue_crawler",
-    "resource/aws_glue_data_catalog_encryption_settings",
-    "resource/aws_glue_data_quality_ruleset",
-    "resource/aws_glue_dev_endpoint",
-    "resource/aws_glue_job",
-    "resource/aws_glue_ml_transform",
-    "resource/aws_glue_partition_index",
-    "resource/aws_glue_partition",
-    "resource/aws_glue_registry",
-    "resource/aws_glue_resource_policy",
-    "resource/aws_glue_schema",
-    "resource/aws_glue_security_configuration",
-    "resource/aws_glue_trigger",
-    "resource/aws_glue_user_defined_function",
-    "resource/aws_glue_workflow",
-    "resource/aws_grafana_license_association",
-    "resource/aws_grafana_role_association",
-    "resource/aws_grafana_workspace_api_key",
-    "resource/aws_grafana_workspace_saml_configuration",
-    "resource/aws_grafana_workspace_service_account_token",
-    "resource/aws_grafana_workspace_service_account",
-    "resource/aws_grafana_workspace",
-    "resource/aws_guardduty_detector_feature",
-    "resource/aws_guardduty_detector",
-    "resource/aws_guardduty_filter",
-    "resource/aws_guardduty_invite_accepter",
-    "resource/aws_guardduty_ipset",
-    "resource/aws_guardduty_malware_protection_plan",
-    "resource/aws_guardduty_member_detector_feature",
-    "resource/aws_guardduty_member",
-    "resource/aws_guardduty_organization_configuration_feature",
-    "resource/aws_guardduty_organization_configuration",
-    "resource/aws_guardduty_publishing_destination",
-    "resource/aws_guardduty_threatintelset",
     "resource/aws_iam_account_alias",
     "resource/aws_iam_account_password_policy",
     "resource/aws_iam_group_membership",

@@ -119,12 +119,12 @@ This resource exports the following attributes in addition to the arguments abov
   are a combination of default settings and their overrides from `setting` in
   the configuration.
 * `cname` - Fully qualified DNS name for this Environment.
-* `autoscaling_groups` - The autoscaling groups used by this Environment.
+* `autoscaling_groups` - The Auto Scaling groups used by this Environment.
 * `instances` - Instances used by this Environment.
 * `launch_configurations` - Launch configurations in use by this Environment.
 * `load_balancers` - Elastic load balancers in use by this Environment.
 * `queues` - SQS queues in use by this Environment.
-* `triggers` - Autoscaling triggers in use by this Environment.
+* `triggers` - Auto Scaling triggers in use by this Environment.
 * `endpoint_url` - The URL to the Load Balancer for this Environment
 
 ## Import

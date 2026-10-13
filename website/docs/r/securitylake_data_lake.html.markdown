@@ -76,7 +76,7 @@ Configurations support the following:
 
 Encryption Configuration support the following:
 
-* `kms_key_id` - (Optional) The id of KMS encryption key used by Amazon Security Lake to encrypt the Security Lake object.
+* `kms_key_id` - (Optional) The ID of KMS encryption key used by Amazon Security Lake to encrypt the Security Lake object.
 
 Lifecycle Configuration support the following:
 
